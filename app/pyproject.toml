@@ -11,13 +11,12 @@ readme = "README.md"
 dependencies = [
   "llama-index-llms-openai",
   "llama-index-embeddings-openai",
-  "llama-index-workflows>=2.5.0,<3.0.0"
+  "llama-index-workflows>=2.5.0,<3.0.0",
+  "llamactl>=0.6.0,<1.0.0"
 ]
 
-[project.optional-dependencies]
-serve = [
-  "llamactl>=0.6.0,<1.0.0",
-]
+# `llamactl serve` runs `uv run` against this project; uv does not install optional
+# extras unless configured, so `llamactl` is listed above for Docker/local serve.
 
 [dependency-groups]
 dev = [

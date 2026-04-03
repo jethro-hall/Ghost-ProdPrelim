@@ -13,7 +13,8 @@ COPY src ./src
 COPY tests ./tests
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir ".[serve]"
+    && pip install --no-cache-dir uv \
+    && pip install --no-cache-dir "."
 
 ENV PYTHONUNBUFFERED=1
 

@@ -41,7 +41,7 @@ From `app/`:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[serve]"
+pip install -e "."
 export OPENAI_API_KEY=...  # do not commit
 llamactl serve --host 127.0.0.1 --port 4501
 ```
