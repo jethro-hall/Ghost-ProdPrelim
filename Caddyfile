@@ -1,0 +1,4 @@
+ghoststack.rideai.com.au {
+	encode gzip
+	reverse_proxy rag:4501
+}
