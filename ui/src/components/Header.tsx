@@ -1,34 +1,57 @@
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { PanelLeftIcon, PlusIcon } from "./ReferenceIcons";
 
 type Props = {
   onFullSync: () => void;
   onToggleRight: () => void;
-  onToggleChat: () => void;
+  onToggleSidebar: () => void;
   syncing: boolean;
 };
 
-export default function Header({ onFullSync, onToggleRight, onToggleChat, syncing }: Props) {
+const TITLES: Record<string, string> = {
+  "/": "Knowledge & retrieval",
+  "/connections": "LLM connections",
+  "/data-sources": "Data sources",
+  "/pipelines": "Parsing pipelines",
+  "/vectors": "Vector DBs",
+  "/knowledge-lab": "Knowledge lab",
+  "/settings": "System administration",
+  "/agent": "Agent configuration",
+  "/logs": "Operational trace",
+};
+
+export default function Header({ onFullSync, onToggleRight, onToggleSidebar, syncing }: Props) {
+  const location = useLocation();
+  const title = TITLES[location.pathname] ?? "GhostDASH";
+
   return (
-    <header className="glass-panel relative z-10 flex items-center justify-between gap-4 px-4 py-3">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-slate-400">Operator</p>
-        <h1 className="text-lg font-semibold text-white">Knowledge & retrieval</h1>
+    <header className="glass-header sticky top-0 z-20 flex h-[44px] items-center justify-between px-4">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="ghost-icon-btn text-slate-400 hover:text-slate-900"
+          title="Toggle menu"
+        >
+          <PanelLeftIcon size={18} strokeWidth={2.5} />
+        </button>
+        <div className="text-[0.9rem] font-semibold text-slate-900">{title}</div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+
+      <div className="flex items-center gap-2">
         <motion.button
           type="button"
-          whileTap={{ scale: 0.97 }}
-          className="glass-button-primary disabled:opacity-50"
+          whileTap={{ scale: 0.98 }}
           onClick={onFullSync}
           disabled={syncing}
+          className="ghost-btn-primary"
         >
-          Full Sync
+          {syncing ? "Full Syncing..." : "Full Sync"}
         </motion.button>
-        <button type="button" className="glass-button text-xs" onClick={onToggleRight}>
-          Connections
-        </button>
-        <button type="button" className="glass-button text-xs" onClick={onToggleChat}>
-          Chat
+        <button type="button" onClick={onToggleRight} className="ghost-btn">
+          <PlusIcon size={14} strokeWidth={2.5} />
+          Add Provider
         </button>
       </div>
     </header>

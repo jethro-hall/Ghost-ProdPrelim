@@ -1,0 +1,17 @@
+---
+description: For Llama-oriented plans, use local LlamaIndex llamactl templates as reference; map to Llama Stack and GhostDASH boundaries.
+globs:
+  - backend/src/**/*.py
+  - docs/**/*.md
+  - stack/**/*.yaml
+alwaysApply: false
+---
+
+# LlamaIndex templates ↔ GhostDASH plans
+
+When planning or implementing RAG, embeddings workflows, document parsing/extraction, chat-over-docs patterns, human-in-the-loop, or workflow-style UIs:
+
+1. **Consult the matching project** under workspace path `llama-agent-templates/<template>/` (sibling of this repo when the workspace root is the parent folder). Start with `AGENTS.md`, then `pyproject.toml` and `src/`.
+2. **Treat templates as LlamaIndex reference**, not drop-in runtime: GhostDASH uses **Meta Llama Stack** (`llama-stack`, `stack/config.yaml`) and **must** keep the browser on `/api/*` only.
+3. **Invoke or reason like** the Cursor subagent **`llama-agent-templates`** (`.cursor/agents/llama-agent-templates.md`) for cross-template or ambiguous cases.
+4. If the workspace is opened **only** inside `ghoststack-rag/` and `llama-agent-templates/` is not visible, use `../llama-agent-templates/<template>/` or widen the editor workspace to include the parent directory.

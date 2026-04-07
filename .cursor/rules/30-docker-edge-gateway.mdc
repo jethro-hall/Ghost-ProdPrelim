@@ -1,0 +1,45 @@
+---
+description: Docker/Caddy guardrails for GhostDASH (canonical compose, route alignment, no service guessing).
+globs:
+  - docker-compose.yml
+  - Caddyfile
+  - backend/Dockerfile
+  - ui/Dockerfile
+  - stack/Dockerfile
+  - stack/config.yaml
+alwaysApply: true
+---
+
+# Docker + Caddy guardrails
+
+## Canonical compose file
+
+- `docker-compose.yml` is canonical.
+- Do not create alternate compose files unless explicitly approved.
+
+## Known compose service names
+
+- `caddy`
+- `ui`
+- `api`
+- `worker`
+- `llama-stack`
+- `qdrant`
+
+## Caddy mount source of truth
+
+- Host path: `./Caddyfile`
+- Container path: `/etc/caddy/Caddyfile`
+
+## Route alignment
+
+- `/` -> `ui:4173`
+- `/api/*` -> `api:8000`
+- `/health` -> `api:8000`
+
+If service ports or listeners change, update `docker-compose.yml` and `Caddyfile` together.
+
+## Verification
+
+- `docker compose config`
+- `docker inspect ghoststack-rag-caddy-1 --format '{{json .Mounts}}'`

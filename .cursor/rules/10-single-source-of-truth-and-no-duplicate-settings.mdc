@@ -1,0 +1,36 @@
+---
+description: "Enforce a single source of truth for LLM, guardrails, KB, and tool policy settings."
+globs:
+  - backend/src/**/*.py
+  - ui/src/**/*.ts
+  - ui/src/**/*.tsx
+alwaysApply: false
+---
+
+# Single Source Of Truth Enforcement
+
+## Goal
+- Prevent duplicated runtime configuration across DB tables, APIs, services, and UI state.
+
+## Non-negotiables
+- A setting has exactly one authoritative persistence location.
+- A setting has exactly one canonical API contract.
+- A setting is editable in exactly one UI surface; all other appearances must be read-only summaries.
+
+## Runtime settings this applies to
+- LLM model and provider settings
+- guardrails and policy behavior
+- KnowledgeBase binding and retrieval behavior
+- tool allow/deny policy
+
+## Required pattern
+- If agents need runtime behavior, they should reference one canonical profile/policy object rather than carrying duplicated copies.
+- Do not add shadow fields, sync code, or “convenience copies” of the same setting.
+
+## Before adding a setting
+1. Identify the single owner.
+2. Identify the single API that exposes it.
+3. Identify the single UI editor for it.
+4. Explain how all other code reads it by reference.
+
+If you cannot answer all four, stop and redesign before coding.

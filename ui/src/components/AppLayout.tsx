@@ -1,86 +1,141 @@
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
-import Sidebar from "./Sidebar";
+import type { ChatApiMode, Connection, Task } from "../api";
+import * as ghostApi from "../api";
+import BackgroundOrbs from "./BackgroundOrbs";
+import FullScreenLoader from "./FullScreenLoader";
+import GhostChat from "./GhostChat";
 import Header from "./Header";
 import RightPanel from "./RightPanel";
-import GhostChat from "./GhostChat";
-import FullScreenLoader from "./FullScreenLoader";
-import type { Connection, Task, TaskStep } from "../api";
-import * as ghostApi from "../api";
+import Sidebar from "./Sidebar";
 
-const idleSteps: TaskStep[] = [
-  { id: "queued", label: "Queued", done: false, active: false },
-  { id: "scan_documents", label: "Scan documents", done: false, active: false },
-  { id: "parse_embed", label: "Parse & embed", done: false, active: false },
-  { id: "finalize", label: "Finalize", done: false, active: false },
-];
+const pendingTask: Task = {
+  id: "pending",
+  task_type: "full_sync",
+  status: "pending",
+  current_step: "queued",
+  progress: 0,
+  error_message: null,
+  steps: [
+    { id: "queued", label: "Queued", done: false, active: true, status: "running" },
+    { id: "parse_structure", label: "Parse Structure", done: false, active: false, status: "pending" },
+    { id: "index_retrieval", label: "Index Retrieval", done: false, active: false, status: "pending" },
+    { id: "finalize", label: "Finalize", done: false, active: false, status: "pending" },
+  ],
+  total_documents: 0,
+  completed_documents: 0,
+  failed_documents: 0,
+  active_document_id: null,
+  active_filename: null,
+  documents: [],
+};
+
+export type AppOutletContext = {
+  uploadFile: (f: File, corpus?: string, lane?: string) => Promise<{ id: string }>;
+  refreshConnections: () => Promise<void>;
+  openConnections: () => void;
+};
 
 export default function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [syncOpen, setSyncOpen] = useState(false);
-  const [syncSteps, setSyncSteps] = useState<TaskStep[]>(idleSteps);
+  const [syncTask, setSyncTask] = useState<Task | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [apiMode, setApiMode] = useState<ChatApiMode>(() => {
+    const stored = window.localStorage.getItem("ghostdash.chat-api-mode");
+    return stored === "chat_completions" ? "chat_completions" : "responses";
+  });
+
+  useEffect(() => {
+    void ghostApi
+      .fetchRuntimeDefaults()
+      .then((defaults) => setApiMode(defaults.chat_api_mode))
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("ghostdash.chat-api-mode", apiMode);
+    void ghostApi.saveRuntimeDefaults({ chat_api_mode: apiMode }).catch(() => null);
+  }, [apiMode]);
 
   async function refreshConnections() {
-    const c = await ghostApi.fetchConnections();
-    setConnections(c);
+    setConnections(await ghostApi.fetchConnections());
+  }
+
+  function openConnections() {
+    setRightOpen(true);
+    void refreshConnections().catch(() => null);
+  }
+
+  async function handleFullSync() {
+    setSyncing(true);
+    setSyncOpen(true);
+    setSyncTask(pendingTask);
+    try {
+      const task = await ghostApi.startSync();
+      let current = task;
+      setSyncTask(current);
+      while (current.status === "pending" || current.status === "running") {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        current = await ghostApi.getTask(task.id);
+        setSyncTask(current);
+      }
+      if (current.status === "completed") {
+        window.setTimeout(() => {
+          setSyncOpen(false);
+        }, 1200);
+      }
+    } finally {
+      setSyncing(false);
+    }
   }
 
   return (
-    <div className="relative flex min-h-screen">
-      <div className="bg-orb" />
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-      <div className="relative z-10 flex flex-1 flex-col gap-4 p-4">
+    <div className="flex h-screen w-full overflow-hidden bg-[#f4f5f7] text-slate-900">
+      <BackgroundOrbs />
+      <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen((value) => !value)} />
+      <main className="relative z-10 flex min-w-0 flex-1 flex-col">
         <Header
           syncing={syncing}
-          onFullSync={async () => {
-            setSyncing(true);
-            setSyncOpen(true);
-            setSyncSteps(idleSteps);
-            try {
-              const task: Task = await ghostApi.startSync();
-              let cur = task;
-              setSyncSteps(cur.steps);
-              while (cur.status === "pending" || cur.status === "running") {
-                await new Promise((r) => setTimeout(r, 1500));
-                cur = await ghostApi.getTask(task.id);
-                setSyncSteps(cur.steps);
-              }
-            } finally {
-              setSyncing(false);
-              setTimeout(() => setSyncOpen(false), 800);
-            }
-          }}
-          onToggleRight={async () => {
-            await refreshConnections();
-            setRightOpen(true);
-          }}
-          onToggleChat={() => setChatOpen((v) => !v)}
+          onToggleSidebar={() => setSidebarOpen((value) => !value)}
+          onFullSync={() => void handleFullSync()}
+          onToggleRight={openConnections}
         />
-        <main className="glass-panel relative z-10 flex-1 overflow-auto p-4">
-          <Outlet
-            context={{
-              uploadFile: ghostApi.uploadFile,
-              refreshConnections,
-            }}
-          />
-        </main>
-      </div>
+        <div className="ghost-scroll relative flex-1 overflow-y-auto p-[18px]">
+          <div className="mx-auto max-w-[960px]">
+            <Outlet
+              context={{
+                uploadFile: ghostApi.uploadFile,
+                refreshConnections,
+                openConnections,
+              } satisfies AppOutletContext}
+            />
+          </div>
+        </div>
+      </main>
       <RightPanel
         open={rightOpen}
         onClose={() => setRightOpen(false)}
         connections={connections}
+        apiMode={apiMode}
+        onApiModeChange={setApiMode}
         onSave={async (body) => {
           await ghostApi.saveConnection(body);
           await refreshConnections();
           setRightOpen(false);
         }}
       />
-      <GhostChat open={chatOpen} onClose={() => setChatOpen(false)} />
-      <FullScreenLoader open={syncOpen} steps={syncSteps} />
+      <GhostChat
+        open={chatOpen}
+        apiMode={apiMode}
+        onApiModeChange={setApiMode}
+        onOpen={() => setChatOpen(true)}
+        onClose={() => setChatOpen(false)}
+      />
+      <FullScreenLoader open={syncOpen} task={syncTask} onClose={() => setSyncOpen(false)} />
     </div>
   );
 }

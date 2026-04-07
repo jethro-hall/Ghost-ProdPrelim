@@ -1,0 +1,30 @@
+---
+description: "GhostDASH UI rules: SPA-first, intuitive operator flows, and no duplicated settings surfaces."
+globs:
+  - ui/src/**/*.ts
+  - ui/src/**/*.tsx
+  - ui/src/**/*.css
+alwaysApply: false
+---
+
+# UI And Human Intuition
+
+## SPA only
+- No full-page reloads for internal navigation or state updates.
+- Async work must have visible loading and actionable error states.
+
+## GhostDASH operator model
+- A first-time operator should be able to quickly find Agents, Data Sources, Connections, Logs, and chat.
+- Labels should use real operator language and clear verbs.
+
+## No duplicated settings surfaces
+- Never make the same setting editable in multiple screens.
+- If a value appears in multiple places, exactly one location is the editor and the rest are summaries.
+
+## Boundaries
+- The UI may call `/api/*` for operator control and `/agent/*` for chat only.
+- The browser must never call providers, Qdrant, or third-party tools directly.
+
+## Human QA before done
+- Validate the changed flows from a cold start.
+- Check responsive layout, error paths, save feedback, and consistency of labels/defaults.

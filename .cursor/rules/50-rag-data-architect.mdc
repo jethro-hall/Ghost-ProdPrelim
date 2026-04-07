@@ -1,0 +1,39 @@
+---
+description: Enforce disciplined LlamaIndex RAG and GraphRAG planning for GhostDASH ingestion, metadata, and retrieval work.
+globs:
+  - backend/src/**/*.py
+  - docs/**/*.md
+  - stack/**/*.yaml
+alwaysApply: false
+---
+
+# RAG Data Architecture
+
+When a task touches ingestion, chunking, retrieval, embeddings, vector storage, or GraphRAG:
+
+1. If the user wants to ingest or reshape data, produce a Markdown **Data Ingestion Plan (DIP)** before code with:
+   - `DataSource`
+   - `Schema`
+   - `Parsing`
+   - `Embeddings`
+   - `Storage`
+2. Stay repo-first:
+   - current relational store: `postgres`
+   - current vector store: `qdrant`
+   - runtime services: `control-api`, `agent-ingress`, `workflow-runtime`
+   - treat `pgvector`, `Pinecone`, `Chroma`, `Milvus`, `Neo4j`, and `NebulaGraph` as explicit migration proposals, not assumed defaults
+3. Define ingestion schema before loading raw data:
+   - choose a `NodeParser` explicitly
+   - specify `chunk_size`, `chunk_overlap`, and parser rationale
+   - require metadata keys at minimum: `file_path`, `ingestion_date`, `corpus`, `entity_type`, `source_id`, `content_hash`
+4. Clean text before embeddings:
+   - normalize whitespace
+   - strip HTML or markup noise where applicable
+   - preserve provenance metadata needed for traceable answers
+5. Prefer `IngestionPipeline` over one-off loaders and prefer typed, documented Python with short rationale comments for non-obvious settings such as `similarity_top_k`
+6. For GraphRAG, define entity types and relation types before ingestion and explain how graph traversal and vector retrieval will be blended
+7. Every RAG implementation answer must include `#### Integration & Configuration Documentation` covering:
+   - Docker images or services involved
+   - required `.env` variables
+   - why the chosen data structure fits the GhostDASH pipeline
+8. Speak up when a plan duplicates storage, repeats logic, or weakens data quality; propose the simpler fit-for-purpose alternative

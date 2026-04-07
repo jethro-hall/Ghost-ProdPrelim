@@ -1,10 +1,19 @@
 :80 {
 	encode gzip
 	handle /api/* {
-		reverse_proxy api:8000
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle /agent/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
 	}
 	handle /health {
-		reverse_proxy api:8000
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
 	}
 	handle {
 		reverse_proxy ui:4173
@@ -14,10 +23,19 @@
 ghoststack.rideai.com.au {
 	encode gzip
 	handle /api/* {
-		reverse_proxy api:8000
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle /agent/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
 	}
 	handle /health {
-		reverse_proxy api:8000
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
 	}
 	handle {
 		reverse_proxy ui:4173

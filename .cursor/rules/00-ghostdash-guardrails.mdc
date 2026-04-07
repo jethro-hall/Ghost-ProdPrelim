@@ -1,0 +1,59 @@
+---
+description: CRITICAL GhostDASH guardrails (repo-first, no invented infra, full-file config rewrites, structured observability).
+alwaysApply: true
+---
+
+# CRITICAL GUARDRAILS
+
+## Repo-first
+
+Read before editing:
+
+- `docs/ARCHITECTURE.md`
+- `docs/GHOSTDASH_UI_ARCHITECTURE.md`
+- `docker-compose.yml`
+- `Caddyfile`
+- `backend/src/ghostdash_api/main.py`
+- `backend/src/ghostdash_api/worker.py`
+- `ui/src/components/AppLayout.tsx`
+- `ui/src/index.css`
+
+## No invented names
+
+- Do not invent service names, ports, mount paths, env vars, volumes, or URLs.
+- `docker-compose.yml` is the source of truth.
+
+## One canonical compose file
+
+- `docker-compose.yml` is canonical.
+- Do not introduce alternative compose files unless explicitly requested.
+
+## Full-file rewrites for config
+
+For these files, replace the whole file and re-validate:
+
+- `docker-compose.yml`
+- `Caddyfile`
+- `backend/Dockerfile`
+- `ui/Dockerfile`
+- `stack/config.yaml`
+
+## Observability is mandatory
+
+All inbound HTTP requests and outbound service calls must log structured JSON with:
+
+- `trace_id`
+- `span_id`
+- `service`
+- `route`
+- `start_ts`
+- `end_ts`
+- `latency_ms`
+- `status`
+- `error`
+
+## Security boundary
+
+- Browser control traffic goes through `/api/*`.
+- Browser chat traffic goes through `/agent/*`.
+- Do not call OpenAI, Qdrant, or other privileged services directly from the browser.

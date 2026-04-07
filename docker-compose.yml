@@ -9,111 +9,175 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      api:
+      control-api:
+        condition: service_healthy
+      agent-ingress:
         condition: service_healthy
       ui:
         condition: service_started
     restart: unless-stopped
 
-  llama-stack:
-    build:
-      context: ./stack
-      dockerfile: Dockerfile
-    env_file:
-      - .env
+  postgres:
+    image: postgres:16-alpine
     environment:
-      SQLITE_STORE_DIR: /data/llama-stack
-      QDRANT_URL: http://qdrant:6333
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      POSTGRES_DB: ghostdash
+      POSTGRES_USER: ghostdash
+      POSTGRES_PASSWORD: ghostdash
     volumes:
-      - stack_data:/data
+      - postgres_data:/var/lib/postgresql/data
     expose:
-      - "8321"
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ghostdash -d ghostdash"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:gpu-nvidia-latest
+    environment:
+      QDRANT__GPU__INDEXING: ${QDRANT_GPU_INDEXING:-1}
+      QDRANT__GPU__DEVICE_FILTER: ${QDRANT_GPU_DEVICE_FILTER:-}
+    gpus:
+      - driver: nvidia
+        count: all
     volumes:
       - qdrant_data:/qdrant/storage
     expose:
       - "6333"
     restart: unless-stopped
 
-  api:
+  workflow-runtime:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: ["python", "-m", "ghostdash_api.workflow_runtime"]
     env_file:
       - .env
     environment:
-      APP_DB_URL: sqlite:////data/app/ghostdash.db
+      APP_DB_URL: postgresql+psycopg://ghostdash:ghostdash@postgres:5432/ghostdash
       APP_DATA_DIR: /data
       APP_UPLOAD_DIR: /data/uploads
+      APP_CONTROL_API_BASE_URL: http://control-api:8000
+      APP_AGENT_INGRESS_BASE_URL: http://agent-ingress:8001
+      APP_WORKFLOW_RUNTIME_URL: http://workflow-runtime:8100
       APP_DEFAULT_CORPUS: ${DEFAULT_CORPUS:-default}
       APP_DEFAULT_POLICY_LANE: ${DEFAULT_POLICY_LANE:-local}
-      APP_LLAMASTACK_BASE_URL: http://llama-stack:8321
       APP_QDRANT_URL: http://qdrant:6333
       APP_QDRANT_COLLECTION: ghostdash_knowledge
-      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-gpt-5.4}
-      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/gpt-5.4}
+      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-openai/text-embedding-3-small}
+      APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+    volumes:
+      - app_data:/data
+    expose:
+      - "8100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health').read()"]
+      interval: 30s
+      timeout: 30s
+      start_period: 60s
+      retries: 10
+    restart: unless-stopped
+
+  control-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["python", "-m", "ghostdash_api.control_api"]
+    env_file:
+      - .env
+    environment:
+      APP_DB_URL: postgresql+psycopg://ghostdash:ghostdash@postgres:5432/ghostdash
+      APP_DATA_DIR: /data
+      APP_UPLOAD_DIR: /data/uploads
+      APP_CONTROL_API_BASE_URL: http://control-api:8000
+      APP_AGENT_INGRESS_BASE_URL: http://agent-ingress:8001
+      APP_WORKFLOW_RUNTIME_URL: http://workflow-runtime:8100
+      APP_DEFAULT_CORPUS: ${DEFAULT_CORPUS:-default}
+      APP_DEFAULT_POLICY_LANE: ${DEFAULT_POLICY_LANE:-local}
+      APP_QDRANT_URL: http://qdrant:6333
+      APP_QDRANT_COLLECTION: ghostdash_knowledge
+      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/gpt-5.4}
+      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-openai/text-embedding-3-small}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
     volumes:
       - app_data:/data
     expose:
       - "8000"
     depends_on:
-      llama-stack:
-        condition: service_started
-      qdrant:
+      postgres:
+        condition: service_healthy
+      workflow-runtime:
         condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
-      interval: 30s
+      interval: 20s
       timeout: 5s
       start_period: 20s
       retries: 5
     restart: unless-stopped
 
-  worker:
+  agent-ingress:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: ["python", "-m", "ghostdash_api.worker"]
+    command: ["python", "-m", "ghostdash_api.agent_ingress"]
     env_file:
       - .env
     environment:
-      APP_DB_URL: sqlite:////data/app/ghostdash.db
+      APP_DB_URL: postgresql+psycopg://ghostdash:ghostdash@postgres:5432/ghostdash
       APP_DATA_DIR: /data
       APP_UPLOAD_DIR: /data/uploads
+      APP_CONTROL_API_BASE_URL: http://control-api:8000
+      APP_AGENT_INGRESS_BASE_URL: http://agent-ingress:8001
+      APP_WORKFLOW_RUNTIME_URL: http://workflow-runtime:8100
       APP_DEFAULT_CORPUS: ${DEFAULT_CORPUS:-default}
       APP_DEFAULT_POLICY_LANE: ${DEFAULT_POLICY_LANE:-local}
-      APP_LLAMASTACK_BASE_URL: http://llama-stack:8321
       APP_QDRANT_URL: http://qdrant:6333
       APP_QDRANT_COLLECTION: ghostdash_knowledge
-      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-gpt-5.4}
-      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/gpt-5.4}
+      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-openai/text-embedding-3-small}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
     volumes:
       - app_data:/data
+    expose:
+      - "8001"
     depends_on:
-      api:
+      postgres:
         condition: service_healthy
-      llama-stack:
+      workflow-runtime:
         condition: service_started
-      qdrant:
-        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health').read()"]
+      interval: 20s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
     restart: unless-stopped
 
   ui:
     build:
       context: ./ui
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_AGENT_BASE_URL: /agent
     environment:
       VITE_API_BASE_URL: /api
+      VITE_AGENT_BASE_URL: /agent
     expose:
       - "4173"
     depends_on:
-      api:
+      control-api:
+        condition: service_healthy
+      agent-ingress:
         condition: service_healthy
     restart: unless-stopped
 
@@ -121,5 +185,5 @@ volumes:
   app_data:
   caddy_data:
   caddy_config:
+  postgres_data:
   qdrant_data:
-  stack_data:
