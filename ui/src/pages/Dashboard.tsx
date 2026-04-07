@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import GhostCard from "../components/GhostCard";
-import { fetchCapabilities, fetchConnections, fetchDocuments, fetchRuns, fetchRuntimeDefaults } from "../api";
-import type { Connection, DocumentIngestion, RunSummary, RuntimeCapabilities, RuntimeDefaults } from "../api";
-
-function fileType(name: string) {
-  const lower = name.toLowerCase();
-  if (lower.endsWith(".xlsx") || lower.endsWith(".xlsm")) return "xlsx";
-  if (lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".csv") || lower.endsWith(".json")) return "txt";
-  if (lower.endsWith(".pdf")) return "pdf";
-  return "other";
-}
+import { fetchCapabilities, fetchConnections, fetchDocuments, fetchRuns, fetchRuntimeDefaults, fetchVectorStats } from "../api";
+import type { Connection, DocumentIngestion, RunSummary, RuntimeCapabilities, RuntimeDefaults, VectorStats } from "../api";
 
 function statusTone(status: string) {
   if (status === "completed") return "text-emerald-600";
@@ -42,6 +34,7 @@ export default function Dashboard() {
   const [capabilities, setCapabilities] = useState<RuntimeCapabilities | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [runtimeDefaults, setRuntimeDefaults] = useState<RuntimeDefaults | null>(null);
+  const [vectorStats, setVectorStats] = useState<VectorStats | null>(null);
   const [documents, setDocuments] = useState<DocumentIngestion[]>([]);
   const [runs, setRuns] = useState<RunSummary[]>([]);
 
@@ -49,6 +42,7 @@ export default function Dashboard() {
     void fetchCapabilities().then(setCapabilities).catch(() => null);
     void fetchConnections().then(setConnections).catch(() => null);
     void fetchRuntimeDefaults().then(setRuntimeDefaults).catch(() => null);
+    void fetchVectorStats().then(setVectorStats).catch(() => null);
     void fetchDocuments().then(setDocuments).catch(() => null);
     void fetchRuns().then(setRuns).catch(() => null);
   }, []);
@@ -57,16 +51,6 @@ export default function Dashboard() {
   const streamingReady = capabilities?.streaming.available ?? false;
   const activeConnection = useMemo(() => connections.find((connection) => connection.enabled) ?? connections[0] ?? null, [connections]);
   const recentDocuments = useMemo(() => documents.slice(0, 6), [documents]);
-  const breakdown = useMemo(() => {
-    return documents.reduce(
-      (acc, document) => {
-        const kind = fileType(document.filename);
-        if (kind in acc) acc[kind as keyof typeof acc] += 1;
-        return acc;
-      },
-      { xlsx: 0, txt: 0, pdf: 0 },
-    );
-  }, [documents]);
 
   const cards = useMemo(
     () => [
@@ -123,8 +107,8 @@ export default function Dashboard() {
           <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Ingress overview</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
-              <div className="text-[1.55rem] font-bold text-slate-900">{documents.length}</div>
-              <div className="text-[0.75rem] text-slate-500">Total files tracked</div>
+              <div className="text-[1.55rem] font-bold text-slate-900">{vectorStats?.documents ?? "..."}</div>
+              <div className="text-[0.75rem] text-slate-500">Total files tracked (aggregate)</div>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
               <div className="text-[1.55rem] font-bold text-slate-900">{runs.length}</div>
@@ -133,20 +117,24 @@ export default function Dashboard() {
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
-              <div className="text-[1.2rem] font-semibold text-slate-900">{breakdown.pdf}</div>
+              <div className="text-[1.2rem] font-semibold text-slate-900">{vectorStats?.pdf_documents ?? "..."}</div>
               <div className="text-[0.72rem] text-slate-500">PDF</div>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
-              <div className="text-[1.2rem] font-semibold text-slate-900">{breakdown.xlsx}</div>
+              <div className="text-[1.2rem] font-semibold text-slate-900">{vectorStats?.xlsx_documents ?? "..."}</div>
               <div className="text-[0.72rem] text-slate-500">XLSX/XLSM</div>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
-              <div className="text-[1.2rem] font-semibold text-slate-900">{breakdown.txt}</div>
+              <div className="text-[1.2rem] font-semibold text-slate-900">{vectorStats?.txt_documents ?? "..."}</div>
               <div className="text-[0.72rem] text-slate-500">TXT-like</div>
             </div>
           </div>
           <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.78rem] leading-6 text-slate-500">
-            Storage is currently backed by Postgres for metadata/provenance and Qdrant for vector retrieval. The dashboard now surfaces the runtime identity and active operator defaults so capability assumptions are visible before uploads, syncs, or provider changes.
+            Storage is currently backed by Postgres for metadata/provenance and Qdrant for vector retrieval. The totals above come from the authoritative
+            {" "}
+            <span className="font-semibold text-slate-900">`/api/vector-stats`</span>
+            {" "}
+            surface, while the recent-documents panel below remains a capped operator preview for quick scanning.
           </div>
         </article>
 
@@ -226,6 +214,9 @@ export default function Dashboard() {
         <article className="glass rounded-xl border border-slate-200 p-5">
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Recent Documents</p>
           <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Ingestion state</h2>
+          <div className="mt-2 text-[0.76rem] leading-6 text-slate-500">
+            Showing the latest six records from the recent-documents feed. Aggregate collection totals are reported in the Knowledge Status cards above.
+          </div>
           <div className="mt-4 space-y-3">
             {recentDocuments.map((document) => (
               <div key={document.id} className="rounded-xl border border-slate-200 bg-white/80 p-3">

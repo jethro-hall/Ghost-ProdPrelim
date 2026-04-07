@@ -52,6 +52,7 @@ from .schemas import (
     TaskStepView,
     TaskView,
     UploadView,
+    VectorStatsView,
 )
 from .service_common import build_app
 from .settings import get_settings
@@ -281,6 +282,57 @@ def _runtime_profile_to_view(runtime_profile) -> RuntimeProfileView:
         enabled=runtime_profile.enabled,
         created_at=runtime_profile.created_at,
         updated_at=runtime_profile.updated_at,
+    )
+
+
+def _compute_vector_stats(session: Session, corpus: str | None = None) -> VectorStatsView:
+    document_count_stmt = select(func.count(DocumentRecord.id))
+    artifact_count_stmt = select(func.count(RetrievalArtifactRecord.id))
+    workbook_row_count_stmt = select(func.count(WorkbookRowRecord.id))
+    filename_stmt = select(DocumentRecord.filename)
+
+    if corpus:
+        document_count_stmt = document_count_stmt.where(DocumentRecord.corpus == corpus)
+        artifact_count_stmt = artifact_count_stmt.where(RetrievalArtifactRecord.corpus == corpus)
+        filename_stmt = filename_stmt.where(DocumentRecord.corpus == corpus)
+        workbook_row_count_stmt = workbook_row_count_stmt.join(
+            WorkbookTableRecord, WorkbookTableRecord.id == WorkbookRowRecord.workbook_table_id
+        ).join(
+            WorkbookSheetRecord, WorkbookSheetRecord.id == WorkbookTableRecord.workbook_sheet_id
+        ).join(
+            WorkbookArtifactRecord, WorkbookArtifactRecord.id == WorkbookSheetRecord.workbook_artifact_id
+        ).where(
+            WorkbookArtifactRecord.document_id.in_(
+                select(DocumentRecord.id).where(DocumentRecord.corpus == corpus)
+            )
+        )
+
+    filenames = [str(name or "").lower() for name in session.scalars(filename_stmt)]
+
+    return VectorStatsView(
+        documents=int(session.scalar(document_count_stmt) or 0),
+        retrieval_artifacts=int(session.scalar(artifact_count_stmt) or 0),
+        workbook_rows=int(session.scalar(workbook_row_count_stmt) or 0),
+        pdf_documents=sum(1 for name in filenames if name.endswith(".pdf")),
+        xlsx_documents=sum(1 for name in filenames if name.endswith(".xlsx") or name.endswith(".xlsm")),
+        txt_documents=sum(
+            1
+            for name in filenames
+            if name.endswith(".txt") or name.endswith(".md") or name.endswith(".csv") or name.endswith(".json")
+        ),
+        other_documents=sum(
+            1
+            for name in filenames
+            if not (
+                name.endswith(".pdf")
+                or name.endswith(".xlsx")
+                or name.endswith(".xlsm")
+                or name.endswith(".txt")
+                or name.endswith(".md")
+                or name.endswith(".csv")
+                or name.endswith(".json")
+            )
+        ),
     )
 
 
@@ -758,6 +810,10 @@ def create_app() -> FastAPI:
             )
             for doc in docs
         ]
+
+    @app.get("/api/vector-stats", response_model=VectorStatsView)
+    def api_vector_stats(corpus: str | None = None, session: Session = Depends(get_session)) -> VectorStatsView:
+        return _compute_vector_stats(session, corpus)
 
     return app
 

@@ -5,8 +5,14 @@ import type { AgentProfile, AgentProfilePayload, AgentToolConfig, RuntimeProfile
 import type { AppOutletContext } from "../components/AppLayout";
 
 const DEFAULT_TOOLS: AgentToolConfig[] = [
-  { id: "kb", name: "Knowledge Base", description: "Query indexed documents.", enabled: true },
-  { id: "web", name: "Web Search", description: "Search for external context.", enabled: false },
+  { id: "kb", name: "Knowledge Base", description: "Query indexed documents.", enabled: true, allowed_urls: [] },
+  {
+    id: "web",
+    name: "Approved Web Sources",
+    description: "Fetch only the explicitly allowed websites stored on this agent.",
+    enabled: false,
+    allowed_urls: [],
+  },
 ];
 
 function createRuntimeProfile(name: string, template?: RuntimeProfile, preserveIdentity = false): RuntimeProfile {
@@ -17,7 +23,7 @@ function createRuntimeProfile(name: string, template?: RuntimeProfile, preserveI
       id: preserveIdentity ? template.id : undefined,
       name: preserveIdentity ? template.name || baseName : baseName,
       tool_policy_config: {
-        tools: template.tool_policy_config.tools.map((tool) => ({ ...tool })),
+        tools: template.tool_policy_config.tools.map((tool) => ({ ...tool, allowed_urls: [...(tool.allowed_urls ?? [])] })),
       },
       kb_config: {
         ...template.kb_config,
@@ -32,7 +38,7 @@ function createRuntimeProfile(name: string, template?: RuntimeProfile, preserveI
       provider: "openai",
       model_id: "openai/gpt-5.4",
       temperature: 0.2,
-      max_tokens: 2000,
+      max_tokens: 16000,
       api_mode: "responses",
     },
     guardrails_config: {
@@ -354,31 +360,69 @@ export default function AgentConfigPage() {
             <div className="font-semibold text-slate-900">Enabled tools</div>
             <div className="mt-2 space-y-2">
               {(runtimeProfile?.tool_policy_config.tools ?? []).map((tool) => (
-                <label key={tool.id} className="flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={tool.enabled}
-                    onChange={() =>
-                      setDraft((current) => ({
-                        ...current,
-                        runtime_profile: current.runtime_profile
-                          ? {
-                              ...current.runtime_profile,
-                              tool_policy_config: {
-                                tools: current.runtime_profile.tool_policy_config.tools.map((entry) =>
-                                  entry.id === tool.id ? { ...entry, enabled: !entry.enabled } : entry,
-                                ),
-                              },
-                            }
-                          : current.runtime_profile,
-                      }))
-                    }
-                  />
-                  <span>
-                    <span className="block font-semibold text-slate-900">{tool.name}</span>
-                    <span>{tool.description}</span>
-                  </span>
-                </label>
+                <div key={tool.id} className="rounded-xl border border-slate-200 bg-white/70 p-3">
+                  <label className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={tool.enabled}
+                      onChange={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          runtime_profile: current.runtime_profile
+                            ? {
+                                ...current.runtime_profile,
+                                tool_policy_config: {
+                                  tools: current.runtime_profile.tool_policy_config.tools.map((entry) =>
+                                    entry.id === tool.id ? { ...entry, enabled: !entry.enabled } : entry,
+                                  ),
+                                },
+                              }
+                            : current.runtime_profile,
+                        }))
+                      }
+                    />
+                    <span>
+                      <span className="block font-semibold text-slate-900">{tool.name}</span>
+                      <span>{tool.description}</span>
+                    </span>
+                  </label>
+                  {tool.id === "web" && (
+                    <div className="mt-3 grid gap-2">
+                      <div className="text-[0.7rem] text-slate-500">
+                        Approved websites for this agent. Maximum 2. The agent may only use these sources when explicitly asked or when checking them materially improves the answer.
+                      </div>
+                      {[0, 1].map((idx) => (
+                        <input
+                          key={idx}
+                          className="ghost-input"
+                          placeholder={idx === 0 ? "https://example.com" : "Optional second website"}
+                          value={tool.allowed_urls?.[idx] ?? ""}
+                          onChange={(event) =>
+                            setDraft((current) => ({
+                              ...current,
+                              runtime_profile: current.runtime_profile
+                                ? {
+                                    ...current.runtime_profile,
+                                    tool_policy_config: {
+                                      tools: current.runtime_profile.tool_policy_config.tools.map((entry) => {
+                                        if (entry.id !== tool.id) return entry;
+                                        const allowedUrls = [...(entry.allowed_urls ?? [])];
+                                        allowedUrls[idx] = event.target.value;
+                                        return {
+                                          ...entry,
+                                          allowed_urls: allowedUrls.map((value) => value.trim()).filter(Boolean).slice(0, 2),
+                                        };
+                                      }),
+                                    },
+                                  }
+                                : current.runtime_profile,
+                            }))
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
             {savedAt && <div className="mt-3">Last saved to GhostDASH at {savedAt}</div>}

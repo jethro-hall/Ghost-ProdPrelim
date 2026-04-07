@@ -222,6 +222,7 @@ def search_vectors(
         out: list[dict[str, Any]] = []
         for hit in response.points:
             payload = hit.payload or {}
+            metadata = payload.get("metadata", {}) or {}
             out.append(
                 {
                     "score": hit.score,
@@ -230,13 +231,15 @@ def search_vectors(
                     "filename": payload.get("filename", ""),
                     "corpus": payload.get("corpus", ""),
                     "artifact_type": payload.get("artifact_type", "chunk"),
-                    "chunk_index": payload.get("chunk_index", 0),
+                    "chunk_index": payload.get("chunk_index", metadata.get("chunk_index", 0)),
                     "source_path": payload.get("source_path", ""),
                     "page_start": payload.get("page_start"),
                     "page_end": payload.get("page_end"),
                     "section_title": payload.get("section_title"),
+                    "section_path": payload.get("section_path", metadata.get("section_path")),
+                    "heading_level": payload.get("heading_level", metadata.get("heading_level")),
                     "parse_lane": payload.get("parse_lane"),
-                    "metadata": payload.get("metadata", {}),
+                    "metadata": metadata,
                 }
             )
         return out

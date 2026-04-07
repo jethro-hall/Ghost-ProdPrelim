@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { AgentProfile, ChatApiMode, ConversationSummary } from "../api";
 import { fetchAgentConversations, fetchAgents, fetchConversationMessages, streamChat } from "../api";
-import { CloseIcon, MessageSquareIcon, SendIcon } from "./ReferenceIcons";
+import { CloseIcon, MessageSquareIcon, PlusIcon, SendIcon } from "./ReferenceIcons";
 
 type ChatEntry = {
   id: string;
@@ -26,6 +26,8 @@ export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [showTools, setShowTools] = useState(false);
+  const [useApprovedWeb, setUseApprovedWeb] = useState(false);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -110,6 +112,7 @@ export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
         apiMode,
         agentId: activeAgentId,
         conversationId: activeConversationId ?? undefined,
+        useApprovedWeb,
         signal: controller.signal,
         onStart: ({ query_mode, conversation_id }) => {
           if (conversation_id) {
@@ -151,6 +154,14 @@ export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
   }
 
   const activeAgent = agents.find((agent) => agent.id === activeAgentId) ?? null;
+  const webTool = activeAgent?.runtime_profile.tool_policy_config.tools.find((tool) => tool.id === "web") ?? null;
+  const approvedWebConfigured = Boolean(webTool?.enabled && (webTool.allowed_urls?.length ?? 0) > 0);
+
+  useEffect(() => {
+    if (!approvedWebConfigured) {
+      setUseApprovedWeb(false);
+    }
+  }, [approvedWebConfigured]);
 
   return (
     <div className="fixed bottom-0 left-1/2 z-[9999] flex w-1/2 max-w-[600px] -translate-x-1/2 flex-col items-center">
@@ -185,6 +196,14 @@ export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
                 GhostChat
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTools((current) => !current)}
+                  className={`ghost-icon-btn ${showTools ? "text-ghost-orange" : "text-slate-500"}`}
+                  title="Chat tools"
+                >
+                  <PlusIcon size={16} />
+                </button>
                 <select
                   className="ghost-select w-[170px] py-2 text-[0.72rem]"
                   value={activeAgentId ?? ""}
@@ -227,6 +246,39 @@ export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
                 </button>
               </div>
             </div>
+            {showTools && (
+              <div className="border-b border-black/5 bg-white/60 p-3 text-[0.72rem] text-slate-600">
+                <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
+                  <div className="font-semibold text-slate-900">Approved web sources</div>
+                  <div className="mt-1 text-[0.7rem] text-slate-500">
+                    Tool policy is owned by the agent runtime profile. Configure enablement and allowed websites in Agent Config; GhostChat can only request a one-off fetch from that stored allowlist.
+                  </div>
+                  <div className="mt-3 text-[0.7rem] text-slate-500">
+                    Tool status: <span className="font-semibold text-slate-900">{webTool?.enabled ? "Enabled" : "Disabled"}</span>
+                  </div>
+                  <div className="mt-1 text-[0.7rem] text-slate-500">
+                    Allowed sources:{" "}
+                    <span className="font-semibold text-slate-900">
+                      {webTool?.allowed_urls?.length ? webTool.allowed_urls.join(", ") : "None configured"}
+                    </span>
+                  </div>
+                  <label className="mt-3 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={useApprovedWeb}
+                      disabled={!approvedWebConfigured}
+                      onChange={() => setUseApprovedWeb((current) => !current)}
+                    />
+                    Force approved web use for this message
+                  </label>
+                  {!approvedWebConfigured && (
+                    <div className="mt-2 text-[0.7rem] text-slate-500">
+                      Enable the approved web tool and store at least one website in Agent Config before using it here.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="ghost-scroll flex flex-1 flex-col gap-3 overflow-y-auto p-4 text-[0.8rem]">
               {log.length === 0 && (

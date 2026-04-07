@@ -16,6 +16,13 @@ settings = get_settings()
 
 
 @dataclass(slots=True)
+class TextIngestionConfig:
+    chunk_size: int
+    chunk_overlap: int
+    heading_aware: bool
+
+
+@dataclass(slots=True)
 class PdfIngestionConfig:
     chunk_size: int
     chunk_overlap: int
@@ -32,6 +39,9 @@ def default_runtime_defaults() -> dict[str, object]:
         "llm_model_id": payload["llm_config_json"]["model_id"],
         "embedding_model_id": payload["kb_config_json"]["embedding_model_id"],
         "default_corpora": list(payload["kb_config_json"]["default_corpora"]),
+        "text_chunk_size": payload["retrieval_config_json"]["text_chunk_size"],
+        "text_chunk_overlap": payload["retrieval_config_json"]["text_chunk_overlap"],
+        "text_heading_aware": payload["retrieval_config_json"]["text_heading_aware"],
         "pdf_chunk_size": payload["retrieval_config_json"]["pdf_chunk_size"],
         "pdf_chunk_overlap": payload["retrieval_config_json"]["pdf_chunk_overlap"],
         "pdf_sentence_window": payload["retrieval_config_json"]["pdf_sentence_window"],
@@ -55,6 +65,15 @@ def get_runtime_defaults(session: Session) -> dict[str, object]:
 def save_runtime_defaults(session: Session, values: dict[str, object]) -> dict[str, object]:
     profile = update_runtime_defaults(session, values)
     return runtime_defaults_view(profile)
+
+
+def get_text_ingestion_config(session: Session) -> TextIngestionConfig:
+    values = get_runtime_defaults(session)
+    return TextIngestionConfig(
+        chunk_size=int(values.get("text_chunk_size", settings.app_chunk_size)),
+        chunk_overlap=int(values.get("text_chunk_overlap", settings.app_chunk_overlap)),
+        heading_aware=bool(values.get("text_heading_aware", True)),
+    )
 
 
 def get_pdf_ingestion_config(session: Session) -> PdfIngestionConfig:

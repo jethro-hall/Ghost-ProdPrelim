@@ -57,11 +57,22 @@ export type RuntimeDefaults = {
   runtime_profile_name?: string | null;
 };
 
+export type VectorStats = {
+  documents: number;
+  retrieval_artifacts: number;
+  workbook_rows: number;
+  pdf_documents: number;
+  xlsx_documents: number;
+  txt_documents: number;
+  other_documents: number;
+};
+
 export type AgentToolConfig = {
   id: string;
   name: string;
   description: string;
   enabled: boolean;
+  allowed_urls: string[];
 };
 
 export type RuntimeProfileLlmConfig = {
@@ -280,6 +291,13 @@ export async function fetchDocuments(corpus?: string) {
   return data;
 }
 
+export async function fetchVectorStats(corpus?: string) {
+  const { data } = await api.get<VectorStats>("/vector-stats", {
+    params: corpus ? { corpus } : undefined,
+  });
+  return data;
+}
+
 export async function fetchRuns(corpus?: string) {
   const { data } = await api.get<RunSummary[]>("/runs", {
     params: corpus ? { corpus } : undefined,
@@ -347,6 +365,7 @@ export async function streamChat(args: {
   apiMode?: ChatApiMode;
   agentId?: string;
   conversationId?: string;
+  useApprovedWeb?: boolean;
   signal?: AbortSignal;
   onStart?: (payload: { citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean }) => void;
   onDelta: (delta: string) => void;
@@ -363,6 +382,7 @@ export async function streamChat(args: {
       api_mode: args.apiMode ?? "responses",
       agent_id: args.agentId ?? null,
       conversation_id: args.conversationId ?? null,
+      use_approved_web: args.useApprovedWeb ?? false,
     }),
     signal: args.signal,
   });

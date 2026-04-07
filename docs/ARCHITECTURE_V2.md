@@ -2,131 +2,109 @@
 
 ## Goal
 
-Move `ghoststack-rag` from a working hybrid RAG stack into a cleaner operator-facing platform with:
+Keep `ghoststack-rag` moving toward a cleaner operator-facing platform without redoing already-shipped ownership work.
 
-- explicit runtime capabilities
-- parser-lane readiness surfaced to the UI
-- clearer separation between control plane, ingestion worker, and retrieval runtime
-- better foundations for higher-fidelity ingestion and stronger retrieval quality
+This document is now a roadmap/status guide, not a speculative pre-cutover plan.
 
-## Target shape
+## Current target shape
 
 ```mermaid
 flowchart LR
   operator[Operator Browser] --> caddy[Caddy HTTPS Edge]
   caddy --> ui[GhostDASH UI]
-  caddy --> api[Control API]
-  api --> worker[Ingestion Worker]
-  api --> qdrant[Qdrant]
-  api --> llms[Provider APIs]
-  worker --> parserLocal[Local Parser Lane]
-  worker --> parserCloud[LlamaParse Cloud Lane]
-  worker --> qdrant
-  worker --> llms
+  caddy --> controlApi[Control API]
+  caddy --> agentIngress[Agent Ingress]
+  controlApi --> postgres[Postgres]
+  controlApi --> workflowRuntime[Workflow Runtime]
+  agentIngress --> workflowRuntime
+  agentIngress --> providers[Provider APIs]
+  workflowRuntime --> postgres
+  workflowRuntime --> qdrant[Qdrant]
+  workflowRuntime --> llamaParse[LlamaParse]
+  agentIngress -. future server-side tools .-> toolProxy[Tool Proxy]
 ```
 
-## Service responsibilities
+## Core principles
 
-### `ui`
+1. `control-api` owns operator-facing control-plane contracts.
+2. `agent-ingress` owns runtime chat boundaries, memory/cache behavior, and runtime-profile resolution.
+3. `workflow-runtime` owns ingestion execution and query-plan construction.
+4. `runtime_profiles` is the single persisted owner of runtime behavior.
+5. UI totals and operational truth surfaces must come from authoritative aggregate APIs, not paged preview lists.
+6. Retrieval quality should improve through richer metadata and better chunking before heavier agentic expansion.
 
-- show runtime readiness and lane availability
-- manage provider settings
-- start syncs, uploads, and chat
-- surface logs, task status, and ingest outcomes
-
-### `api`
-
-- own the public `/api/*` contract
-- expose runtime capabilities and readiness
-- persist connection and task records
-- serve retrieval-backed chat and streaming chat
-- remain thin; do not own document parsing or indexing work
-
-### `worker`
-
-- own all ingestion execution
-- choose parser lane based on requested policy and runtime readiness
-- parse, normalize, chunk, embed, and index
-- record parse/index outcomes per document
-
-### `qdrant`
-
-- remain the canonical vector and retrieval payload store
-
-## Principles
-
-1. API owns orchestration, not ingestion execution.
-2. Worker owns parsing, chunking, embedding, and indexing.
-3. Runtime capabilities must be discoverable by the UI, not inferred.
-4. Cloud parsing must fail loudly when not configured.
-5. Retrieval quality should improve by enriching chunk metadata before replacing the whole stack.
-
-## Rollout checklist
+## What is already shipped
 
 ### Phase 1: Runtime capability surface
 
-- Add `/api/capabilities` that returns:
-  - parser lane readiness
-  - chat API mode support
-  - streaming support
-  - vector store/runtime identity
-- Show capability cards in the dashboard
-- Show whether `LlamaParse` is actually ready or blocked
+Shipped:
 
-### Phase 2: Persisted provider/runtime defaults
+- `/api/capabilities`
+- dashboard capability cards
+- explicit cloud-lane blocked/ready visibility
+- distinct `/api/*` and `/agent/*` boundaries
 
-- Persist default chat API mode in backend state instead of only local UI state
-- Surface active provider/model/runtime choices in the dashboard
+### Milestone 1: Control-plane system of record
 
-### Phase 3: Better ingestion metadata
+Shipped:
 
-- Record richer parse/index metadata per document
-- Distinguish:
-  - requested lane
-  - actual parse lane
-  - parse status
-  - index status
-- Surface these in UI/logs
-- Persist structured non-vector artifacts in the app database when appropriate
-  - Example: store spreadsheet workbook JSON in the app DB
-  - Example: store `LlamaParse` markdown output in the app DB when cloud parsing is used
-- Keep `Llama Stack` internal storage as runtime plumbing only
-  - it uses internal SQLite stores for its own metadata/files
-  - it is not the operator-facing document database for GhostDASH
+- canonical `runtime_profiles` persistence
+- agents reference one runtime profile through `runtime_profile_id`
+- `/api/runtime/defaults` remains only as a compatibility view over the default runtime profile
+- duplicate runtime-setting ownership removed from connections and agent rows
 
-### Phase 4: Better chunking and retrieval
+This means the old roadmap item "persisted provider/runtime defaults" is no longer a future Phase 2 task. That work is complete in a stronger form.
 
-- move from simple fixed slicing toward structure-aware chunking
-- preserve source section metadata when available
-- improve retrieval quality before larger agentic expansion
+### Phase 2: Retrieval fidelity and operator truth surfaces
 
-## First implementation slice
+Shipped in the current stack:
 
-The first slice brought online was `Phase 1`.
-
-Why:
-
-- lowest-risk change
-- immediately useful to operators
-- exposes whether `LlamaParse` is actually usable
-- makes the UI architecture-aware instead of config-assumption-aware
+- structure-aware text chunking for headed/markdown-like text
+- section-aware retrieval metadata (`section_title`, `section_path`, `heading_level`)
+- authoritative `GET /api/vector-stats`
+- dashboard/vector pages using aggregate totals instead of the capped documents list
+- approved-web allowlist support owned by the runtime profile, with per-message use from chat
 
 ## Current state
 
-`Phase 1` is live, and the first `Phase 3` slice is also live:
+The current platform is already a LlamaIndex-native hybrid in the practical sense:
 
-- `/api/documents` now exposes:
-  - requested lane
-  - actual parse lane
-  - parse status
-  - index status
-  - artifact summaries
-- the dashboard now shows recent-document ingestion state
-- XLSX/XLSM sync now stores a structured `workbook_json` artifact in the app DB
-- cloud-lane ingestion is ready to store `llamaparse_markdown` artifacts once `LLAMA_CLOUD_API_KEY` is configured
+- LlamaIndex workflows orchestrate ingestion and query planning
+- Postgres is the operator-facing system of record
+- Qdrant holds derived vector payloads
+- agent runtime behavior is resolved from `runtime_profiles`
+- spreadsheets persist relational structure first, then retrieval artifacts
+- document retrieval now carries richer section metadata through ingestion and citation serialization
+
+What is still intentionally hybrid:
+
+- text chunking/index payload shaping is custom rather than a pure `VectorStoreIndex` pipeline
+- the UI still shows citation counts but does not yet render full section-path/heading metadata
+
+## Recommended next phases
+
+### Phase 3: Server-side tool execution boundary
+
+Next highest-value architecture move:
+
+- make `tool-proxy` the only server-side boundary for external tool calls
+- keep all browser-to-third-party traffic banned
+- route approved external tool execution through one traceable service
+
+### Phase 4: Stable per-agent runtime endpoints
+
+- formalize stable per-agent URLs under `/agent/<agent_id>` or equivalent
+- keep ingress stateless for settings ownership
+- resolve runtime profiles and tool policy per request from the control plane
+
+### Phase 5: Richer operator observability and citation inspection
+
+- expose more structured citation detail in the UI
+- make `section_path`, `heading_level`, and source-type differences inspectable by operators
+- keep trace/log correlation visible across `caddy` -> `agent-ingress` -> `workflow-runtime` -> provider/tool boundaries
 
 ## Done means
 
-- `/api/capabilities` exists and is live
-- dashboard shows local lane, cloud lane, streaming, and API mode readiness
-- blocked cloud parsing is visible in the UI before a user runs a failing sync
+- roadmap docs no longer describe Milestone 1 runtime-profile ownership as future work
+- current retrieval/operator-truth work is represented as shipped reality
+- next phases focus on tool execution, ingress hardening, and richer operator observability rather than reintroducing duplicate settings ownership

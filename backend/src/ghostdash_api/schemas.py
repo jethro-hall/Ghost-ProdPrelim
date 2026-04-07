@@ -65,13 +65,14 @@ class AgentToolConfig(BaseModel):
     name: str
     description: str
     enabled: bool = True
+    allowed_urls: list[str] = Field(default_factory=list, max_length=2)
 
 
 class RuntimeProfileLlmConfig(BaseModel):
     provider: str = Field(default="openai", min_length=1, max_length=32)
     model_id: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0, le=2)
-    max_tokens: int = Field(default=2000, ge=1, le=16000)
+    max_tokens: int = Field(default=16000, ge=1, le=16000)
     api_mode: ChatApiMode = "responses"
 
 
@@ -88,6 +89,9 @@ class RuntimeProfileKnowledgeBaseConfig(BaseModel):
 
 class RuntimeProfileRetrievalConfig(BaseModel):
     default_top_k: int = Field(default=6, ge=1, le=20)
+    text_chunk_size: int = Field(default=800, ge=400, le=1800)
+    text_chunk_overlap: int = Field(default=120, ge=20, le=320)
+    text_heading_aware: bool = True
     pdf_chunk_size: int = Field(default=900, ge=600, le=1400)
     pdf_chunk_overlap: int = Field(default=120, ge=50, le=220)
     pdf_sentence_window: int = Field(default=2, ge=1, le=4)
@@ -132,6 +136,9 @@ class RuntimeDefaultsPayload(BaseModel):
     llm_model_id: str = Field(default="openai/gpt-5.4", min_length=1)
     embedding_model_id: str = Field(default="openai/text-embedding-3-small", min_length=1)
     default_corpora: list[str] = Field(default_factory=lambda: ["default"])
+    text_chunk_size: int = Field(default=800, ge=400, le=1800)
+    text_chunk_overlap: int = Field(default=120, ge=20, le=320)
+    text_heading_aware: bool = True
     pdf_chunk_size: int = Field(default=900, ge=600, le=1400)
     pdf_chunk_overlap: int = Field(default=120, ge=50, le=220)
     pdf_sentence_window: int = Field(default=2, ge=1, le=4)
@@ -225,6 +232,16 @@ class DocumentIngestionView(BaseModel):
     artifacts: list[DocumentArtifactView]
 
 
+class VectorStatsView(BaseModel):
+    documents: int = 0
+    retrieval_artifacts: int = 0
+    workbook_rows: int = 0
+    pdf_documents: int = 0
+    xlsx_documents: int = 0
+    txt_documents: int = 0
+    other_documents: int = 0
+
+
 class SyncRequest(BaseModel):
     corpus: str | None = None
 
@@ -286,6 +303,7 @@ class ChatRequest(BaseModel):
     api_mode: ChatApiMode = "responses"
     agent_id: str | None = None
     conversation_id: str | None = None
+    use_approved_web: bool = False
 
 
 class ChatCitation(BaseModel):
@@ -298,10 +316,14 @@ class ChatCitation(BaseModel):
     page_start: int | None = None
     page_end: int | None = None
     section_title: str | None = None
+    section_path: str | None = None
+    heading_level: int | None = None
     parse_lane: str | None = None
     sheet_name: str | None = None
     table_name: str | None = None
     row_index: int | None = None
+    source_type: str | None = None
+    title: str | None = None
 
 
 class ChatResponse(BaseModel):

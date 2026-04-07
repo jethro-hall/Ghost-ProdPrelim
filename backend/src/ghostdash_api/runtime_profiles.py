@@ -13,13 +13,30 @@ settings = get_settings()
 
 DEFAULT_RUNTIME_PROFILE_NAME = "GhostDASH Default Runtime"
 DEFAULT_SYSTEM_PROMPT = (
-    "You answer using retrieved knowledge only. "
-    "Always ground the answer in the provided context and say when the context is insufficient."
+    "You are GhostDASH Strategic Intelligence, a grounded business analysis agent. "
+    "Be direct, specific, deeply reasoned, no-fluff, and fact-grounded. "
+    "When the user is loading context, acknowledge it briefly, note what is materially important, "
+    "and only ask high-value follow-up questions if they change the business, financial, operational, or strategic outcome. "
+    "When the user asks for analysis, strategy, forecasting, advice, or planning, produce executive-grade reasoning with multiple solution paths, "
+    "clear trade-offs, and practical next actions. "
+    "If there is insufficient data for a strong answer, say that clearly at the start and again at the end, "
+    "but never stop at the problem: always provide the best grounded partial answer, multiple options, and exactly what extra data would improve confidence. "
+    "If asked what is in your context, memory, or 'brain', report it honestly and in detail: active corpora, remembered conversation context, approved web sources, "
+    "important loaded facts, missing facts, and confidence constraints. "
+    "If approved web sources are available, use them only when explicitly requested or when checking them would clearly add value to the answer. "
+    "Never pretend to have checked a site you did not actually check. "
+    "Never invent certainty, and always separate facts, inferences, assumptions, and recommended actions."
 )
 DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR = "Say clearly that the available context is insufficient."
 DEFAULT_AGENT_TOOLS = [
-    {"id": "kb", "name": "Knowledge Base", "description": "Query indexed documents.", "enabled": True},
-    {"id": "web", "name": "Web Search", "description": "Search for external context.", "enabled": False},
+    {"id": "kb", "name": "Knowledge Base", "description": "Query indexed documents.", "enabled": True, "allowed_urls": []},
+    {
+        "id": "web",
+        "name": "Approved Web Sources",
+        "description": "Fetch only the explicitly allowed websites stored on this agent.",
+        "enabled": False,
+        "allowed_urls": [],
+    },
 ]
 
 
@@ -28,7 +45,7 @@ def _default_llm_config() -> dict[str, Any]:
         "provider": "openai",
         "model_id": settings.app_default_chat_model,
         "temperature": 0.2,
-        "max_tokens": 2000,
+        "max_tokens": 16000,
         "api_mode": "responses",
     }
 
@@ -51,6 +68,9 @@ def _default_kb_config() -> dict[str, Any]:
 def _default_retrieval_config() -> dict[str, Any]:
     return {
         "default_top_k": settings.app_pdf_top_k,
+        "text_chunk_size": settings.app_chunk_size,
+        "text_chunk_overlap": settings.app_chunk_overlap,
+        "text_heading_aware": True,
         "pdf_chunk_size": settings.app_pdf_chunk_size,
         "pdf_chunk_overlap": settings.app_pdf_chunk_overlap,
         "pdf_sentence_window": settings.app_pdf_sentence_window,
@@ -245,6 +265,9 @@ def runtime_defaults_view(profile: RuntimeProfileRecord) -> dict[str, Any]:
         "llm_model_id": llm_config.get("model_id", settings.app_default_chat_model),
         "embedding_model_id": kb_config.get("embedding_model_id", settings.app_default_embedding_model),
         "default_corpora": list(kb_config.get("default_corpora", [settings.app_default_corpus])),
+        "text_chunk_size": int(retrieval_config.get("text_chunk_size", settings.app_chunk_size)),
+        "text_chunk_overlap": int(retrieval_config.get("text_chunk_overlap", settings.app_chunk_overlap)),
+        "text_heading_aware": bool(retrieval_config.get("text_heading_aware", True)),
         "pdf_chunk_size": int(retrieval_config.get("pdf_chunk_size", settings.app_pdf_chunk_size)),
         "pdf_chunk_overlap": int(retrieval_config.get("pdf_chunk_overlap", settings.app_pdf_chunk_overlap)),
         "pdf_sentence_window": int(retrieval_config.get("pdf_sentence_window", settings.app_pdf_sentence_window)),
@@ -285,6 +308,18 @@ def update_runtime_defaults(session: Session, payload: dict[str, Any]) -> Runtim
             "default_top_k": payload.get(
                 "pdf_top_k",
                 (profile.retrieval_config_json or {}).get("default_top_k", settings.app_pdf_top_k),
+            ),
+            "text_chunk_size": payload.get(
+                "text_chunk_size",
+                (profile.retrieval_config_json or {}).get("text_chunk_size", settings.app_chunk_size),
+            ),
+            "text_chunk_overlap": payload.get(
+                "text_chunk_overlap",
+                (profile.retrieval_config_json or {}).get("text_chunk_overlap", settings.app_chunk_overlap),
+            ),
+            "text_heading_aware": payload.get(
+                "text_heading_aware",
+                (profile.retrieval_config_json or {}).get("text_heading_aware", True),
             ),
             "pdf_chunk_size": payload.get(
                 "pdf_chunk_size",

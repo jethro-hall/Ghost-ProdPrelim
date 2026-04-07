@@ -25,9 +25,11 @@ Thin operator-facing control plane for:
 
 - uploads
 - connection management
-- runtime defaults
+- runtime-profile-backed operator defaults through the `/api/runtime/defaults` compatibility view
+- agent configuration and conversation inventory
 - ingestion run state
 - document inventory and structure stats
+- authoritative vector aggregate stats
 - capability reporting
 
 ### `agent-ingress`
@@ -37,6 +39,9 @@ Dedicated runtime query boundary for `/agent/*`.
 Responsibilities:
 
 - accept chat and streaming chat requests
+- resolve the selected agent and runtime profile
+- apply conversation memory and response cache behavior
+- optionally inject approved-web context from the runtime profile allowlist
 - fetch workflow-generated query plans
 - return exact structured answers or LLM-grounded answers
 - keep all runtime query traffic off `/api/*`
@@ -50,6 +55,7 @@ Responsibilities:
 - run ingestion workflows without a polling loop
 - build relational workbook structure for XLSX
 - create retrieval artifacts and provenance
+- use structure-aware chunking for headed text and markdown-like sources
 - index retrieval artifacts into `Qdrant`
 - build structured, semantic, and blended query plans
 
@@ -60,7 +66,8 @@ System of record for:
 - documents and versions
 - ingestion runs
 - provider connections
-- runtime defaults
+- runtime profiles
+- agent profiles, conversations, and cached responses
 - workbook sheets, tables, and rows
 - retrieval artifact metadata
 
@@ -105,10 +112,10 @@ XLSX/XLSM is treated as structured data first:
 
 ### Document path
 
-PDF, DOCX, TXT, HTML, and similar files stay document-oriented:
+PDF, DOCX, TXT, HTML, Markdown, and similar files stay document-oriented:
 
 - local or cloud parse lane
-- chunked retrieval artifacts with provenance
+- structure-aware chunked retrieval artifacts with provenance and section metadata where available
 - vector indexing in `Qdrant`
 
 ## Query Model
@@ -128,6 +135,12 @@ flowchart LR
   workflowRuntime --> answer[GroundedAnswer]
   answer --> agentIngress
 ```
+
+Additional runtime behavior resolved at `agent-ingress`:
+
+- conversation memory and per-agent cache lookup
+- approved-web allowlist fetches when explicitly requested or when the user names an allowlisted domain
+- runtime-profile-owned model, guardrail, retrieval, and tool policy settings
 
 ## Verification Goals
 

@@ -17,6 +17,7 @@ from .ingest import (
     PDF_ORIGINAL_TEXT_METADATA_KEY,
     PDF_WINDOW_METADATA_KEY,
     build_pdf_nodes,
+    detect_section_title,
     estimate_token_count,
     extract_pdf_documents,
     extract_spreadsheet_structure,
@@ -35,7 +36,7 @@ from .models import (
 )
 from .qdrant_store import delete_document_vectors, search_vectors, upsert_retrieval_artifacts
 from .runtime import embed_texts, get_active_connection
-from .runtime_defaults import get_pdf_ingestion_config
+from .runtime_defaults import get_pdf_ingestion_config, get_text_ingestion_config
 from .runtime_profiles import get_default_runtime_profile
 from .settings import get_settings
 from .telemetry import log_instant_event
@@ -146,11 +147,14 @@ def build_qdrant_payload(document: DocumentRecord, artifact: RetrievalArtifactRe
         "filename": document.filename,
         "corpus": document.corpus,
         "artifact_type": artifact.artifact_type,
+        "chunk_index": metadata.get("chunk_index"),
         "source_path": document.source_path,
         "content_hash": metadata.get("content_hash"),
         "page_start": metadata.get("page_start"),
         "page_end": metadata.get("page_end"),
         "section_title": metadata.get("section_title"),
+        "section_path": metadata.get("section_path"),
+        "heading_level": metadata.get("heading_level"),
         "parse_lane": metadata.get("parse_lane"),
         "text": metadata.get(PDF_WINDOW_METADATA_KEY) or artifact.text,
         "metadata": payload_metadata,
@@ -232,10 +236,160 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
     size = len(text)
     while start < size:
         end = min(size, start + chunk_size)
-        chunks.append(text[start:end])
+        if end < size:
+            search_start = min(size, start + max(chunk_size // 2, 1))
+            boundary_candidates = (
+                ("\n\n", 0),
+                ("\n", 0),
+                (". ", 1),
+                ("? ", 1),
+                ("! ", 1),
+                ("; ", 1),
+                (", ", 1),
+                (" ", 0),
+            )
+            for delimiter, keep_chars in boundary_candidates:
+                snapped = text.rfind(delimiter, search_start, end)
+                if snapped > start:
+                    end = snapped + keep_chars
+                    break
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
         if end >= size:
             break
         start = max(0, end - overlap)
+        while start < size and text[start].isspace():
+            start += 1
+    return chunks
+
+
+def _is_structured_heading(line: str, *, previous_line: str | None, next_line: str | None) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if re.match(r"^\s{0,3}#{1,6}\s+\S", stripped):
+        return True
+    prev_blank = previous_line is None or not previous_line.strip()
+    next_blank = next_line is None or not next_line.strip()
+    if not (prev_blank or next_blank):
+        return False
+    return (
+        len(stripped) <= 100
+        and stripped.upper() == stripped
+        and any(char.isalpha() for char in stripped)
+    )
+
+
+def _extract_heading_descriptor(
+    line: str,
+    *,
+    previous_line: str | None,
+    next_line: str | None,
+) -> tuple[str, int] | None:
+    stripped = line.strip()
+    markdown_match = re.match(r"^\s{0,3}(#{1,6})\s+(.+?)\s*$", stripped)
+    if markdown_match:
+        return markdown_match.group(2).strip()[:200], len(markdown_match.group(1))
+    if _is_structured_heading(stripped, previous_line=previous_line, next_line=next_line):
+        return (detect_section_title(stripped) or stripped[:200], 1)
+    return None
+
+
+def build_text_sections(text: str, *, preserve_headings: bool = True) -> list[dict[str, Any]]:
+    normalized = text.strip()
+    if not normalized:
+        return []
+    if not preserve_headings:
+        detected_title = detect_section_title(normalized)
+        return [
+            {
+                "section_title": detected_title,
+                "section_path": detected_title,
+                "heading_level": None,
+                "text": normalized,
+            }
+        ]
+
+    lines = normalized.splitlines()
+    sections: list[dict[str, Any]] = []
+    current_lines: list[str] = []
+    current_title: str | None = None
+    current_path: str | None = None
+    current_heading_level: int | None = None
+    heading_stack: list[str | None] = []
+
+    def flush_section() -> None:
+        body = "\n".join(current_lines).strip()
+        if not body:
+            return
+        sections.append(
+            {
+                "section_title": current_title or detect_section_title(body),
+                "section_path": current_path or current_title or detect_section_title(body),
+                "heading_level": current_heading_level,
+                "text": body,
+            }
+        )
+
+    for idx, line in enumerate(lines):
+        previous_line = lines[idx - 1] if idx > 0 else None
+        next_line = lines[idx + 1] if idx + 1 < len(lines) else None
+        heading = _extract_heading_descriptor(line, previous_line=previous_line, next_line=next_line)
+        if heading:
+            heading_title, heading_level = heading
+            if current_lines:
+                flush_section()
+                current_lines = []
+            while len(heading_stack) < heading_level:
+                heading_stack.append(None)
+            heading_stack = heading_stack[:heading_level]
+            heading_stack[heading_level - 1] = heading_title
+            current_title = heading_title
+            current_heading_level = heading_level
+            current_path = " > ".join(title for title in heading_stack if title)
+        current_lines.append(line)
+
+    flush_section()
+    if sections:
+        return sections
+    detected_title = detect_section_title(normalized)
+    return [
+        {
+            "section_title": detected_title,
+            "section_path": detected_title,
+            "heading_level": None,
+            "text": normalized,
+        }
+    ]
+
+
+def build_text_retrieval_chunks(
+    text: str,
+    *,
+    chunk_size: int,
+    overlap: int,
+    preserve_headings: bool,
+) -> list[dict[str, Any]]:
+    chunks: list[dict[str, Any]] = []
+    for section_index, section in enumerate(build_text_sections(text, preserve_headings=preserve_headings)):
+        section_title = section.get("section_title")
+        section_path = section.get("section_path")
+        heading_level = section.get("heading_level")
+        section_text = str(section.get("text") or "").strip()
+        if not section_text:
+            continue
+        for section_chunk_index, chunk in enumerate(chunk_text(section_text, chunk_size, overlap)):
+            chunks.append(
+                {
+                    "text": chunk,
+                    "section_title": section_title,
+                    "section_path": section_path,
+                    "heading_level": heading_level,
+                    "section_index": section_index,
+                    "section_chunk_index": section_chunk_index,
+                }
+            )
     return chunks
 
 
@@ -440,23 +594,40 @@ def persist_text_retrieval_artifacts(
     text: str,
     parse_lane: str,
     artifact_type: str = "chunk",
+    chunk_size: int,
+    chunk_overlap: int,
+    heading_aware: bool,
+    extra_metadata: dict[str, Any] | None = None,
 ) -> list[RetrievalArtifactRecord]:
     artifacts: list[RetrievalArtifactRecord] = []
-    for idx, chunk in enumerate(chunk_text(text, settings.app_chunk_size, settings.app_chunk_overlap)):
+    for idx, chunk in enumerate(
+        build_text_retrieval_chunks(
+            text,
+            chunk_size=chunk_size,
+            overlap=chunk_overlap,
+            preserve_headings=heading_aware,
+        )
+    ):
         artifacts.append(
             RetrievalArtifactRecord(
                 document_id=document.id,
                 corpus=document.corpus,
                 artifact_type=artifact_type,
-                text=chunk,
+                text=chunk["text"],
                 metadata_json=build_retrieval_metadata(
                     document=document,
                     version=version,
                     artifact_type=artifact_type,
                     parse_lane=parse_lane,
                     extra_metadata={
+                        **(extra_metadata or {}),
                         "chunk_index": idx,
-                        "token_count": estimate_token_count(chunk),
+                        "section_title": chunk.get("section_title"),
+                        "section_path": chunk.get("section_path"),
+                        "heading_level": chunk.get("heading_level"),
+                        "section_index": chunk.get("section_index"),
+                        "section_chunk_index": chunk.get("section_chunk_index"),
+                        "token_count": estimate_token_count(chunk["text"]),
                     },
                 ),
             )
@@ -586,6 +757,7 @@ class IngestionWorkflow(Workflow):
             if run is None:
                 raise ValueError(f"ingestion run {ev.run_id} not found")
             pdf_config = get_pdf_ingestion_config(session)
+            text_config = get_text_ingestion_config(session)
             total = max(len(ev.document_ids), 1)
             processed = 0
             failed = 0
@@ -637,25 +809,23 @@ class IngestionWorkflow(Workflow):
                         if document.requested_lane == "cloud":
                             cloud_text, cloud_lane = extract_text_cloud(path, settings.app_llamaparse_tier, ev.trace_id)
                             document.actual_parse_lane = cloud_lane
-                            retrieval_artifacts.append(
-                                RetrievalArtifactRecord(
-                                    document_id=document.id,
-                                    corpus=document.corpus,
-                                    artifact_type="llamaparse_markdown",
+                            retrieval_artifacts.extend(
+                                persist_text_retrieval_artifacts(
+                                    session,
+                                    document=document,
+                                    version=version,
                                     text=cloud_text,
-                                    metadata_json=build_retrieval_metadata(
-                                        document=document,
-                                        version=version,
-                                        artifact_type="llamaparse_markdown",
-                                        parse_lane=cloud_lane,
-                                        extra_metadata={
-                                            "sheet_count": sheet_count,
-                                            "table_count": table_count,
-                                            "row_count": row_count,
-                                            "entity_type": "workbook_markdown",
-                                            "token_count": estimate_token_count(cloud_text),
-                                        },
-                                    ),
+                                    parse_lane=cloud_lane,
+                                    artifact_type="llamaparse_markdown",
+                                    chunk_size=text_config.chunk_size,
+                                    chunk_overlap=text_config.chunk_overlap,
+                                    heading_aware=text_config.heading_aware,
+                                    extra_metadata={
+                                        "sheet_count": sheet_count,
+                                        "table_count": table_count,
+                                        "row_count": row_count,
+                                        "entity_type": "workbook_markdown",
+                                    },
                                 )
                             )
                         document.metadata_json = {
@@ -693,6 +863,9 @@ class IngestionWorkflow(Workflow):
                                     version=version,
                                     text=joined_text,
                                     parse_lane=pdf_extraction.parse_lane,
+                                    chunk_size=text_config.chunk_size,
+                                    chunk_overlap=text_config.chunk_overlap,
+                                    heading_aware=text_config.heading_aware,
                                 )
                             document.metadata_json = {
                                 "artifact_count": len(retrieval_artifacts),
@@ -712,6 +885,9 @@ class IngestionWorkflow(Workflow):
                                 version=version,
                                 text=text,
                                 parse_lane=parse_lane,
+                                chunk_size=text_config.chunk_size,
+                                chunk_overlap=text_config.chunk_overlap,
+                                heading_aware=text_config.heading_aware,
                             )
                         else:
                             text, parse_lane = extract_text_local(path)
@@ -722,9 +898,17 @@ class IngestionWorkflow(Workflow):
                                 version=version,
                                 text=text,
                                 parse_lane=parse_lane,
+                                chunk_size=text_config.chunk_size,
+                                chunk_overlap=text_config.chunk_overlap,
+                                heading_aware=text_config.heading_aware,
                             )
                         if path.suffix.lower() != ".pdf":
-                            document.metadata_json = {"artifact_count": len(retrieval_artifacts)}
+                            document.metadata_json = {
+                                "artifact_count": len(retrieval_artifacts),
+                                "text_chunk_size": text_config.chunk_size,
+                                "text_chunk_overlap": text_config.chunk_overlap,
+                                "text_heading_aware": text_config.heading_aware,
+                            }
 
                     for artifact in retrieval_artifacts:
                         session.add(artifact)
@@ -939,12 +1123,30 @@ class IngestionWorkflow(Workflow):
 
 def classify_query_mode(message: str) -> str:
     lowered = message.lower()
+    structured_tokens = ["sku", "price", "amount", "total", "status", "customer", "invoice", "row", "sheet", "id"]
     has_structured_signal = any(
-        token in lowered
-        for token in ["sku", "price", "amount", "total", "status", "customer", "invoice", "row", "sheet", "id"]
+        re.search(rf"\b{re.escape(token)}\b", lowered)
+        for token in structured_tokens
     )
     has_identifier = bool(re.search(r"\b[A-Z]{2,}\d+\b|\b\d{2,}\b", message))
     asks_for_overview = any(token in lowered for token in ["summary", "summarize", "overview", "explain"])
+    asks_for_strategy = any(
+        phrase in lowered
+        for phrase in [
+            "strategy",
+            "strategic",
+            "business plan",
+            "position paper",
+            "direction",
+            "forecast",
+            "turnover",
+            "financial",
+            "position",
+            "detailed",
+        ]
+    )
+    if asks_for_strategy:
+        return "semantic"
     if has_structured_signal and has_identifier:
         return "structured"
     if has_structured_signal and not asks_for_overview:
@@ -1010,13 +1212,14 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
         mode = classify_query_mode(message)
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
-        structured_candidates = find_structured_candidates(message, corpora)
+        structured_candidates = find_structured_candidates(message, corpora) if mode in {"structured", "blended"} else []
         structured_context: list[str] = []
         if structured_candidates:
             target_field = None
             top_row_json = structured_candidates[0]["row"].row_json
             for key in top_row_json:
-                if key.replace("_", " ") in message.lower() or key in message.lower():
+                key_terms = [key.casefold(), key.replace("_", " ").casefold()]
+                if any(re.search(rf"\b{re.escape(term)}\b", message.lower()) for term in key_terms):
                     target_field = key
                     break
             for candidate in structured_candidates:
@@ -1045,7 +1248,7 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
                         "row_index": row.row_index,
                     }
                 )
-            if target_field and target_field in top_row_json and mode == "structured":
+            if target_field and target_field in top_row_json and mode == "structured" and len(message.split()) <= 20:
                 value = top_row_json.get(target_field, "")
                 top = structured_candidates[0]
                 direct_answer = (
@@ -1076,8 +1279,10 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
                             "chunk_index": hit.get("chunk_index"),
                             "page_start": metadata.get("page_start"),
                             "page_end": metadata.get("page_end"),
-                            "section_title": metadata.get("section_title"),
-                            "parse_lane": metadata.get("parse_lane"),
+                            "section_title": hit.get("section_title", metadata.get("section_title")),
+                            "section_path": hit.get("section_path", metadata.get("section_path")),
+                            "heading_level": hit.get("heading_level", metadata.get("heading_level")),
+                            "parse_lane": hit.get("parse_lane", metadata.get("parse_lane")),
                             "sheet_name": metadata.get("sheet_name"),
                             "table_name": metadata.get("table_name"),
                             "row_index": metadata.get("row_index"),
