@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ghost-orange: #ff5000;
+  --ghost-slate: #0f172a;
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.bg-orb {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+      circle at 20% 20%,
+      rgba(255, 80, 0, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(circle at 80% 30%, rgba(56, 189, 248, 0.12), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(99, 102, 241, 0.1), transparent 40%);
+  z-index: 0;
+}
+
+.glass-panel {
+  @apply backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl;
+  background: var(--glass-bg);
+}
+
+.glass-input {
+  @apply w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none ring-ghost-orange/40 focus:ring-2;
+}
+
+.glass-button {
+  @apply rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium transition hover:bg-white/10;
+}
+
+.glass-button-primary {
+  @apply rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition;
+  background: linear-gradient(135deg, #ff5000, #ff7a3d);
+}
+
+.glass-button-primary:hover {
+  filter: brightness(1.05);
+}

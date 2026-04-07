@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ghostdash-api"
+version = "0.1.0"
+description = "Control API and ingestion worker for the GhostDASH RAG platform."
+requires-python = ">=3.12"
+readme = "README.md"
+dependencies = [
+  "beautifulsoup4>=4.12.3,<5.0.0",
+  "fastapi>=0.115.0,<1.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "llama-cloud>=1.0.0",
+  "llama-parse>=0.5.0,<1.0.0",
+  "openai>=2.0.0,<3.0.0",
+  "openpyxl>=3.1.5,<4.0.0",
+  "pydantic-settings>=2.6.0,<3.0.0",
+  "pypdf>=6.0.0,<7.0.0",
+  "python-docx>=1.1.2,<2.0.0",
+  "python-multipart>=0.0.9,<1.0.0",
+  "python-pptx>=1.0.2,<2.0.0",
+  "qdrant-client>=1.9.0,<2.0.0",
+  "sqlalchemy>=2.0.36,<3.0.0",
+  "tiktoken>=0.9.0,<1.0.0",
+  "uvicorn>=0.30.0,<1.0.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.2",
+  "ruff>=0.13.2",
+]
+
+[project.scripts]
+ghostdash-api = "ghostdash_api.main:run"
+ghostdash-worker = "ghostdash_api.worker:run"
+
+[tool.hatch.envs.default.scripts]
+format = "ruff format ."
+format-check = "ruff format --check ."
+lint = "ruff check --fix ."
+lint-check = ["ruff check ."]
+test = "pytest"
+all-check = ["format-check", "lint-check", "test"]

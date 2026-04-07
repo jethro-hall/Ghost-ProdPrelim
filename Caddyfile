@@ -1,4 +1,25 @@
+:80 {
+	encode gzip
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /health {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy ui:4173
+	}
+}
+
 ghoststack.rideai.com.au {
 	encode gzip
-	reverse_proxy rag:4501
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /health {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy ui:4173
+	}
 }

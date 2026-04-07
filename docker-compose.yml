@@ -1,19 +1,4 @@
 services:
-  rag:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    environment:
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4}
-      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
-    volumes:
-      - rag_data:/data
-    expose:
-      - "4501"
-    restart: unless-stopped
-
   caddy:
     image: caddy:2-alpine
     ports:
@@ -24,11 +9,117 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      rag:
+      api:
+        condition: service_healthy
+      ui:
+        condition: service_started
+    restart: unless-stopped
+
+  llama-stack:
+    build:
+      context: ./stack
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      SQLITE_STORE_DIR: /data/llama-stack
+      QDRANT_URL: http://qdrant:6333
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+    volumes:
+      - stack_data:/data
+    expose:
+      - "8321"
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant_data:/qdrant/storage
+    expose:
+      - "6333"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      APP_DB_URL: sqlite:////data/app/ghostdash.db
+      APP_DATA_DIR: /data
+      APP_UPLOAD_DIR: /data/uploads
+      APP_DEFAULT_CORPUS: ${DEFAULT_CORPUS:-default}
+      APP_DEFAULT_POLICY_LANE: ${DEFAULT_POLICY_LANE:-local}
+      APP_LLAMASTACK_BASE_URL: http://llama-stack:8321
+      APP_QDRANT_URL: http://qdrant:6333
+      APP_QDRANT_COLLECTION: ghostdash_knowledge
+      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-gpt-5.4}
+      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+    volumes:
+      - app_data:/data
+    expose:
+      - "8000"
+    depends_on:
+      llama-stack:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["python", "-m", "ghostdash_api.worker"]
+    env_file:
+      - .env
+    environment:
+      APP_DB_URL: sqlite:////data/app/ghostdash.db
+      APP_DATA_DIR: /data
+      APP_UPLOAD_DIR: /data/uploads
+      APP_DEFAULT_CORPUS: ${DEFAULT_CORPUS:-default}
+      APP_DEFAULT_POLICY_LANE: ${DEFAULT_POLICY_LANE:-local}
+      APP_LLAMASTACK_BASE_URL: http://llama-stack:8321
+      APP_QDRANT_URL: http://qdrant:6333
+      APP_QDRANT_COLLECTION: ghostdash_knowledge
+      APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-gpt-5.4}
+      APP_DEFAULT_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+    volumes:
+      - app_data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+      llama-stack:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    environment:
+      VITE_API_BASE_URL: /api
+    expose:
+      - "4173"
+    depends_on:
+      api:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  rag_data:
+  app_data:
   caddy_data:
   caddy_config:
+  qdrant_data:
+  stack_data:
