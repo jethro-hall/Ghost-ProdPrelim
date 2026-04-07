@@ -26,8 +26,6 @@ class ConnectionRecord(TimestampMixin, Base):
     label: Mapped[str] = mapped_column(String(64))
     api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     base_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    chat_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    embedding_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     @property
@@ -37,11 +35,19 @@ class ConnectionRecord(TimestampMixin, Base):
         return f"***{self.api_key[-4:]}"
 
 
-class RuntimeDefaultRecord(TimestampMixin, Base):
-    __tablename__ = "runtime_defaults"
+class RuntimeProfileRecord(TimestampMixin, Base):
+    __tablename__ = "runtime_profiles"
 
-    key: Mapped[str] = mapped_column(String(64), primary_key=True)
-    value_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    name: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    llm_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    guardrails_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    kb_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    retrieval_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    tool_policy_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class EmbeddingCacheRecord(TimestampMixin, Base):
@@ -65,14 +71,10 @@ class AgentProfileRecord(TimestampMixin, Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(128), unique=True, index=True)
-    system_prompt: Mapped[str] = mapped_column(Text)
     first_message: Mapped[str] = mapped_column(Text)
-    model_id: Mapped[str] = mapped_column(String(128), default="openai/gpt-5.4")
-    temperature: Mapped[float] = mapped_column(Float, default=0.2)
-    max_tokens: Mapped[int] = mapped_column(Integer, default=2000)
     language: Mapped[str] = mapped_column(String(32), default="en-US")
     voice_id: Mapped[str] = mapped_column(String(64), default="alloy")
-    tools_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    runtime_profile_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 

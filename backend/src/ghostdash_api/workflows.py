@@ -36,6 +36,7 @@ from .models import (
 from .qdrant_store import delete_document_vectors, search_vectors, upsert_retrieval_artifacts
 from .runtime import embed_texts, get_active_connection
 from .runtime_defaults import get_pdf_ingestion_config
+from .runtime_profiles import get_default_runtime_profile
 from .settings import get_settings
 from .telemetry import log_instant_event
 
@@ -787,6 +788,8 @@ class IngestionWorkflow(Workflow):
             if run is None:
                 raise ValueError(f"ingestion run {ev.run_id} not found")
             connection = get_active_connection(session, "openai")
+            kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
+            embedding_model_id = kb_config.get("embedding_model_id")
             total = max(len(ev.document_ids), 1)
             parse_failed = int((run.result_json or {}).get("documents_parse_failed", 0))
             failed = int((run.result_json or {}).get("documents_failed", 0))
@@ -812,7 +815,13 @@ class IngestionWorkflow(Workflow):
                         str(artifact.metadata_json.get(PDF_ORIGINAL_TEXT_METADATA_KEY) or artifact.text)
                         for artifact in valid_artifacts
                     ]
-                    vectors = embed_texts(texts, connection, trace_id=ev.trace_id, service="workflow-runtime")
+                    vectors = embed_texts(
+                        texts,
+                        connection,
+                        embedding_model=embedding_model_id,
+                        trace_id=ev.trace_id,
+                        service="workflow-runtime",
+                    )
                     payloads = [build_qdrant_payload(document, artifact) for artifact in valid_artifacts if artifact.text.strip()]
                     point_ids: list[str] = []
                     upsert_batches = build_qdrant_upsert_batches(payloads, vectors)
@@ -996,6 +1005,8 @@ def find_structured_candidates(message: str, corpora: list[str]) -> list[dict[st
 def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str) -> dict[str, Any]:
     with SessionLocal() as session:
         connection = get_active_connection(session, "openai")
+        kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
+        embedding_model_id = kb_config.get("embedding_model_id")
         mode = classify_query_mode(message)
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
@@ -1044,7 +1055,13 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
 
         semantic_context: list[str] = []
         if mode in {"semantic", "blended"} or not direct_answer:
-            query_vectors = embed_texts([message], connection, trace_id=trace_id, service="workflow-runtime")
+            query_vectors = embed_texts(
+                [message],
+                connection,
+                embedding_model=embedding_model_id,
+                trace_id=trace_id,
+                service="workflow-runtime",
+            )
             if query_vectors:
                 for hit in search_vectors(query_vectors[0], corpora, top_k, trace_id=trace_id, service="workflow-runtime"):
                     metadata = hit.get("metadata", {})

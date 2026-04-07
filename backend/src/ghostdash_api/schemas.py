@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 ChatApiMode = Literal["responses", "chat_completions"]
 QueryMode = Literal["semantic", "structured", "blended"]
+ParseLanePolicy = Literal["local_default", "cloud_default", "auto"]
 
 
 class ConnectionPayload(BaseModel):
@@ -14,8 +15,6 @@ class ConnectionPayload(BaseModel):
     label: str | None = None
     api_key: str | None = None
     base_url: str | None = None
-    chat_model: str | None = None
-    embedding_model: str | None = None
     enabled: bool = True
 
 
@@ -24,8 +23,8 @@ class ConnectionTestPayload(BaseModel):
     label: str | None = None
     api_key: str | None = None
     base_url: str | None = None
-    chat_model: str | None = None
     api_mode: ChatApiMode = "responses"
+    model_id: str | None = None
     prompt: str = "Reply with a short OK message that names the API mode used."
 
 
@@ -34,8 +33,6 @@ class ConnectionView(BaseModel):
     provider: str
     label: str
     base_url: str | None
-    chat_model: str | None
-    embedding_model: str | None
     enabled: bool
     api_key_hint: str | None
     has_api_key: bool
@@ -63,26 +60,6 @@ class RuntimeCapabilities(BaseModel):
     model_runtime: str
 
 
-class RuntimeDefaultsPayload(BaseModel):
-    chat_api_mode: ChatApiMode = "responses"
-    pdf_chunk_size: int = Field(default=900, ge=600, le=1400)
-    pdf_chunk_overlap: int = Field(default=120, ge=50, le=220)
-    pdf_sentence_window: int = Field(default=2, ge=1, le=4)
-    pdf_top_k: int = Field(default=6, ge=4, le=12)
-    pdf_parse_lane_policy: Literal["local_default", "cloud_default", "auto"] = "auto"
-    pdf_rerank_enabled: bool = False
-
-
-class RuntimeDefaultsView(BaseModel):
-    chat_api_mode: ChatApiMode = "responses"
-    pdf_chunk_size: int = 900
-    pdf_chunk_overlap: int = 120
-    pdf_sentence_window: int = 2
-    pdf_top_k: int = 6
-    pdf_parse_lane_policy: Literal["local_default", "cloud_default", "auto"] = "auto"
-    pdf_rerank_enabled: bool = False
-
-
 class AgentToolConfig(BaseModel):
     id: str
     name: str
@@ -90,17 +67,92 @@ class AgentToolConfig(BaseModel):
     enabled: bool = True
 
 
-class AgentProfilePayload(BaseModel):
-    id: str | None = None
-    name: str = Field(min_length=1, max_length=128)
-    system_prompt: str = Field(min_length=1)
-    first_message: str = Field(min_length=1)
+class RuntimeProfileLlmConfig(BaseModel):
+    provider: str = Field(default="openai", min_length=1, max_length=32)
     model_id: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0, le=2)
     max_tokens: int = Field(default=2000, ge=1, le=16000)
+    api_mode: ChatApiMode = "responses"
+
+
+class RuntimeProfileGuardrailsConfig(BaseModel):
+    system_prompt: str = Field(min_length=1)
+    grounding_mode: Literal["retrieved_only"] = "retrieved_only"
+    insufficient_context_behavior: str = Field(min_length=1)
+
+
+class RuntimeProfileKnowledgeBaseConfig(BaseModel):
+    default_corpora: list[str] = Field(default_factory=list)
+    embedding_model_id: str = Field(min_length=1)
+
+
+class RuntimeProfileRetrievalConfig(BaseModel):
+    default_top_k: int = Field(default=6, ge=1, le=20)
+    pdf_chunk_size: int = Field(default=900, ge=600, le=1400)
+    pdf_chunk_overlap: int = Field(default=120, ge=50, le=220)
+    pdf_sentence_window: int = Field(default=2, ge=1, le=4)
+    pdf_parse_lane_policy: ParseLanePolicy = "auto"
+    pdf_rerank_enabled: bool = False
+
+
+class RuntimeProfileToolPolicyConfig(BaseModel):
+    tools: list[AgentToolConfig] = Field(default_factory=list)
+
+
+class RuntimeProfilePayload(BaseModel):
+    id: str | None = None
+    name: str = Field(min_length=1, max_length=128)
+    description: str | None = None
+    llm_config: RuntimeProfileLlmConfig
+    guardrails_config: RuntimeProfileGuardrailsConfig
+    kb_config: RuntimeProfileKnowledgeBaseConfig
+    retrieval_config: RuntimeProfileRetrievalConfig
+    tool_policy_config: RuntimeProfileToolPolicyConfig
+    is_default: bool = False
+    enabled: bool = True
+
+
+class RuntimeProfileView(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    llm_config: RuntimeProfileLlmConfig
+    guardrails_config: RuntimeProfileGuardrailsConfig
+    kb_config: RuntimeProfileKnowledgeBaseConfig
+    retrieval_config: RuntimeProfileRetrievalConfig
+    tool_policy_config: RuntimeProfileToolPolicyConfig
+    is_default: bool
+    enabled: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class RuntimeDefaultsPayload(BaseModel):
+    chat_api_mode: ChatApiMode = "responses"
+    llm_model_id: str = Field(default="openai/gpt-5.4", min_length=1)
+    embedding_model_id: str = Field(default="openai/text-embedding-3-small", min_length=1)
+    default_corpora: list[str] = Field(default_factory=lambda: ["default"])
+    pdf_chunk_size: int = Field(default=900, ge=600, le=1400)
+    pdf_chunk_overlap: int = Field(default=120, ge=50, le=220)
+    pdf_sentence_window: int = Field(default=2, ge=1, le=4)
+    pdf_top_k: int = Field(default=6, ge=1, le=20)
+    pdf_parse_lane_policy: ParseLanePolicy = "auto"
+    pdf_rerank_enabled: bool = False
+
+
+class RuntimeDefaultsView(RuntimeDefaultsPayload):
+    runtime_profile_id: str | None = None
+    runtime_profile_name: str | None = None
+
+
+class AgentProfilePayload(BaseModel):
+    id: str | None = None
+    name: str = Field(min_length=1, max_length=128)
+    first_message: str = Field(min_length=1)
     language: str = Field(default="en-US", min_length=2, max_length=32)
     voice_id: str = Field(default="alloy", min_length=1, max_length=64)
-    tools: list[AgentToolConfig] = Field(default_factory=list)
+    runtime_profile_id: str | None = None
+    runtime_profile: RuntimeProfilePayload | None = None
     is_default: bool = False
     enabled: bool = True
 
@@ -108,14 +160,11 @@ class AgentProfilePayload(BaseModel):
 class AgentProfileView(BaseModel):
     id: str
     name: str
-    system_prompt: str
     first_message: str
-    model_id: str
-    temperature: float
-    max_tokens: int
     language: str
     voice_id: str
-    tools: list[AgentToolConfig]
+    runtime_profile_id: str
+    runtime_profile: RuntimeProfileView
     is_default: bool
     enabled: bool
     created_at: datetime

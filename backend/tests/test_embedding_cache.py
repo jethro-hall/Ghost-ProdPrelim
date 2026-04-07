@@ -27,14 +27,12 @@ def configure_runtime(monkeypatch):
     return SessionLocal
 
 
-def make_connection(*, model: str = "openai/text-embedding-3-small", base_url: str = "https://api.openai.com/v1") -> ConnectionRecord:
+def make_connection(*, base_url: str = "https://api.openai.com/v1") -> ConnectionRecord:
     return ConnectionRecord(
         provider="openai",
         label="OpenAI",
         api_key="test-key",
         base_url=base_url,
-        chat_model="openai/gpt-5.4",
-        embedding_model=model,
         enabled=True,
     )
 
@@ -64,8 +62,8 @@ def test_embed_cache_separates_models(monkeypatch):
     fake_model = FakeEmbedModel()
     monkeypatch.setattr(runtime, "_get_embed_model", lambda connection: fake_model)
 
-    runtime.embed_texts(["alpha"], make_connection(model="openai/text-embedding-3-small"))
-    runtime.embed_texts(["alpha"], make_connection(model="openai/text-embedding-3-large"))
+    runtime.embed_texts(["alpha"], make_connection(), embedding_model="openai/text-embedding-3-small")
+    runtime.embed_texts(["alpha"], make_connection(), embedding_model="openai/text-embedding-3-large")
 
     assert fake_model.calls == [["alpha"], ["alpha"]]
 

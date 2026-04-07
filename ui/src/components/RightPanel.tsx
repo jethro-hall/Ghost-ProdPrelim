@@ -9,14 +9,11 @@ type Props = {
   onClose: () => void;
   connections: Connection[];
   apiMode: ChatApiMode;
-  onApiModeChange: (mode: ChatApiMode) => void;
   onSave: (connection: {
     provider: string;
     label?: string;
     api_key?: string;
     base_url?: string;
-    chat_model?: string;
-    embedding_model?: string;
     enabled?: boolean;
   }) => Promise<void>;
 };
@@ -26,15 +23,12 @@ export default function RightPanel({
   onClose,
   connections,
   apiMode,
-  onApiModeChange,
   onSave,
 }: Props) {
   const openai = connections.find((connection) => connection.provider === "openai");
   const [label, setLabel] = useState("OpenAI");
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("https://api.openai.com/v1");
-  const [chatModel, setChatModel] = useState("openai/gpt-5.4");
-  const [embeddingModel, setEmbeddingModel] = useState("openai/text-embedding-3-small");
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
@@ -45,8 +39,6 @@ export default function RightPanel({
     setLabel(openai?.label ?? "OpenAI");
     setApiKey("");
     setBaseUrl(openai?.base_url ?? "https://api.openai.com/v1");
-    setChatModel(openai?.chat_model ?? "openai/gpt-5.4");
-    setEmbeddingModel(openai?.embedding_model ?? "openai/text-embedding-3-small");
     setTestResult(null);
     setTestError(null);
   }, [open, openai]);
@@ -60,7 +52,6 @@ export default function RightPanel({
         provider: "openai",
         api_key: apiKey || undefined,
         base_url: baseUrl || undefined,
-        chat_model: chatModel || undefined,
         api_mode: apiMode,
       });
       setTestResult(result);
@@ -79,8 +70,6 @@ export default function RightPanel({
         label: label || "OpenAI",
         api_key: apiKey || undefined,
         base_url: baseUrl || undefined,
-        chat_model: chatModel || undefined,
-        embedding_model: embeddingModel || undefined,
         enabled: true,
       });
     } finally {
@@ -111,7 +100,7 @@ export default function RightPanel({
             <div className="flex items-center justify-between border-b border-black/5 pb-2">
               <div>
                 <h2 className="text-[1.05rem] font-semibold text-slate-900">Connections</h2>
-                <p className="text-[0.75rem] text-slate-500">Save credentials, choose the chat API, and test live.</p>
+                <p className="text-[0.75rem] text-slate-500">Save credentials, base URL overrides, and test the live provider path.</p>
               </div>
               <button type="button" aria-label="Close connections panel" className="ghost-icon-btn text-slate-500" onClick={onClose}>
                 <CloseIcon size={14} />
@@ -134,17 +123,11 @@ export default function RightPanel({
               <label className="font-medium text-slate-600">Base URL</label>
               <input className="ghost-input" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
 
-              <label className="font-medium text-slate-600">Chat model</label>
-              <input className="ghost-input" value={chatModel} onChange={(event) => setChatModel(event.target.value)} />
-
-              <label className="font-medium text-slate-600">Embedding model</label>
-              <input className="ghost-input" value={embeddingModel} onChange={(event) => setEmbeddingModel(event.target.value)} />
-
-              <label className="font-medium text-slate-600">Chat API mode</label>
-              <select className="ghost-select" value={apiMode} onChange={(event) => onApiModeChange(event.target.value as ChatApiMode)}>
-                <option value="responses">Responses API</option>
-                <option value="chat_completions">Chat Completions API</option>
-              </select>
+              <div className="rounded-lg border border-slate-200 bg-white/80 p-3 text-[0.75rem] leading-6 text-slate-600">
+                <div className="font-semibold text-slate-900">Runtime-owned settings</div>
+                <div className="mt-1">Chat API mode: {apiMode === "chat_completions" ? "Chat Completions" : "Responses"}</div>
+                <div className="mt-1">Model, embedding, and retrieval settings are edited from Agent Config and Pipelines so provider connections stay limited to transport and credentials.</div>
+              </div>
 
               <div className="mt-1 flex items-center gap-2">
                 <button type="button" className="ghost-btn" disabled={testing || saving} onClick={() => void handleTest()}>

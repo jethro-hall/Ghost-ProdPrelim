@@ -22,6 +22,7 @@ from .database import SessionLocal, get_session
 from .models import AgentConversationRecord
 from .runtime import generate_answer, get_active_connection, seed_default_connections, stream_answer
 from .runtime_defaults import resolve_query_top_k
+from .runtime_profiles import resolve_agent_runtime_profile, resolve_corpora
 from .schemas import ChatRequest, ChatResponse
 from .service_common import build_app
 from .settings import get_settings
@@ -92,8 +93,10 @@ def create_app() -> FastAPI:
         request: Request,
         session: Session = Depends(get_session),
     ) -> ChatResponse:
-        top_k = resolve_query_top_k(session, body.top_k)
         agent = get_agent(session, body.agent_id)
+        runtime_profile = resolve_agent_runtime_profile(session, agent)
+        corpora = resolve_corpora(runtime_profile, body.corpora)
+        top_k = resolve_query_top_k(session, body.top_k, runtime_profile=runtime_profile)
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
@@ -104,7 +107,7 @@ def create_app() -> FastAPI:
                 session,
                 agent_id=agent.id,
                 message=body.message,
-                corpora=body.corpora,
+                corpora=corpora,
                 api_mode=body.api_mode,
             )
             session.commit()
@@ -113,9 +116,10 @@ def create_app() -> FastAPI:
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
         cache_key = build_response_cache_key(
             agent=agent,
+            runtime_profile=runtime_profile,
             history_context=history_context,
             message=body.message,
-            corpora=body.corpora,
+            corpora=corpora,
             api_mode=body.api_mode,
         )
         cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
@@ -131,7 +135,7 @@ def create_app() -> FastAPI:
                 citations=cached.citations_json,
                 api_mode=body.api_mode,
             )
-            conversation.corpora_json = list(body.corpora)
+            conversation.corpora_json = list(corpora)
             conversation.api_mode = body.api_mode
             session.commit()
             log_instant_event(
@@ -149,27 +153,34 @@ def create_app() -> FastAPI:
                 agent_id=agent.id,
                 cached=True,
             )
-        plan = await fetch_query_plan(build_query_message(message=body.message, history_context=history_context), body.corpora, top_k, request.state.trace_id)
+        plan = await fetch_query_plan(
+            build_query_message(message=body.message, history_context=history_context),
+            corpora,
+            top_k,
+            request.state.trace_id,
+        )
         citations = plan.get("citations", [])
         if plan.get("direct_answer"):
             answer = plan["direct_answer"]
         else:
             answer = ""
-        connection = get_active_connection(session, "openai")
+        llm_config = dict(runtime_profile.llm_config_json or {})
+        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        connection = get_active_connection(session, str(llm_config.get("provider", "openai")))
         if not answer:
             answer = generate_answer(
                 build_answer_prompt(
                     agent_name=agent.name,
-                    system_prompt=agent.system_prompt,
+                    system_prompt=str(guardrails_config.get("system_prompt", "")),
                     query_prompt=plan["prompt"],
                     history_context=history_context,
                 ),
                 connection,
                 api_mode=body.api_mode,
-                system_prompt=agent.system_prompt,
-                model_id=agent.model_id,
-                temperature=agent.temperature,
-                max_tokens=agent.max_tokens,
+                system_prompt=str(guardrails_config.get("system_prompt", "")),
+                model_id=str(llm_config.get("model_id", "")),
+                temperature=float(llm_config.get("temperature", 0)),
+                max_tokens=int(llm_config.get("max_tokens", 2000)),
                 trace_id=request.state.trace_id,
                 service="agent-ingress",
             )
@@ -184,7 +195,7 @@ def create_app() -> FastAPI:
             citations=citations,
             api_mode=body.api_mode,
         )
-        conversation.corpora_json = list(body.corpora)
+        conversation.corpora_json = list(corpora)
         conversation.api_mode = body.api_mode
         session.commit()
         store_cached_response(
@@ -210,8 +221,10 @@ def create_app() -> FastAPI:
         request: Request,
         session: Session = Depends(get_session),
     ) -> StreamingResponse:
-        top_k = resolve_query_top_k(session, body.top_k)
         agent = get_agent(session, body.agent_id)
+        runtime_profile = resolve_agent_runtime_profile(session, agent)
+        corpora = resolve_corpora(runtime_profile, body.corpora)
+        top_k = resolve_query_top_k(session, body.top_k, runtime_profile=runtime_profile)
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
@@ -222,7 +235,7 @@ def create_app() -> FastAPI:
                 session,
                 agent_id=agent.id,
                 message=body.message,
-                corpora=body.corpora,
+                corpora=corpora,
                 api_mode=body.api_mode,
             )
             session.commit()
@@ -231,9 +244,10 @@ def create_app() -> FastAPI:
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
         cache_key = build_response_cache_key(
             agent=agent,
+            runtime_profile=runtime_profile,
             history_context=history_context,
             message=body.message,
-            corpora=body.corpora,
+            corpora=corpora,
             api_mode=body.api_mode,
         )
         cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
@@ -241,11 +255,13 @@ def create_app() -> FastAPI:
         if cached is None:
             plan = await fetch_query_plan(
                 build_query_message(message=body.message, history_context=history_context),
-                body.corpora,
+                corpora,
                 top_k,
                 request.state.trace_id,
             )
-        connection = get_active_connection(session, "openai")
+        llm_config = dict(runtime_profile.llm_config_json or {})
+        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        connection = get_active_connection(session, str(llm_config.get("provider", "openai")))
 
         def _encode(payload: dict) -> str:
             return f"data: {json.dumps(payload)}\n\n"
@@ -273,16 +289,16 @@ def create_app() -> FastAPI:
                 for delta in stream_answer(
                     build_answer_prompt(
                         agent_name=agent.name,
-                        system_prompt=agent.system_prompt,
+                        system_prompt=str(guardrails_config.get("system_prompt", "")),
                         query_prompt=plan["prompt"],
                         history_context=history_context,
                     ),
                     connection,
                     api_mode=body.api_mode,
-                    system_prompt=agent.system_prompt,
-                    model_id=agent.model_id,
-                    temperature=agent.temperature,
-                    max_tokens=agent.max_tokens,
+                    system_prompt=str(guardrails_config.get("system_prompt", "")),
+                    model_id=str(llm_config.get("model_id", "")),
+                    temperature=float(llm_config.get("temperature", 0)),
+                    max_tokens=int(llm_config.get("max_tokens", 2000)),
                     trace_id=request.state.trace_id,
                     service="agent-ingress",
                 ):
@@ -311,7 +327,7 @@ def create_app() -> FastAPI:
                 )
                 stream_conversation = stream_session.get(AgentConversationRecord, conversation.id)
                 if stream_conversation is not None:
-                    stream_conversation.corpora_json = list(body.corpora)
+                    stream_conversation.corpora_json = list(corpora)
                     stream_conversation.api_mode = body.api_mode
                 stream_session.commit()
                 if cached is None:

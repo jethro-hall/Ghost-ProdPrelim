@@ -27,9 +27,11 @@ def ensure_runtime_dirs() -> None:
 
 def init_db() -> None:
     from . import models  # noqa: F401
+    from .schema_migrations import run_startup_migrations
 
     ensure_runtime_dirs()
     Base.metadata.create_all(bind=engine)
+    run_startup_migrations(engine)
 
 
 def get_session() -> Generator[Session, None, None]:

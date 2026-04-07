@@ -13,14 +13,12 @@ from sqlalchemy.orm import Session
 
 from .database import SessionLocal
 from .models import ConnectionRecord, EmbeddingCacheRecord
+from .runtime_profiles import DEFAULT_SYSTEM_PROMPT
 from .settings import get_settings
 from .telemetry import log_event, log_instant_event, new_span_id, wrap_outbound_call
 
 settings = get_settings()
-SYSTEM_PROMPT = (
-    "You answer using retrieved knowledge only. "
-    "Always ground the answer in the provided context and say when the context is insufficient."
-)
+SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT
 
 
 @dataclass(slots=True)
@@ -29,8 +27,6 @@ class ProviderConnectionConfig:
     label: str
     api_key: str | None
     base_url: str | None
-    chat_model: str | None
-    embedding_model: str | None
 
 
 def _normalize_provider_model_id(provider: str, model_id: str | None, fallback: str) -> str:
@@ -45,16 +41,12 @@ def _merge_provider_connection(
     *,
     api_key: str | None = None,
     base_url: str | None = None,
-    chat_model: str | None = None,
-    embedding_model: str | None = None,
 ) -> ProviderConnectionConfig:
     return ProviderConnectionConfig(
         provider=connection.provider,
         label=connection.label,
         api_key=api_key if api_key not in (None, "") else connection.api_key,
         base_url=base_url if base_url not in (None, "") else connection.base_url,
-        chat_model=chat_model if chat_model not in (None, "") else connection.chat_model,
-        embedding_model=embedding_model if embedding_model not in (None, "") else connection.embedding_model,
     )
 
 
@@ -69,10 +61,10 @@ def _provider_base_url(connection: ProviderConnectionConfig) -> str:
     return (connection.base_url or settings.openai_base_url).rstrip("/")
 
 
-def _get_llm(connection: ProviderConnectionConfig) -> LlamaIndexOpenAI:
+def _get_llm(connection: ProviderConnectionConfig, *, model_id: str | None = None) -> LlamaIndexOpenAI:
     return _build_llm(
         connection,
-        model_id=connection.chat_model,
+        model_id=model_id,
         temperature=0,
         max_tokens=None,
         system_prompt=SYSTEM_PROMPT,
@@ -98,10 +90,10 @@ def _build_llm(
     )
 
 
-def _get_embed_model(connection: ProviderConnectionConfig) -> OpenAIEmbedding:
+def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: str | None = None) -> OpenAIEmbedding:
     model = _normalize_provider_model_id(
         connection.provider,
-        connection.embedding_model,
+        embedding_model,
         settings.app_default_embedding_model,
     )
     return OpenAIEmbedding(
@@ -111,10 +103,15 @@ def _get_embed_model(connection: ProviderConnectionConfig) -> OpenAIEmbedding:
     )
 
 
-def _embedding_cache_key(connection: ProviderConnectionConfig, text: str) -> tuple[str, str, str, str]:
+def _embedding_cache_key(
+    connection: ProviderConnectionConfig,
+    text: str,
+    *,
+    embedding_model: str | None = None,
+) -> tuple[str, str, str, str]:
     model = _normalize_provider_model_id(
         connection.provider,
-        connection.embedding_model,
+        embedding_model,
         settings.app_default_embedding_model,
     )
     text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -131,8 +128,10 @@ def _embedding_cache_cutoff() -> datetime | None:
 def _load_cached_embeddings(
     connection: ProviderConnectionConfig,
     text_batch: list[str],
+    *,
+    embedding_model: str | None = None,
 ) -> tuple[dict[str, list[float]], tuple[str, str, str], int]:
-    provider, base_url, model, _ = _embedding_cache_key(connection, text_batch[0])
+    provider, base_url, model, _ = _embedding_cache_key(connection, text_batch[0], embedding_model=embedding_model)
     hashes = {hashlib.sha256(text.encode("utf-8")).hexdigest() for text in text_batch}
     cutoff = _embedding_cache_cutoff()
     cached: dict[str, list[float]] = {}
@@ -209,8 +208,6 @@ def seed_default_connections(session: Session) -> None:
             "label": "OpenAI",
             "api_key": settings.openai_api_key,
             "base_url": settings.openai_base_url,
-            "chat_model": settings.app_default_chat_model,
-            "embedding_model": settings.app_default_embedding_model,
             "enabled": bool(settings.openai_api_key),
         }
     }
@@ -220,8 +217,6 @@ def seed_default_connections(session: Session) -> None:
             if settings.openai_api_key and not existing.api_key:
                 existing.api_key = settings.openai_api_key
                 existing.enabled = True
-            existing.chat_model = existing.chat_model or settings.app_default_chat_model
-            existing.embedding_model = existing.embedding_model or settings.app_default_embedding_model
             existing.base_url = existing.base_url or settings.openai_base_url
             continue
         session.add(ConnectionRecord(provider=provider, **payload))
@@ -244,8 +239,6 @@ def save_connection(session: Session, provider: str, **fields) -> ConnectionReco
         setattr(record, key, value)
 
     if provider == "openai":
-        record.chat_model = record.chat_model or settings.app_default_chat_model
-        record.embedding_model = record.embedding_model or settings.app_default_embedding_model
         record.base_url = record.base_url or settings.openai_base_url
 
     session.commit()
@@ -264,6 +257,7 @@ def embed_texts(
     texts: Iterable[str],
     connection: ConnectionRecord,
     *,
+    embedding_model: str | None = None,
     trace_id: str | None = None,
     service: str = "workflow-runtime",
 ) -> list[list[float]]:
@@ -272,7 +266,7 @@ def embed_texts(
         return []
     provider_connection = _merge_provider_connection(connection)
     if not settings.app_embedding_cache_enabled:
-        embed_model = _get_embed_model(provider_connection)
+        embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
 
         def _run() -> list[list[float]]:
             return embed_model.get_text_embedding_batch(text_batch)
@@ -281,7 +275,11 @@ def embed_texts(
             return wrap_outbound_call(trace_id=trace_id, service=service, route="openai.embeddings", fn=_run)
         return _run()
 
-    cached_vectors, namespace, stale_count = _load_cached_embeddings(provider_connection, text_batch)
+    cached_vectors, namespace, stale_count = _load_cached_embeddings(
+        provider_connection,
+        text_batch,
+        embedding_model=embedding_model,
+    )
     unique_missing_texts: list[str] = []
     seen_missing_hashes: set[str] = set()
     for text in text_batch:
@@ -310,7 +308,7 @@ def embed_texts(
 
     missing_vectors_by_hash: dict[str, list[float]] = {}
     if unique_missing_texts:
-        embed_model = _get_embed_model(provider_connection)
+        embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
 
         def _run() -> list[list[float]]:
             return embed_model.get_text_embedding_batch(unique_missing_texts)
@@ -359,7 +357,7 @@ def generate_answer(
     provider_connection = _merge_provider_connection(connection)
     llm = _build_llm(
         provider_connection,
-        model_id=model_id or provider_connection.chat_model,
+        model_id=model_id,
         temperature=temperature,
         max_tokens=max_tokens,
         system_prompt=system_prompt,
@@ -390,7 +388,7 @@ def stream_answer(
     provider_connection = _merge_provider_connection(connection)
     llm = _build_llm(
         provider_connection,
-        model_id=model_id or provider_connection.chat_model,
+        model_id=model_id,
         temperature=temperature,
         max_tokens=max_tokens,
         system_prompt=system_prompt,
@@ -430,23 +428,22 @@ def test_provider_connection(
     service: str = "control-api",
     api_key: str | None = None,
     base_url: str | None = None,
-    chat_model: str | None = None,
+    model_id: str | None = None,
 ) -> dict[str, str]:
     provider_connection = _merge_provider_connection(
         connection,
         api_key=api_key,
         base_url=base_url,
-        chat_model=chat_model,
     )
 
     def _run() -> dict[str, str]:
-        llm = _get_llm(provider_connection)
+        llm = _get_llm(provider_connection, model_id=model_id)
         response = llm.complete(prompt)
         return {
             "api_mode": api_mode,
             "model": _normalize_provider_model_id(
                 provider_connection.provider,
-                provider_connection.chat_model,
+                model_id,
                 settings.app_default_chat_model,
             ),
             "base_url": _provider_base_url(provider_connection),

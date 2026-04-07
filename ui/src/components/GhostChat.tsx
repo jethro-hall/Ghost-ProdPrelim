@@ -15,12 +15,11 @@ type ChatEntry = {
 type Props = {
   open: boolean;
   apiMode: ChatApiMode;
-  onApiModeChange: (mode: ChatApiMode) => void;
   onOpen: () => void;
   onClose: () => void;
 };
 
-export default function GhostChat({ open, apiMode, onApiModeChange, onOpen, onClose }: Props) {
+export default function GhostChat({ open, apiMode, onOpen, onClose }: Props) {
   const [message, setMessage] = useState("");
   const [log, setLog] = useState<ChatEntry[]>([]);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
@@ -220,14 +219,9 @@ export default function GhostChat({ open, apiMode, onApiModeChange, onOpen, onCl
                     </option>
                   ))}
                 </select>
-                <select
-                  className="ghost-select w-[165px] py-2 text-[0.72rem]"
-                  value={apiMode}
-                  onChange={(event) => onApiModeChange(event.target.value as ChatApiMode)}
-                >
-                  <option value="responses">Responses API</option>
-                  <option value="chat_completions">Chat Completions API</option>
-                </select>
+                <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-[0.7rem] font-semibold text-slate-600">
+                  {apiMode === "chat_completions" ? "Chat Completions" : "Responses"} API
+                </div>
                 <button type="button" onClick={handleClose} className="ghost-icon-btn text-slate-500">
                   <CloseIcon size={14} />
                 </button>

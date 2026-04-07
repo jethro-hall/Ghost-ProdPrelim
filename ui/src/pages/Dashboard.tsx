@@ -176,13 +176,19 @@ export default function Dashboard() {
               <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Chat Model</div>
                 <div className="mt-1 text-[0.82rem] font-semibold text-slate-900">
-                  {activeConnection?.chat_model ?? "Default"}
+                  {runtimeDefaults?.llm_model_id ?? "Loading"}
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Embedding Model</div>
                 <div className="mt-1 text-[0.82rem] font-semibold text-slate-900">
-                  {activeConnection?.embedding_model ?? "Default"}
+                  {runtimeDefaults?.embedding_model_id ?? "Loading"}
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/80 p-3 sm:col-span-2">
+                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Default Corpora</div>
+                <div className="mt-1 text-[0.82rem] font-semibold text-slate-900">
+                  {(runtimeDefaults?.default_corpora ?? []).join(", ") || "default"}
                 </div>
               </div>
             </div>

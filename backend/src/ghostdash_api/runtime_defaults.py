@@ -4,11 +4,15 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
-from .models import RuntimeDefaultRecord
+from .runtime_profiles import (
+    default_runtime_profile_payload,
+    get_default_runtime_profile,
+    runtime_defaults_view,
+    update_runtime_defaults,
+)
 from .settings import get_settings
 
 settings = get_settings()
-RUNTIME_DEFAULTS_KEY = "chat_defaults"
 
 
 @dataclass(slots=True)
@@ -22,14 +26,18 @@ class PdfIngestionConfig:
 
 
 def default_runtime_defaults() -> dict[str, object]:
+    payload = default_runtime_profile_payload()
     return {
-        "chat_api_mode": "responses",
-        "pdf_chunk_size": settings.app_pdf_chunk_size,
-        "pdf_chunk_overlap": settings.app_pdf_chunk_overlap,
-        "pdf_sentence_window": settings.app_pdf_sentence_window,
-        "pdf_top_k": settings.app_pdf_top_k,
-        "pdf_parse_lane_policy": settings.app_pdf_parse_lane_policy,
-        "pdf_rerank_enabled": False,
+        "chat_api_mode": payload["llm_config_json"]["api_mode"],
+        "llm_model_id": payload["llm_config_json"]["model_id"],
+        "embedding_model_id": payload["kb_config_json"]["embedding_model_id"],
+        "default_corpora": list(payload["kb_config_json"]["default_corpora"]),
+        "pdf_chunk_size": payload["retrieval_config_json"]["pdf_chunk_size"],
+        "pdf_chunk_overlap": payload["retrieval_config_json"]["pdf_chunk_overlap"],
+        "pdf_sentence_window": payload["retrieval_config_json"]["pdf_sentence_window"],
+        "pdf_top_k": payload["retrieval_config_json"]["default_top_k"],
+        "pdf_parse_lane_policy": payload["retrieval_config_json"]["pdf_parse_lane_policy"],
+        "pdf_rerank_enabled": payload["retrieval_config_json"]["pdf_rerank_enabled"],
     }
 
 
@@ -40,25 +48,13 @@ def merge_runtime_defaults(values: dict | None) -> dict[str, object]:
     return merged
 
 
-def ensure_runtime_defaults(session: Session) -> RuntimeDefaultRecord:
-    record = session.get(RuntimeDefaultRecord, RUNTIME_DEFAULTS_KEY)
-    merged = merge_runtime_defaults(record.value_json if record is not None else None)
-    if record is None:
-        record = RuntimeDefaultRecord(key=RUNTIME_DEFAULTS_KEY, value_json=merged)
-        session.add(record)
-        session.commit()
-        session.refresh(record)
-        return record
-
-    if record.value_json != merged:
-        record.value_json = merged
-        session.commit()
-        session.refresh(record)
-    return record
-
-
 def get_runtime_defaults(session: Session) -> dict[str, object]:
-    return dict(ensure_runtime_defaults(session).value_json)
+    return dict(runtime_defaults_view(get_default_runtime_profile(session)))
+
+
+def save_runtime_defaults(session: Session, values: dict[str, object]) -> dict[str, object]:
+    profile = update_runtime_defaults(session, values)
+    return runtime_defaults_view(profile)
 
 
 def get_pdf_ingestion_config(session: Session) -> PdfIngestionConfig:
@@ -73,8 +69,11 @@ def get_pdf_ingestion_config(session: Session) -> PdfIngestionConfig:
     )
 
 
-def resolve_query_top_k(session: Session, requested_top_k: int | None) -> int:
+def resolve_query_top_k(session: Session, requested_top_k: int | None, *, runtime_profile=None) -> int:
     if requested_top_k is not None and requested_top_k > 0:
         return requested_top_k
-    values = get_runtime_defaults(session)
+    if runtime_profile is None:
+        values = get_runtime_defaults(session)
+    else:
+        values = runtime_defaults_view(runtime_profile)
     return int(values.get("pdf_top_k", settings.app_pdf_top_k))

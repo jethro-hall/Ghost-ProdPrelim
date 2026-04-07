@@ -1,24 +1,75 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { fetchAgents, saveAgent } from "../api";
-import type { AgentProfile, AgentProfilePayload, AgentToolConfig } from "../api";
+import type { AgentProfile, AgentProfilePayload, AgentToolConfig, RuntimeProfile } from "../api";
+import type { AppOutletContext } from "../components/AppLayout";
 
 const DEFAULT_TOOLS: AgentToolConfig[] = [
   { id: "kb", name: "Knowledge Base", description: "Query indexed documents.", enabled: true },
   { id: "web", name: "Web Search", description: "Search for external context.", enabled: false },
 ];
 
-function createDraft(): AgentProfilePayload {
+function createRuntimeProfile(name: string, template?: RuntimeProfile, preserveIdentity = false): RuntimeProfile {
+  const baseName = `${name} Runtime`;
+  if (template) {
+    return {
+      ...template,
+      id: preserveIdentity ? template.id : undefined,
+      name: preserveIdentity ? template.name || baseName : baseName,
+      tool_policy_config: {
+        tools: template.tool_policy_config.tools.map((tool) => ({ ...tool })),
+      },
+      kb_config: {
+        ...template.kb_config,
+        default_corpora: [...template.kb_config.default_corpora],
+      },
+    };
+  }
   return {
-    name: "GhostDASH Assistant",
-    system_prompt:
-      "You answer using retrieved knowledge only. Always ground the answer in the provided context and say when the context is insufficient.",
-    first_message: "Hello! I am your GhostDASH assistant. How can I help you today?",
-    model_id: "openai/gpt-5.4",
-    temperature: 0.2,
-    max_tokens: 2000,
-    language: "en-US",
-    voice_id: "alloy",
-    tools: DEFAULT_TOOLS,
+    name: baseName,
+    description: "Canonical runtime profile for this agent.",
+    llm_config: {
+      provider: "openai",
+      model_id: "openai/gpt-5.4",
+      temperature: 0.2,
+      max_tokens: 2000,
+      api_mode: "responses",
+    },
+    guardrails_config: {
+      system_prompt:
+        "You answer using retrieved knowledge only. Always ground the answer in the provided context and say when the context is insufficient.",
+      grounding_mode: "retrieved_only",
+      insufficient_context_behavior: "Say clearly that the available context is insufficient.",
+    },
+    kb_config: {
+      default_corpora: ["default"],
+      embedding_model_id: "openai/text-embedding-3-small",
+    },
+    retrieval_config: {
+      default_top_k: 6,
+      pdf_chunk_size: 900,
+      pdf_chunk_overlap: 120,
+      pdf_sentence_window: 2,
+      pdf_parse_lane_policy: "auto",
+      pdf_rerank_enabled: false,
+    },
+    tool_policy_config: {
+      tools: DEFAULT_TOOLS.map((tool) => ({ ...tool })),
+    },
+    is_default: false,
+    enabled: true,
+  };
+}
+
+function createDraft(template?: AgentProfile | null): AgentProfilePayload {
+  const name = template?.name ?? "GhostDASH Assistant";
+  return {
+    name,
+    first_message: template?.first_message ?? "Hello! I am your GhostDASH assistant. How can I help you today?",
+    language: template?.language ?? "en-US",
+    voice_id: template?.voice_id ?? "alloy",
+    runtime_profile_id: null,
+    runtime_profile: createRuntimeProfile(name, template?.runtime_profile, false),
     is_default: false,
     enabled: true,
   };
@@ -28,25 +79,24 @@ function toDraft(agent: AgentProfile): AgentProfilePayload {
   return {
     id: agent.id,
     name: agent.name,
-    system_prompt: agent.system_prompt,
     first_message: agent.first_message,
-    model_id: agent.model_id,
-    temperature: agent.temperature,
-    max_tokens: agent.max_tokens,
     language: agent.language,
     voice_id: agent.voice_id,
-    tools: agent.tools,
+    runtime_profile_id: agent.runtime_profile_id,
+    runtime_profile: createRuntimeProfile(agent.name, agent.runtime_profile, true),
     is_default: agent.is_default,
     enabled: agent.enabled,
   };
 }
 
 export default function AgentConfigPage() {
+  const { refreshRuntimeDefaults } = useOutletContext<AppOutletContext>();
   const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<AgentProfilePayload>(() => createDraft());
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const selectedAgent = useMemo(() => agents.find((agent) => agent.id === selectedId) ?? null, [agents, selectedId]);
+  const runtimeProfile = draft.runtime_profile;
 
   async function refresh() {
     const nextAgents = await fetchAgents();
@@ -68,6 +118,9 @@ export default function AgentConfigPage() {
     setAgents(nextAgents);
     setSelectedId(saved.id);
     setDraft(toDraft(saved));
+    if (saved.is_default) {
+      await refreshRuntimeDefaults();
+    }
     setSavedAt(new Date().toLocaleTimeString());
   }
 
@@ -77,9 +130,9 @@ export default function AgentConfigPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Agent Configuration</p>
-            <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Persona, tools, and defaults</h2>
+            <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Persona and runtime profile</h2>
             <p className="mt-2 text-[0.8rem] leading-6 text-slate-500">
-              Agent profiles are now persisted in the native stack so GhostChat can remember conversations per agent instead of resetting to a browser-only draft.
+              Each agent now points at one canonical runtime profile. Model, guardrails, and tool policy live there; pipeline and retrieval defaults are edited in the Pipelines view.
             </p>
           </div>
           <div className="flex gap-2">
@@ -88,7 +141,7 @@ export default function AgentConfigPage() {
               className="ghost-btn"
               onClick={() => {
                 setSelectedId(null);
-                setDraft(createDraft());
+                setDraft(createDraft(selectedAgent ?? agents.find((agent) => agent.is_default) ?? agents[0] ?? null));
               }}
             >
               New agent
@@ -123,7 +176,7 @@ export default function AgentConfigPage() {
                   <div className="truncate text-[0.82rem] font-semibold text-slate-900">{agent.name}</div>
                   {agent.is_default && <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.64rem] font-semibold text-emerald-700">Default</span>}
                 </div>
-                <div className="mt-1 truncate text-[0.72rem] text-slate-500">{agent.model_id}</div>
+                <div className="mt-1 truncate text-[0.72rem] text-slate-500">{agent.runtime_profile.llm_config.model_id}</div>
               </button>
             ))}
             {agents.length === 0 && <div className="text-[0.78rem] text-slate-500">No agents have been saved yet.</div>}
@@ -133,30 +186,138 @@ export default function AgentConfigPage() {
         <article className="glass rounded-xl border border-slate-200 p-5 space-y-4">
           <label className="block text-[0.76rem] text-slate-500">
             Agent name
-            <input className="ghost-input mt-1" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
-          </label>
-          <label className="block text-[0.76rem] text-slate-500">
-            System prompt
-            <textarea className="ghost-textarea mt-1 min-h-[150px]" value={draft.system_prompt} onChange={(event) => setDraft((current) => ({ ...current, system_prompt: event.target.value }))} />
+            <input
+              className="ghost-input mt-1"
+              value={draft.name}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  name: event.target.value,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        name:
+                          current.runtime_profile.name === `${current.name} Runtime`
+                            ? `${event.target.value} Runtime`
+                            : current.runtime_profile.name,
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
           </label>
           <label className="block text-[0.76rem] text-slate-500">
             First message
-            <textarea className="ghost-textarea mt-1 min-h-[90px]" value={draft.first_message} onChange={(event) => setDraft((current) => ({ ...current, first_message: event.target.value }))} />
+            <textarea
+              className="ghost-textarea mt-1 min-h-[90px]"
+              value={draft.first_message}
+              onChange={(event) => setDraft((current) => ({ ...current, first_message: event.target.value }))}
+            />
+          </label>
+          <label className="block text-[0.76rem] text-slate-500">
+            System prompt
+            <textarea
+              className="ghost-textarea mt-1 min-h-[150px]"
+              value={runtimeProfile?.guardrails_config.system_prompt ?? ""}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        guardrails_config: {
+                          ...current.runtime_profile.guardrails_config,
+                          system_prompt: event.target.value,
+                        },
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
+          </label>
+          <label className="block text-[0.76rem] text-slate-500">
+            Insufficient context behavior
+            <textarea
+              className="ghost-textarea mt-1 min-h-[90px]"
+              value={runtimeProfile?.guardrails_config.insufficient_context_behavior ?? ""}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        guardrails_config: {
+                          ...current.runtime_profile.guardrails_config,
+                          insufficient_context_behavior: event.target.value,
+                        },
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
           </label>
         </article>
 
         <article className="glass rounded-xl border border-slate-200 p-5 space-y-4">
           <label className="block text-[0.76rem] text-slate-500">
             Model
-            <input className="ghost-input mt-1" value={draft.model_id} onChange={(event) => setDraft((current) => ({ ...current, model_id: event.target.value }))} />
+            <input
+              className="ghost-input mt-1"
+              value={runtimeProfile?.llm_config.model_id ?? ""}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        llm_config: { ...current.runtime_profile.llm_config, model_id: event.target.value },
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
           </label>
           <label className="block text-[0.76rem] text-slate-500">
             Temperature
-            <input className="ghost-input mt-1" type="number" step="0.1" min="0" max="2" value={draft.temperature} onChange={(event) => setDraft((current) => ({ ...current, temperature: Number(event.target.value) }))} />
+            <input
+              className="ghost-input mt-1"
+              type="number"
+              step="0.1"
+              min="0"
+              max="2"
+              value={runtimeProfile?.llm_config.temperature ?? 0}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        llm_config: { ...current.runtime_profile.llm_config, temperature: Number(event.target.value) },
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
           </label>
           <label className="block text-[0.76rem] text-slate-500">
             Max tokens
-            <input className="ghost-input mt-1" type="number" min="1" value={draft.max_tokens} onChange={(event) => setDraft((current) => ({ ...current, max_tokens: Number(event.target.value) }))} />
+            <input
+              className="ghost-input mt-1"
+              type="number"
+              min="1"
+              value={runtimeProfile?.llm_config.max_tokens ?? 1}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  runtime_profile: current.runtime_profile
+                    ? {
+                        ...current.runtime_profile,
+                        llm_config: { ...current.runtime_profile.llm_config, max_tokens: Number(event.target.value) },
+                      }
+                    : current.runtime_profile,
+                }))
+              }
+            />
           </label>
           <label className="block text-[0.76rem] text-slate-500">
             Language
@@ -170,14 +331,29 @@ export default function AgentConfigPage() {
             <input
               type="checkbox"
               checked={draft.is_default}
-              onChange={() => setDraft((current) => ({ ...current, is_default: !current.is_default }))}
+              onChange={() =>
+                setDraft((current) => ({
+                  ...current,
+                  is_default: !current.is_default,
+                  runtime_profile: current.runtime_profile
+                    ? { ...current.runtime_profile, is_default: !current.is_default }
+                    : current.runtime_profile,
+                }))
+              }
             />
             Set as default agent
           </label>
+          <div className="rounded-xl border border-slate-200 bg-white/80 p-3 text-[0.74rem] text-slate-500">
+            <div className="font-semibold text-slate-900">Runtime profile</div>
+            <div className="mt-1">{runtimeProfile?.name ?? "Unsaved runtime profile"}</div>
+            <div className="mt-1">KB defaults: {(runtimeProfile?.kb_config.default_corpora ?? []).join(", ") || "default"}</div>
+            <div className="mt-1">Embedding model: {runtimeProfile?.kb_config.embedding_model_id ?? "openai/text-embedding-3-small"}</div>
+            <div className="mt-1">Pipeline retrieval defaults live in the Pipelines page to avoid duplicate edit surfaces.</div>
+          </div>
           <div className="rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.76rem] text-slate-500">
             <div className="font-semibold text-slate-900">Enabled tools</div>
             <div className="mt-2 space-y-2">
-              {draft.tools.map((tool) => (
+              {(runtimeProfile?.tool_policy_config.tools ?? []).map((tool) => (
                 <label key={tool.id} className="flex items-start gap-2">
                   <input
                     type="checkbox"
@@ -185,9 +361,16 @@ export default function AgentConfigPage() {
                     onChange={() =>
                       setDraft((current) => ({
                         ...current,
-                        tools: current.tools.map((entry) =>
-                          entry.id === tool.id ? { ...entry, enabled: !entry.enabled } : entry,
-                        ),
+                        runtime_profile: current.runtime_profile
+                          ? {
+                              ...current.runtime_profile,
+                              tool_policy_config: {
+                                tools: current.runtime_profile.tool_policy_config.tools.map((entry) =>
+                                  entry.id === tool.id ? { ...entry, enabled: !entry.enabled } : entry,
+                                ),
+                              },
+                            }
+                          : current.runtime_profile,
                       }))
                     }
                   />

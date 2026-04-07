@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import type { ChatApiMode, Connection, Task } from "../api";
+import type { ChatApiMode, Connection, RuntimeDefaults, Task } from "../api";
 import * as ghostApi from "../api";
 import BackgroundOrbs from "./BackgroundOrbs";
 import FullScreenLoader from "./FullScreenLoader";
@@ -33,6 +33,9 @@ const pendingTask: Task = {
 export type AppOutletContext = {
   uploadFile: (f: File, corpus?: string, lane?: string) => Promise<{ id: string }>;
   refreshConnections: () => Promise<void>;
+  runtimeDefaults: RuntimeDefaults | null;
+  refreshRuntimeDefaults: () => Promise<void>;
+  saveRuntimeDefaults: (body: RuntimeDefaults) => Promise<void>;
   openConnections: () => void;
 };
 
@@ -44,25 +47,24 @@ export default function AppLayout() {
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncTask, setSyncTask] = useState<Task | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [apiMode, setApiMode] = useState<ChatApiMode>(() => {
-    const stored = window.localStorage.getItem("ghostdash.chat-api-mode");
-    return stored === "chat_completions" ? "chat_completions" : "responses";
-  });
+  const [runtimeDefaults, setRuntimeDefaults] = useState<RuntimeDefaults | null>(null);
+  const apiMode: ChatApiMode = runtimeDefaults?.chat_api_mode ?? "responses";
 
   useEffect(() => {
-    void ghostApi
-      .fetchRuntimeDefaults()
-      .then((defaults) => setApiMode(defaults.chat_api_mode))
-      .catch(() => null);
+    void refreshRuntimeDefaults().catch(() => null);
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("ghostdash.chat-api-mode", apiMode);
-    void ghostApi.saveRuntimeDefaults({ chat_api_mode: apiMode }).catch(() => null);
-  }, [apiMode]);
 
   async function refreshConnections() {
     setConnections(await ghostApi.fetchConnections());
+  }
+
+  async function refreshRuntimeDefaults() {
+    setRuntimeDefaults(await ghostApi.fetchRuntimeDefaults());
+  }
+
+  async function persistRuntimeDefaults(body: RuntimeDefaults) {
+    const saved = await ghostApi.saveRuntimeDefaults(body);
+    setRuntimeDefaults(saved);
   }
 
   function openConnections() {
@@ -110,6 +112,9 @@ export default function AppLayout() {
               context={{
                 uploadFile: ghostApi.uploadFile,
                 refreshConnections,
+                runtimeDefaults,
+                refreshRuntimeDefaults,
+                saveRuntimeDefaults: persistRuntimeDefaults,
                 openConnections,
               } satisfies AppOutletContext}
             />
@@ -121,7 +126,6 @@ export default function AppLayout() {
         onClose={() => setRightOpen(false)}
         connections={connections}
         apiMode={apiMode}
-        onApiModeChange={setApiMode}
         onSave={async (body) => {
           await ghostApi.saveConnection(body);
           await refreshConnections();
@@ -131,7 +135,6 @@ export default function AppLayout() {
       <GhostChat
         open={chatOpen}
         apiMode={apiMode}
-        onApiModeChange={setApiMode}
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
       />

@@ -28,7 +28,8 @@ from .models import (
     WorkbookTableRecord,
 )
 from .runtime import get_active_connection, list_connections, save_connection, seed_default_connections, test_provider_connection
-from .runtime_defaults import ensure_runtime_defaults
+from .runtime_defaults import get_runtime_defaults, save_runtime_defaults
+from .runtime_profiles import get_default_runtime_profile, resolve_agent_runtime_profile, seed_default_runtime_profile
 from .schemas import (
     AgentProfilePayload,
     AgentProfileView,
@@ -44,6 +45,7 @@ from .schemas import (
     RuntimeCapabilities,
     RuntimeDefaultsPayload,
     RuntimeDefaultsView,
+    RuntimeProfileView,
     RunSummaryView,
     SyncRequest,
     TaskDocumentView,
@@ -61,7 +63,7 @@ settings = get_settings()
 def initialize_control_runtime_state() -> None:
     with SessionLocal() as session:
         seed_default_connections(session)
-        ensure_runtime_defaults(session)
+        seed_default_runtime_profile(session)
         seed_default_agent_profiles(session)
 
 
@@ -265,18 +267,32 @@ def _run_summary_to_view(run: IngestionRunRecord) -> RunSummaryView:
     )
 
 
-def _agent_to_view(agent: AgentProfileRecord) -> AgentProfileView:
+def _runtime_profile_to_view(runtime_profile) -> RuntimeProfileView:
+    return RuntimeProfileView(
+        id=runtime_profile.id,
+        name=runtime_profile.name,
+        description=runtime_profile.description,
+        llm_config=runtime_profile.llm_config_json or {},
+        guardrails_config=runtime_profile.guardrails_config_json or {},
+        kb_config=runtime_profile.kb_config_json or {},
+        retrieval_config=runtime_profile.retrieval_config_json or {},
+        tool_policy_config=runtime_profile.tool_policy_config_json or {},
+        is_default=runtime_profile.is_default,
+        enabled=runtime_profile.enabled,
+        created_at=runtime_profile.created_at,
+        updated_at=runtime_profile.updated_at,
+    )
+
+
+def _agent_to_view(agent: AgentProfileRecord, runtime_profile) -> AgentProfileView:
     return AgentProfileView(
         id=agent.id,
         name=agent.name,
-        system_prompt=agent.system_prompt,
         first_message=agent.first_message,
-        model_id=agent.model_id,
-        temperature=agent.temperature,
-        max_tokens=agent.max_tokens,
         language=agent.language,
         voice_id=agent.voice_id,
-        tools=agent.tools_json or [],
+        runtime_profile_id=runtime_profile.id,
+        runtime_profile=_runtime_profile_to_view(runtime_profile),
         is_default=agent.is_default,
         enabled=agent.enabled,
         created_at=agent.created_at,
@@ -400,18 +416,14 @@ def create_app() -> FastAPI:
 
     @app.get("/api/runtime/defaults", response_model=RuntimeDefaultsView)
     def api_runtime_defaults(session: Session = Depends(get_session)) -> RuntimeDefaultsView:
-        record = ensure_runtime_defaults(session)
-        return RuntimeDefaultsView(**record.value_json)
+        return RuntimeDefaultsView(**get_runtime_defaults(session))
 
     @app.post("/api/runtime/defaults", response_model=RuntimeDefaultsView)
     def api_save_runtime_defaults(
         body: RuntimeDefaultsPayload,
         session: Session = Depends(get_session),
     ) -> RuntimeDefaultsView:
-        record = ensure_runtime_defaults(session)
-        record.value_json = body.model_dump()
-        session.commit()
-        return RuntimeDefaultsView(**record.value_json)
+        return RuntimeDefaultsView(**save_runtime_defaults(session, body.model_dump()))
 
     @app.get("/api/connections", response_model=list[ConnectionView])
     def api_list_connections(session: Session = Depends(get_session)) -> list[ConnectionView]:
@@ -422,8 +434,6 @@ def create_app() -> FastAPI:
                 provider=row.provider,
                 label=row.label,
                 base_url=row.base_url,
-                chat_model=row.chat_model,
-                embedding_model=row.embedding_model,
                 enabled=row.enabled,
                 api_key_hint=row.masked_api_key,
                 has_api_key=bool(row.api_key),
@@ -442,8 +452,6 @@ def create_app() -> FastAPI:
             label=body.label or body.provider,
             api_key=body.api_key,
             base_url=body.base_url,
-            chat_model=body.chat_model,
-            embedding_model=body.embedding_model,
             enabled=body.enabled,
         )
         return ConnectionView(
@@ -451,8 +459,6 @@ def create_app() -> FastAPI:
             provider=record.provider,
             label=record.label,
             base_url=record.base_url,
-            chat_model=record.chat_model,
-            embedding_model=record.embedding_model,
             enabled=record.enabled,
             api_key_hint=record.masked_api_key,
             has_api_key=bool(record.api_key),
@@ -465,6 +471,7 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> ConnectionTestResponse:
         record = get_active_connection(session, body.provider)
+        runtime_profile = get_default_runtime_profile(session)
         result = test_provider_connection(
             record,
             api_mode=body.api_mode,
@@ -473,13 +480,13 @@ def create_app() -> FastAPI:
             service="control-api",
             api_key=body.api_key,
             base_url=body.base_url,
-            chat_model=body.chat_model,
+            model_id=body.model_id or (runtime_profile.llm_config_json or {}).get("model_id"),
         )
         return ConnectionTestResponse(ok=True, **result)
 
     @app.get("/api/agents", response_model=list[AgentProfileView])
     def api_list_agents(session: Session = Depends(get_session)) -> list[AgentProfileView]:
-        return [_agent_to_view(agent) for agent in list_agents(session)]
+        return [_agent_to_view(agent, resolve_agent_runtime_profile(session, agent)) for agent in list_agents(session)]
 
     @app.post("/api/agents", response_model=AgentProfileView)
     def api_save_agent(
@@ -487,7 +494,7 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> AgentProfileView:
         agent = save_agent(session, body.model_dump())
-        return _agent_to_view(agent)
+        return _agent_to_view(agent, resolve_agent_runtime_profile(session, agent))
 
     @app.get("/api/agents/{agent_id}/conversations", response_model=list[ConversationSummaryView])
     def api_list_agent_conversations(

@@ -31,7 +31,7 @@ export default function ConnectionsPage() {
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Connections</p>
             <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Provider runtime</h2>
             <p className="mt-2 max-w-[650px] text-[0.8rem] leading-6 text-slate-500">
-              This page mirrors the designer’s infrastructure view while staying tied to the live provider records. Use it to confirm provider health before changing models, embeddings, or parse-lane behavior.
+              This page mirrors the designer’s infrastructure view while staying tied to the live provider records. Use it to confirm provider transport, credentials, and health before changing runtime policy elsewhere.
             </p>
           </div>
           <div className="flex gap-2">
@@ -63,14 +63,11 @@ export default function ConnectionsPage() {
                 <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">API Key</div>
                 <div className="mt-1 font-mono text-[0.78rem] text-slate-900">{connection.api_key_hint ?? "Not configured"}</div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Chat Model</div>
-                  <div className="mt-1 text-[0.78rem] text-slate-900">{connection.chat_model ?? "Default"}</div>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-                  <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Embedding</div>
-                  <div className="mt-1 text-[0.78rem] text-slate-900">{connection.embedding_model ?? "Default"}</div>
+              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Ownership</div>
+                <div className="mt-1 text-[0.78rem] text-slate-900">Transport, credentials, and base URL only</div>
+                <div className="mt-1 text-[0.72rem] text-slate-500">
+                  LLM model, embedding model, and retrieval defaults now live in runtime profiles so they have one canonical owner.
                 </div>
               </div>
             </div>

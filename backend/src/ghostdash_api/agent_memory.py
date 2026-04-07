@@ -7,45 +7,38 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .models import (
-    AgentConversationRecord,
-    AgentMessageRecord,
-    AgentProfileRecord,
-    ChatResponseCacheRecord,
+from .models import AgentConversationRecord, AgentMessageRecord, AgentProfileRecord, ChatResponseCacheRecord, RuntimeProfileRecord
+from .runtime_profiles import (
+    resolve_agent_runtime_profile,
+    save_runtime_profile,
+    seed_default_runtime_profile,
 )
 from .settings import get_settings
 
 settings = get_settings()
-DEFAULT_AGENT_TOOLS = [
-    {"id": "kb", "name": "Knowledge Base", "description": "Query indexed documents.", "enabled": True},
-    {"id": "web", "name": "Web Search", "description": "Search for external context.", "enabled": False},
-]
 
 
-def default_agent_payload() -> dict:
+def default_agent_payload(runtime_profile_id: str) -> dict:
     return {
         "name": "GhostDASH Assistant",
-        "system_prompt": (
-            "You answer using retrieved knowledge only. "
-            "Always ground the answer in the provided context and say when the context is insufficient."
-        ),
         "first_message": "Hello! I am your GhostDASH assistant. How can I help you today?",
-        "model_id": settings.app_default_chat_model,
-        "temperature": 0.2,
-        "max_tokens": 2000,
         "language": "en-US",
         "voice_id": "alloy",
-        "tools_json": list(DEFAULT_AGENT_TOOLS),
+        "runtime_profile_id": runtime_profile_id,
         "is_default": True,
         "enabled": True,
     }
 
 
 def seed_default_agent_profiles(session: Session) -> None:
+    default_runtime_profile = seed_default_runtime_profile(session)
     existing = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.is_default.is_(True)))
     if existing is not None:
+        if not existing.runtime_profile_id:
+            existing.runtime_profile_id = default_runtime_profile.id
+            session.commit()
         return
-    payload = default_agent_payload()
+    payload = default_agent_payload(default_runtime_profile.id)
     session.add(AgentProfileRecord(**payload))
     session.commit()
 
@@ -76,21 +69,48 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
     record = session.get(AgentProfileRecord, payload.get("id")) if payload.get("id") else None
     if record is None and payload.get("name"):
         record = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.name == payload["name"]))
+    is_new_record = record is None
+
+    default_runtime_profile = seed_default_runtime_profile(session)
     if record is None:
-        record = AgentProfileRecord(**default_agent_payload())
+        record = AgentProfileRecord(**default_agent_payload(default_runtime_profile.id))
         session.add(record)
-    for key, value in payload.items():
-        if key == "id":
-            continue
-        if key == "tools":
-            setattr(record, "tools_json", value)
-            continue
-        setattr(record, key, value)
+
+    runtime_profile_payload = payload.get("runtime_profile")
+    runtime_profile_id = payload.get("runtime_profile_id") or (None if is_new_record else record.runtime_profile_id)
+    if runtime_profile_payload is not None:
+        runtime_profile_record = save_runtime_profile(
+            session,
+            {
+                **runtime_profile_payload,
+                "id": runtime_profile_payload.get("id") or runtime_profile_id,
+                "is_default": bool(payload.get("is_default", False)),
+            },
+        )
+        record.runtime_profile_id = runtime_profile_record.id
+    elif runtime_profile_id:
+        record.runtime_profile_id = runtime_profile_id
+    elif not record.runtime_profile_id:
+        record.runtime_profile_id = default_runtime_profile.id
+
+    for key in ("name", "first_message", "language", "voice_id", "is_default", "enabled"):
+        if key in payload:
+            setattr(record, key, payload[key])
+
     if record.is_default:
         for other in session.scalars(
             select(AgentProfileRecord).where(AgentProfileRecord.id != record.id, AgentProfileRecord.is_default.is_(True))
         ):
             other.is_default = False
+        runtime_profile = resolve_agent_runtime_profile(session, record)
+        runtime_profile.is_default = True
+        for other_profile in session.scalars(
+            select(RuntimeProfileRecord).where(
+                RuntimeProfileRecord.id != runtime_profile.id,
+                RuntimeProfileRecord.is_default.is_(True),
+            )
+        ):
+            other_profile.is_default = False
     session.commit()
     session.refresh(record)
     return record
@@ -185,18 +205,26 @@ def _cache_cutoff() -> datetime | None:
 def build_response_cache_key(
     *,
     agent: AgentProfileRecord,
+    runtime_profile,
     history_context: str,
     message: str,
     corpora: list[str],
     api_mode: str,
 ) -> str:
+    llm_config = dict(runtime_profile.llm_config_json or {})
+    guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+    kb_config = dict(runtime_profile.kb_config_json or {})
+    retrieval_config = dict(runtime_profile.retrieval_config_json or {})
+    tool_policy = dict(runtime_profile.tool_policy_config_json or {})
     payload = {
         "agent_id": agent.id,
         "agent_name": agent.name,
-        "system_prompt": agent.system_prompt,
-        "model_id": agent.model_id,
-        "temperature": agent.temperature,
-        "max_tokens": agent.max_tokens,
+        "runtime_profile_id": runtime_profile.id,
+        "llm_config": llm_config,
+        "guardrails_config": guardrails_config,
+        "kb_config": kb_config,
+        "retrieval_config": retrieval_config,
+        "tool_policy_config": tool_policy,
         "history_context": history_context,
         "message": message,
         "corpora": list(corpora),

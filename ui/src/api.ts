@@ -15,8 +15,6 @@ export type Connection = {
   provider: string;
   label: string;
   base_url: string | null;
-  chat_model: string | null;
-  embedding_model: string | null;
   enabled: boolean;
   api_key_hint: string | null;
   has_api_key: boolean;
@@ -46,6 +44,17 @@ export type RuntimeCapabilities = {
 
 export type RuntimeDefaults = {
   chat_api_mode: ChatApiMode;
+  llm_model_id: string;
+  embedding_model_id: string;
+  default_corpora: string[];
+  pdf_chunk_size: number;
+  pdf_chunk_overlap: number;
+  pdf_sentence_window: number;
+  pdf_top_k: number;
+  pdf_parse_lane_policy: "local_default" | "cloud_default" | "auto";
+  pdf_rerank_enabled: boolean;
+  runtime_profile_id?: string | null;
+  runtime_profile_name?: string | null;
 };
 
 export type AgentToolConfig = {
@@ -55,17 +64,61 @@ export type AgentToolConfig = {
   enabled: boolean;
 };
 
-export type AgentProfile = {
-  id: string;
-  name: string;
-  system_prompt: string;
-  first_message: string;
+export type RuntimeProfileLlmConfig = {
+  provider: string;
   model_id: string;
   temperature: number;
   max_tokens: number;
+  api_mode: ChatApiMode;
+};
+
+export type RuntimeProfileGuardrailsConfig = {
+  system_prompt: string;
+  grounding_mode: "retrieved_only";
+  insufficient_context_behavior: string;
+};
+
+export type RuntimeProfileKnowledgeBaseConfig = {
+  default_corpora: string[];
+  embedding_model_id: string;
+};
+
+export type RuntimeProfileRetrievalConfig = {
+  default_top_k: number;
+  pdf_chunk_size: number;
+  pdf_chunk_overlap: number;
+  pdf_sentence_window: number;
+  pdf_parse_lane_policy: "local_default" | "cloud_default" | "auto";
+  pdf_rerank_enabled: boolean;
+};
+
+export type RuntimeProfileToolPolicyConfig = {
+  tools: AgentToolConfig[];
+};
+
+export type RuntimeProfile = {
+  id?: string;
+  name: string;
+  description?: string | null;
+  llm_config: RuntimeProfileLlmConfig;
+  guardrails_config: RuntimeProfileGuardrailsConfig;
+  kb_config: RuntimeProfileKnowledgeBaseConfig;
+  retrieval_config: RuntimeProfileRetrievalConfig;
+  tool_policy_config: RuntimeProfileToolPolicyConfig;
+  is_default: boolean;
+  enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AgentProfile = {
+  id: string;
+  name: string;
+  first_message: string;
   language: string;
   voice_id: string;
-  tools: AgentToolConfig[];
+  runtime_profile_id: string;
+  runtime_profile: RuntimeProfile;
   is_default: boolean;
   enabled: boolean;
   created_at: string;
@@ -75,14 +128,11 @@ export type AgentProfile = {
 export type AgentProfilePayload = {
   id?: string;
   name: string;
-  system_prompt: string;
   first_message: string;
-  model_id: string;
-  temperature: number;
-  max_tokens: number;
   language: string;
   voice_id: string;
-  tools: AgentToolConfig[];
+  runtime_profile_id?: string | null;
+  runtime_profile?: RuntimeProfile;
   is_default: boolean;
   enabled: boolean;
 };
@@ -246,7 +296,7 @@ export async function testConnection(body: {
   provider: string;
   api_key?: string;
   base_url?: string;
-  chat_model?: string;
+  model_id?: string;
   api_mode: ChatApiMode;
   prompt?: string;
 }) {
@@ -282,7 +332,6 @@ export async function chat(message: string, corpora: string[] = [], apiMode: Cha
     body: JSON.stringify({
       message,
       corpora,
-      top_k: 6,
       api_mode: apiMode,
     }),
   });
@@ -311,7 +360,6 @@ export async function streamChat(args: {
     body: JSON.stringify({
       message: args.message,
       corpora: args.corpora ?? [],
-      top_k: 6,
       api_mode: args.apiMode ?? "responses",
       agent_id: args.agentId ?? null,
       conversation_id: args.conversationId ?? null,
