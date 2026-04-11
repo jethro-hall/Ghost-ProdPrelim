@@ -18,12 +18,28 @@ class TimestampMixin:
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
 
+class ToolRegistryRecord(TimestampMixin, Base):
+    __tablename__ = "tool_registry"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    provider: Mapped[str] = mapped_column(String(64), index=True)
+    name: Mapped[str] = mapped_column(String(128))
+    gateway: Mapped[str] = mapped_column(String(128))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="unknown")
+    active: Mapped[bool] = mapped_column(Boolean, default=False)
+    config_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class ConnectionRecord(TimestampMixin, Base):
     __tablename__ = "connections"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
     provider: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     label: Mapped[str] = mapped_column(String(64))
+    provider_kind: Mapped[str] = mapped_column(String(32), default="openai")
+    auth_strategy: Mapped[str] = mapped_column(String(32), default="bearer")
+    auth_header_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     base_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -48,6 +64,29 @@ class RuntimeProfileRecord(TimestampMixin, Base):
     tool_policy_config_json: Mapped[dict] = mapped_column(JSON, default=dict)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CollectionRecord(TimestampMixin, Base):
+    __tablename__ = "collections"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    slug: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(128))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="active")
+    embedding_model_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
+class RuntimeProfileCollectionRecord(TimestampMixin, Base):
+    __tablename__ = "runtime_profile_collections"
+    __table_args__ = (
+        UniqueConstraint("runtime_profile_id", "collection_id", name="uq_runtime_profile_collection"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    runtime_profile_id: Mapped[str] = mapped_column(String(64), index=True)
+    collection_id: Mapped[str] = mapped_column(String(64), index=True)
+    position: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class EmbeddingCacheRecord(TimestampMixin, Base):
@@ -87,6 +126,8 @@ class AgentConversationRecord(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(256), default="New conversation")
     corpora_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     api_mode: Mapped[str] = mapped_column(String(32), default="responses")
+    # Last OpenAI Responses API response id for this thread (previous_response_id); not used for chat_completions path.
+    openai_last_response_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
 
 class AgentMessageRecord(TimestampMixin, Base):
@@ -117,6 +158,83 @@ class ChatResponseCacheRecord(TimestampMixin, Base):
     hit_count: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class ChatUploadRecord(TimestampMixin, Base):
+    __tablename__ = "chat_uploads"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    conversation_id: Mapped[str] = mapped_column(String(64), index=True)
+    agent_id: Mapped[str] = mapped_column(String(64), index=True)
+    filename: Mapped[str] = mapped_column(String(256))
+    storage_path: Mapped[str] = mapped_column(Text, unique=True)
+    mime_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source_kind: Mapped[str] = mapped_column(String(32), default="document")
+    requested_lane: Mapped[str] = mapped_column(String(32), default="default")
+    extracted_parse_lane: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    extracted_char_count: Mapped[int] = mapped_column(Integer, default=0)
+    extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(64), default="uploaded_pending_decision")
+    persistence_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    collection_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    promoted_document_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class WorkflowDefinitionRecord(TimestampMixin, Base):
+    __tablename__ = "workflow_definitions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    workflow_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    name: Mapped[str] = mapped_column(String(128))
+    execution_mode: Mapped[str] = mapped_column(String(32), default="sequential")
+    definition_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class WorkflowRunRecord(TimestampMixin, Base):
+    __tablename__ = "workflow_runs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    workflow_definition_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    workflow_id: Mapped[str] = mapped_column(String(128), index=True)
+    surface: Mapped[str] = mapped_column(String(64), default="ghost_chatui")
+    execution_mode: Mapped[str] = mapped_column(String(32), default="sequential")
+    status: Mapped[str] = mapped_column(String(32), default="queued")
+    current_step: Mapped[str] = mapped_column(String(128), default="queued")
+    progress: Mapped[float] = mapped_column(Float, default=0.0)
+    prompt: Mapped[str] = mapped_column(Text)
+    requested_agent_ids_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    parent_conversation_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    result_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class WorkflowStepRunRecord(TimestampMixin, Base):
+    __tablename__ = "workflow_step_runs"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence", name="uq_workflow_step_run_sequence"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    run_id: Mapped[str] = mapped_column(String(64), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    node_id: Mapped[str] = mapped_column(String(128))
+    node_type: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(32), default="pending")
+    agent_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    agent_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    conversation_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    output_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    citations_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class DocumentRecord(TimestampMixin, Base):
     __tablename__ = "documents"
 
@@ -126,7 +244,7 @@ class DocumentRecord(TimestampMixin, Base):
     source_path: Mapped[str] = mapped_column(Text, unique=True)
     mime_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
     source_kind: Mapped[str] = mapped_column(String(32), default="document")
-    requested_lane: Mapped[str] = mapped_column(String(32), default="local")
+    requested_lane: Mapped[str] = mapped_column(String(32), default="default")
     actual_parse_lane: Mapped[str | None] = mapped_column(String(64), nullable=True)
     parse_status: Mapped[str] = mapped_column(String(32), default="pending")
     index_status: Mapped[str] = mapped_column(String(32), default="pending")

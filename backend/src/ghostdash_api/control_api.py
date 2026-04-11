@@ -3,25 +3,43 @@ from __future__ import annotations
 import hashlib
 import mimetypes
 import re
+import shutil
 import time
 from pathlib import Path
+from typing import cast
+from uuid import uuid4
 
 import httpx
-from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import PlainTextResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .agent_memory import get_agent, list_agents, list_conversations, list_messages, save_agent, seed_default_agent_profiles
+from .collections import (
+    collection_delete_impact,
+    delete_collection_and_storage,
+    ensure_collection_record,
+    get_collection,
+    get_collection_by_slug,
+    list_collections,
+)
 from .database import get_session
 from .database import SessionLocal
+from .ingest import extract_text_local
 from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
     AgentProfileRecord,
+    ChatUploadRecord,
+    CollectionRecord,
     ConnectionRecord,
     DocumentRecord,
     IngestionRunRecord,
     RetrievalArtifactRecord,
+    RuntimeProfileCollectionRecord,
+    WorkflowRunRecord,
+    WorkflowStepRunRecord,
     WorkbookArtifactRecord,
     WorkbookRowRecord,
     WorkbookSheetRecord,
@@ -34,6 +52,14 @@ from .schemas import (
     AgentProfilePayload,
     AgentProfileView,
     CapabilityStatus,
+    ChatBootstrapFeatures,
+    ChatBootstrapView,
+    ChatUploadDecisionPayload,
+    ChatUploadView,
+    CollectionCreatePayload,
+    CollectionDeleteResponse,
+    CollectionImpactView,
+    CollectionView,
     ConnectionPayload,
     ConnectionTestPayload,
     ConnectionTestResponse,
@@ -47,16 +73,63 @@ from .schemas import (
     RuntimeDefaultsView,
     RuntimeProfileView,
     RunSummaryView,
+    RequestedParseLane,
     SyncRequest,
     TaskDocumentView,
     TaskStepView,
     TaskView,
     UploadView,
     VectorStatsView,
+    ToolActivationPayload,
+    ToolCatalogEntryView,
+    ToolDetailView,
+    ToolExecutePayload,
+    ToolExecuteResponse,
+    ToolPolicyPayload,
+    ToolPolicyView,
+    ToolSettingsPayload,
+    ToolTestResponse,
+    WorkflowDefinitionImportPayload,
+    WorkflowDefinitionPayload,
+    WorkflowDefinitionView,
+    WorkflowRunCreatePayload,
+    WorkflowRunSummaryView,
+    WorkflowRunUpdatePayload,
+    WorkflowRunView,
+    WorkflowStepRunUpdatePayload,
+    WorkflowStepRunView,
 )
 from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event, new_span_id
+from .tool_registry import (
+    execute_tool_operation,
+    get_agent_tool_policy,
+    get_tool_detail,
+    list_tool_catalog,
+    run_tool_test,
+    set_tool_activation,
+    update_agent_tool_policy,
+    update_tool_settings,
+)
+from .workflow_definition_io import dump_workflow_definition_text, parse_workflow_definition_text
+from .workflow_run_executor import (
+    cancel_workflow_run_execution,
+    initialize_workflow_run_executor_state,
+    schedule_workflow_run_execution,
+)
+from .workflow_runs import (
+    create_workflow_run,
+    get_workflow_run,
+    get_workflow_definition,
+    list_workflow_definitions,
+    list_workflow_runs,
+    list_workflow_steps,
+    seed_workflow_definitions,
+    upsert_workflow_definition,
+    update_workflow_run,
+    update_workflow_step_run,
+)
 
 settings = get_settings()
 
@@ -66,6 +139,8 @@ def initialize_control_runtime_state() -> None:
         seed_default_connections(session)
         seed_default_runtime_profile(session)
         seed_default_agent_profiles(session)
+        seed_workflow_definitions(session)
+    initialize_workflow_run_executor_state()
 
 
 def _runtime_capabilities() -> RuntimeCapabilities:
@@ -139,6 +214,7 @@ def _run_documents(run: IngestionRunRecord, session: Session) -> tuple[list[Task
                 id=document.id,
                 filename=document.filename,
                 requested_lane=document.requested_lane,
+                actual_parse_lane=document.actual_parse_lane,
                 parse_status=document.parse_status,
                 index_status=document.index_status,
                 overall_status=document.status,
@@ -268,6 +344,77 @@ def _run_summary_to_view(run: IngestionRunRecord) -> RunSummaryView:
     )
 
 
+def _workflow_step_to_view(step: WorkflowStepRunRecord) -> WorkflowStepRunView:
+    return WorkflowStepRunView(
+        id=step.id,
+        sequence=step.sequence,
+        node_id=step.node_id,
+        node_type=step.node_type,
+        status=step.status,
+        agent_id=step.agent_id,
+        agent_name=step.agent_name,
+        conversation_id=step.conversation_id,
+        output_text=step.output_text,
+        citations=step.citations_json or [],
+        error_message=step.error_message,
+        metadata_json=step.metadata_json or {},
+        started_at=step.started_at,
+        completed_at=step.completed_at,
+        created_at=step.created_at,
+        updated_at=step.updated_at,
+    )
+
+
+def _workflow_definition_to_view(definition) -> WorkflowDefinitionView:
+    payload = dict(definition.definition_json or {})
+    return WorkflowDefinitionView(
+        workflow_id=payload.get("workflow_id", definition.workflow_id),
+        version=payload.get("version", definition.version),
+        name=payload.get("name", definition.name),
+        execution_mode=payload.get("execution_mode", definition.execution_mode),
+        min_agents=payload.get("min_agents", 1),
+        max_agents=payload.get("max_agents", 1),
+        persist_child_conversations=payload.get("persist_child_conversations", True),
+        head_agent=payload.get("head_agent"),
+        nodes=payload.get("nodes", []),
+        enabled=definition.enabled,
+        created_at=definition.created_at,
+        updated_at=definition.updated_at,
+    )
+
+
+def _workflow_run_summary_to_view(run: WorkflowRunRecord) -> WorkflowRunSummaryView:
+    workflow_metadata = dict((run.result_json or {}).get("workflow", {}))
+    return WorkflowRunSummaryView(
+        id=run.id,
+        workflow_id=run.workflow_id,
+        workflow_name=workflow_metadata.get("name"),
+        surface=run.surface,
+        execution_mode=run.execution_mode,
+        status=run.status,
+        current_step=run.current_step,
+        progress=run.progress,
+        prompt=run.prompt,
+        requested_agent_ids=run.requested_agent_ids_json or [],
+        head_agent_id=workflow_metadata.get("head_agent_id"),
+        head_agent_name=workflow_metadata.get("head_agent_name"),
+        parent_conversation_id=run.parent_conversation_id,
+        error_message=run.error_message,
+        result_json=run.result_json or {},
+        created_at=run.created_at,
+        updated_at=run.updated_at,
+    )
+
+
+def _workflow_run_to_view(run: WorkflowRunRecord, session: Session) -> WorkflowRunView:
+    return WorkflowRunView(
+        **_workflow_run_summary_to_view(run).model_dump(),
+        started_at=run.started_at,
+        completed_at=run.completed_at,
+        steps=[_workflow_step_to_view(step) for step in list_workflow_steps(session, run.id)],
+    )
+
+
 def _runtime_profile_to_view(runtime_profile) -> RuntimeProfileView:
     return RuntimeProfileView(
         id=runtime_profile.id,
@@ -352,6 +499,35 @@ def _agent_to_view(agent: AgentProfileRecord, runtime_profile) -> AgentProfileVi
     )
 
 
+def _collection_to_view(collection: CollectionRecord, session: Session, *, include_impact: bool = False) -> CollectionView:
+    attached_runtime_profile_ids = list(
+        session.scalars(
+            select(RuntimeProfileCollectionRecord.runtime_profile_id).where(
+                RuntimeProfileCollectionRecord.collection_id == collection.id
+            )
+        )
+    )
+    attached_agent_ids = list(
+        session.scalars(
+            select(AgentProfileRecord.id).where(AgentProfileRecord.runtime_profile_id.in_(attached_runtime_profile_ids or [""]))
+        )
+    )
+    impact = CollectionImpactView(**collection_delete_impact(session, collection)) if include_impact else None
+    return CollectionView(
+        id=collection.id,
+        slug=collection.slug,
+        name=collection.name,
+        description=collection.description,
+        status=collection.status,
+        embedding_model_id=collection.embedding_model_id,
+        attached_runtime_profile_ids=attached_runtime_profile_ids,
+        attached_agent_ids=attached_agent_ids,
+        impact=impact,
+        created_at=collection.created_at,
+        updated_at=collection.updated_at,
+    )
+
+
 def _conversation_to_view(conversation: AgentConversationRecord, message_count: int) -> ConversationSummaryView:
     return ConversationSummaryView(
         id=conversation.id,
@@ -377,6 +553,65 @@ def _message_to_view(message: AgentMessageRecord) -> ConversationMessageView:
         api_mode=message.api_mode,
         created_at=message.created_at,
     )
+
+
+def _chat_upload_to_view(upload: ChatUploadRecord, session: Session) -> ChatUploadView:
+    collection_slug: str | None = None
+    if upload.collection_id:
+        collection = session.get(CollectionRecord, upload.collection_id)
+        if collection is not None:
+            collection_slug = collection.slug
+    return ChatUploadView(
+        id=upload.id,
+        conversation_id=upload.conversation_id,
+        agent_id=upload.agent_id,
+        filename=upload.filename,
+        mime_type=upload.mime_type,
+        source_kind=upload.source_kind,
+        policy_lane=cast(RequestedParseLane, upload.requested_lane or "default"),
+        extracted_parse_lane=upload.extracted_parse_lane,
+        extracted_char_count=upload.extracted_char_count,
+        status=upload.status,
+        persistence_mode=upload.persistence_mode,
+        collection_id=upload.collection_id,
+        collection_slug=collection_slug,
+        promoted_document_id=upload.promoted_document_id,
+        error_message=upload.error_message,
+        created_at=upload.created_at,
+        updated_at=upload.updated_at,
+    )
+
+
+def _safe_upload_name(filename: str | None) -> str:
+    candidate = filename or "upload"
+    return re.sub(r"[^a-zA-Z0-9._() -]+", "_", Path(candidate).name).strip()[:200] or "upload"
+
+
+def _resolve_chat_upload_path(*, conversation_id: str, upload_id: str, safe_name: str) -> Path:
+    dest_dir = settings.upload_dir / "_chat" / conversation_id / upload_id
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    return dest_dir / safe_name
+
+
+def _resolve_promoted_document_path(*, corpus: str, upload_id: str, safe_name: str) -> Path:
+    dest_dir = settings.upload_dir / corpus
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    suffix = Path(safe_name).suffix
+    stem = Path(safe_name).stem[:180] or "upload"
+    return dest_dir / f"{stem}__{upload_id}{suffix}"
+
+
+def _chat_upload_source_kind(path: Path) -> str:
+    return "spreadsheet" if path.suffix.lower() in {".xlsx", ".xlsm"} else "document"
+
+
+def _ensure_chat_upload_conversation(session: Session, *, conversation_id: str, agent_id: str) -> AgentConversationRecord:
+    conversation = session.get(AgentConversationRecord, conversation_id)
+    if conversation is None:
+        raise HTTPException(404, "conversation not found")
+    if conversation.agent_id != agent_id:
+        raise HTTPException(400, "conversation does not belong to the selected agent")
+    return conversation
 
 
 async def _write_upload_to_disk(file: UploadFile, dest: Path) -> tuple[int, str]:
@@ -448,6 +683,64 @@ def trigger_ingestion_run(run_id: str, trace_id: str) -> None:
         raise
 
 
+def _promote_chat_upload_to_document(
+    session: Session,
+    *,
+    upload: ChatUploadRecord,
+    collection: CollectionRecord,
+) -> DocumentRecord:
+    staged_path = Path(upload.storage_path)
+    if not staged_path.is_file():
+        raise HTTPException(409, "staged upload file is missing from disk")
+
+    safe_name = _safe_upload_name(upload.filename)
+    dest = _resolve_promoted_document_path(corpus=collection.slug, upload_id=upload.id, safe_name=safe_name)
+    shutil.move(str(staged_path), str(dest))
+    source_path = str(dest.resolve())
+    metadata_json = {
+        **(upload.metadata_json or {}),
+        "chat_upload_id": upload.id,
+        "chat_upload_status": upload.status,
+    }
+    existing = session.scalar(select(DocumentRecord).where(DocumentRecord.source_path == source_path))
+    if existing is None:
+        existing = DocumentRecord(
+            corpus=collection.slug,
+            filename=safe_name,
+            source_path=source_path,
+            mime_type=upload.mime_type or mimetypes.guess_type(safe_name)[0],
+            requested_lane=upload.requested_lane or "default",
+            parse_status="pending",
+            index_status="pending",
+            status="uploaded",
+            source_kind=_chat_upload_source_kind(dest),
+            metadata_json=metadata_json,
+        )
+        session.add(existing)
+        session.flush()
+    else:
+        existing.corpus = collection.slug
+        existing.filename = safe_name
+        existing.mime_type = upload.mime_type or mimetypes.guess_type(safe_name)[0]
+        existing.requested_lane = upload.requested_lane or "default"
+        existing.actual_parse_lane = None
+        existing.parse_status = "pending"
+        existing.index_status = "pending"
+        existing.status = "uploaded"
+        existing.source_kind = _chat_upload_source_kind(dest)
+        existing.error_message = None
+        existing.metadata_json = {**(existing.metadata_json or {}), **metadata_json}
+
+    upload.storage_path = source_path
+    upload.source_kind = existing.source_kind
+    upload.collection_id = collection.id
+    upload.promoted_document_id = existing.id
+    upload.persistence_mode = "save_to_knowledge"
+    upload.status = "approved_for_indexing"
+    upload.error_message = None
+    return existing
+
+
 def create_app() -> FastAPI:
     app = build_app(
         service_name="control-api",
@@ -475,7 +768,10 @@ def create_app() -> FastAPI:
         body: RuntimeDefaultsPayload,
         session: Session = Depends(get_session),
     ) -> RuntimeDefaultsView:
-        return RuntimeDefaultsView(**save_runtime_defaults(session, body.model_dump()))
+        try:
+            return RuntimeDefaultsView(**save_runtime_defaults(session, body.model_dump()))
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
 
     @app.get("/api/connections", response_model=list[ConnectionView])
     def api_list_connections(session: Session = Depends(get_session)) -> list[ConnectionView]:
@@ -485,6 +781,9 @@ def create_app() -> FastAPI:
                 id=row.id,
                 provider=row.provider,
                 label=row.label,
+                provider_kind=row.provider_kind,
+                auth_strategy=row.auth_strategy,
+                auth_header_name=row.auth_header_name,
                 base_url=row.base_url,
                 enabled=row.enabled,
                 api_key_hint=row.masked_api_key,
@@ -502,6 +801,9 @@ def create_app() -> FastAPI:
             session,
             body.provider,
             label=body.label or body.provider,
+            provider_kind=body.provider_kind,
+            auth_strategy=body.auth_strategy,
+            auth_header_name=body.auth_header_name,
             api_key=body.api_key,
             base_url=body.base_url,
             enabled=body.enabled,
@@ -510,6 +812,9 @@ def create_app() -> FastAPI:
             id=record.id,
             provider=record.provider,
             label=record.label,
+            provider_kind=record.provider_kind,
+            auth_strategy=record.auth_strategy,
+            auth_header_name=record.auth_header_name,
             base_url=record.base_url,
             enabled=record.enabled,
             api_key_hint=record.masked_api_key,
@@ -522,19 +827,125 @@ def create_app() -> FastAPI:
         request: Request,
         session: Session = Depends(get_session),
     ) -> ConnectionTestResponse:
-        record = get_active_connection(session, body.provider)
+        try:
+            record = get_active_connection(session, body.provider)
+        except ValueError:
+            # Allow testing a brand-new provider key before persisting it.
+            record = ConnectionRecord(
+                provider=body.provider,
+                label=body.label or body.provider,
+                provider_kind=body.provider_kind,
+                auth_strategy=body.auth_strategy,
+                auth_header_name=body.auth_header_name,
+                api_key=body.api_key,
+                base_url=body.base_url,
+                enabled=True,
+            )
         runtime_profile = get_default_runtime_profile(session)
-        result = test_provider_connection(
-            record,
-            api_mode=body.api_mode,
-            prompt=body.prompt,
-            trace_id=request.state.trace_id,
-            service="control-api",
-            api_key=body.api_key,
-            base_url=body.base_url,
-            model_id=body.model_id or (runtime_profile.llm_config_json or {}).get("model_id"),
-        )
+        try:
+            result = test_provider_connection(
+                record,
+                api_mode=body.api_mode,
+                prompt=body.prompt,
+                trace_id=request.state.trace_id,
+                service="control-api",
+                api_key=body.api_key,
+                base_url=body.base_url,
+                model_id=body.model_id or (runtime_profile.llm_config_json or {}).get("model_id"),
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
         return ConnectionTestResponse(ok=True, **result)
+
+    @app.get("/api/tools/catalog", response_model=list[ToolCatalogEntryView])
+    def api_tool_catalog(session: Session = Depends(get_session)) -> list[ToolCatalogEntryView]:
+        return list_tool_catalog(session)
+
+    @app.get("/api/tools/policy/{agent_id}", response_model=ToolPolicyView)
+    def api_agent_tool_policy(agent_id: str, session: Session = Depends(get_session)) -> ToolPolicyView:
+        try:
+            return get_agent_tool_policy(session, agent_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.post("/api/tools/policy/{agent_id}", response_model=ToolPolicyView)
+    def api_save_agent_tool_policy(
+        agent_id: str,
+        body: ToolPolicyPayload,
+        session: Session = Depends(get_session),
+    ) -> ToolPolicyView:
+        try:
+            return update_agent_tool_policy(session, agent_id, body.allowed_tool_ids)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.get("/api/tools/{tool_id}", response_model=ToolDetailView)
+    def api_tool_detail(tool_id: str, session: Session = Depends(get_session)) -> ToolDetailView:
+        try:
+            return get_tool_detail(session, tool_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.post("/api/tools/{tool_id}/settings", response_model=ToolDetailView)
+    def api_save_tool_settings(
+        tool_id: str,
+        body: ToolSettingsPayload,
+        session: Session = Depends(get_session),
+    ) -> ToolDetailView:
+        try:
+            return update_tool_settings(session, tool_id, body.model_dump())
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.post("/api/tools/{tool_id}/test", response_model=ToolTestResponse)
+    def api_test_tool(tool_id: str, session: Session = Depends(get_session)) -> ToolTestResponse:
+        try:
+            return run_tool_test(session, tool_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.post("/api/tools/{tool_id}/execute", response_model=ToolExecuteResponse)
+    def api_execute_tool(
+        tool_id: str,
+        body: ToolExecutePayload,
+        session: Session = Depends(get_session),
+    ) -> ToolExecuteResponse:
+        try:
+            return execute_tool_operation(session, tool_id, operation=body.operation, payload=body.payload)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.post("/api/tools/{tool_id}/activation", response_model=ToolCatalogEntryView)
+    def api_tool_activation(
+        tool_id: str,
+        body: ToolActivationPayload,
+        session: Session = Depends(get_session),
+    ) -> ToolCatalogEntryView:
+        try:
+            return set_tool_activation(session, tool_id, body.active)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+    @app.get("/api/chat/bootstrap", response_model=ChatBootstrapView)
+    def api_chat_bootstrap(
+        surface: str = "ghostdash",
+        session: Session = Depends(get_session),
+    ) -> ChatBootstrapView:
+        agents = [_agent_to_view(agent, resolve_agent_runtime_profile(session, agent)) for agent in list_agents(session)]
+        default_agent = next((agent for agent in agents if agent.is_default), agents[0] if agents else None)
+        return ChatBootstrapView(
+            surface=surface,
+            default_agent_id=default_agent.id if default_agent is not None else None,
+            runtime_defaults=RuntimeDefaultsView(**get_runtime_defaults(session)),
+            capabilities=_runtime_capabilities(),
+            features=ChatBootstrapFeatures(
+                allow_mock_provider=False,
+                allow_api_mode_override=False,
+                allow_approved_web_toggle=True,
+            ),
+            agents=agents,
+            tools_catalog=list_tool_catalog(session),
+        )
 
     @app.get("/api/agents", response_model=list[AgentProfileView])
     def api_list_agents(session: Session = Depends(get_session)) -> list[AgentProfileView]:
@@ -545,8 +956,60 @@ def create_app() -> FastAPI:
         body: AgentProfilePayload,
         session: Session = Depends(get_session),
     ) -> AgentProfileView:
-        agent = save_agent(session, body.model_dump())
+        try:
+            agent = save_agent(session, body.model_dump())
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
         return _agent_to_view(agent, resolve_agent_runtime_profile(session, agent))
+
+    @app.get("/api/collections", response_model=list[CollectionView])
+    def api_list_collections(
+        include_impact: bool = False,
+        session: Session = Depends(get_session),
+    ) -> list[CollectionView]:
+        return [
+            _collection_to_view(collection, session, include_impact=include_impact)
+            for collection in list_collections(session)
+        ]
+
+    @app.post("/api/collections", response_model=CollectionView)
+    def api_create_collection(
+        body: CollectionCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> CollectionView:
+        try:
+            record = ensure_collection_record(
+                session,
+                slug=body.slug,
+                name=body.name or body.slug,
+                description=body.description,
+                embedding_model_id=(get_default_runtime_profile(session).kb_config_json or {}).get("embedding_model_id"),
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        session.commit()
+        session.refresh(record)
+        return _collection_to_view(record, session, include_impact=True)
+
+    @app.get("/api/collections/{collection_id}", response_model=CollectionView)
+    def api_collection_detail(collection_id: str, session: Session = Depends(get_session)) -> CollectionView:
+        try:
+            collection = get_collection(session, collection_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _collection_to_view(collection, session, include_impact=True)
+
+    @app.delete("/api/collections/{collection_id}", response_model=CollectionDeleteResponse)
+    def api_delete_collection(collection_id: str, session: Session = Depends(get_session)) -> CollectionDeleteResponse:
+        try:
+            collection = get_collection(session, collection_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        try:
+            impact = CollectionImpactView(**delete_collection_and_storage(session, collection))
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return CollectionDeleteResponse(id=collection_id, slug=collection.slug, impact=impact)
 
     @app.get("/api/agents/{agent_id}/conversations", response_model=list[ConversationSummaryView])
     def api_list_agent_conversations(
@@ -572,6 +1035,135 @@ def create_app() -> FastAPI:
             raise HTTPException(404, "conversation not found")
         return [_message_to_view(message) for message in list_messages(session, conversation_id)]
 
+    @app.get("/api/conversations/{conversation_id}/uploads", response_model=list[ChatUploadView])
+    def api_list_conversation_uploads(
+        conversation_id: str,
+        session: Session = Depends(get_session),
+    ) -> list[ChatUploadView]:
+        conversation = session.get(AgentConversationRecord, conversation_id)
+        if conversation is None:
+            raise HTTPException(404, "conversation not found")
+        uploads = list(
+            session.scalars(
+                select(ChatUploadRecord)
+                .where(ChatUploadRecord.conversation_id == conversation_id)
+                .order_by(ChatUploadRecord.created_at.desc())
+            )
+        )
+        return [_chat_upload_to_view(upload, session) for upload in uploads]
+
+    @app.post("/api/conversations/{conversation_id}/uploads", response_model=ChatUploadView)
+    async def api_stage_conversation_upload(
+        conversation_id: str,
+        agent_id: str = Form(...),
+        policy_lane: str | None = Form(None),
+        file: UploadFile = File(...),
+        session: Session = Depends(get_session),
+    ) -> ChatUploadView:
+        get_agent(session, agent_id)
+        _ensure_chat_upload_conversation(session, conversation_id=conversation_id, agent_id=agent_id)
+        lane = cast(RequestedParseLane, policy_lane or "default")
+        if lane not in {"default", "local", "cloud"}:
+            raise HTTPException(400, "policy_lane must be default, local, or cloud")
+
+        safe_name = _safe_upload_name(file.filename)
+        upload_id = str(uuid4())
+        dest = _resolve_chat_upload_path(conversation_id=conversation_id, upload_id=upload_id, safe_name=safe_name)
+        upload = ChatUploadRecord(
+            id=upload_id,
+            conversation_id=conversation_id,
+            agent_id=agent_id,
+            filename=safe_name,
+            storage_path=str(dest.resolve()),
+            mime_type=file.content_type or mimetypes.guess_type(safe_name)[0],
+            requested_lane=lane,
+            source_kind="document",
+            status="uploaded_pending_decision",
+            metadata_json={},
+        )
+        session.add(upload)
+        session.flush()
+
+        size_bytes, sha256 = await _write_upload_to_disk(file, dest)
+        extracted_text: str | None = None
+        extracted_parse_lane: str | None = None
+        extraction_error: str | None = None
+        extraction_truncated = False
+        try:
+            extracted_text, extracted_parse_lane = extract_text_local(dest)
+            if len(extracted_text) > 12000:
+                extracted_text = extracted_text[:12000].rstrip() + "\n\n[truncated for chat context]"
+                extraction_truncated = True
+        except Exception as exc:
+            extraction_error = str(exc)[:2000]
+
+        upload.storage_path = str(dest.resolve())
+        upload.source_kind = _chat_upload_source_kind(dest)
+        upload.extracted_text = extracted_text
+        upload.extracted_parse_lane = extracted_parse_lane
+        upload.extracted_char_count = len(extracted_text or "")
+        upload.error_message = extraction_error
+        upload.metadata_json = {
+            "size_bytes": size_bytes,
+            "sha256": sha256,
+            "extraction_truncated": extraction_truncated,
+        }
+        session.commit()
+        session.refresh(upload)
+        return _chat_upload_to_view(upload, session)
+
+    @app.post("/api/chat/uploads/{upload_id}/decision", response_model=ChatUploadView)
+    def api_chat_upload_decision(
+        upload_id: str,
+        body: ChatUploadDecisionPayload,
+        session: Session = Depends(get_session),
+    ) -> ChatUploadView:
+        upload = session.get(ChatUploadRecord, upload_id)
+        if upload is None:
+            raise HTTPException(404, "chat upload not found")
+        _ensure_chat_upload_conversation(
+            session,
+            conversation_id=upload.conversation_id,
+            agent_id=upload.agent_id,
+        )
+
+        if body.persistence_mode == "conversation_only":
+            upload.persistence_mode = "conversation_only"
+            upload.status = "conversation_only"
+            upload.collection_id = None
+            upload.error_message = None
+            session.commit()
+            session.refresh(upload)
+            return _chat_upload_to_view(upload, session)
+
+        collection: CollectionRecord | None = None
+        if body.collection_id:
+            try:
+                collection = get_collection(session, body.collection_id)
+            except ValueError as exc:
+                raise HTTPException(404, str(exc)) from exc
+        elif body.collection_slug:
+            collection = get_collection_by_slug(session, body.collection_slug)
+            if collection is None:
+                raise HTTPException(404, f"collection '{body.collection_slug}' not found")
+
+        upload.persistence_mode = "save_to_knowledge"
+        if collection is None:
+            upload.status = "awaiting_collection"
+            session.commit()
+            session.refresh(upload)
+            return _chat_upload_to_view(upload, session)
+
+        if upload.promoted_document_id:
+            session.commit()
+            session.refresh(upload)
+            return _chat_upload_to_view(upload, session)
+
+        _promote_chat_upload_to_document(session, upload=upload, collection=collection)
+        session.commit()
+        session.refresh(upload)
+        return _chat_upload_to_view(upload, session)
+
     @app.post("/api/upload", response_model=UploadView)
     async def api_upload(
         corpus: str | None = Form(None),
@@ -580,9 +1172,12 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> UploadView:
         target_corpus = corpus or settings.app_default_corpus
-        lane = policy_lane or settings.app_default_policy_lane
-        if lane not in {"local", "cloud"}:
-            raise HTTPException(400, "policy_lane must be local or cloud")
+        collection = get_collection_by_slug(session, target_corpus)
+        if collection is None:
+            raise HTTPException(404, f"collection '{target_corpus}' not found")
+        lane = cast(RequestedParseLane, policy_lane or "default")
+        if lane not in {"default", "local", "cloud"}:
+            raise HTTPException(400, "policy_lane must be default, local, or cloud")
 
         filename = file.filename or "upload"
         safe_name = re.sub(r"[^a-zA-Z0-9._() -]+", "_", Path(filename).name).strip()[:200] or "upload"
@@ -653,6 +1248,8 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> TaskView:
         corpus = body.corpus or settings.app_default_corpus
+        if get_collection_by_slug(session, corpus) is None:
+            raise HTTPException(404, f"collection '{corpus}' not found")
         existing = session.scalar(
             select(IngestionRunRecord)
             .where(
@@ -708,6 +1305,178 @@ def create_app() -> FastAPI:
             statement = statement.where(IngestionRunRecord.corpus == corpus)
         runs = list(session.scalars(statement.limit(20)))
         return [_run_summary_to_view(run) for run in runs]
+
+    @app.get("/api/workflows/definitions", response_model=list[WorkflowDefinitionView])
+    def api_workflow_definitions(session: Session = Depends(get_session)) -> list[WorkflowDefinitionView]:
+        return [_workflow_definition_to_view(definition) for definition in list_workflow_definitions(session)]
+
+    @app.get("/api/workflows/definitions/{workflow_id}", response_model=WorkflowDefinitionView)
+    def api_workflow_definition(workflow_id: str, session: Session = Depends(get_session)) -> WorkflowDefinitionView:
+        try:
+            definition = get_workflow_definition(session, workflow_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _workflow_definition_to_view(definition)
+
+    @app.post("/api/workflows/definitions", response_model=WorkflowDefinitionView)
+    def api_upsert_workflow_definition(
+        body: WorkflowDefinitionPayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowDefinitionView:
+        try:
+            definition = upsert_workflow_definition(session, body.model_dump())
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return _workflow_definition_to_view(definition)
+
+    @app.post("/api/workflows/definitions/import", response_model=WorkflowDefinitionView)
+    def api_import_workflow_definition(
+        body: WorkflowDefinitionImportPayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowDefinitionView:
+        try:
+            parsed = parse_workflow_definition_text(definition_text=body.definition_text, format=body.format)
+            definition = upsert_workflow_definition(session, parsed)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return _workflow_definition_to_view(definition)
+
+    @app.get("/api/workflows/definitions/{workflow_id}/export", response_class=PlainTextResponse)
+    def api_export_workflow_definition(
+        workflow_id: str,
+        format: str = Query(default="yaml"),
+        session: Session = Depends(get_session),
+    ) -> Response:
+        try:
+            definition = get_workflow_definition(session, workflow_id)
+            body = dump_workflow_definition_text(definition=dict(definition.definition_json or {}), format=format)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return PlainTextResponse(body)
+
+    @app.get("/api/workflows/runs", response_model=list[WorkflowRunSummaryView])
+    def api_workflow_runs(
+        surface: str | None = None,
+        workflow_id: str | None = None,
+        session: Session = Depends(get_session),
+    ) -> list[WorkflowRunSummaryView]:
+        return [
+            _workflow_run_summary_to_view(run)
+            for run in list_workflow_runs(session, surface=surface, workflow_id=workflow_id, limit=20)
+        ]
+
+    @app.get("/api/workflows/runs/{run_id}", response_model=WorkflowRunView)
+    def api_workflow_run(run_id: str, session: Session = Depends(get_session)) -> WorkflowRunView:
+        try:
+            run = get_workflow_run(session, run_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _workflow_run_to_view(run, session)
+
+    @app.post("/api/workflows/runs", response_model=WorkflowRunView)
+    def api_create_workflow_run(
+        body: WorkflowRunCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowRunView:
+        try:
+            run = create_workflow_run(
+                session,
+                workflow_id=body.workflow_id,
+                surface=body.surface,
+                prompt=body.prompt,
+                agent_ids=body.agent_ids,
+                parent_conversation_id=body.parent_conversation_id,
+                head_agent_id=body.head_agent_id,
+                result_json={
+                    "request": {
+                        "api_mode": body.api_mode,
+                        "use_approved_web": body.use_approved_web,
+                    }
+                },
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return _workflow_run_to_view(run, session)
+
+    @app.post("/api/workflows/runs/execute", response_model=WorkflowRunView)
+    async def api_execute_workflow_run(
+        body: WorkflowRunCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowRunView:
+        try:
+            run = create_workflow_run(
+                session,
+                workflow_id=body.workflow_id,
+                surface=body.surface,
+                prompt=body.prompt,
+                agent_ids=body.agent_ids,
+                parent_conversation_id=body.parent_conversation_id,
+                head_agent_id=body.head_agent_id,
+                result_json={
+                    "request": {
+                        "api_mode": body.api_mode,
+                        "use_approved_web": body.use_approved_web,
+                    }
+                },
+            )
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        schedule_workflow_run_execution(run.id)
+        return _workflow_run_to_view(run, session)
+
+    @app.post("/api/workflows/runs/{run_id}", response_model=WorkflowRunView)
+    def api_update_workflow_run(
+        run_id: str,
+        body: WorkflowRunUpdatePayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowRunView:
+        try:
+            run = update_workflow_run(
+                session,
+                run_id=run_id,
+                status=body.status,
+                error_message=body.error_message,
+                result_json=body.result_json or None,
+            )
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _workflow_run_to_view(run, session)
+
+    @app.post("/api/workflows/runs/{run_id}/cancel", response_model=WorkflowRunView)
+    async def api_cancel_workflow_run(
+        run_id: str,
+        session: Session = Depends(get_session),
+    ) -> WorkflowRunView:
+        try:
+            await cancel_workflow_run_execution(run_id)
+            session.expire_all()
+            run = get_workflow_run(session, run_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _workflow_run_to_view(run, session)
+
+    @app.post("/api/workflows/runs/{run_id}/steps/{step_id}", response_model=WorkflowRunView)
+    def api_update_workflow_step_run(
+        run_id: str,
+        step_id: str,
+        body: WorkflowStepRunUpdatePayload,
+        session: Session = Depends(get_session),
+    ) -> WorkflowRunView:
+        try:
+            run = update_workflow_step_run(
+                session,
+                run_id=run_id,
+                step_id=step_id,
+                status=body.status,
+                conversation_id=body.conversation_id,
+                output_text=body.output_text,
+                citations=body.citations,
+                error_message=body.error_message,
+                metadata_json=body.metadata_json or None,
+            )
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _workflow_run_to_view(run, session)
 
     @app.get("/api/documents", response_model=list[DocumentIngestionView])
     def api_documents(corpus: str | None = None, session: Session = Depends(get_session)) -> list[DocumentIngestionView]:

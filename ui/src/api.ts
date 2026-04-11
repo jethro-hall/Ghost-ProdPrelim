@@ -10,10 +10,36 @@ export const api = axios.create({
 
 export type ChatApiMode = "responses" | "chat_completions";
 
+/** Approximate LLM tokens (cl100k) per assistant turn; sums prompt + completion. */
+export type ChatUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  estimate?: boolean;
+};
+export type RequestedLane = "default" | "local" | "cloud";
+export type ChatUploadPersistenceMode = "conversation_only" | "save_to_knowledge";
+export type ProviderKind = "openai" | "anthropic" | "google_gemini" | "openai_compatible";
+export type ConnectionAuthStrategy = "bearer" | "x_api_key" | "custom_header";
+export type ToolHealth = "healthy" | "unhealthy" | "unknown";
+
+export const REQUESTED_LANE_LABELS: Record<RequestedLane, string> = {
+  default: "Default (runtime policy)",
+  local: "Local only",
+  cloud: "Cloud only",
+};
+
+export function formatRequestedLane(lane: RequestedLane) {
+  return REQUESTED_LANE_LABELS[lane];
+}
+
 export type Connection = {
   id: string;
   provider: string;
   label: string;
+  provider_kind: ProviderKind;
+  auth_strategy: ConnectionAuthStrategy;
+  auth_header_name: string | null;
   base_url: string | null;
   enabled: boolean;
   api_key_hint: string | null;
@@ -45,6 +71,10 @@ export type RuntimeCapabilities = {
 export type RuntimeDefaults = {
   chat_api_mode: ChatApiMode;
   llm_model_id: string;
+  llm_connection_id?: string | null;
+  llm_connection_label?: string | null;
+  llm_provider_key?: string | null;
+  llm_provider_kind?: ProviderKind | null;
   embedding_model_id: string;
   default_corpora: string[];
   pdf_chunk_size: number;
@@ -55,6 +85,39 @@ export type RuntimeDefaults = {
   pdf_rerank_enabled: boolean;
   runtime_profile_id?: string | null;
   runtime_profile_name?: string | null;
+};
+
+export type CollectionImpact = {
+  documents: number;
+  document_versions: number;
+  retrieval_artifacts: number;
+  workbook_artifacts: number;
+  workbook_sheets: number;
+  workbook_tables: number;
+  workbook_rows: number;
+  ingestion_runs: number;
+  active_runs: number;
+  runtime_profiles: number;
+  agents: number;
+  conversations: number;
+  messages: number;
+  cache_entries: number;
+  vector_points: number;
+  upload_paths: string[];
+};
+
+export type Collection = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  status: string;
+  embedding_model_id: string | null;
+  attached_runtime_profile_ids: string[];
+  attached_agent_ids: string[];
+  impact?: CollectionImpact | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type VectorStats = {
@@ -73,9 +136,67 @@ export type AgentToolConfig = {
   description: string;
   enabled: boolean;
   allowed_urls: string[];
+  provider?: string | null;
+  kind?: string | null;
+  session_toggleable?: boolean;
+};
+
+export type ToolCatalogEntry = {
+  id: string;
+  provider: string;
+  name: string;
+  gateway: string;
+  description?: string | null;
+  status: ToolHealth;
+  active: boolean;
+  configured: boolean;
+  read_only: boolean;
+  session_toggleable: boolean;
+};
+
+export type ToolSettings = {
+  base_url?: string | null;
+  database?: string | null;
+  username_hint?: string | null;
+  has_password: boolean;
+  auth_source: "direct_credentials";
+  read_only: boolean;
+  timeout_ms: number;
+  health_path: string;
+  execute_path: string;
+  missing_config: string[];
+};
+
+export type ToolDetail = ToolCatalogEntry & {
+  settings: ToolSettings;
+  safe_operations: string[];
+};
+
+export type ToolTestResult = {
+  success: boolean;
+  message: string;
+  trace_id?: string | null;
+  latency_ms?: number | null;
+  data: Record<string, unknown>;
+};
+
+export type ToolExecuteResult = {
+  success: boolean;
+  message: string;
+  trace_id?: string | null;
+  latency_ms?: number | null;
+  operation?: string | null;
+  read_only: boolean;
+  data: Record<string, unknown>;
+};
+
+export type ToolPolicy = {
+  agent_id: string;
+  allowed_tool_ids: string[];
 };
 
 export type RuntimeProfileLlmConfig = {
+  connection_id?: string | null;
   provider: string;
   model_id: string;
   temperature: number;
@@ -136,6 +257,22 @@ export type AgentProfile = {
   updated_at: string;
 };
 
+export type ChatBootstrapFeatures = {
+  allow_mock_provider: boolean;
+  allow_api_mode_override: boolean;
+  allow_approved_web_toggle: boolean;
+};
+
+export type ChatBootstrap = {
+  surface: string;
+  default_agent_id: string | null;
+  runtime_defaults: RuntimeDefaults;
+  capabilities: RuntimeCapabilities;
+  features: ChatBootstrapFeatures;
+  agents: AgentProfile[];
+  tools_catalog?: ToolCatalogEntry[];
+};
+
 export type AgentProfilePayload = {
   id?: string;
   name: string;
@@ -171,6 +308,26 @@ export type ConversationMessage = {
   created_at: string;
 };
 
+export type ChatUpload = {
+  id: string;
+  conversation_id: string;
+  agent_id: string;
+  filename: string;
+  mime_type: string | null;
+  source_kind: string;
+  policy_lane: RequestedLane;
+  extracted_parse_lane: string | null;
+  extracted_char_count: number;
+  status: string;
+  persistence_mode: ChatUploadPersistenceMode | null;
+  collection_id: string | null;
+  collection_slug: string | null;
+  promoted_document_id: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DocumentArtifact = {
   artifact_type: string;
   source: string;
@@ -182,7 +339,7 @@ export type DocumentIngestion = {
   corpus: string;
   filename: string;
   source_path: string;
-  requested_lane: string;
+  requested_lane: RequestedLane;
   actual_parse_lane: string | null;
   parse_status: string;
   index_status: string;
@@ -205,7 +362,8 @@ export type TaskStep = {
 export type TaskDocument = {
   id: string;
   filename: string;
-  requested_lane: string;
+  requested_lane: RequestedLane;
+  actual_parse_lane: string | null;
   parse_status: string;
   index_status: string;
   overall_status: string;
@@ -236,7 +394,7 @@ export type RunSummary = {
   status: string;
   current_step: string;
   progress: number;
-  requested_lane: string | null;
+  requested_lane: RequestedLane | null;
   trace_id: string | null;
   error_message: string | null;
   result_json: Record<string, unknown>;
@@ -259,6 +417,13 @@ export async function fetchRuntimeDefaults() {
   return data;
 }
 
+export async function fetchChatBootstrap(surface = "ghostdash") {
+  const { data } = await api.get<ChatBootstrap>("/chat/bootstrap", {
+    params: { surface },
+  });
+  return data;
+}
+
 export async function saveRuntimeDefaults(body: RuntimeDefaults) {
   const { data } = await api.post<RuntimeDefaults>("/runtime/defaults", body);
   return data;
@@ -266,6 +431,74 @@ export async function saveRuntimeDefaults(body: RuntimeDefaults) {
 
 export async function fetchAgents() {
   const { data } = await api.get<AgentProfile[]>("/agents");
+  return data;
+}
+
+export async function fetchToolCatalog() {
+  const { data } = await api.get<ToolCatalogEntry[]>("/tools/catalog");
+  return data;
+}
+
+export async function fetchToolDetail(toolId: string) {
+  const { data } = await api.get<ToolDetail>(`/tools/${toolId}`);
+  return data;
+}
+
+export async function saveToolSettings(
+  toolId: string,
+  body: {
+    base_url?: string | null;
+    database?: string | null;
+    username?: string | null;
+    password?: string | null;
+    timeout_ms?: number;
+  },
+) {
+  const { data } = await api.post<ToolDetail>(`/tools/${toolId}/settings`, body);
+  return data;
+}
+
+export async function testTool(toolId: string) {
+  const { data } = await api.post<ToolTestResult>(`/tools/${toolId}/test`);
+  return data;
+}
+
+export async function executeTool(toolId: string, body: { operation: string; payload?: Record<string, unknown> }) {
+  const { data } = await api.post<ToolExecuteResult>(`/tools/${toolId}/execute`, body);
+  return data;
+}
+
+export async function setToolActivation(toolId: string, active: boolean) {
+  const { data } = await api.post<ToolCatalogEntry>(`/tools/${toolId}/activation`, { active });
+  return data;
+}
+
+export async function fetchAgentToolPolicy(agentId: string) {
+  const { data } = await api.get<ToolPolicy>(`/tools/policy/${agentId}`);
+  return data;
+}
+
+export async function saveAgentToolPolicy(agentId: string, allowedToolIds: string[]) {
+  const { data } = await api.post<ToolPolicy>(`/tools/policy/${agentId}`, { allowed_tool_ids: allowedToolIds });
+  return data;
+}
+
+export async function fetchCollections(includeImpact = false) {
+  const { data } = await api.get<Collection[]>("/collections", {
+    params: includeImpact ? { include_impact: true } : undefined,
+  });
+  return data;
+}
+
+export async function createCollection(body: { slug: string; name?: string; description?: string }) {
+  const { data } = await api.post<Collection>("/collections", body);
+  return data;
+}
+
+export async function deleteCollection(collectionId: string) {
+  const { data } = await api.delete<{ id: string; slug: string; deleted: boolean; impact: CollectionImpact }>(
+    `/collections/${collectionId}`,
+  );
   return data;
 }
 
@@ -281,6 +514,11 @@ export async function fetchAgentConversations(agentId: string) {
 
 export async function fetchConversationMessages(conversationId: string) {
   const { data } = await api.get<ConversationMessage[]>(`/conversations/${conversationId}/messages`);
+  return data;
+}
+
+export async function fetchConversationUploads(conversationId: string) {
+  const { data } = await api.get<ChatUpload[]>(`/conversations/${conversationId}/uploads`);
   return data;
 }
 
@@ -305,13 +543,24 @@ export async function fetchRuns(corpus?: string) {
   return data;
 }
 
-export async function saveConnection(body: Partial<Connection> & { provider: string }) {
+export async function saveConnection(
+  body: Partial<Connection> & {
+    provider: string;
+    provider_kind?: ProviderKind;
+    auth_strategy?: ConnectionAuthStrategy;
+    auth_header_name?: string | null;
+  },
+) {
   const { data } = await api.post<Connection>("/connections", body);
   return data;
 }
 
 export async function testConnection(body: {
   provider: string;
+  label?: string;
+  provider_kind?: ProviderKind;
+  auth_strategy?: ConnectionAuthStrategy;
+  auth_header_name?: string | null;
   api_key?: string;
   base_url?: string;
   model_id?: string;
@@ -322,13 +571,41 @@ export async function testConnection(body: {
   return data;
 }
 
-export async function uploadFile(file: File, corpus?: string, policyLane?: string) {
+export async function uploadFile(file: File, corpus?: string, policyLane?: RequestedLane) {
   const form = new FormData();
   form.append("file", file);
   if (corpus) form.append("corpus", corpus);
   if (policyLane) form.append("policy_lane", policyLane);
   const { data } = await api.post("/upload", form);
   return data as { id: string; filename: string; status: string };
+}
+
+export async function stageConversationUpload(args: {
+  conversationId: string;
+  agentId: string;
+  file: File;
+  policyLane?: RequestedLane;
+}) {
+  const form = new FormData();
+  form.append("agent_id", args.agentId);
+  form.append("file", args.file);
+  if (args.policyLane) form.append("policy_lane", args.policyLane);
+  const { data } = await api.post<ChatUpload>(`/conversations/${args.conversationId}/uploads`, form);
+  return data;
+}
+
+export async function decideChatUpload(args: {
+  uploadId: string;
+  persistenceMode: ChatUploadPersistenceMode;
+  collectionId?: string | null;
+  collectionSlug?: string | null;
+}) {
+  const { data } = await api.post<ChatUpload>(`/chat/uploads/${args.uploadId}/decision`, {
+    persistence_mode: args.persistenceMode,
+    collection_id: args.collectionId ?? null,
+    collection_slug: args.collectionSlug ?? null,
+  });
+  return data;
 }
 
 export async function startSync(corpus?: string) {
@@ -363,13 +640,20 @@ export async function streamChat(args: {
   message: string;
   corpora?: string[];
   apiMode?: ChatApiMode;
+  /** Per-request model id (e.g. openai/gpt-4o-mini). Omit to use the agent runtime profile model. */
+  llmModelId?: string | null;
   agentId?: string;
   conversationId?: string;
   useApprovedWeb?: boolean;
   signal?: AbortSignal;
   onStart?: (payload: { citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean }) => void;
   onDelta: (delta: string) => void;
-  onDone?: (payload: { citations: unknown[]; conversation_id?: string; cached?: boolean }) => void;
+  onDone?: (payload: {
+    citations: unknown[];
+    conversation_id?: string;
+    cached?: boolean;
+    usage?: ChatUsage;
+  }) => void;
 }) {
   const response = await fetch(`${agentBaseUrl}/chat/stream`, {
     method: "POST",
@@ -380,6 +664,7 @@ export async function streamChat(args: {
       message: args.message,
       corpora: args.corpora ?? [],
       api_mode: args.apiMode ?? "responses",
+      llm_model_id: args.llmModelId?.trim() ? args.llmModelId.trim() : null,
       agent_id: args.agentId ?? null,
       conversation_id: args.conversationId ?? null,
       use_approved_web: args.useApprovedWeb ?? false,
@@ -410,7 +695,7 @@ export async function streamChat(args: {
       const payload = JSON.parse(line.slice(6)) as
         | { type: "start"; citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean }
         | { type: "delta"; delta: string }
-        | { type: "done"; citations: unknown[]; conversation_id?: string; cached?: boolean }
+        | { type: "done"; citations: unknown[]; conversation_id?: string; cached?: boolean; usage?: ChatUsage }
         | { type: "error"; error: string };
 
       if (payload.type === "start") {
@@ -425,7 +710,12 @@ export async function streamChat(args: {
       } else if (payload.type === "delta") {
         args.onDelta(payload.delta);
       } else if (payload.type === "done") {
-        args.onDone?.({ citations: payload.citations, conversation_id: payload.conversation_id, cached: payload.cached });
+        args.onDone?.({
+          citations: payload.citations,
+          conversation_id: payload.conversation_id,
+          cached: payload.cached,
+          usage: payload.usage,
+        });
       } else if (payload.type === "error") {
         throw new Error(payload.error);
       }

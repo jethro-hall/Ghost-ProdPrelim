@@ -6,7 +6,9 @@ from typing import Any
 from sqlalchemy import inspect, select, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.orm import sessionmaker
 
+from .collections import backfill_collection_registry
 from .models import RuntimeProfileRecord
 from .runtime_profiles import build_runtime_profile_from_legacy
 
@@ -99,6 +101,71 @@ def _ensure_agent_runtime_profile_column(engine: Engine) -> None:
             message = str(exc).lower()
             if "already exists" not in message and "duplicate column" not in message:
                 raise
+
+
+def _ensure_connection_metadata_columns(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "connections" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("connections")}
+    missing_columns = []
+    if "provider_kind" not in columns:
+        missing_columns.append(("provider_kind", "VARCHAR(32)"))
+    if "auth_strategy" not in columns:
+        missing_columns.append(("auth_strategy", "VARCHAR(32)"))
+    if "auth_header_name" not in columns:
+        missing_columns.append(("auth_header_name", "VARCHAR(64)"))
+    if not missing_columns:
+        return
+    with engine.begin() as connection:
+        for column_name, column_type in missing_columns:
+            statement = (
+                f"ALTER TABLE connections ADD COLUMN IF NOT EXISTS {column_name} {column_type}"
+                if engine.dialect.name == "postgresql"
+                else f"ALTER TABLE connections ADD COLUMN {column_name} {column_type}"
+            )
+            try:
+                connection.execute(text(statement))
+            except (OperationalError, ProgrammingError) as exc:
+                message = str(exc).lower()
+                if "already exists" not in message and "duplicate column" not in message:
+                    raise
+
+
+def _backfill_connection_metadata(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "connections" not in inspector.get_table_names():
+        return
+    with engine.begin() as connection:
+        rows = connection.execute(
+            text("SELECT id, provider, base_url, provider_kind, auth_strategy, auth_header_name FROM connections")
+        ).mappings()
+        for row in rows:
+            base_url = str(row.get("base_url") or "").lower()
+            provider = str(row.get("provider") or "")
+            provider_kind = row.get("provider_kind")
+            auth_strategy = row.get("auth_strategy")
+            auth_header_name = row.get("auth_header_name")
+            next_provider_kind = provider_kind or ("openai" if provider == "openai" else "openai_compatible")
+            next_auth_strategy = auth_strategy or "bearer"
+            next_auth_header_name = auth_header_name
+            if "one.rideai.com.au" in base_url:
+                next_provider_kind = "openai_compatible"
+                next_auth_strategy = "custom_header"
+                next_auth_header_name = next_auth_header_name or "X-Internal-Key"
+            connection.execute(
+                text(
+                    "UPDATE connections "
+                    "SET provider_kind = :provider_kind, auth_strategy = :auth_strategy, auth_header_name = :auth_header_name "
+                    "WHERE id = :connection_id"
+                ),
+                {
+                    "provider_kind": next_provider_kind,
+                    "auth_strategy": next_auth_strategy,
+                    "auth_header_name": next_auth_header_name,
+                    "connection_id": row["id"],
+                },
+            )
 
 
 def _backfill_runtime_profiles(engine: Engine) -> None:
@@ -202,8 +269,63 @@ def _drop_legacy_runtime_sources(engine: Engine) -> None:
             connection.execute(text("DROP TABLE IF EXISTS runtime_defaults"))
 
 
+def _ensure_agent_conversation_openai_response_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_conversations" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_conversations")}
+    if "openai_last_response_id" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_conversations ADD COLUMN IF NOT EXISTS openai_last_response_id VARCHAR(128)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_conversations ADD COLUMN openai_last_response_id VARCHAR(128)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_tool_registry_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "tool_registry" in inspector.get_table_names():
+        _create_index_if_missing(engine, "tool_registry", "ix_tool_registry_provider", "provider")
+        return
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS tool_registry (
+                    id VARCHAR(64) PRIMARY KEY,
+                    provider VARCHAR(64) NOT NULL,
+                    name VARCHAR(128) NOT NULL,
+                    gateway VARCHAR(128) NOT NULL,
+                    description TEXT,
+                    status VARCHAR(32) NOT NULL DEFAULT 'unknown',
+                    active BOOLEAN NOT NULL DEFAULT false,
+                    config_json JSON NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+    _create_index_if_missing(engine, "tool_registry", "ix_tool_registry_provider", "provider")
+
+
 def run_startup_migrations(engine: Engine) -> None:
+    _ensure_tool_registry_table(engine)
     _ensure_agent_runtime_profile_column(engine)
+    _ensure_agent_conversation_openai_response_column(engine)
+    _ensure_connection_metadata_columns(engine)
     _create_index_if_missing(engine, "agent_profiles", "ix_agent_profiles_runtime_profile_id", "runtime_profile_id")
+    _backfill_connection_metadata(engine)
     _backfill_runtime_profiles(engine)
     _drop_legacy_runtime_sources(engine)
+    SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+    with SessionLocal() as session:
+        backfill_collection_registry(session)

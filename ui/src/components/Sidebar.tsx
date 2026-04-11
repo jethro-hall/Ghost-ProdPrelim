@@ -115,6 +115,7 @@ export default function Sidebar({ open, onToggle }: Props) {
           Settings
         </div>
         <nav className="flex flex-col gap-0.5">
+          <NavItem to="/tools" label="Tool Settings" icon={<NetworkIcon size={14} />} />
           <NavItem to="/settings" label="System Settings" icon={<SettingsIcon size={14} />} />
         </nav>
       </div>

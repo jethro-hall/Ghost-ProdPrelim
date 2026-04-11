@@ -6,8 +6,10 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .collections import hydrate_runtime_profile_collection_bindings, sync_runtime_profile_collection_bindings
 from .models import AgentProfileRecord, RuntimeProfileRecord
-from .settings import get_settings
+from .approved_web import normalize_allowed_urls
+from .settings import get_settings, should_backfill_default_embedding_model
 
 settings = get_settings()
 
@@ -29,15 +31,99 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR = "Say clearly that the available context is insufficient."
 DEFAULT_AGENT_TOOLS = [
-    {"id": "kb", "name": "Knowledge Base", "description": "Query indexed documents.", "enabled": True, "allowed_urls": []},
+    {
+        "id": "kb",
+        "name": "Knowledge Base",
+        "description": "Query indexed documents.",
+        "enabled": True,
+        "allowed_urls": [],
+        "provider": "ghostdash",
+        "kind": "knowledge",
+        "session_toggleable": False,
+    },
     {
         "id": "web",
         "name": "Approved Web Sources",
         "description": "Fetch only the explicitly allowed websites stored on this agent.",
         "enabled": False,
         "allowed_urls": [],
+        "provider": "approved_web",
+        "kind": "approved_web",
+        "session_toggleable": False,
+    },
+    {
+        "id": "odoo_primary",
+        "name": "Odoo ERP",
+        "description": "Read-only ERP and finance access when GhostDASH allows it and the gateway is healthy.",
+        "enabled": False,
+        "allowed_urls": [],
+        "provider": "odoo",
+        "kind": "external",
+        "session_toggleable": True,
     },
 ]
+
+
+def normalize_tool_policy_config(policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    incoming = dict(policy or {})
+    defaults_by_id = {str(tool["id"]): deepcopy(tool) for tool in DEFAULT_AGENT_TOOLS}
+    normalized_tools: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+
+    for raw_tool in list(incoming.get("tools") or []):
+        if not isinstance(raw_tool, dict):
+            continue
+        tool_id = str(raw_tool.get("id") or "").strip()
+        if not tool_id or tool_id in seen_ids:
+            continue
+        seen_ids.add(tool_id)
+        normalized = deepcopy(
+            defaults_by_id.get(
+                tool_id,
+                {
+                    "id": tool_id,
+                    "name": str(raw_tool.get("name") or tool_id),
+                    "description": str(raw_tool.get("description") or ""),
+                    "enabled": bool(raw_tool.get("enabled", False)),
+                    "allowed_urls": [],
+                },
+            )
+        )
+        normalized.update(dict(raw_tool))
+        normalized["id"] = tool_id
+        normalized["name"] = str(normalized.get("name") or tool_id)
+        normalized["description"] = str(normalized.get("description") or "")
+        normalized["enabled"] = bool(normalized.get("enabled", False))
+        normalized["allowed_urls"] = (
+            normalize_allowed_urls(normalized.get("allowed_urls"))
+            if tool_id == "web"
+            else []
+        )
+        provider = str(normalized.get("provider") or defaults_by_id.get(tool_id, {}).get("provider") or "").strip()
+        kind = str(normalized.get("kind") or defaults_by_id.get(tool_id, {}).get("kind") or "").strip()
+        if provider:
+            normalized["provider"] = provider
+        else:
+            normalized.pop("provider", None)
+        if kind:
+            normalized["kind"] = kind
+        else:
+            normalized.pop("kind", None)
+        normalized["session_toggleable"] = bool(
+            normalized.get(
+                "session_toggleable",
+                defaults_by_id.get(tool_id, {}).get("session_toggleable", False),
+            )
+        )
+        normalized_tools.append(normalized)
+
+    for default_tool in DEFAULT_AGENT_TOOLS:
+        if default_tool["id"] in seen_ids:
+            continue
+        normalized_tools.append(deepcopy(default_tool))
+
+    incoming["tools"] = normalized_tools
+    return incoming
 
 
 def _default_llm_config() -> dict[str, Any]:
@@ -80,7 +166,7 @@ def _default_retrieval_config() -> dict[str, Any]:
 
 
 def _default_tool_policy_config() -> dict[str, Any]:
-    return {"tools": deepcopy(DEFAULT_AGENT_TOOLS)}
+    return normalize_tool_policy_config({"tools": deepcopy(DEFAULT_AGENT_TOOLS)})
 
 
 def default_runtime_profile_payload(
@@ -121,6 +207,7 @@ def merge_runtime_profile_payload(payload: dict[str, Any] | None = None) -> dict
     merged["tool_policy_config_json"].update(
         dict(incoming.get("tool_policy_config") or incoming.get("tool_policy_config_json") or {})
     )
+    merged["tool_policy_config_json"] = normalize_tool_policy_config(merged["tool_policy_config_json"])
     return merged
 
 
@@ -156,6 +243,7 @@ def build_runtime_profile_from_legacy(
         payload["retrieval_config_json"].update(dict(retrieval_defaults))
     if tools:
         payload["tool_policy_config_json"]["tools"] = deepcopy(list(tools))
+    payload["tool_policy_config_json"] = normalize_tool_policy_config(payload["tool_policy_config_json"])
     return payload
 
 
@@ -169,6 +257,40 @@ def _unset_other_default_profiles(session: Session, runtime_profile_id: str) -> 
         other.is_default = False
 
 
+def _normalize_default_profile_embedding_model(profile: RuntimeProfileRecord) -> bool:
+    kb_config = dict(profile.kb_config_json or {})
+    if not should_backfill_default_embedding_model(kb_config.get("embedding_model_id")):
+        return False
+    kb_config["embedding_model_id"] = settings.app_default_embedding_model
+    profile.kb_config_json = kb_config
+    return True
+
+
+def _normalize_runtime_profile_tool_policy(profile: RuntimeProfileRecord) -> bool:
+    normalized = normalize_tool_policy_config(profile.tool_policy_config_json or {})
+    if normalized == (profile.tool_policy_config_json or {}):
+        return False
+    profile.tool_policy_config_json = normalized
+    return True
+
+
+def build_unique_runtime_profile_name(
+    session: Session,
+    base_name: str,
+    *,
+    ignore_profile_id: str | None = None,
+) -> str:
+    normalized_base = str(base_name or "").strip() or "Runtime Profile"
+    candidate = normalized_base
+    suffix = 2
+    while True:
+        existing = session.scalar(select(RuntimeProfileRecord).where(RuntimeProfileRecord.name == candidate))
+        if existing is None or existing.id == ignore_profile_id:
+            return candidate
+        candidate = f"{normalized_base} {suffix}"
+        suffix += 1
+
+
 def save_runtime_profile(
     session: Session,
     payload: dict[str, Any],
@@ -176,11 +298,18 @@ def save_runtime_profile(
     existing_record: RuntimeProfileRecord | None = None,
 ) -> RuntimeProfileRecord:
     merged = merge_runtime_profile_payload(payload)
+    merged_name = str(merged.get("name") or "").strip()
+    if not merged_name:
+        raise ValueError("runtime profile name is required")
+    merged["name"] = merged_name
     record = existing_record
     if record is None and payload.get("id"):
         record = session.get(RuntimeProfileRecord, payload["id"])
-    if record is None and payload.get("name"):
-        record = session.scalar(select(RuntimeProfileRecord).where(RuntimeProfileRecord.name == payload["name"]))
+    existing_by_name = session.scalar(select(RuntimeProfileRecord).where(RuntimeProfileRecord.name == merged_name))
+    if record is None and existing_by_name is not None:
+        raise ValueError(f"runtime profile '{merged_name}' already exists")
+    if record is not None and existing_by_name is not None and existing_by_name.id != record.id:
+        raise ValueError(f"runtime profile '{merged_name}' already exists")
     if record is None:
         record = RuntimeProfileRecord(**default_runtime_profile_payload(is_default=False))
         session.add(record)
@@ -195,6 +324,12 @@ def save_runtime_profile(
     record.is_default = bool(merged["is_default"])
     record.enabled = bool(merged["enabled"])
     session.flush()
+    sync_runtime_profile_collection_bindings(
+        session,
+        record,
+        list((record.kb_config_json or {}).get("default_corpora", [])),
+        create_missing=False,
+    )
     if record.is_default:
         _unset_other_default_profiles(session, record.id)
     session.commit()
@@ -227,9 +362,22 @@ def clone_runtime_profile(
 def seed_default_runtime_profile(session: Session) -> RuntimeProfileRecord:
     existing = session.scalar(select(RuntimeProfileRecord).where(RuntimeProfileRecord.is_default.is_(True)))
     if existing is not None:
+        profile_changed = _normalize_default_profile_embedding_model(existing)
+        profile_changed = _normalize_runtime_profile_tool_policy(existing) or profile_changed
+        hydrate_runtime_profile_collection_bindings(session, existing)
+        if profile_changed:
+            session.commit()
+        session.refresh(existing)
         return existing
     record = RuntimeProfileRecord(**default_runtime_profile_payload())
     session.add(record)
+    session.flush()
+    sync_runtime_profile_collection_bindings(
+        session,
+        record,
+        list((record.kb_config_json or {}).get("default_corpora", [])),
+        create_missing=True,
+    )
     session.commit()
     session.refresh(record)
     return record
@@ -244,6 +392,10 @@ def get_runtime_profile(session: Session, runtime_profile_id: str | None = None)
         profile = session.get(RuntimeProfileRecord, runtime_profile_id)
         if profile is None:
             raise ValueError(f"runtime profile {runtime_profile_id} not found")
+        if _normalize_runtime_profile_tool_policy(profile):
+            session.commit()
+            session.refresh(profile)
+        hydrate_runtime_profile_collection_bindings(session, profile)
         return profile
     return get_default_runtime_profile(session)
 
@@ -254,15 +406,30 @@ def resolve_agent_runtime_profile(session: Session, agent: AgentProfileRecord) -
     return get_default_runtime_profile(session)
 
 
-def runtime_defaults_view(profile: RuntimeProfileRecord) -> dict[str, Any]:
+def runtime_defaults_view(session: Session, profile: RuntimeProfileRecord) -> dict[str, Any]:
+    from .runtime import resolve_llm_connection
+
     llm_config = dict(profile.llm_config_json or {})
     kb_config = dict(profile.kb_config_json or {})
     retrieval_config = dict(profile.retrieval_config_json or {})
+    connection = None
+    try:
+        connection = resolve_llm_connection(
+            session,
+            connection_id=llm_config.get("connection_id"),
+            provider=llm_config.get("provider"),
+        )
+    except ValueError:
+        connection = None
     return {
         "runtime_profile_id": profile.id,
         "runtime_profile_name": profile.name,
         "chat_api_mode": llm_config.get("api_mode", "responses"),
         "llm_model_id": llm_config.get("model_id", settings.app_default_chat_model),
+        "llm_connection_id": connection.id if connection is not None else llm_config.get("connection_id"),
+        "llm_connection_label": connection.label if connection is not None else None,
+        "llm_provider_key": connection.provider if connection is not None else llm_config.get("provider"),
+        "llm_provider_kind": connection.provider_kind if connection is not None else None,
         "embedding_model_id": kb_config.get("embedding_model_id", settings.app_default_embedding_model),
         "default_corpora": list(kb_config.get("default_corpora", [settings.app_default_corpus])),
         "text_chunk_size": int(retrieval_config.get("text_chunk_size", settings.app_chunk_size)),
