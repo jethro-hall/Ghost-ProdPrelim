@@ -1,5 +1,11 @@
 :80 {
 	encode gzip
+	handle /ghost_chatui {
+		redir https://ghoststack.rideai.com.au/ghost_chatui/ 308
+	}
+	handle /ghost_chatui/* {
+		redir https://ghoststack.rideai.com.au{uri} 308
+	}
 	handle /api/* {
 		reverse_proxy control-api:8000 {
 			flush_interval -1
@@ -22,6 +28,12 @@
 
 ghoststack.rideai.com.au {
 	encode gzip
+	handle /ghost_chatui {
+		redir /ghost_chatui/ 308
+	}
+	handle_path /ghost_chatui/* {
+		reverse_proxy ghost-chatui:3000
+	}
 	handle /api/* {
 		reverse_proxy control-api:8000 {
 			flush_interval -1
@@ -40,4 +52,9 @@ ghoststack.rideai.com.au {
 	handle {
 		reverse_proxy ui:4173
 	}
+}
+
+https://ghoststack.rideai.com.au:6333 {
+	encode gzip
+	reverse_proxy qdrant:6333
 }

@@ -64,6 +64,14 @@ export default function ConnectionsPage() {
                 <div className="mt-1 font-mono text-[0.78rem] text-slate-900">{connection.api_key_hint ?? "Not configured"}</div>
               </div>
               <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Provider Kind</div>
+                <div className="mt-1 text-[0.78rem] text-slate-900">{connection.provider_kind}</div>
+                <div className="mt-1 text-[0.72rem] text-slate-500">
+                  Auth: {connection.auth_strategy}
+                  {connection.auth_header_name ? ` (${connection.auth_header_name})` : ""}
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Ownership</div>
                 <div className="mt-1 text-[0.78rem] text-slate-900">Transport, credentials, and base URL only</div>
                 <div className="mt-1 text-[0.72rem] text-slate-500">

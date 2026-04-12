@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import GhostCard from "../components/GhostCard";
-import { fetchCapabilities, fetchConnections, fetchDocuments, fetchRuns, fetchRuntimeDefaults, fetchVectorStats } from "../api";
-import type { Connection, DocumentIngestion, RunSummary, RuntimeCapabilities, RuntimeDefaults, VectorStats } from "../api";
+import { fetchCapabilities, fetchCollections, fetchConnections, fetchDocuments, fetchRuns, fetchRuntimeDefaults, fetchVectorStats, formatRequestedLane } from "../api";
+import type { Collection, Connection, DocumentIngestion, RunSummary, RuntimeCapabilities, RuntimeDefaults, VectorStats } from "../api";
 
 function statusTone(status: string) {
   if (status === "completed") return "text-emerald-600";
@@ -32,6 +32,7 @@ function summarizeChatModes(capabilities: RuntimeCapabilities | null) {
 
 export default function Dashboard() {
   const [capabilities, setCapabilities] = useState<RuntimeCapabilities | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [runtimeDefaults, setRuntimeDefaults] = useState<RuntimeDefaults | null>(null);
   const [vectorStats, setVectorStats] = useState<VectorStats | null>(null);
@@ -40,6 +41,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     void fetchCapabilities().then(setCapabilities).catch(() => null);
+    void fetchCollections(true).then(setCollections).catch(() => null);
     void fetchConnections().then(setConnections).catch(() => null);
     void fetchRuntimeDefaults().then(setRuntimeDefaults).catch(() => null);
     void fetchVectorStats().then(setVectorStats).catch(() => null);
@@ -49,8 +51,44 @@ export default function Dashboard() {
 
   const cloudReady = capabilities?.parser_lanes.cloud.available ?? false;
   const streamingReady = capabilities?.streaming.available ?? false;
-  const activeConnection = useMemo(() => connections.find((connection) => connection.enabled) ?? connections[0] ?? null, [connections]);
+  const activeConnection = useMemo(() => {
+    if (runtimeDefaults?.llm_connection_id) {
+      const byId = connections.find((connection) => connection.id === runtimeDefaults.llm_connection_id);
+      if (byId) return byId;
+    }
+    if (runtimeDefaults?.llm_provider_key) {
+      const byProviderKey = connections.find((connection) => connection.provider === runtimeDefaults.llm_provider_key);
+      if (byProviderKey) return byProviderKey;
+    }
+    return connections.find((connection) => connection.enabled) ?? connections[0] ?? null;
+  }, [connections, runtimeDefaults?.llm_connection_id, runtimeDefaults?.llm_provider_key]);
   const recentDocuments = useMemo(() => documents.slice(0, 6), [documents]);
+  const runtimeDefaultCorpora = runtimeDefaults?.default_corpora ?? [];
+  const primaryCollectionSlug = runtimeDefaultCorpora[0] ?? "default";
+  const systemDocumentTotal = useMemo(
+    () => collections.reduce((sum, collection) => sum + (collection.impact?.documents ?? 0), 0),
+    [collections],
+  );
+  const systemVectorTotal = useMemo(
+    () => collections.reduce((sum, collection) => sum + (collection.impact?.vector_points ?? 0), 0),
+    [collections],
+  );
+  const runtimeAccessibleCollections = useMemo(
+    () => collections.filter((collection) => runtimeDefaultCorpora.includes(collection.slug)),
+    [collections, runtimeDefaultCorpora],
+  );
+  const runtimeAccessibleDocuments = useMemo(
+    () => runtimeAccessibleCollections.reduce((sum, collection) => sum + (collection.impact?.documents ?? 0), 0),
+    [runtimeAccessibleCollections],
+  );
+  const runtimeAccessibleVectors = useMemo(
+    () => runtimeAccessibleCollections.reduce((sum, collection) => sum + (collection.impact?.vector_points ?? 0), 0),
+    [runtimeAccessibleCollections],
+  );
+  const primaryCollection = useMemo(
+    () => collections.find((collection) => collection.slug === primaryCollectionSlug) ?? null,
+    [collections, primaryCollectionSlug],
+  );
 
   const cards = useMemo(
     () => [
@@ -105,10 +143,24 @@ export default function Dashboard() {
         <article className="glass rounded-xl border border-slate-200 p-5">
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Knowledge Status</p>
           <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Ingress overview</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
-              <div className="text-[1.55rem] font-bold text-slate-900">{vectorStats?.documents ?? "..."}</div>
-              <div className="text-[0.75rem] text-slate-500">Total files tracked (aggregate)</div>
+              <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">System Total</div>
+              <div className="mt-1 text-[1.4rem] font-bold text-slate-900">{systemDocumentTotal > 0 ? systemDocumentTotal : (vectorStats?.documents ?? 0)}</div>
+              <div className="text-[0.75rem] text-slate-500">Files across all managed collections</div>
+              <div className="mt-1 text-[0.72rem] text-slate-500">{systemVectorTotal.toLocaleString()} vector point(s)</div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
+              <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Runtime Default Access</div>
+              <div className="mt-1 text-[1.4rem] font-bold text-slate-900">{runtimeAccessibleDocuments}</div>
+              <div className="text-[0.75rem] text-slate-500">Files visible through the active default corpora</div>
+              <div className="mt-1 text-[0.72rem] text-slate-500">{runtimeAccessibleVectors.toLocaleString()} vector point(s)</div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
+              <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Primary Collection</div>
+              <div className="mt-1 text-[1.4rem] font-bold text-slate-900">{primaryCollection?.impact?.documents ?? "..."}</div>
+              <div className="text-[0.75rem] text-slate-500">{primaryCollection?.slug ?? primaryCollectionSlug}</div>
+              <div className="mt-1 text-[0.72rem] text-slate-500">{(primaryCollection?.impact?.vector_points ?? 0).toLocaleString()} vector point(s)</div>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
               <div className="text-[1.55rem] font-bold text-slate-900">{runs.length}</div>
@@ -130,11 +182,11 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.78rem] leading-6 text-slate-500">
-            Storage is currently backed by Postgres for metadata/provenance and Qdrant for vector retrieval. The totals above come from the authoritative
+            Storage is currently backed by Postgres for metadata/provenance and one shared Qdrant collection for vector retrieval. System Total is aggregate across all managed collections, Runtime Default Access reflects the active default corpora, and Primary Collection shows the lead namespace only. The aggregate document totals above come from the authoritative
             {" "}
             <span className="font-semibold text-slate-900">`/api/vector-stats`</span>
             {" "}
-            surface, while the recent-documents panel below remains a capped operator preview for quick scanning.
+            surface, while per-collection vector counts come from the managed collection impacts.
           </div>
         </article>
 
@@ -150,6 +202,9 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-1 text-[0.72rem] text-slate-500">
                   {activeConnection?.base_url ?? "Using default provider base URL"}
+                </div>
+                <div className="mt-1 text-[0.72rem] text-slate-500">
+                  {activeConnection?.provider_kind ?? runtimeDefaults?.llm_provider_kind ?? "provider kind loading"}
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
@@ -183,6 +238,9 @@ export default function Dashboard() {
             <div className="rounded-xl border border-slate-200 bg-white/80 p-3 text-[0.76rem] leading-6 text-slate-500">
               The active runtime is currently backed by <span className="font-semibold text-slate-900">{capabilities?.vector_store ?? "..."}</span> for retrieval and{" "}
               <span className="font-semibold text-slate-900">{capabilities?.model_runtime ?? "..."}</span> for orchestration.
+              {" "}
+              Uploads set to <span className="font-semibold text-slate-900">Default</span> currently follow{" "}
+              <span className="font-semibold text-slate-900">{runtimeDefaults?.pdf_parse_lane_policy ?? "Loading"}</span> for PDFs.
             </div>
           </div>
         </article>
@@ -224,7 +282,7 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <div className="truncate text-[0.82rem] font-semibold text-slate-900">{document.filename}</div>
                     <div className="mt-1 text-[0.72rem] text-slate-500">
-                      requested: {document.requested_lane} • actual: {document.actual_parse_lane ?? "pending"}
+                      requested: {formatRequestedLane(document.requested_lane)} • actual: {document.actual_parse_lane ?? "pending"}
                     </div>
                     <div className="mt-1 text-[0.72rem] text-slate-500">
                       {document.workbook_table_count > 0

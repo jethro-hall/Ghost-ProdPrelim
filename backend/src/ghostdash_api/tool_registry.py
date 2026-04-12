@@ -7,7 +7,6 @@ import httpx
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .collections import sync_runtime_profile_collection_bindings
 from .models import AgentProfileRecord, RuntimeProfileRecord, ToolRegistryRecord
 from .odoo_connector import (
     ODOO_GATEWAY,
@@ -24,6 +23,7 @@ from .odoo_connector import (
 )
 from .runtime_profiles import (
     build_unique_runtime_profile_name,
+    clone_runtime_profile,
     get_default_runtime_profile,
     normalize_tool_policy_config,
 )
@@ -44,7 +44,7 @@ def _default_odoo_record() -> ToolRegistryRecord:
         provider=ODOO_PROVIDER,
         name="Odoo ERP",
         gateway=ODOO_GATEWAY,
-        description="Read-only Odoo ERP access routed through the Ghost stack control plane.",
+        description="Governed Odoo ERP access routed through the Ghost stack control plane.",
         status="unknown",
         active=False,
         config_json=default_odoo_config(),
@@ -84,7 +84,8 @@ def _merge_odoo_config(existing: dict[str, Any] | None, updates: dict[str, Any] 
     if timeout_ms is not None:
         merged["timeout_ms"] = int(timeout_ms)
     merged["auth_source"] = "direct_credentials"
-    merged["read_only"] = True
+    if "read_only" in incoming:
+        merged["read_only"] = bool(incoming.get("read_only"))
     return merged
 
 
@@ -97,7 +98,7 @@ def _build_tool_settings_view(record: ToolRegistryRecord) -> ToolSettingsView:
         username_hint=mask_identity(config.get("username")),
         has_password=bool(str(config.get("password") or "").strip()),
         auth_source="direct_credentials",
-        read_only=True,
+        read_only=bool(config.get("read_only", True)),
         timeout_ms=int(config.get("timeout_ms") or default_odoo_config()["timeout_ms"]),
         health_path=str(config.get("health_path") or default_odoo_config()["health_path"]),
         execute_path=str(config.get("execute_path") or default_odoo_config()["execute_path"]),
@@ -116,7 +117,7 @@ def _build_tool_catalog_entry(record: ToolRegistryRecord) -> ToolCatalogEntryVie
         status=record.status,
         active=bool(record.active),
         configured=len(settings.missing_config) == 0,
-        read_only=True,
+        read_only=settings.read_only,
         session_toggleable=True,
     )
 
@@ -284,21 +285,15 @@ def _clone_runtime_profile_for_agent(
     agent: AgentProfileRecord,
     source_profile: RuntimeProfileRecord,
 ) -> RuntimeProfileRecord:
-    clone = RuntimeProfileRecord(
-        name=build_unique_runtime_profile_name(session, f"{source_profile.name} {agent.name}".strip(), ignore_profile_id=source_profile.id),
-        surface=source_profile.surface,
-        system_prompt=source_profile.system_prompt,
-        llm_config_json=deepcopy(source_profile.llm_config_json or {}),
-        kb_config_json=deepcopy(source_profile.kb_config_json or {}),
-        retrieval_config_json=deepcopy(source_profile.retrieval_config_json or {}),
-        tool_policy_config_json=normalize_tool_policy_config(deepcopy(source_profile.tool_policy_config_json or {})),
-        collection_bindings_json=deepcopy(source_profile.collection_bindings_json or []),
-        is_default=False,
-        enabled=bool(source_profile.enabled),
+    clone = clone_runtime_profile(
+        session,
+        source_profile,
+        name=build_unique_runtime_profile_name(
+            session,
+            f"{source_profile.name} {agent.name}".strip(),
+            ignore_profile_id=source_profile.id,
+        ),
     )
-    session.add(clone)
-    session.flush()
-    sync_runtime_profile_collection_bindings(session, clone, clone.collection_bindings_json or [])
     agent.runtime_profile_id = clone.id
     session.add(agent)
     session.flush()

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import type { RuntimeDefaults } from "../api";
+import { fetchCollections } from "../api";
+import type { Collection, RuntimeDefaults } from "../api";
 import type { AppOutletContext } from "../components/AppLayout";
 
 function ConfigSlider({
@@ -42,6 +43,7 @@ function ConfigSlider({
 export default function PipelinesPage() {
   const { runtimeDefaults, saveRuntimeDefaults } = useOutletContext<AppOutletContext>();
   const [config, setConfig] = useState<RuntimeDefaults | null>(runtimeDefaults);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,6 +51,10 @@ export default function PipelinesPage() {
       setConfig(runtimeDefaults);
     }
   }, [runtimeDefaults]);
+
+  useEffect(() => {
+    void fetchCollections().then(setCollections).catch(() => null);
+  }, []);
 
   const summary = useMemo(
     () =>
@@ -112,20 +118,33 @@ export default function PipelinesPage() {
             />
           </label>
           <label className="block text-[0.76rem] text-slate-500">
-            Default corpora
-            <input
-              className="ghost-input mt-1"
-              value={config.default_corpora.join(", ")}
-              onChange={(event) =>
-                update(
-                  "default_corpora",
-                  event.target.value
-                    .split(",")
-                    .map((value) => value.trim())
-                    .filter(Boolean),
-                )
-              }
-            />
+            Default collections
+            <div className="mt-2 space-y-2">
+              {collections.map((collection) => {
+                const selected = config.default_corpora.includes(collection.slug);
+                return (
+                  <label key={collection.id} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white/70 p-3">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() =>
+                        update(
+                          "default_corpora",
+                          selected
+                            ? config.default_corpora.filter((value) => value !== collection.slug)
+                            : [...config.default_corpora, collection.slug],
+                        )
+                      }
+                    />
+                    <span>
+                      <span className="block font-semibold text-slate-900">{collection.name}</span>
+                      <span>{collection.slug}</span>
+                    </span>
+                  </label>
+                );
+              })}
+              {collections.length === 0 && <div className="text-[0.72rem] text-slate-500">No managed collections exist yet. Create them in Data Sources first.</div>}
+            </div>
           </label>
           <div className="rounded-xl border border-slate-200 bg-white/80 p-3 text-[0.76rem] text-slate-500">
             <div className="font-semibold text-slate-900">Default LLM model</div>

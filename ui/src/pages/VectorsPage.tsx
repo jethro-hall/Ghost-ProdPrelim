@@ -15,7 +15,9 @@ export default function VectorsPage() {
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Vector DBs</p>
         <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Qdrant collection monitoring</h2>
         <p className="mt-2 text-[0.8rem] leading-6 text-slate-500">
-          Monitoring the live `ghostdash_knowledge` collection. These totals come from the authoritative aggregate
+          Monitoring the live Qdrant backing collection for the current embedding generation. These are system-wide aggregate totals across all managed logical collections, not a single namespace.
+          {" "}
+          They come from the authoritative aggregate
           {" "}
           <span className="font-semibold text-slate-900">`/api/vector-stats`</span>
           {" "}

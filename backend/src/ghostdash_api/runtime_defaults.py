@@ -59,12 +59,12 @@ def merge_runtime_defaults(values: dict | None) -> dict[str, object]:
 
 
 def get_runtime_defaults(session: Session) -> dict[str, object]:
-    return dict(runtime_defaults_view(get_default_runtime_profile(session)))
+    return dict(runtime_defaults_view(session, get_default_runtime_profile(session)))
 
 
 def save_runtime_defaults(session: Session, values: dict[str, object]) -> dict[str, object]:
     profile = update_runtime_defaults(session, values)
-    return runtime_defaults_view(profile)
+    return runtime_defaults_view(session, profile)
 
 
 def get_text_ingestion_config(session: Session) -> TextIngestionConfig:
@@ -94,5 +94,5 @@ def resolve_query_top_k(session: Session, requested_top_k: int | None, *, runtim
     if runtime_profile is None:
         values = get_runtime_defaults(session)
     else:
-        values = runtime_defaults_view(runtime_profile)
+        values = runtime_defaults_view(session, runtime_profile)
     return int(values.get("pdf_top_k", settings.app_pdf_top_k))

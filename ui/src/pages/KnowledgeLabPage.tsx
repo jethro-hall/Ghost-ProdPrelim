@@ -26,8 +26,8 @@ export default function KnowledgeLabPage() {
         </div>
       </section>
       <section className="glass rounded-xl border border-slate-200 p-5 text-[0.8rem] text-slate-500">
-        <div className="font-semibold text-slate-900">Current corpus footprint</div>
-        <div className="mt-2">{documents.length} document(s) are currently available for future audit sampling.</div>
+        <div className="font-semibold text-slate-900">Current system footprint</div>
+        <div className="mt-2">{documents.length} document(s) are currently available across the managed collection set for future audit sampling.</div>
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[0.76rem] text-amber-700">
           Next backend step: sample nodes, score completeness/provenance/consistency, and generate the 10/10 roadmap the handover calls for.
         </div>

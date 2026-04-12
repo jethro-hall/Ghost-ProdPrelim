@@ -66,15 +66,28 @@ def get_agent(session: Session, agent_id: str | None = None) -> AgentProfileReco
 
 
 def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
+    normalized_name = str(payload.get("name") or "").strip()
+    if not normalized_name:
+        raise ValueError("agent name is required")
+
+    normalized_first_message = str(payload.get("first_message") or "").strip()
+    if not normalized_first_message:
+        raise ValueError("first message is required")
+
     record = session.get(AgentProfileRecord, payload.get("id")) if payload.get("id") else None
-    if record is None and payload.get("name"):
-        record = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.name == payload["name"]))
+    existing_by_name = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.name == normalized_name))
     is_new_record = record is None
 
+    if is_new_record and existing_by_name is not None:
+        raise ValueError(f"agent '{normalized_name}' already exists")
+    if record is not None and existing_by_name is not None and existing_by_name.id != record.id:
+        raise ValueError(f"agent '{normalized_name}' already exists")
+
     default_runtime_profile = seed_default_runtime_profile(session)
+    pending_insert = False
     if record is None:
         record = AgentProfileRecord(**default_agent_payload(default_runtime_profile.id))
-        session.add(record)
+        pending_insert = True
 
     runtime_profile_payload = payload.get("runtime_profile")
     runtime_profile_id = payload.get("runtime_profile_id") or (None if is_new_record else record.runtime_profile_id)
@@ -93,9 +106,21 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
     elif not record.runtime_profile_id:
         record.runtime_profile_id = default_runtime_profile.id
 
+    payload = {
+        **payload,
+        "name": normalized_name,
+        "first_message": normalized_first_message,
+        "language": str(payload.get("language") or record.language or "en-US").strip() or "en-US",
+        "voice_id": str(payload.get("voice_id") or record.voice_id or "alloy").strip() or "alloy",
+    }
+
     for key in ("name", "first_message", "language", "voice_id", "is_default", "enabled"):
         if key in payload:
             setattr(record, key, payload[key])
+
+    if pending_insert:
+        session.add(record)
+        session.flush()
 
     if record.is_default:
         for other in session.scalars(
@@ -210,6 +235,7 @@ def build_response_cache_key(
     message: str,
     corpora: list[str],
     api_mode: str,
+    llm_model_id_override: str | None = None,
 ) -> str:
     llm_config = dict(runtime_profile.llm_config_json or {})
     guardrails_config = dict(runtime_profile.guardrails_config_json or {})
@@ -230,6 +256,9 @@ def build_response_cache_key(
         "corpora": list(corpora),
         "api_mode": api_mode,
     }
+    stripped = (llm_model_id_override or "").strip()
+    if stripped:
+        payload["llm_model_id_override"] = stripped
     return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 

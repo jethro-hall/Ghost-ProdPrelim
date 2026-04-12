@@ -47,6 +47,13 @@ QDRANT_UPSERT_MAX_BYTES = 24 * 1024 * 1024
 QDRANT_UPSERT_MAX_POINTS = 96
 QDRANT_PAYLOAD_TEXT_MAX_CHARS = 8000
 QDRANT_EXCLUDED_METADATA_KEYS = frozenset({PDF_ORIGINAL_TEXT_METADATA_KEY, PDF_WINDOW_METADATA_KEY})
+DOCUMENT_EXPANSION_LIMIT_MULTIPLIER = 3
+DOCUMENT_EXPANSION_LIMIT_FLOOR = 8
+DOCUMENT_EXPANSION_LIMIT_CAP = 18
+DOCUMENT_DOMINANCE_MIN_HITS = 3
+DOCUMENT_DOMINANCE_MIN_SHARE = 0.6
+DOCUMENT_DOMINANCE_MIN_SCORE_SHARE = 0.65
+DOCUMENT_DOMINANCE_MIN_GAP = 2
 
 # PostgreSQL rejects bound-parameter lists larger than ~65535; large IN (...) on row-derived
 # id lists must be chunked (see find_structured_candidates).
@@ -687,6 +694,19 @@ def build_pdf_retrieval_artifacts(
     return artifacts
 
 
+def build_pdf_document_metadata(*, artifact_count: int, pdf_extraction, pdf_config) -> dict[str, Any]:
+    return {
+        "artifact_count": artifact_count,
+        "page_count": pdf_extraction.page_count,
+        "total_text_chars": pdf_extraction.total_text_chars,
+        "pdf_chunk_size": pdf_config.chunk_size,
+        "pdf_chunk_overlap": pdf_config.chunk_overlap,
+        "pdf_sentence_window": pdf_config.sentence_window,
+        "pdf_parse_lane_policy": pdf_config.parse_lane_policy,
+        "pdf_parse_diagnostics": pdf_extraction.parse_diagnostics,
+    }
+
+
 def select_documents_for_corpus(session, corpus: str) -> list[DocumentRecord]:
     return list(
         session.scalars(
@@ -695,6 +715,78 @@ def select_documents_for_corpus(session, corpus: str) -> list[DocumentRecord]:
             .order_by(DocumentRecord.updated_at.desc())
         )
     )
+
+
+def select_documents_for_corpora(session, corpora: list[str]) -> list[DocumentRecord]:
+    target_corpora = list(corpora or [settings.app_default_corpus])
+    if len(target_corpora) == 1:
+        return select_documents_for_corpus(session, target_corpora[0])
+    return list(
+        session.scalars(
+            select(DocumentRecord)
+            .where(DocumentRecord.corpus.in_(target_corpora))
+            .order_by(DocumentRecord.updated_at.desc())
+        )
+    )
+
+
+def build_document_inventory_citations(documents: list[DocumentRecord], *, limit: int = 25) -> list[dict[str, Any]]:
+    citations: list[dict[str, Any]] = []
+    for document in documents[:limit]:
+        citations.append(
+            {
+                "document_id": document.id,
+                "filename": document.filename,
+                "corpus": document.corpus,
+                "artifact_type": "document_manifest",
+                "source_path": document.source_path,
+                "parse_lane": document.actual_parse_lane,
+            }
+        )
+    return citations
+
+
+def build_document_inventory_context(documents: list[DocumentRecord], *, limit: int = 25) -> str:
+    if not documents:
+        return "Document inventory candidates:\n- No indexed documents were found in the active corpora."
+
+    lines = []
+    for document in documents[:limit]:
+        metadata = dict(document.metadata_json or {})
+        parts = [
+            f"filename={document.filename}",
+            f"corpus={document.corpus}",
+            f"parse_status={document.parse_status}",
+            f"index_status={document.index_status}",
+        ]
+        if document.actual_parse_lane:
+            parts.append(f"parse_lane={document.actual_parse_lane}")
+        if metadata.get("title"):
+            parts.append(f"title={metadata['title']}")
+        lines.append("- " + " | ".join(parts))
+
+    remaining = len(documents) - min(len(documents), limit)
+    if remaining > 0:
+        lines.append(f"- ... {remaining} more document(s) not shown")
+    return "Document inventory candidates:\n" + "\n".join(lines)
+
+
+def build_document_inventory_answer(documents: list[DocumentRecord], corpora: list[str], *, limit: int = 25) -> str:
+    corpus_label = ", ".join(corpora or [settings.app_default_corpus])
+    if not documents:
+        return f"No indexed documents were found in the active corpora: {corpus_label}."
+
+    lines = [f"Indexed files in active corpora {corpus_label} ({len(documents)} total):", ""]
+    for document in documents[:limit]:
+        parts = [document.filename]
+        if document.actual_parse_lane:
+            parts.append(f"parse lane: {document.actual_parse_lane}")
+        parts.append(f"parse: {document.parse_status}")
+        parts.append(f"index: {document.index_status}")
+        lines.append("- " + " | ".join(parts))
+    if len(documents) > limit:
+        lines.append(f"- ... {len(documents) - limit} more file(s) not shown")
+    return "\n".join(lines).strip()
 
 
 def _set_run_document_inventory(run: IngestionRunRecord, documents: list[DocumentRecord]) -> None:
@@ -786,7 +878,7 @@ class IngestionWorkflow(Workflow):
 
                 document.mime_type = mimetypes.guess_type(document.filename)[0]
                 document.source_kind = "spreadsheet" if path.suffix.lower() in {".xlsx", ".xlsm"} else "document"
-                document.requested_lane = document.requested_lane or settings.app_default_policy_lane
+                document.requested_lane = document.requested_lane or "default"
                 document.error_message = None
                 version = persist_document_version(session, document)
                 clear_document_state(session, document.id)
@@ -798,7 +890,7 @@ class IngestionWorkflow(Workflow):
                         if structure is None:
                             raise ValueError("failed to parse workbook structure")
                         document.actual_parse_lane = "local_xlsx"
-                        sheet_count, table_count, row_count, _ = structure.get("sheet_count", 0), 0, 0, None
+                        sheet_count = int(structure.get("sheet_count", 0))
                         table_count, row_count, retrieval_artifacts = persist_workbook_structure(
                             session,
                             document=document,
@@ -867,15 +959,11 @@ class IngestionWorkflow(Workflow):
                                     chunk_overlap=text_config.chunk_overlap,
                                     heading_aware=text_config.heading_aware,
                                 )
-                            document.metadata_json = {
-                                "artifact_count": len(retrieval_artifacts),
-                                "page_count": pdf_extraction.page_count,
-                                "total_text_chars": pdf_extraction.total_text_chars,
-                                "pdf_chunk_size": pdf_config.chunk_size,
-                                "pdf_chunk_overlap": pdf_config.chunk_overlap,
-                                "pdf_sentence_window": pdf_config.sentence_window,
-                                "pdf_parse_lane_policy": pdf_config.parse_lane_policy,
-                            }
+                            document.metadata_json = build_pdf_document_metadata(
+                                artifact_count=len(retrieval_artifacts),
+                                pdf_extraction=pdf_extraction,
+                                pdf_config=pdf_config,
+                            )
                         elif document.requested_lane == "cloud":
                             text, parse_lane = extract_text_cloud(path, settings.app_llamaparse_tier, ev.trace_id)
                             document.actual_parse_lane = parse_lane
@@ -992,6 +1080,9 @@ class IngestionWorkflow(Workflow):
                         .order_by(RetrievalArtifactRecord.created_at.asc())
                     )
                 )
+                current_batch_index: int | None = None
+                current_batch_points = 0
+                current_batch_bytes = 0
                 try:
                     delete_document_vectors(document.id, trace_id=ev.trace_id, service="workflow-runtime")
                     valid_artifacts = [artifact for artifact in artifacts if artifact.text.strip()]
@@ -1010,9 +1101,6 @@ class IngestionWorkflow(Workflow):
                     point_ids: list[str] = []
                     upsert_batches = build_qdrant_upsert_batches(payloads, vectors)
                     estimated_upsert_bytes = 0
-                    current_batch_index = 0
-                    current_batch_points = 0
-                    current_batch_bytes = 0
                     for current_batch_index, (batch_payloads, batch_vectors, batch_bytes) in enumerate(upsert_batches, start=1):
                         current_batch_points = len(batch_payloads)
                         current_batch_bytes = batch_bytes
@@ -1156,15 +1244,65 @@ def classify_query_mode(message: str) -> str:
     return "semantic"
 
 
+def needs_document_inventory_context(message: str) -> bool:
+    lowered = message.lower()
+    inventory_phrases = (
+        "file inventory",
+        "document inventory",
+        "file list",
+        "document list",
+        "loaded files",
+        "loaded documents",
+        "filename",
+        "filenames",
+        "file names",
+        "metadata",
+        "what files",
+        "which files",
+        "what documents",
+        "which documents",
+        "exact file name",
+        "title",
+        "titles",
+        "identifiable by name",
+    )
+    if any(phrase in lowered for phrase in inventory_phrases):
+        return True
+    return "do you have any" in lowered and "document" in lowered
+
+
+def is_document_inventory_listing_question(message: str) -> bool:
+    lowered = message.lower()
+    listing_phrases = (
+        "what files",
+        "which files",
+        "list files",
+        "show files",
+        "file inventory",
+        "file list",
+        "what documents",
+        "which documents",
+        "list documents",
+        "show documents",
+        "document inventory",
+        "document list",
+        "what metadata",
+        "show metadata",
+        "can you see any metadata",
+        "identifiable by name",
+        "full file list",
+        "file inventory",
+    )
+    return any(phrase in lowered for phrase in listing_phrases)
+
+
 def find_structured_candidates(message: str, corpora: list[str]) -> list[dict[str, Any]]:
     lowered = message.lower()
     search_terms = [term for term in re.findall(r"[A-Za-z0-9_.-]+", lowered) if len(term) > 1]
     if not search_terms:
         return []
     with SessionLocal() as session:
-        documents = select_documents_for_corpus(session, corpora[0]) if len(corpora) == 1 else list(
-            session.scalars(select(DocumentRecord).where(DocumentRecord.corpus.in_(corpora or [settings.app_default_corpus])))
-        )
+        documents = select_documents_for_corpora(session, corpora)
         document_ids = [document.id for document in documents]
         if not document_ids:
             return []
@@ -1204,22 +1342,245 @@ def find_structured_candidates(message: str, corpora: list[str]) -> list[dict[st
         return scored[:5]
 
 
-def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str) -> dict[str, Any]:
+def _semantic_hit_key(hit: dict[str, Any]) -> tuple[Any, ...]:
+    metadata = hit.get("metadata", {}) or {}
+    return (
+        hit.get("document_id"),
+        hit.get("artifact_type", "chunk"),
+        hit.get("source_path"),
+        hit.get("chunk_index", metadata.get("chunk_index")),
+        hit.get("page_start", metadata.get("page_start")),
+        hit.get("page_end", metadata.get("page_end")),
+        hit.get("section_path", metadata.get("section_path")),
+        hit.get("section_title", metadata.get("section_title")),
+        metadata.get("sheet_name"),
+        metadata.get("table_name"),
+        metadata.get("row_index"),
+        hit.get("text", ""),
+    )
+
+
+def _citation_key(citation: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+        citation.get("document_id"),
+        citation.get("artifact_type"),
+        citation.get("source_path"),
+        citation.get("chunk_index"),
+        citation.get("page_start"),
+        citation.get("page_end"),
+        citation.get("section_path"),
+        citation.get("sheet_name"),
+        citation.get("table_name"),
+        citation.get("row_index"),
+    )
+
+
+def build_semantic_hit_context(hit: dict[str, Any]) -> str:
+    metadata = hit.get("metadata", {}) or {}
+    location_parts: list[str] = []
+    page_start = hit.get("page_start", metadata.get("page_start"))
+    page_end = hit.get("page_end", metadata.get("page_end"))
+    if page_start is not None:
+        if page_end is not None and page_end != page_start:
+            location_parts.append(f"pages={page_start}-{page_end}")
+        else:
+            location_parts.append(f"page={page_start}")
+    if metadata.get("sheet_name"):
+        location_parts.append(f"sheet={metadata['sheet_name']}")
+    if metadata.get("table_name"):
+        location_parts.append(f"table={metadata['table_name']}")
+    if metadata.get("row_index") is not None:
+        location_parts.append(f"row={metadata['row_index']}")
+    section_path = hit.get("section_path", metadata.get("section_path"))
+    semantic_parts = [
+        f"filename={hit['filename']}",
+        f"corpus={hit['corpus']}",
+        f"artifact_type={hit.get('artifact_type', 'chunk')}",
+    ]
+    if hit.get("source_path"):
+        semantic_parts.append(f"source_path={hit['source_path']}")
+    parse_lane = hit.get("parse_lane", metadata.get("parse_lane"))
+    if parse_lane:
+        semantic_parts.append(f"parse_lane={parse_lane}")
+    if section_path:
+        semantic_parts.append(f"section_path={section_path}")
+    semantic_parts.extend(location_parts)
+    return "Metadata: " + " | ".join(semantic_parts) + "\nRetrieved text:\n" + hit["text"]
+
+
+def build_semantic_hit_citation(hit: dict[str, Any]) -> dict[str, Any]:
+    metadata = hit.get("metadata", {}) or {}
+    return {
+        "document_id": hit["document_id"],
+        "filename": hit["filename"],
+        "corpus": hit["corpus"],
+        "artifact_type": hit.get("artifact_type", "chunk"),
+        "source_path": hit["source_path"],
+        "chunk_index": hit.get("chunk_index"),
+        "page_start": hit.get("page_start", metadata.get("page_start")),
+        "page_end": hit.get("page_end", metadata.get("page_end")),
+        "section_title": hit.get("section_title", metadata.get("section_title")),
+        "section_path": hit.get("section_path", metadata.get("section_path")),
+        "heading_level": hit.get("heading_level", metadata.get("heading_level")),
+        "parse_lane": hit.get("parse_lane", metadata.get("parse_lane")),
+        "sheet_name": metadata.get("sheet_name"),
+        "table_name": metadata.get("table_name"),
+        "row_index": metadata.get("row_index"),
+    }
+
+
+def collect_semantic_context_and_citations(
+    hits: list[dict[str, Any]],
+    *,
+    seen_hit_keys: set[tuple[Any, ...]] | None = None,
+    seen_citation_keys: set[tuple[Any, ...]] | None = None,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    hit_keys = seen_hit_keys if seen_hit_keys is not None else set()
+    citation_keys = seen_citation_keys if seen_citation_keys is not None else set()
+    context: list[str] = []
+    citations: list[dict[str, Any]] = []
+    for hit in hits:
+        hit_key = _semantic_hit_key(hit)
+        if hit_key in hit_keys:
+            continue
+        hit_keys.add(hit_key)
+        context.append(build_semantic_hit_context(hit))
+        citation = build_semantic_hit_citation(hit)
+        citation_key = _citation_key(citation)
+        if citation_key in citation_keys:
+            continue
+        citation_keys.add(citation_key)
+        citations.append(citation)
+    return context, citations
+
+
+def _normalize_filename_lookup(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.casefold())
+
+
+def _message_mentions_filename(message: str, filename: str) -> bool:
+    lowered = message.casefold()
+    if filename.casefold() in lowered:
+        return True
+    normalized_message = _normalize_filename_lookup(message)
+    normalized_filename = _normalize_filename_lookup(filename)
+    if normalized_filename and normalized_filename in normalized_message:
+        return True
+    normalized_stem = _normalize_filename_lookup(Path(filename).stem)
+    return len(normalized_stem) >= 12 and normalized_stem in normalized_message
+
+
+def _summarize_semantic_documents(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    summaries: dict[str, dict[str, Any]] = {}
+    for rank, hit in enumerate(hits):
+        document_id = str(hit.get("document_id") or "").strip()
+        if not document_id:
+            continue
+        summary = summaries.setdefault(
+            document_id,
+            {
+                "document_id": document_id,
+                "filename": hit.get("filename", ""),
+                "corpus": hit.get("corpus", ""),
+                "hit_count": 0,
+                "score_sum": 0.0,
+                "first_rank": rank,
+            },
+        )
+        summary["hit_count"] += 1
+        summary["score_sum"] += max(float(hit.get("score") or 0.0), 0.0)
+    return sorted(
+        summaries.values(),
+        key=lambda item: (-int(item["hit_count"]), -float(item["score_sum"]), int(item["first_rank"])),
+    )
+
+
+def _document_expansion_limit(top_k: int) -> int:
+    normalized_top_k = max(1, int(top_k))
+    return min(
+        max(normalized_top_k * DOCUMENT_EXPANSION_LIMIT_MULTIPLIER, DOCUMENT_EXPANSION_LIMIT_FLOOR),
+        DOCUMENT_EXPANSION_LIMIT_CAP,
+    )
+
+
+def _document_selection_reason_label(reason: str) -> str:
+    if reason == "filename_mention":
+        return "filename mention"
+    return "document dominance"
+
+
+def select_semantic_target_document(message: str, semantic_hits: list[dict[str, Any]]) -> dict[str, Any] | None:
+    documents = _summarize_semantic_documents(semantic_hits)
+    if not documents:
+        return None
+
+    for document in documents:
+        filename = str(document.get("filename") or "")
+        if filename and _message_mentions_filename(message, filename):
+            return {**document, "selection_reason": "filename_mention"}
+
+    total_hits = sum(int(document["hit_count"]) for document in documents)
+    if total_hits < DOCUMENT_DOMINANCE_MIN_HITS:
+        return None
+
+    top_document = documents[0]
+    if int(top_document["hit_count"]) == total_hits:
+        return {**top_document, "selection_reason": "document_dominance"}
+
+    if len(documents) < 2:
+        return None
+
+    second_document = documents[1]
+    total_score = sum(float(document["score_sum"]) for document in documents)
+    hit_share = int(top_document["hit_count"]) / max(total_hits, 1)
+    score_share = float(top_document["score_sum"]) / total_score if total_score > 0 else 0.0
+    if (
+        int(top_document["hit_count"]) >= DOCUMENT_DOMINANCE_MIN_HITS
+        and hit_share >= DOCUMENT_DOMINANCE_MIN_SHARE
+        and score_share >= DOCUMENT_DOMINANCE_MIN_SCORE_SHARE
+        and int(top_document["hit_count"]) >= int(second_document["hit_count"]) + DOCUMENT_DOMINANCE_MIN_GAP
+    ):
+        return {**top_document, "selection_reason": "document_dominance"}
+    return None
+
+
+def build_query_plan(
+    message: str,
+    corpora: list[str],
+    top_k: int,
+    trace_id: str,
+    current_message: str | None = None,
+) -> dict[str, Any]:
+    user_message = (current_message or message).strip()
     with SessionLocal() as session:
         connection = get_active_connection(session, "openai")
         kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
         embedding_model_id = kb_config.get("embedding_model_id")
-        mode = classify_query_mode(message)
+        mode = classify_query_mode(user_message)
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
-        structured_candidates = find_structured_candidates(message, corpora) if mode in {"structured", "blended"} else []
+        inventory_query = needs_document_inventory_context(user_message)
+        inventory_listing_query = is_document_inventory_listing_question(user_message)
+        inventory_documents = select_documents_for_corpora(session, corpora) if inventory_query else []
+        inventory_context = build_document_inventory_context(inventory_documents) if inventory_query else ""
+        if inventory_query:
+            if inventory_documents:
+                citations.extend(build_document_inventory_citations(inventory_documents))
+            if inventory_listing_query:
+                return {
+                    "query_mode": mode,
+                    "direct_answer": build_document_inventory_answer(inventory_documents, corpora),
+                    "prompt": None,
+                    "citations": citations,
+                }
+        structured_candidates = find_structured_candidates(user_message, corpora) if mode in {"structured", "blended"} else []
         structured_context: list[str] = []
         if structured_candidates:
             target_field = None
             top_row_json = structured_candidates[0]["row"].row_json
             for key in top_row_json:
                 key_terms = [key.casefold(), key.replace("_", " ").casefold()]
-                if any(re.search(rf"\b{re.escape(term)}\b", message.lower()) for term in key_terms):
+                if any(re.search(rf"\b{re.escape(term)}\b", user_message.lower()) for term in key_terms):
                     target_field = key
                     break
             for candidate in structured_candidates:
@@ -1248,7 +1609,7 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
                         "row_index": row.row_index,
                     }
                 )
-            if target_field and target_field in top_row_json and mode == "structured" and len(message.split()) <= 20:
+            if target_field and target_field in top_row_json and mode == "structured" and len(user_message.split()) <= 20:
                 value = top_row_json.get(target_field, "")
                 top = structured_candidates[0]
                 direct_answer = (
@@ -1257,49 +1618,80 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
                 )
 
         semantic_context: list[str] = []
+        document_scoped_context: list[str] = []
+        target_document: dict[str, Any] | None = None
         if mode in {"semantic", "blended"} or not direct_answer:
             query_vectors = embed_texts(
-                [message],
+                [user_message],
                 connection,
                 embedding_model=embedding_model_id,
                 trace_id=trace_id,
                 service="workflow-runtime",
             )
             if query_vectors:
-                for hit in search_vectors(query_vectors[0], corpora, top_k, trace_id=trace_id, service="workflow-runtime"):
-                    metadata = hit.get("metadata", {})
-                    semantic_context.append(hit["text"])
-                    citations.append(
-                        {
-                            "document_id": hit["document_id"],
-                            "filename": hit["filename"],
-                            "corpus": hit["corpus"],
-                            "artifact_type": hit.get("artifact_type", "chunk"),
-                            "source_path": hit["source_path"],
-                            "chunk_index": hit.get("chunk_index"),
-                            "page_start": metadata.get("page_start"),
-                            "page_end": metadata.get("page_end"),
-                            "section_title": hit.get("section_title", metadata.get("section_title")),
-                            "section_path": hit.get("section_path", metadata.get("section_path")),
-                            "heading_level": hit.get("heading_level", metadata.get("heading_level")),
-                            "parse_lane": hit.get("parse_lane", metadata.get("parse_lane")),
-                            "sheet_name": metadata.get("sheet_name"),
-                            "table_name": metadata.get("table_name"),
-                            "row_index": metadata.get("row_index"),
-                        }
+                semantic_hits = search_vectors(
+                    query_vectors[0],
+                    corpora,
+                    top_k,
+                    trace_id=trace_id,
+                    service="workflow-runtime",
+                )
+                prompt_semantic_hits = semantic_hits
+                if mode in {"semantic", "blended"}:
+                    target_document = select_semantic_target_document(user_message, semantic_hits)
+                if (
+                    target_document is not None
+                    and str(target_document.get("selection_reason")) == "filename_mention"
+                ):
+                    prompt_semantic_hits = [
+                        hit
+                        for hit in semantic_hits
+                        if str(hit.get("document_id") or "") == str(target_document.get("document_id") or "")
+                    ]
+                semantic_hit_keys: set[tuple[Any, ...]] = set()
+                citation_keys = {_citation_key(citation) for citation in citations}
+                semantic_context, semantic_citations = collect_semantic_context_and_citations(
+                    prompt_semantic_hits,
+                    seen_hit_keys=semantic_hit_keys,
+                    seen_citation_keys=citation_keys,
+                )
+                citations.extend(semantic_citations)
+                if target_document is not None:
+                    expansion_hits = search_vectors(
+                        query_vectors[0],
+                        corpora,
+                        _document_expansion_limit(top_k),
+                        document_ids=[target_document["document_id"]],
+                        trace_id=trace_id,
+                        service="workflow-runtime",
                     )
+                    document_scoped_context, document_scoped_citations = collect_semantic_context_and_citations(
+                        expansion_hits,
+                        seen_hit_keys=semantic_hit_keys,
+                        seen_citation_keys=citation_keys,
+                    )
+                    citations.extend(document_scoped_citations)
 
         if direct_answer:
             return {"query_mode": mode, "direct_answer": direct_answer, "prompt": None, "citations": citations}
 
         all_context = []
+        if inventory_context:
+            all_context.append(inventory_context)
         if structured_context:
             all_context.append("Structured lookup candidates:\n" + "\n".join(structured_context))
         if semantic_context:
             all_context.append("Semantic retrieval candidates:\n" + "\n".join(semantic_context))
+        if document_scoped_context and target_document is not None:
+            all_context.append(
+                "Document-scoped expansion:\n"
+                f"Target document: filename={target_document['filename']} | corpus={target_document['corpus']} | "
+                f"selection_reason={_document_selection_reason_label(str(target_document['selection_reason']))}\n"
+                + "\n".join(document_scoped_context)
+            )
         if not all_context:
             prompt = (
-                f"User question: {message}\n\n"
+                f"User question: {user_message}\n\n"
                 "No matching structured rows or semantic retrieval artifacts were found. "
                 "Say clearly that no grounded answer is available."
             )
@@ -1308,7 +1700,7 @@ def build_query_plan(message: str, corpora: list[str], top_k: int, trace_id: str
                 "Use only the grounded context below. If the question asks for an exact row value, prefer the "
                 "structured lookup evidence first.\n\n"
                 + "\n\n".join(all_context)
-                + f"\n\nUser question: {message}"
+                + f"\n\nUser question: {user_message}"
             )
         if mode == "structured" and structured_context and semantic_context:
             mode = "blended"
@@ -1320,6 +1712,7 @@ class QueryWorkflow(Workflow):
     async def prepare_query(self, ev: StartEvent) -> StopEvent:
         result = build_query_plan(
             message=str(start_event_value(ev, "message")),
+            current_message=str(start_event_value(ev, "current_message") or start_event_value(ev, "message")),
             corpora=list(start_event_value(ev, "corpora") or []),
             top_k=int(start_event_value(ev, "top_k") or 6),
             trace_id=str(start_event_value(ev, "trace_id")),

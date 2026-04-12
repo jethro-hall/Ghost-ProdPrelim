@@ -1,0 +1,25 @@
+NAMES                        STATUS                          PORTS
+ghost-control-plane          Up 35 minutes (healthy)         3000/tcp
+ghost-control-plane-canary   Up 35 minutes (healthy)         3000/tcp
+ghost-hubtiger-mcp           Up 36 minutes                   8096/tcp
+ghost-hubtiger-proxy         Up 36 minutes                   8095/tcp
+ghost-docling-processor      Up 36 minutes (healthy)         127.0.0.1:5001->8088/tcp
+ghost-shopify-mcp            Up 36 minutes (healthy)         3012/tcp
+ghost-web-ui                 Up 36 minutes                   80/tcp
+ghost-hubtiger               Up 36 minutes                   0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+ghost-odoo-rpc               Up 36 minutes (healthy)         8097/tcp
+ghost-edge-gateway           Up 7 days                       80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 0.0.0.0:6333->6333/tcp, [::]:6333->6333/tcp, 0.0.0.0:7070->7070/tcp, [::]:7070->7070/tcp, 2019/tcp, 0.0.0.0:8092->8092/tcp, [::]:8092->8092/tcp, 443/udp
+ghost-n8n                    Up 7 days (healthy)             5678/tcp
+ghost-agent-ingress          Up 8 days                       
+ghost-grafana                Up 8 days                       0.0.0.0:3005->3000/tcp, [::]:3005->3000/tcp
+ghost-promtail               Up 7 days                       
+ghost-phoenix                Up 8 days                       4317/tcp, 9090/tcp, 0.0.0.0:6006->6006/tcp, [::]:6006->6006/tcp
+ghost-postgres               Up 8 days                       5432/tcp
+ghost-redis                  Up 8 days                       0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+ghost-open-webui             Up 8 days (healthy)             8080/tcp
+ghost-qdrant                 Up 8 days (healthy)             6333-6334/tcp
+ghost-tool-proxy             Up 8 days                       
+ghost-embedder               Up 8 days (healthy)             
+ghost-glances                Restarting (0) 32 seconds ago   
+ghost-loki                   Up 8 days                       3100/tcp
+ghost-otel-collector         Up 8 days                       4317/tcp, 55678-55679/tcp, 0.0.0.0:4318->4318/tcp, [::]:4318->4318/tcp

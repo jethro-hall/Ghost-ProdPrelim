@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import type { Task, TaskDocument, TaskStep } from "../api";
+import { formatRequestedLane, type Task, type TaskDocument, type TaskStep } from "../api";
 import { CheckIcon, CloseIcon } from "./ReferenceIcons";
 
 type Props = {
@@ -140,7 +140,7 @@ export default function FullScreenLoader({ open, task, onClose }: Props) {
                         <div className="min-w-0">
                           <div className="truncate text-[0.78rem] font-semibold">{document.filename}</div>
                           <div className="mt-0.5 text-[0.68rem]">
-                            parse: {document.parse_status} • index: {document.index_status} • lane: {document.requested_lane}
+                            parse: {document.parse_status} • index: {document.index_status} • requested: {formatRequestedLane(document.requested_lane)} • actual: {document.actual_parse_lane ?? "pending"}
                           </div>
                         </div>
                         <div className="shrink-0 text-[0.68rem] font-semibold uppercase tracking-[0.12em]">{documentStatus(document)}</div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import type { ChatApiMode, Connection, RuntimeDefaults, Task } from "../api";
+import type { ChatApiMode, Connection, RequestedLane, RuntimeDefaults, Task } from "../api";
 import * as ghostApi from "../api";
 import BackgroundOrbs from "./BackgroundOrbs";
 import FullScreenLoader from "./FullScreenLoader";
@@ -31,7 +31,8 @@ const pendingTask: Task = {
 };
 
 export type AppOutletContext = {
-  uploadFile: (f: File, corpus?: string, lane?: string) => Promise<{ id: string }>;
+  uploadFile: (f: File, corpus?: string, lane?: RequestedLane) => Promise<{ id: string }>;
+  startSync: (corpus?: string) => Promise<void>;
   refreshConnections: () => Promise<void>;
   runtimeDefaults: RuntimeDefaults | null;
   refreshRuntimeDefaults: () => Promise<void>;
@@ -72,12 +73,12 @@ export default function AppLayout() {
     void refreshConnections().catch(() => null);
   }
 
-  async function handleFullSync() {
+  async function handleFullSync(corpus?: string) {
     setSyncing(true);
     setSyncOpen(true);
     setSyncTask(pendingTask);
     try {
-      const task = await ghostApi.startSync();
+      const task = await ghostApi.startSync(corpus);
       let current = task;
       setSyncTask(current);
       while (current.status === "pending" || current.status === "running") {
@@ -111,6 +112,7 @@ export default function AppLayout() {
             <Outlet
               context={{
                 uploadFile: ghostApi.uploadFile,
+                startSync: handleFullSync,
                 refreshConnections,
                 runtimeDefaults,
                 refreshRuntimeDefaults,
@@ -126,6 +128,11 @@ export default function AppLayout() {
         onClose={() => setRightOpen(false)}
         connections={connections}
         apiMode={apiMode}
+        runtimeDefaults={runtimeDefaults}
+        onSaveChatApiMode={async (mode) => {
+          if (!runtimeDefaults) return;
+          await persistRuntimeDefaults({ ...runtimeDefaults, chat_api_mode: mode });
+        }}
         onSave={async (body) => {
           await ghostApi.saveConnection(body);
           await refreshConnections();
@@ -135,6 +142,7 @@ export default function AppLayout() {
       <GhostChat
         open={chatOpen}
         apiMode={apiMode}
+        startSync={handleFullSync}
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
       />

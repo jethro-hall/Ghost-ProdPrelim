@@ -54,7 +54,7 @@ DEFAULT_AGENT_TOOLS = [
     {
         "id": "odoo_primary",
         "name": "Odoo ERP",
-        "description": "Read-only ERP and finance access when GhostDASH allows it and the gateway is healthy.",
+        "description": "Governed ERP and finance access when GhostDASH allows it and the gateway is healthy.",
         "enabled": False,
         "allowed_urls": [],
         "provider": "odoo",

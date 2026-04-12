@@ -1,4 +1,4 @@
-import type { DocumentIngestion } from "../api";
+import { formatRequestedLane, type DocumentIngestion } from "../api";
 import { FileTextIcon } from "./ReferenceIcons";
 
 type Props = {
@@ -40,7 +40,7 @@ export default function IngestionHistory({ history, onRefresh }: Props) {
                 <div>
                   <h3 className="max-w-[400px] truncate text-[0.8rem] font-semibold text-slate-900">{item.filename}</h3>
                   <p className="mt-0.5 text-[0.7rem] text-slate-500">
-                    {item.corpus} | {item.requested_lane} requested | {item.actual_parse_lane ?? "pending"} actual
+                    {item.corpus} | {formatRequestedLane(item.requested_lane)} requested | {item.actual_parse_lane ?? "pending"} actual
                   </p>
                   <p className="text-[0.7rem] text-slate-500">
                     parse: {item.parse_status} | index: {item.index_status}

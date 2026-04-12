@@ -26,6 +26,7 @@ class IngestTriggerPayload(BaseModel):
 
 class QueryTriggerPayload(BaseModel):
     message: str
+    current_message: str | None = None
     corpora: list[str] = []
     top_k: int = 6
     trace_id: str
@@ -237,6 +238,7 @@ def create_app() -> FastAPI:
         workflow = QueryWorkflow(timeout=120, verbose=False)
         result = await workflow.run(
             message=body.message,
+            current_message=body.current_message or body.message,
             corpora=body.corpora,
             top_k=body.top_k,
             trace_id=body.trace_id,

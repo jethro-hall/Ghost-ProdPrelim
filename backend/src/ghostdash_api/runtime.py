@@ -5,8 +5,11 @@ import time
 from datetime import UTC, datetime, timedelta
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
+from openai import OpenAI as OpenAIClient
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.openai.base import OpenAIEmbeddingModelType
 from llama_index.llms.openai import OpenAI as LlamaIndexOpenAI
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,6 +22,16 @@ from .telemetry import log_event, log_instant_event, new_span_id, wrap_outbound_
 
 settings = get_settings()
 SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT
+OPENAI_EMBEDDING_MODEL_VALUES = frozenset(model.value for model in OpenAIEmbeddingModelType)
+OPENAI_EMBEDDING_VALIDATION_MODEL = OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002.value
+
+
+@dataclass(slots=True)
+class LlmCompletionResult:
+    """Result of a single LLM call; `openai_response_id` is set for native OpenAI Responses API."""
+
+    text: str
+    openai_response_id: str | None = None
 
 
 @dataclass(slots=True)
@@ -27,6 +40,9 @@ class ProviderConnectionConfig:
     label: str
     api_key: str | None
     base_url: str | None
+    provider_kind: str = "openai"
+    auth_strategy: str = "bearer"
+    auth_header_name: str | None = None
 
 
 def _normalize_provider_model_id(provider: str, model_id: str | None, fallback: str) -> str:
@@ -41,10 +57,16 @@ def _merge_provider_connection(
     *,
     api_key: str | None = None,
     base_url: str | None = None,
+    provider_kind: str | None = None,
+    auth_strategy: str | None = None,
+    auth_header_name: str | None = None,
 ) -> ProviderConnectionConfig:
     return ProviderConnectionConfig(
         provider=connection.provider,
         label=connection.label,
+        provider_kind=provider_kind or connection.provider_kind or "openai",
+        auth_strategy=auth_strategy or connection.auth_strategy or "bearer",
+        auth_header_name=auth_header_name if auth_header_name is not None else connection.auth_header_name,
         api_key=api_key if api_key not in (None, "") else connection.api_key,
         base_url=base_url if base_url not in (None, "") else connection.base_url,
     )
@@ -57,8 +79,90 @@ def _provider_api_key(connection: ProviderConnectionConfig) -> str:
     return api_key
 
 
+def _normalize_openai_compatible_base_url(base_url: str) -> str:
+    normalized = base_url.rstrip("/")
+    for suffix in ("/chat/completions", "/responses", "/completions", "/embeddings"):
+        if normalized.endswith(suffix):
+            return normalized[: -len(suffix)]
+    return normalized
+
+
 def _provider_base_url(connection: ProviderConnectionConfig) -> str:
-    return (connection.base_url or settings.openai_base_url).rstrip("/")
+    return _normalize_openai_compatible_base_url(connection.base_url or settings.openai_base_url)
+
+
+def _provider_default_headers(connection: ProviderConnectionConfig) -> dict[str, str] | None:
+    auth_strategy = (connection.auth_strategy or "bearer").strip().lower()
+    if auth_strategy == "x_api_key":
+        return {"x-api-key": _provider_api_key(connection)}
+    if auth_strategy == "custom_header":
+        header_name = (connection.auth_header_name or "").strip() or "X-API-Key"
+        return {header_name: _provider_api_key(connection)}
+    base_url = _provider_base_url(connection)
+    parsed = urlsplit(base_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/")
+    if hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1"):
+        return {"X-Internal-Key": _provider_api_key(connection)}
+    return None
+
+
+def _uses_rideai_chat_gateway(connection: ProviderConnectionConfig) -> bool:
+    base_url = _provider_base_url(connection)
+    parsed = urlsplit(base_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/")
+    return hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1")
+
+
+def should_use_openai_responses_chain(connection: ConnectionRecord, api_mode: str) -> bool:
+    """Use OpenAI /v1/responses with previous_response_id (no pasted history) when applicable."""
+    if api_mode != "responses":
+        return False
+    pc = _merge_provider_connection(connection)
+    if _uses_rideai_chat_gateway(pc):
+        return False
+    if (pc.provider_kind or "openai").lower() != "openai":
+        return False
+    host = (urlsplit(_provider_base_url(pc)).hostname or "").lower()
+    return host == "api.openai.com"
+
+
+def _build_openai_compatible_client(connection: ProviderConnectionConfig) -> OpenAIClient:
+    return OpenAIClient(
+        api_key=_provider_api_key(connection),
+        base_url=_provider_base_url(connection),
+        default_headers=_provider_default_headers(connection),
+    )
+
+
+def _embedding_provider_base_url(connection: ProviderConnectionConfig) -> str:
+    configured = settings.openai_embedding_base_url
+    if configured:
+        return configured.rstrip("/")
+    return _provider_base_url(connection)
+
+
+def _embedding_provider_api_key(connection: ProviderConnectionConfig) -> str:
+    configured = settings.openai_embedding_api_key
+    if configured:
+        return configured
+    embedding_base = _embedding_provider_base_url(connection)
+    if embedding_base != _provider_base_url(connection):
+        # Local TEI does not require auth, but the OpenAI client still expects a placeholder key.
+        return "local-tei"
+    return _provider_api_key(connection)
+
+
+def _embedding_base_uses_custom_endpoint(base_url: str) -> bool:
+    return (urlsplit(base_url).hostname or "").lower() != "api.openai.com"
+
+
+def _should_use_custom_embedding_model_name(connection: ProviderConnectionConfig, model: str) -> bool:
+    return (
+        model not in OPENAI_EMBEDDING_MODEL_VALUES
+        and _embedding_base_uses_custom_endpoint(_embedding_provider_base_url(connection))
+    )
 
 
 def _get_llm(connection: ProviderConnectionConfig, *, model_id: str | None = None) -> LlamaIndexOpenAI:
@@ -84,6 +188,7 @@ def _build_llm(
         model=model,
         api_key=_provider_api_key(connection),
         api_base=_provider_base_url(connection),
+        default_headers=_provider_default_headers(connection),
         temperature=temperature,
         max_tokens=max_tokens,
         system_prompt=system_prompt,
@@ -96,11 +201,46 @@ def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: s
         embedding_model,
         settings.app_default_embedding_model,
     )
-    return OpenAIEmbedding(
-        model=model,
-        api_key=_provider_api_key(connection),
-        api_base=_provider_base_url(connection),
-    )
+    embed_kwargs = {
+        "api_key": _embedding_provider_api_key(connection),
+        "api_base": _embedding_provider_base_url(connection),
+        "embed_batch_size": max(1, settings.app_embedding_batch_size),
+    }
+    if _should_use_custom_embedding_model_name(connection, model):
+        # LlamaIndex validates `model` against OpenAI enums before making the request,
+        # so custom TEI-served models need to be passed via `model_name` instead.
+        embed_kwargs["model"] = OPENAI_EMBEDDING_VALIDATION_MODEL
+        embed_kwargs["model_name"] = model
+    else:
+        embed_kwargs["model"] = model
+    return OpenAIEmbedding(**embed_kwargs)
+
+
+def _iter_embedding_text_batches(texts: list[str]) -> Iterator[list[str]]:
+    batch_size = max(1, settings.app_embedding_batch_size)
+    for start in range(0, len(texts), batch_size):
+        yield texts[start : start + batch_size]
+
+
+def _request_embeddings_in_batches(
+    embed_model: OpenAIEmbedding,
+    texts: list[str],
+    *,
+    trace_id: str | None = None,
+    service: str = "workflow-runtime",
+) -> list[list[float]]:
+    vectors: list[list[float]] = []
+    for batch in _iter_embedding_text_batches(texts):
+        def _run(current_batch: list[str] = batch) -> list[list[float]]:
+            return embed_model.get_text_embedding_batch(current_batch)
+
+        batch_vectors = (
+            wrap_outbound_call(trace_id=trace_id, service=service, route="openai.embeddings", fn=_run)
+            if trace_id
+            else _run()
+        )
+        vectors.extend(batch_vectors)
+    return vectors
 
 
 def _embedding_cache_key(
@@ -115,7 +255,7 @@ def _embedding_cache_key(
         settings.app_default_embedding_model,
     )
     text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
-    return connection.provider, _provider_base_url(connection), model, text_hash
+    return connection.provider, _embedding_provider_base_url(connection), model, text_hash
 
 
 def _embedding_cache_cutoff() -> datetime | None:
@@ -123,6 +263,13 @@ def _embedding_cache_cutoff() -> datetime | None:
     if ttl_seconds <= 0:
         return None
     return datetime.now(UTC) - timedelta(seconds=ttl_seconds)
+
+
+def _cache_row_is_stale(updated_at: datetime, cutoff: datetime | None) -> bool:
+    if cutoff is None:
+        return False
+    candidate = updated_at if updated_at.tzinfo is not None else updated_at.replace(tzinfo=UTC)
+    return candidate < cutoff
 
 
 def _load_cached_embeddings(
@@ -149,7 +296,7 @@ def _load_cached_embeddings(
         )
         dirty = False
         for row in rows:
-            if cutoff is not None and row.updated_at < cutoff:
+            if _cache_row_is_stale(row.updated_at, cutoff):
                 session.delete(row)
                 stale_count += 1
                 dirty = True
@@ -206,6 +353,9 @@ def seed_default_connections(session: Session) -> None:
     defaults = {
         "openai": {
             "label": "OpenAI",
+            "provider_kind": "openai",
+            "auth_strategy": "bearer",
+            "auth_header_name": None,
             "api_key": settings.openai_api_key,
             "base_url": settings.openai_base_url,
             "enabled": bool(settings.openai_api_key),
@@ -218,6 +368,10 @@ def seed_default_connections(session: Session) -> None:
                 existing.api_key = settings.openai_api_key
                 existing.enabled = True
             existing.base_url = existing.base_url or settings.openai_base_url
+            existing.provider_kind = existing.provider_kind or payload["provider_kind"]
+            existing.auth_strategy = existing.auth_strategy or payload["auth_strategy"]
+            if existing.auth_header_name is None:
+                existing.auth_header_name = payload["auth_header_name"]
             continue
         session.add(ConnectionRecord(provider=provider, **payload))
     session.commit()
@@ -230,7 +384,13 @@ def list_connections(session: Session) -> list[ConnectionRecord]:
 def save_connection(session: Session, provider: str, **fields) -> ConnectionRecord:
     record = session.scalar(select(ConnectionRecord).where(ConnectionRecord.provider == provider))
     if record is None:
-        record = ConnectionRecord(provider=provider, label=fields.get("label") or provider.title())
+        record = ConnectionRecord(
+            provider=provider,
+            label=fields.get("label") or provider.title(),
+            provider_kind=fields.get("provider_kind") or ("openai" if provider == "openai" else "openai_compatible"),
+            auth_strategy=fields.get("auth_strategy") or "bearer",
+            auth_header_name=fields.get("auth_header_name"),
+        )
         session.add(record)
 
     for key, value in fields.items():
@@ -240,10 +400,21 @@ def save_connection(session: Session, provider: str, **fields) -> ConnectionReco
 
     if provider == "openai":
         record.base_url = record.base_url or settings.openai_base_url
+        record.provider_kind = record.provider_kind or "openai"
+
+    if record.provider_kind == "openai_compatible" and record.auth_strategy == "custom_header":
+        record.auth_header_name = (record.auth_header_name or "X-API-Key").strip() or "X-API-Key"
 
     session.commit()
     session.refresh(record)
     return record
+
+
+def get_connection(session: Session, connection_id: str) -> ConnectionRecord:
+    connection = session.get(ConnectionRecord, connection_id)
+    if connection is None:
+        raise ValueError(f"connection {connection_id} not found")
+    return connection
 
 
 def get_active_connection(session: Session, provider: str = "openai") -> ConnectionRecord:
@@ -251,6 +422,20 @@ def get_active_connection(session: Session, provider: str = "openai") -> Connect
     if connection is None:
         raise ValueError(f"No connection record exists for {provider}")
     return connection
+
+
+def resolve_llm_connection(
+    session: Session,
+    *,
+    connection_id: str | None = None,
+    provider: str | None = None,
+    fallback_provider: str = "openai",
+) -> ConnectionRecord:
+    if connection_id:
+        return get_connection(session, connection_id)
+    if provider:
+        return get_active_connection(session, provider)
+    return get_active_connection(session, fallback_provider)
 
 
 def embed_texts(
@@ -267,13 +452,7 @@ def embed_texts(
     provider_connection = _merge_provider_connection(connection)
     if not settings.app_embedding_cache_enabled:
         embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
-
-        def _run() -> list[list[float]]:
-            return embed_model.get_text_embedding_batch(text_batch)
-
-        if trace_id:
-            return wrap_outbound_call(trace_id=trace_id, service=service, route="openai.embeddings", fn=_run)
-        return _run()
+        return _request_embeddings_in_batches(embed_model, text_batch, trace_id=trace_id, service=service)
 
     cached_vectors, namespace, stale_count = _load_cached_embeddings(
         provider_connection,
@@ -309,14 +488,11 @@ def embed_texts(
     missing_vectors_by_hash: dict[str, list[float]] = {}
     if unique_missing_texts:
         embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
-
-        def _run() -> list[list[float]]:
-            return embed_model.get_text_embedding_batch(unique_missing_texts)
-
-        new_vectors = (
-            wrap_outbound_call(trace_id=trace_id, service=service, route="openai.embeddings", fn=_run)
-            if trace_id
-            else _run()
+        new_vectors = _request_embeddings_in_batches(
+            embed_model,
+            unique_missing_texts,
+            trace_id=trace_id,
+            service=service,
         )
         to_store: list[tuple[str, list[float]]] = []
         for text, vector in zip(unique_missing_texts, new_vectors, strict=True):
@@ -353,19 +529,61 @@ def generate_answer(
     max_tokens: int | None = None,
     trace_id: str | None = None,
     service: str = "agent-ingress",
-) -> str:
+    previous_response_id: str | None = None,
+    use_openai_responses_http: bool = False,
+) -> LlmCompletionResult:
     provider_connection = _merge_provider_connection(connection)
-    llm = _build_llm(
-        provider_connection,
-        model_id=model_id,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        system_prompt=system_prompt,
-    )
+    resolved_model = _normalize_provider_model_id(provider_connection.provider, model_id, settings.app_default_chat_model)
 
-    def _run() -> str:
-        response = llm.complete(prompt)
-        return getattr(response, "text", str(response)).strip()
+    if _uses_rideai_chat_gateway(provider_connection):
+        client = _build_openai_compatible_client(provider_connection)
+
+        def _run() -> LlmCompletionResult:
+            response = client.chat.completions.create(
+                model=resolved_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                stream=False,
+            )
+            content = response.choices[0].message.content if response.choices else ""
+            return LlmCompletionResult(text=(content or "").strip(), openai_response_id=None)
+
+    elif use_openai_responses_http:
+        client = _build_openai_compatible_client(provider_connection)
+
+        def _run() -> LlmCompletionResult:
+            instr = (system_prompt or "").strip() or "You are a helpful assistant."
+            kwargs: dict = {
+                "model": resolved_model,
+                "instructions": instr,
+                "input": prompt,
+                "temperature": temperature,
+            }
+            if max_tokens is not None:
+                kwargs["max_output_tokens"] = max_tokens
+            if previous_response_id:
+                kwargs["previous_response_id"] = previous_response_id
+            resp = client.responses.create(**kwargs)
+            text = (getattr(resp, "output_text", None) or "").strip()
+            return LlmCompletionResult(text=text, openai_response_id=getattr(resp, "id", None))
+
+    else:
+        llm = _build_llm(
+            provider_connection,
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            system_prompt=system_prompt,
+        )
+
+        def _run() -> LlmCompletionResult:
+            response = llm.complete(prompt)
+            out = getattr(response, "text", str(response)).strip()
+            return LlmCompletionResult(text=out, openai_response_id=None)
 
     route = f"openai.{api_mode}"
     if trace_id:
@@ -384,24 +602,73 @@ def stream_answer(
     max_tokens: int | None = None,
     trace_id: str,
     service: str = "agent-ingress",
+    previous_response_id: str | None = None,
+    use_openai_responses_http: bool = False,
+    openai_response_id_out: list[str | None] | None = None,
 ) -> Iterator[str]:
     provider_connection = _merge_provider_connection(connection)
-    llm = _build_llm(
-        provider_connection,
-        model_id=model_id,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        system_prompt=system_prompt,
-    )
+    resolved_model = _normalize_provider_model_id(provider_connection.provider, model_id, settings.app_default_chat_model)
     span_id = new_span_id()
     start_ts = time.time()
     error: str | None = None
     status: str = "ok"
     try:
-        for chunk in llm.stream_complete(prompt):
-            delta = getattr(chunk, "delta", None) or getattr(chunk, "text", None) or str(chunk)
-            if delta:
-                yield delta
+        if _uses_rideai_chat_gateway(provider_connection):
+            client = _build_openai_compatible_client(provider_connection)
+            stream = client.chat.completions.create(
+                model=resolved_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                stream=True,
+            )
+            for chunk in stream:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta.content or ""
+                if delta:
+                    yield delta
+        elif use_openai_responses_http:
+            client = _build_openai_compatible_client(provider_connection)
+            instr = (system_prompt or "").strip() or "You are a helpful assistant."
+            kwargs: dict = {
+                "model": resolved_model,
+                "instructions": instr,
+                "input": prompt,
+                "temperature": temperature,
+                "stream": True,
+            }
+            if max_tokens is not None:
+                kwargs["max_output_tokens"] = max_tokens
+            if previous_response_id:
+                kwargs["previous_response_id"] = previous_response_id
+            stream = client.responses.create(**kwargs)
+            for event in stream:
+                et = getattr(event, "type", None)
+                if et == "response.output_text.delta":
+                    delta = getattr(event, "delta", "") or ""
+                    if delta:
+                        yield delta
+                elif et == "response.completed":
+                    resp_obj = getattr(event, "response", None)
+                    rid = getattr(resp_obj, "id", None) if resp_obj is not None else None
+                    if openai_response_id_out is not None and len(openai_response_id_out) > 0:
+                        openai_response_id_out[0] = rid
+        else:
+            llm = _build_llm(
+                provider_connection,
+                model_id=model_id,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                system_prompt=system_prompt,
+            )
+            for chunk in llm.stream_complete(prompt):
+                delta = getattr(chunk, "delta", None) or getattr(chunk, "text", None) or str(chunk)
+                if delta:
+                    yield delta
     except Exception as exc:
         error = repr(exc)
         status = "error"
@@ -417,6 +684,40 @@ def stream_answer(
             status=status,
             error=error,
         )
+
+
+def stream_answer_to_result(
+    prompt: str,
+    connection: ConnectionRecord,
+    *,
+    api_mode: str = "responses",
+    system_prompt: str = SYSTEM_PROMPT,
+    model_id: str | None = None,
+    temperature: float = 0,
+    max_tokens: int | None = None,
+    trace_id: str,
+    service: str = "agent-ingress",
+    previous_response_id: str | None = None,
+    use_openai_responses_http: bool = False,
+) -> LlmCompletionResult:
+    holder: list[str | None] = [None]
+    parts: list[str] = []
+    for delta in stream_answer(
+        prompt,
+        connection,
+        api_mode=api_mode,
+        system_prompt=system_prompt,
+        model_id=model_id,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        trace_id=trace_id,
+        service=service,
+        previous_response_id=previous_response_id,
+        use_openai_responses_http=use_openai_responses_http,
+        openai_response_id_out=holder,
+    ):
+        parts.append(delta)
+    return LlmCompletionResult(text="".join(parts).strip(), openai_response_id=holder[0] if holder else None)
 
 
 def test_provider_connection(
@@ -435,19 +736,31 @@ def test_provider_connection(
         api_key=api_key,
         base_url=base_url,
     )
+    resolved_model = _normalize_provider_model_id(
+        provider_connection.provider,
+        model_id,
+        settings.app_default_chat_model,
+    )
 
     def _run() -> dict[str, str]:
-        llm = _get_llm(provider_connection, model_id=model_id)
-        response = llm.complete(prompt)
+        if _uses_rideai_chat_gateway(provider_connection):
+            client = _build_openai_compatible_client(provider_connection)
+            response = client.chat.completions.create(
+                model=resolved_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+                stream=False,
+            )
+            output = (response.choices[0].message.content if response.choices else "") or ""
+        else:
+            llm = _get_llm(provider_connection, model_id=model_id)
+            response = llm.complete(prompt)
+            output = getattr(response, "text", str(response)).strip()
         return {
             "api_mode": api_mode,
-            "model": _normalize_provider_model_id(
-                provider_connection.provider,
-                model_id,
-                settings.app_default_chat_model,
-            ),
+            "model": resolved_model,
             "base_url": _provider_base_url(provider_connection),
-            "output": getattr(response, "text", str(response)).strip(),
+            "output": output.strip(),
         }
 
     route = f"openai.test.{api_mode}"

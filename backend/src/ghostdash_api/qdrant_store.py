@@ -6,29 +6,36 @@ import json
 from typing import Any
 from uuid import uuid4
 
-from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    FilterSelector,
-    MatchValue,
-    PayloadSchemaType,
-    PointStruct,
-    VectorParams,
-)
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import (
+        Distance,
+        FieldCondition,
+        Filter,
+        FilterSelector,
+        MatchAny,
+        MatchValue,
+        PayloadSchemaType,
+        PointStruct,
+        VectorParams,
+    )
+except ModuleNotFoundError:  # pragma: no cover - exercised only in stripped test hosts
+    QdrantClient = None  # type: ignore[assignment]
+    Distance = FieldCondition = Filter = FilterSelector = MatchAny = MatchValue = PayloadSchemaType = PointStruct = VectorParams = None
 
 from .settings import get_settings
 from .telemetry import wrap_outbound_call
 
 settings = get_settings()
 
-DEFAULT_VECTOR_SIZE = 1536
+DEFAULT_VECTOR_SIZE = 1024
 DEFAULT_UPSERT_MAX_PAYLOAD_BYTES = 24 * 1024 * 1024
 DEFAULT_UPSERT_MAX_POINTS = 128
 
 
 def client() -> QdrantClient:
+    if QdrantClient is None:
+        raise RuntimeError("qdrant_client is not installed")
     return QdrantClient(
         url=settings.app_qdrant_url,
         api_key=settings.qdrant_api_key or None,
@@ -36,21 +43,96 @@ def client() -> QdrantClient:
     )
 
 
+def configured_vector_size() -> int:
+    return max(1, int(getattr(settings, "app_qdrant_vector_size", DEFAULT_VECTOR_SIZE)))
+
+
+def _extract_collection_vector_size(collection_info: Any) -> int:
+    vectors = getattr(getattr(getattr(collection_info, "config", None), "params", None), "vectors", None)
+    if vectors is None:
+        raise RuntimeError("Unable to resolve Qdrant collection vector size from collection metadata")
+    if hasattr(vectors, "size"):
+        return int(vectors.size)
+    if isinstance(vectors, dict):
+        if len(vectors) != 1:
+            raise RuntimeError("Named-vector Qdrant collections are not supported by this runtime")
+        only_vector = next(iter(vectors.values()))
+        if hasattr(only_vector, "size"):
+            return int(only_vector.size)
+    raise RuntimeError("Unsupported Qdrant vector configuration returned by collection metadata")
+
+
+def _assert_collection_vector_size(qc: QdrantClient, collection_name: str, expected_size: int) -> None:
+    actual_size = _extract_collection_vector_size(qc.get_collection(collection_name=collection_name))
+    if actual_size != expected_size:
+        raise ValueError(
+            f"Qdrant collection '{collection_name}' is configured for {actual_size}-d vectors, "
+            f"but GhostDASH is configured for {expected_size}-d vectors. "
+            "Use a clean collection name or align APP_QDRANT_VECTOR_SIZE with the embedding model."
+        )
+
+
+def _assert_vector_batch_size(vectors: list[list[float]], expected_size: int, *, collection_name: str) -> None:
+    invalid_sizes = sorted({len(vector) for vector in vectors if len(vector) != expected_size})
+    if not invalid_sizes:
+        return
+    if len(invalid_sizes) == 1:
+        received = str(invalid_sizes[0])
+    else:
+        received = ", ".join(str(size) for size in invalid_sizes)
+    raise ValueError(
+        f"Embedding vectors for Qdrant collection '{collection_name}' must be {expected_size}-d, "
+        f"but received vector sizes: {received}."
+    )
+
+
+def _normalize_keyword_values(values: list[str] | None) -> list[str]:
+    normalized: list[str] = []
+    for value in values or []:
+        text = str(value).strip()
+        if text:
+            normalized.append(text)
+    return normalized
+
+
+def _build_keyword_match(values: list[str] | None):
+    normalized = _normalize_keyword_values(values)
+    if not normalized:
+        return None
+    if len(normalized) == 1:
+        return MatchValue(value=normalized[0])
+    return MatchAny(any=normalized)
+
+
+def _build_search_filter(*, corpora: list[str] | None, document_ids: list[str] | None = None) -> Filter | None:
+    must = []
+    corpus_match = _build_keyword_match(corpora)
+    if corpus_match is not None:
+        must.append(FieldCondition(key="corpus", match=corpus_match))
+    document_match = _build_keyword_match(document_ids)
+    if document_match is not None:
+        must.append(FieldCondition(key="document_id", match=document_match))
+    if not must:
+        return None
+    return Filter(must=must)
+
+
 def ensure_collection(
-    vector_size: int = DEFAULT_VECTOR_SIZE,
+    vector_size: int | None = None,
     trace_id: str | None = None,
     service: str = "ghostdash-api",
 ) -> None:
     qc = client()
     name = settings.app_qdrant_collection
+    expected_size = configured_vector_size() if vector_size is None else int(vector_size)
 
     def _ensure() -> None:
         if qc.collection_exists(collection_name=name):
-            pass
+            _assert_collection_vector_size(qc, name, expected_size)
         else:
             qc.create_collection(
                 collection_name=name,
-                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+                vectors_config=VectorParams(size=expected_size, distance=Distance.COSINE),
             )
         for field_name in ("corpus", "document_id", "artifact_type", "content_hash"):
             qc.create_payload_index(
@@ -92,6 +174,49 @@ def delete_document_vectors(document_id: str, trace_id: str | None = None, servi
         _delete()
 
 
+def delete_corpus_vectors(corpus: str, trace_id: str | None = None, service: str = "control-api") -> None:
+    qc = client()
+    name = settings.app_qdrant_collection
+
+    def _delete() -> None:
+        if not qc.collection_exists(collection_name=name):
+            return
+        qc.delete(
+            collection_name=name,
+            points_selector=FilterSelector(
+                filter=Filter(
+                    must=[FieldCondition(key="corpus", match=MatchValue(value=corpus))],
+                ),
+            ),
+        )
+
+    if trace_id:
+        wrap_outbound_call(trace_id=trace_id, service=service, route="qdrant.delete", fn=_delete)
+    else:
+        _delete()
+
+
+def count_corpus_vectors(corpus: str, trace_id: str | None = None, service: str = "control-api") -> int:
+    qc = client()
+    name = settings.app_qdrant_collection
+
+    def _count() -> int:
+        if not qc.collection_exists(collection_name=name):
+            return 0
+        response = qc.count(
+            collection_name=name,
+            count_filter=Filter(
+                must=[FieldCondition(key="corpus", match=MatchValue(value=corpus))],
+            ),
+            exact=True,
+        )
+        return int(getattr(response, "count", 0) or 0)
+
+    if trace_id:
+        return wrap_outbound_call(trace_id=trace_id, service=service, route="qdrant.count", fn=_count)
+    return _count()
+
+
 def _estimate_point_bytes(vector: list[float], payload: dict[str, Any]) -> int:
     payload_size = len(json.dumps(payload, default=str).encode("utf-8"))
     # Vector payload overhead is roughly float bytes + JSON structural overhead.
@@ -106,8 +231,10 @@ def upsert_retrieval_artifacts(
     trace_id: str | None = None,
     service: str = "workflow-runtime",
 ) -> list[str]:
+    expected_size = configured_vector_size()
+    _assert_vector_batch_size(vectors, expected_size, collection_name=settings.app_qdrant_collection)
     ensure_collection(
-        vector_size=len(vectors[0]) if vectors else DEFAULT_VECTOR_SIZE,
+        vector_size=expected_size,
         trace_id=trace_id,
         service=service,
     )
@@ -198,20 +325,24 @@ def search_vectors(
     vector: list[float],
     corpora: list[str],
     top_k: int,
+    document_ids: list[str] | None = None,
     trace_id: str | None = None,
     service: str = "agent-ingress",
 ) -> list[dict[str, Any]]:
     qc = client()
     name = settings.app_qdrant_collection
+    expected_size = configured_vector_size()
 
     def _search() -> list[dict[str, Any]]:
+        if len(vector) != expected_size:
+            raise ValueError(
+                f"Search vectors for Qdrant collection '{name}' must be {expected_size}-d, "
+                f"but received {len(vector)} dimensions."
+            )
         if not qc.collection_exists(collection_name=name):
             return []
-        qdrant_filter: Filter | None = None
-        if corpora:
-            qdrant_filter = Filter(
-                should=[FieldCondition(key="corpus", match=MatchValue(value=corpus)) for corpus in corpora],
-            )
+        _assert_collection_vector_size(qc, name, expected_size)
+        qdrant_filter = _build_search_filter(corpora=corpora, document_ids=document_ids)
         response = qc.query_points(
             collection_name=name,
             query=vector,

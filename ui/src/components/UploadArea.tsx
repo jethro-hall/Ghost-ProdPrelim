@@ -1,23 +1,25 @@
 import { useEffect, useRef } from "react";
 import { TrashIcon, UploadIcon } from "./ReferenceIcons";
+import { formatRequestedLane, type RequestedLane } from "../api";
 
 export type StagedUpload = {
   id: string;
   file: File;
   name: string;
   sizeLabel: string;
-  lane: "local" | "cloud";
+  lane: RequestedLane;
   status: "staged" | "uploading" | "uploaded" | "error";
   error?: string;
 };
 
 type Props = {
   stagedFiles: StagedUpload[];
-  selectedLane: "local" | "cloud";
+  selectedLane: RequestedLane;
+  collectionLabel: string;
   cloudReady: boolean;
   uploading: boolean;
   statusText: string;
-  onLaneChange: (lane: "local" | "cloud") => void;
+  onLaneChange: (lane: RequestedLane) => void;
   onAddFiles: (files: FileList | null) => void;
   onRemove: (id: string) => void;
   onUploadAll: () => void;
@@ -41,6 +43,7 @@ function rowStatusClass(item: StagedUpload) {
 export default function UploadArea({
   stagedFiles,
   selectedLane,
+  collectionLabel,
   cloudReady,
   uploading,
   statusText,
@@ -63,16 +66,20 @@ export default function UploadArea({
   return (
     <div className="mb-6 max-w-[700px]">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h3 className="text-[0.9rem] font-semibold text-slate-900">Dashboard Upload</h3>
+        <div>
+          <h3 className="text-[0.9rem] font-semibold text-slate-900">Dashboard Upload</h3>
+          <div className="mt-1 text-[0.72rem] text-slate-500">Target collection: {collectionLabel}</div>
+        </div>
         <div className="flex items-center gap-2">
           <select
             className="ghost-select w-[185px] text-[0.75rem]"
             value={selectedLane}
-            onChange={(event) => onLaneChange(event.target.value as "local" | "cloud")}
+            onChange={(event) => onLaneChange(event.target.value as RequestedLane)}
           >
-            <option value="local">Local parse lane</option>
+            <option value="default">Default (runtime policy)</option>
+            <option value="local">Local only</option>
             <option value="cloud" disabled={!cloudReady}>
-              Cloud (LlamaParse){!cloudReady ? " - unavailable" : ""}
+              Cloud only (LlamaParse){!cloudReady ? " - unavailable" : ""}
             </option>
           </select>
           <button type="button" className="ghost-btn-primary" onClick={onUploadAll} disabled={uploading || stagedFiles.length === 0}>
@@ -145,6 +152,9 @@ export default function UploadArea({
           Cloud parsing is currently blocked because `LLAMA_CLOUD_API_KEY` is not configured in the live environment.
         </p>
       )}
+      <p className="mt-2 text-[0.72rem] text-slate-500">
+        `Default` leaves PDF lane choice to the active runtime policy. `Local` and `Cloud` are explicit overrides.
+      </p>
 
       {statusText && <p className="mt-2 text-[0.75rem] text-slate-500">{statusText}</p>}
 
@@ -173,7 +183,7 @@ export default function UploadArea({
                     <div className="text-[0.72rem] text-slate-500">{file.sizeLabel}</div>
                     {file.error && <div className="mt-0.5 text-[0.72rem] text-rose-600">{file.error}</div>}
                   </td>
-                  <td className="px-2.5 py-2 text-slate-600">{file.lane}</td>
+                  <td className="px-2.5 py-2 text-slate-600">{formatRequestedLane(file.lane)}</td>
                   <td className={`px-2.5 py-2 font-medium ${rowStatusClass(file)}`}>{rowStatusLabel(file)}</td>
                   <td className="px-2.5 py-2">
                     <button

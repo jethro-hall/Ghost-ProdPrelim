@@ -1,0 +1,12 @@
+HTTP/2 200 
+alt-svc: h3=":443"; ma=2592000
+content-type: application/json; charset=utf-8
+date: Sat, 11 Apr 2026 00:02:28 GMT
+etag: W/"b-Ai2R8hgEarLmHKwesT1qcY913ys"
+via: 1.1 Caddy
+x-powered-by: Express
+x-span-id: e36fbb30-5c9e-4200-b8b1-feaf3def777f
+x-trace-id: 444f8f25-fe27-4656-a59d-225044e03c65
+content-length: 11
+
+{"ok":true}

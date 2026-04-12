@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from ghostdash_api import control_api, tool_registry
+from ghostdash_api import control_api, odoo_connector, tool_registry
 from ghostdash_api.database import Base, get_session
 from ghostdash_api.models import AgentProfileRecord, RuntimeProfileRecord, ToolRegistryRecord
 from ghostdash_api.odoo_connector import ODOO_TOOL_ID
@@ -72,7 +72,7 @@ def test_chat_bootstrap_includes_tool_catalog_and_policy_updates_clone_shared_pr
             "provider": "odoo",
             "name": "Odoo ERP",
             "gateway": "ghoststack-rag",
-            "description": "Read-only Odoo ERP access routed through the Ghost stack control plane.",
+            "description": "Governed Odoo ERP access routed through the Ghost stack control plane.",
             "status": "unknown",
             "active": False,
             "configured": False,
@@ -138,16 +138,22 @@ def test_odoo_tool_settings_test_and_execute_round_trip(monkeypatch) -> None:
 
     def fake_execute_odoo_operation(config, *, operation: str, payload: dict | None = None):
         assert config.base_url == "https://odoo.example.com"
-        assert operation == "odoo.meta.current_user"
-        assert payload == {}
+        assert config.read_only is False
+        assert operation == "odoo.rpc.execute_kw"
+        assert payload == {
+            "model": "res.partner",
+            "method": "search_count",
+            "args": [],
+            "kwargs": {"domain": [["customer_rank", ">", 0]]},
+        }
         return {
             "success": True,
-            "message": "odoo.meta.current_user completed.",
+            "message": "odoo.rpc.execute_kw completed.",
             "trace_id": "trace-execute",
             "latency_ms": 35,
             "operation": operation,
-            "read_only": True,
-            "data": {"count": 1, "records": [{"id": 7, "name": "Operator"}]},
+            "read_only": False,
+            "data": {"model": "res.partner", "method": "search_count", "result_type": "scalar", "result": 42},
         }
 
     monkeypatch.setattr(tool_registry, "test_odoo_connection", fake_test_odoo_connection)
@@ -160,6 +166,7 @@ def test_odoo_tool_settings_test_and_execute_round_trip(monkeypatch) -> None:
             "database": "ghost",
             "username": "operator@example.com",
             "password": "super-secret",
+            "read_only": False,
             "timeout_ms": 25000,
         },
     )
@@ -169,6 +176,7 @@ def test_odoo_tool_settings_test_and_execute_round_trip(monkeypatch) -> None:
     assert settings_payload["settings"]["database"] == "ghost"
     assert settings_payload["settings"]["has_password"] is True
     assert settings_payload["settings"]["username_hint"]
+    assert settings_payload["settings"]["read_only"] is False
 
     test_response = client.post(f"/api/tools/{ODOO_TOOL_ID}/test")
     assert test_response.status_code == 200
@@ -180,16 +188,110 @@ def test_odoo_tool_settings_test_and_execute_round_trip(monkeypatch) -> None:
 
     execute_response = client.post(
         f"/api/tools/{ODOO_TOOL_ID}/execute",
-        json={"operation": "odoo.meta.current_user", "payload": {}},
+        json={
+            "operation": "odoo.rpc.execute_kw",
+            "payload": {
+                "model": "res.partner",
+                "method": "search_count",
+                "args": [],
+                "kwargs": {"domain": [["customer_rank", ">", 0]]},
+            },
+        },
     )
     assert execute_response.status_code == 200
     execute_payload = execute_response.json()
     assert execute_payload["success"] is True
     assert execute_payload["trace_id"] == "trace-execute"
-    assert execute_payload["data"]["records"][0]["name"] == "Operator"
+    assert execute_payload["read_only"] is False
+    assert execute_payload["data"]["result"] == 42
 
     with SessionLocal() as session:
         record = session.get(ToolRegistryRecord, ODOO_TOOL_ID)
         assert record is not None
         assert record.status == "healthy"
         assert record.active is True
+        assert record.config_json["read_only"] is False
+
+
+class _DummyClient:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+def test_odoo_connector_blocks_mutation_in_read_only_mode(monkeypatch) -> None:
+    monkeypatch.setattr(odoo_connector.httpx, "Client", _DummyClient)
+    monkeypatch.setattr(odoo_connector, "_authenticate", lambda client, config: 7)
+
+    try:
+        odoo_connector.execute_odoo_operation(
+            {
+                "base_url": "https://odoo.example.com",
+                "database": "ghost",
+                "username": "operator@example.com",
+                "password": "super-secret",
+                "read_only": True,
+            },
+            operation="odoo.rpc.execute_kw",
+            payload={"model": "res.partner", "method": "write", "args": [[7], {"name": "Mutated"}], "kwargs": {}},
+        )
+    except odoo_connector.OdooConnectorError as exc:
+        assert "read-only mode" in str(exc)
+    else:
+        raise AssertionError("Expected read-only execution to be blocked")
+
+
+def test_odoo_connector_supports_quarterly_margin_summary(monkeypatch) -> None:
+    monkeypatch.setattr(odoo_connector.httpx, "Client", _DummyClient)
+    monkeypatch.setattr(odoo_connector, "_authenticate", lambda client, config: 7)
+
+    def fake_execute_kw(client, *, config, uid, model, method, args=None, kwargs=None):
+        assert method == "read_group"
+        if model == "account.move":
+            return [
+                {"invoice_date:quarter": "2025-Q3", "amount_untaxed_signed": 1000.0, "__domain": [["invoice_date", ">=", "2025-07-01"]]},
+                {"invoice_date:quarter": "2025-Q4", "amount_untaxed_signed": 1200.0, "__domain": [["invoice_date", ">=", "2025-10-01"]]},
+                {"invoice_date:quarter": "2026-Q1", "amount_untaxed_signed": 1500.0, "__domain": [["invoice_date", ">=", "2026-01-01"]]},
+            ]
+        if model == "account.move.line":
+            return [
+                {"date:quarter": "2025-Q3", "balance": 600.0, "__domain": [["date", ">=", "2025-07-01"]]},
+                {"date:quarter": "2025-Q4", "balance": 700.0, "__domain": [["date", ">=", "2025-10-01"]]},
+                {"date:quarter": "2026-Q1", "balance": 900.0, "__domain": [["date", ">=", "2026-01-01"]]},
+            ]
+        raise AssertionError(f"Unexpected model {model}")
+
+    monkeypatch.setattr(odoo_connector, "_execute_kw", fake_execute_kw)
+    monkeypatch.setattr(
+        odoo_connector,
+        "_quarter_ranges",
+        lambda **kwargs: [
+            (odoo_connector.date(2025, 7, 1), odoo_connector.date(2025, 10, 1)),
+            (odoo_connector.date(2025, 10, 1), odoo_connector.date(2026, 1, 1)),
+            (odoo_connector.date(2026, 1, 1), odoo_connector.date(2026, 4, 1)),
+        ],
+    )
+
+    response = odoo_connector.execute_odoo_operation(
+        {
+            "base_url": "https://odoo.example.com",
+            "database": "ghost",
+            "username": "operator@example.com",
+            "password": "super-secret",
+            "read_only": True,
+        },
+        operation="odoo.finance.margin.quarterly_summary",
+        payload={"quarters": 3, "include_current_quarter": True},
+    )
+
+    assert response["success"] is True
+    assert response["read_only"] is True
+    quarters = response["data"]["quarters"]
+    assert quarters[0]["quarter"] == "2025-Q3"
+    assert quarters[0]["gp"] == 400.0
+    assert quarters[2]["running_gp"] == 1500.0
