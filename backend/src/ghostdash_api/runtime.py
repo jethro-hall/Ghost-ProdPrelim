@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from typing import Any
 from datetime import UTC, datetime, timedelta
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -193,6 +194,26 @@ def _build_llm(
         max_tokens=max_tokens,
         system_prompt=system_prompt,
     )
+
+
+def _coerce_content_fragment_to_text(fragment: Any) -> str:
+    if fragment is None:
+        return ""
+    if isinstance(fragment, str):
+        return fragment
+    if isinstance(fragment, (int, float, bool)):
+        return str(fragment)
+    if isinstance(fragment, (list, tuple)):
+        return "".join(_coerce_content_fragment_to_text(item) for item in fragment)
+    if isinstance(fragment, dict):
+        for key in ("text", "content", "delta", "value"):
+            if key in fragment:
+                return _coerce_content_fragment_to_text(fragment.get(key))
+        return ""
+    for attr in ("text", "content", "delta", "value"):
+        if hasattr(fragment, attr):
+            return _coerce_content_fragment_to_text(getattr(fragment, attr))
+    return ""
 
 
 def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: str | None = None) -> OpenAIEmbedding:
@@ -550,7 +571,7 @@ def generate_answer(
                 stream=False,
             )
             content = response.choices[0].message.content if response.choices else ""
-            return LlmCompletionResult(text=(content or "").strip(), openai_response_id=None)
+            return LlmCompletionResult(text=_coerce_content_fragment_to_text(content).strip(), openai_response_id=None)
 
     elif use_openai_responses_http:
         client = _build_openai_compatible_client(provider_connection)
@@ -628,7 +649,7 @@ def stream_answer(
             for chunk in stream:
                 if not chunk.choices:
                     continue
-                delta = chunk.choices[0].delta.content or ""
+                delta = _coerce_content_fragment_to_text(chunk.choices[0].delta.content)
                 if delta:
                     yield delta
         elif use_openai_responses_http:
@@ -649,7 +670,7 @@ def stream_answer(
             for event in stream:
                 et = getattr(event, "type", None)
                 if et == "response.output_text.delta":
-                    delta = getattr(event, "delta", "") or ""
+                    delta = _coerce_content_fragment_to_text(getattr(event, "delta", ""))
                     if delta:
                         yield delta
                 elif et == "response.completed":
@@ -666,7 +687,9 @@ def stream_answer(
                 system_prompt=system_prompt,
             )
             for chunk in llm.stream_complete(prompt):
-                delta = getattr(chunk, "delta", None) or getattr(chunk, "text", None) or str(chunk)
+                delta = _coerce_content_fragment_to_text(
+                    getattr(chunk, "delta", None) or getattr(chunk, "text", None) or chunk
+                )
                 if delta:
                     yield delta
     except Exception as exc:
