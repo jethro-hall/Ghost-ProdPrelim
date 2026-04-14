@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     app_agent_memory_window_messages: int = 8
     app_qdrant_upsert_max_payload_bytes: int = 24 * 1024 * 1024
     app_qdrant_upsert_max_points: int = 128
+    app_llm_request_timeout_seconds: float = 300.0
 
     @property
     def db_path(self) -> Path:

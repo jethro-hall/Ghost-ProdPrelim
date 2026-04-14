@@ -64,7 +64,7 @@ export default function UploadArea({
   }, []);
 
   return (
-    <div className="mb-6 max-w-[700px]">
+    <div className="mb-6 w-full">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div>
           <h3 className="text-[0.9rem] font-semibold text-slate-900">Dashboard Upload</h3>

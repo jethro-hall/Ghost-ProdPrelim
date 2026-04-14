@@ -132,17 +132,31 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="space-y-5">
-      <div className="flex max-w-[1200px] flex-wrap gap-2">
+    <div className="dashboard-page space-y-4">
+      <section className="glass rounded-xl border border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">Dashboard</p>
+            <h2 className="mt-1 text-[1rem] font-semibold text-slate-900">Knowledge and retrieval control surface</h2>
+          </div>
+          <div className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-600">
+            {summarizeChatModes(capabilities)}
+          </div>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-2">
         {cards.map((card) => (
           <GhostCard key={card.label} {...card} />
         ))}
       </div>
 
-      <section className="grid gap-4 md:grid-cols-[1.25fr_0.95fr]">
-        <article className="glass rounded-xl border border-slate-200 p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Knowledge Status</p>
-          <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Ingress overview</h2>
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_340px] 2xl:grid-cols-[minmax(0,1.3fr)_380px]">
+        <article className="glass rounded-xl border border-slate-200 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-[0.84rem] font-semibold text-slate-900">Ingress overview</h3>
+            <div className="text-[0.7rem] text-slate-500">{systemVectorTotal.toLocaleString()} vector point(s)</div>
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white/80 p-4">
               <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">System Total</div>
@@ -181,19 +195,12 @@ export default function Dashboard() {
               <div className="text-[0.72rem] text-slate-500">TXT-like</div>
             </div>
           </div>
-          <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.78rem] leading-6 text-slate-500">
-            Storage is currently backed by Postgres for metadata/provenance and one shared Qdrant collection for vector retrieval. System Total is aggregate across all managed collections, Runtime Default Access reflects the active default corpora, and Primary Collection shows the lead namespace only. The aggregate document totals above come from the authoritative
-            {" "}
-            <span className="font-semibold text-slate-900">`/api/vector-stats`</span>
-            {" "}
-            surface, while per-collection vector counts come from the managed collection impacts.
-          </div>
         </article>
 
-        <article className="glass rounded-xl border border-slate-200 p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Runtime Defaults</p>
-          <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Active operator path</h2>
-          <div className="mt-4 space-y-3">
+        <aside className="glass rounded-xl border border-slate-200 p-3">
+          <div className="space-y-3">
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Active runtime</div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
                 <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Provider</div>
@@ -235,22 +242,25 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white/80 p-3 text-[0.76rem] leading-6 text-slate-500">
+            </section>
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] leading-5 text-slate-500">
               The active runtime is currently backed by <span className="font-semibold text-slate-900">{capabilities?.vector_store ?? "..."}</span> for retrieval and{" "}
               <span className="font-semibold text-slate-900">{capabilities?.model_runtime ?? "..."}</span> for orchestration.
               {" "}
               Uploads set to <span className="font-semibold text-slate-900">Default</span> currently follow{" "}
               <span className="font-semibold text-slate-900">{runtimeDefaults?.pdf_parse_lane_policy ?? "Loading"}</span> for PDFs.
-            </div>
+            </section>
           </div>
-        </article>
+        </aside>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-[0.95fr_1.25fr]">
-        <article className="glass rounded-xl border border-slate-200 p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Recent Runs</p>
-          <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Operational snapshot</h2>
-          <div className="mt-4 space-y-3">
+      <section className="grid gap-3 xl:grid-cols-[0.9fr_1.1fr]">
+        <article className="glass rounded-xl border border-slate-200 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-[0.84rem] font-semibold text-slate-900">Operational snapshot</h3>
+            <div className="text-[0.7rem] text-slate-500">{runs.length} run(s)</div>
+          </div>
+          <div className="space-y-3">
             {runs.slice(0, 4).map((run) => (
               <div key={run.id} className="rounded-xl border border-slate-200 bg-white/80 p-3">
                 <div className="flex items-center justify-between gap-3">
@@ -269,13 +279,12 @@ export default function Dashboard() {
           </div>
         </article>
 
-        <article className="glass rounded-xl border border-slate-200 p-5">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Recent Documents</p>
-          <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Ingestion state</h2>
-          <div className="mt-2 text-[0.76rem] leading-6 text-slate-500">
-            Showing the latest six records from the recent-documents feed. Aggregate collection totals are reported in the Knowledge Status cards above.
+        <article className="glass rounded-xl border border-slate-200 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-[0.84rem] font-semibold text-slate-900">Recent documents</h3>
+            <div className="text-[0.7rem] text-slate-500">{recentDocuments.length} shown</div>
           </div>
-          <div className="mt-4 space-y-3">
+          <div className="space-y-3">
             {recentDocuments.map((document) => (
               <div key={document.id} className="rounded-xl border border-slate-200 bg-white/80 p-3">
                 <div className="flex items-start justify-between gap-3">

@@ -17,6 +17,7 @@ const TITLES: Record<string, string> = {
   "/vectors": "Vector DBs",
   "/knowledge-lab": "Knowledge lab",
   "/settings": "System administration",
+  "/tools": "Tool settings",
   "/agent": "Agent configuration",
   "/logs": "Operational trace",
 };

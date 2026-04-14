@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import type { ChatApiMode, Connection, RequestedLane, RuntimeDefaults, Task } from "../api";
 import * as ghostApi from "../api";
 import BackgroundOrbs from "./BackgroundOrbs";
@@ -41,6 +41,7 @@ export type AppOutletContext = {
 };
 
 export default function AppLayout() {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -50,6 +51,17 @@ export default function AppLayout() {
   const [syncing, setSyncing] = useState(false);
   const [runtimeDefaults, setRuntimeDefaults] = useState<RuntimeDefaults | null>(null);
   const apiMode: ChatApiMode = runtimeDefaults?.chat_api_mode ?? "responses";
+  const isWideCanvasRoute =
+    location.pathname === "/agent" ||
+    location.pathname === "/tools" ||
+    location.pathname === "/logs" ||
+    location.pathname === "/data-sources" ||
+    location.pathname === "/pipelines" ||
+    location.pathname === "/connections" ||
+    location.pathname === "/" ||
+    location.pathname === "/vectors" ||
+    location.pathname === "/knowledge-lab" ||
+    location.pathname === "/settings";
 
   useEffect(() => {
     void refreshRuntimeDefaults().catch(() => null);
@@ -108,7 +120,7 @@ export default function AppLayout() {
           onToggleRight={openConnections}
         />
         <div className="ghost-scroll relative flex-1 overflow-y-auto p-[18px]">
-          <div className="mx-auto max-w-[960px]">
+          <div className={`mx-auto w-full ${isWideCanvasRoute ? "max-w-none" : "max-w-[960px]"}`}>
             <Outlet
               context={{
                 uploadFile: ghostApi.uploadFile,

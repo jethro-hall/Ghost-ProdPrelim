@@ -24,17 +24,19 @@ export default function ConnectionsPage() {
   }, []);
 
   return (
-    <div className="space-y-5">
-      <section className="glass rounded-xl border border-slate-200 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">Connections</p>
-            <h2 className="mt-1 text-[1.05rem] font-semibold text-slate-900">Provider runtime</h2>
-            <p className="mt-2 max-w-[650px] text-[0.8rem] leading-6 text-slate-500">
-              This page mirrors the designer’s infrastructure view while staying tied to the live provider records. Use it to confirm provider transport, credentials, and health before changing runtime policy elsewhere.
-            </p>
+    <div className="connections-page space-y-4">
+      <section className="glass rounded-xl border border-slate-200 px-4 py-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">Connections</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h2 className="text-[1rem] font-semibold text-slate-900">Provider runtime</h2>
+              <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                {connections.length} records
+              </span>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="connections-command-bar flex items-center gap-2">
             <button type="button" className="ghost-btn" onClick={() => void refresh()}>
               Refresh
             </button>
@@ -45,48 +47,55 @@ export default function ConnectionsPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {connections.map((connection) => (
-          <article key={connection.id} className="glass rounded-xl border border-slate-200 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-[0.95rem] font-semibold text-slate-900">{connection.label}</h3>
-                <p className="mt-1 text-[0.76rem] text-slate-500">{connection.base_url ?? "Using default provider base URL."}</p>
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_330px]">
+        <section className="grid gap-3 lg:grid-cols-2">
+          {connections.map((connection) => (
+            <article key={connection.id} className="glass rounded-xl border border-slate-200 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate text-[0.9rem] font-semibold text-slate-900">{connection.label}</h3>
+                  <p className="mt-1 truncate text-[0.72rem] text-slate-500">{connection.base_url ?? "Using default provider base URL."}</p>
+                </div>
+                <span className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] ${badgeClass(connection.enabled && connection.has_api_key)}`}>
+                  {connection.enabled && connection.has_api_key ? "Connected" : "Disconnected"}
+                </span>
               </div>
-              <span className={`rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold ${badgeClass(connection.enabled && connection.has_api_key)}`}>
-                {connection.enabled && connection.has_api_key ? "Connected" : "Disconnected"}
-              </span>
-            </div>
 
-            <div className="mt-4 space-y-3 text-[0.8rem] text-slate-600">
-              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">API Key</div>
-                <div className="mt-1 font-mono text-[0.78rem] text-slate-900">{connection.api_key_hint ?? "Not configured"}</div>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Provider Kind</div>
-                <div className="mt-1 text-[0.78rem] text-slate-900">{connection.provider_kind}</div>
-                <div className="mt-1 text-[0.72rem] text-slate-500">
-                  Auth: {connection.auth_strategy}
-                  {connection.auth_header_name ? ` (${connection.auth_header_name})` : ""}
+              <div className="mt-3 grid gap-2 text-[0.72rem] text-slate-600">
+                <div className="rounded-lg border border-slate-200 bg-white/80 p-2">
+                  <div className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-slate-400">API key</div>
+                  <div className="mt-1 font-mono text-[0.72rem] text-slate-900">{connection.api_key_hint ?? "Not configured"}</div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white/80 p-2">
+                  <div className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-slate-400">Provider kind</div>
+                  <div className="mt-1 text-[0.72rem] text-slate-900">{connection.provider_kind}</div>
+                  <div className="mt-1 text-[0.68rem] text-slate-500">
+                    Auth: {connection.auth_strategy}
+                    {connection.auth_header_name ? ` (${connection.auth_header_name})` : ""}
+                  </div>
                 </div>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-                <div className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400">Ownership</div>
-                <div className="mt-1 text-[0.78rem] text-slate-900">Transport, credentials, and base URL only</div>
-                <div className="mt-1 text-[0.72rem] text-slate-500">
-                  LLM model, embedding model, and retrieval defaults now live in runtime profiles so they have one canonical owner.
-                </div>
+            </article>
+          ))}
+        </section>
+
+        <aside className="glass rounded-xl border border-slate-200 p-3">
+          <div className="space-y-3">
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] text-slate-600">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Ownership</div>
+              <div>Transport, credentials, and base URL only.</div>
+              <div className="mt-1 text-slate-500">
+                LLM model, embedding model, and retrieval defaults live in runtime profiles so there is one canonical owner.
               </div>
-            </div>
-          </article>
-        ))}
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] text-slate-600">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Cloud lane readiness</div>
+              <div>{capabilities?.parser_lanes.cloud.message ?? "Loading parser lane capability state..."}</div>
+            </section>
+          </div>
+        </aside>
       </div>
-
-      <section className="glass rounded-xl border border-slate-200 p-5 text-[0.8rem] leading-6 text-slate-500">
-        <span className="font-semibold text-slate-900">Cloud lane readiness:</span>{" "}
-        {capabilities?.parser_lanes.cloud.message ?? "Loading parser lane capability state..."}
-      </section>
     </div>
   );
 }

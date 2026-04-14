@@ -148,7 +148,7 @@ export default function RightPanel({
             onClick={onClose}
           />
           <motion.aside
-            className="glass-popup ghost-scroll fixed right-0 top-0 z-50 flex h-full w-full max-w-[360px] flex-col gap-4 overflow-y-auto border-l border-white/60 p-5"
+            className="glass-popup ghost-scroll connections-panel fixed right-0 top-0 z-50 flex h-full w-full max-w-[390px] flex-col gap-3 overflow-y-auto border-l border-white/60 p-4"
             initial={{ x: "100%", opacity: 0.8 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0.8 }}
@@ -156,16 +156,15 @@ export default function RightPanel({
           >
             <div className="flex items-center justify-between border-b border-black/5 pb-2">
               <div>
-                <h2 className="text-[1.05rem] font-semibold text-slate-900">Connections</h2>
-                <p className="text-[0.75rem] text-slate-500">Save credentials, base URL overrides, and test the live provider path.</p>
+                <h2 className="text-[0.98rem] font-semibold text-slate-900">Connections</h2>
               </div>
               <button type="button" aria-label="Close connections panel" className="ghost-icon-btn text-slate-500" onClick={onClose}>
                 <CloseIcon size={14} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-3 text-[0.8rem]">
-              <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
+            <div className="flex flex-col gap-2 text-[0.76rem]">
+              <div className="rounded-lg border border-slate-200 bg-white/80 p-2">
                 <div className="text-[0.72rem] font-semibold text-slate-900">Saved LLM connections</div>
                 <div className="mt-2 flex items-center gap-2">
                   <select
@@ -229,10 +228,29 @@ export default function RightPanel({
                 onChange={(event) => setProvider(event.target.value)}
                 placeholder="openai, openai-stage, local-llm"
               />
-              {!isNewConnection && <div className="text-[0.68rem] text-slate-500">Provider key is fixed for existing records to avoid accidental duplicate entries.</div>}
+              {!isNewConnection && <div className="text-[0.66rem] text-slate-500">Provider key is fixed for existing records.</div>}
 
               <label className="font-medium text-slate-600">Provider kind</label>
-              <select className="ghost-input" value={providerKind} onChange={(event) => setProviderKind(event.target.value as ProviderKind)}>
+              <select
+                className="ghost-input"
+                value={providerKind}
+                onChange={(event) => {
+                  const next = event.target.value as ProviderKind;
+                  setProviderKind(next);
+                  if (next !== "google_gemini") return;
+
+                  if (isNewConnection) {
+                    if (!provider.trim() || provider === "openai") setProvider("google-gemini");
+                    if (!label.trim() || label === "OpenAI") setLabel("Google Gemini");
+                  }
+
+                  // Match Google's native REST `:generateContent` examples.
+                  if (baseUrl.includes("api.openai.com") || baseUrl.includes("one.rideai.com.au")) {
+                    setBaseUrl("https://generativelanguage.googleapis.com/v1beta");
+                  }
+                  if (authStrategy === "x_api_key") setAuthStrategy("x_goog_api_key");
+                }}
+              >
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Claude / Anthropic</option>
                 <option value="google_gemini">Google Gemini</option>
@@ -250,6 +268,7 @@ export default function RightPanel({
               >
                 <option value="bearer">Bearer token</option>
                 <option value="x_api_key">x-api-key header</option>
+                <option value="x_goog_api_key">x-goog-api-key header (Gemini)</option>
                 <option value="custom_header">Custom header</option>
               </select>
 
@@ -281,7 +300,7 @@ export default function RightPanel({
                 Enabled
               </label>
 
-              <div className="rounded-lg border border-slate-200 bg-white/80 p-3 text-[0.75rem] leading-6 text-slate-600">
+              <div className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] leading-5 text-slate-600">
                 <div className="font-semibold text-slate-900">OpenAI API path</div>
                 <label className="mt-2 block text-[0.72rem] font-medium text-slate-700">Default chat API mode</label>
                 <select
@@ -299,7 +318,7 @@ export default function RightPanel({
                   <option value="responses">Responses API</option>
                   <option value="chat_completions">Chat Completions API</option>
                 </select>
-                <p className="mt-2 text-[0.68rem] text-slate-500">
+                <p className="mt-2 text-[0.66rem] text-slate-500">
                   This updates the <strong>default</strong> runtime profile (same as{" "}
                   <Link className="font-medium text-slate-700 underline" to="/pipelines">
                     Parsing Pipelines
@@ -310,7 +329,7 @@ export default function RightPanel({
                   </Link>
                   .
                 </p>
-                <p className="mt-2 text-[0.68rem] text-slate-500">
+                <p className="mt-2 text-[0.66rem] text-slate-500">
                   Connections only store base URL and credentials; choose <strong>Responses</strong> for current OpenAI ChatGPT-class models on <code className="rounded bg-slate-100 px-1">api.openai.com</code>.
                 </p>
               </div>
@@ -325,7 +344,7 @@ export default function RightPanel({
               </div>
 
               {(testResult || testError) && (
-                <div className="rounded-lg border border-slate-200 bg-white/85 p-3 text-[0.75rem] text-slate-700 shadow-sm">
+                <div className="rounded-lg border border-slate-200 bg-white/85 p-2 text-[0.72rem] text-slate-700 shadow-sm">
                   {testError ? (
                     <p className="text-rose-600">{testError}</p>
                   ) : (

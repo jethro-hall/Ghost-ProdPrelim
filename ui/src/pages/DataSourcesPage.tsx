@@ -216,139 +216,165 @@ export default function DataSourcesPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="glass rounded-xl border border-slate-200 p-5 text-[0.8rem] text-slate-500">
-        The designer handover splits ingestion from the knowledge overview. This page is now the dedicated home for staged uploads, mixed-lane batching, and document-level ingestion status.
-        {stagedCount > 0 && <span className="ml-2 font-semibold text-slate-900">{stagedCount} file(s) ready.</span>}
-      </section>
-      <section className="grid gap-3 md:grid-cols-3">
-        <div className="glass rounded-xl border border-slate-200 p-4">
-          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">System Total</div>
-          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{systemDocuments}</div>
-          <div className="text-[0.74rem] text-slate-500">Files across all managed collections</div>
-          <div className="mt-1 text-[0.72rem] text-slate-500">{systemVectors.toLocaleString()} vector point(s)</div>
-        </div>
-        <div className="glass rounded-xl border border-slate-200 p-4">
-          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Runtime Default Access</div>
-          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{runtimeAccessibleDocuments}</div>
-          <div className="text-[0.74rem] text-slate-500">Files exposed through attached default collections</div>
-          <div className="mt-1 text-[0.72rem] text-slate-500">{runtimeAccessibleVectors.toLocaleString()} vector point(s)</div>
-        </div>
-        <div className="glass rounded-xl border border-slate-200 p-4">
-          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Primary Collection</div>
-          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{primaryCollection?.impact?.documents ?? 0}</div>
-          <div className="text-[0.74rem] text-slate-500">{primaryCollection?.slug ?? primaryCollectionSlug}</div>
-          <div className="mt-1 text-[0.72rem] text-slate-500">{(primaryCollection?.impact?.vector_points ?? 0).toLocaleString()} vector point(s)</div>
-        </div>
-      </section>
-      <section className="glass rounded-xl border border-slate-200 p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-[0.85rem] font-semibold text-slate-900">Managed collections</div>
-            <div className="mt-1 text-[0.76rem] text-slate-500">
-              Collections are now explicit namespaces. Deletion removes files, vectors, metadata, and agent/runtime bindings in one controlled sweep.
-            </div>
-            <div className="mt-1 text-[0.76rem] text-slate-500">
-              Counts below are per selected collection only. Aggregate system totals are shown separately above.
+    <div className="data-sources-page space-y-4">
+      <section className="glass rounded-xl border border-slate-200 px-4 py-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">Data sources</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h2 className="text-[1rem] font-semibold text-slate-900">Upload and collection workspace</h2>
+              <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                {stagedCount} staged
+              </span>
             </div>
           </div>
-          <button type="button" className="ghost-btn" onClick={() => void refreshCollections()}>
-            Refresh
-          </button>
-        </div>
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-3">
-            <label className="block text-[0.76rem] text-slate-500">
-              Upload target collection
-              <select
-                className="ghost-select mt-1"
-                value={selectedCollection?.id ?? ""}
-                onChange={(event) => setSelectedCollectionId(event.target.value)}
-              >
-                {collections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.name} ({collection.slug})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-[0.76rem] text-slate-500">
-                New collection slug
-                <input className="ghost-input mt-1" value={newCollectionSlug} onChange={(event) => setNewCollectionSlug(event.target.value)} placeholder="finance-fy26" />
-              </label>
-              <label className="block text-[0.76rem] text-slate-500">
-                Display name
-                <input className="ghost-input mt-1" value={newCollectionName} onChange={(event) => setNewCollectionName(event.target.value)} placeholder="Finance FY26" />
-              </label>
-            </div>
-            <button type="button" className="ghost-btn-primary" disabled={collectionBusy || !newCollectionSlug.trim()} onClick={() => void handleCreateCollection()}>
-              Create collection
+          <div className="data-sources-command-bar flex flex-wrap items-center gap-2">
+            <button type="button" className="ghost-btn" onClick={() => void refreshCollections()}>
+              Refresh
             </button>
             <button type="button" className="ghost-btn" disabled={collectionBusy || !selectedCollection} onClick={() => void handleSyncSelectedCollection()}>
-              Sync selected collection
+              Sync selected
             </button>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.76rem] text-slate-500">
-            <div className="font-semibold text-slate-900">Selected impact summary</div>
-            {selectedCollection ? (
-              <>
-                <div className="mt-2">
-                  {selectedCollection.name} (<span className="font-mono text-slate-900">{selectedCollection.slug}</span>)
-                </div>
-                <div className="mt-1">
-                  {(selectedCollection.impact?.documents ?? 0)} file(s), {(selectedCollection.impact?.vector_points ?? 0)} vector point(s), {(selectedCollection.impact?.agents ?? 0)} attached agent(s)
-                </div>
-                <div className="mt-1">
-                  {(selectedCollection.impact?.conversations ?? 0)} conversation(s), {(selectedCollection.impact?.cache_entries ?? 0)} cache entry(s), {(selectedCollection.impact?.ingestion_runs ?? 0)} sync run(s)
-                </div>
-              </>
-            ) : (
-              <div className="mt-2">No collections are registered yet.</div>
-            )}
-          </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {collections.map((collection) => (
-            <div key={collection.id} className={`rounded-xl border p-4 ${selectedCollection?.id === collection.id ? "border-orange-300 bg-orange-50/50" : "border-slate-200 bg-white/80"}`}>
-              <div className="flex items-start justify-between gap-3">
-                <button type="button" className="text-left" onClick={() => setSelectedCollectionId(collection.id)}>
-                  <div className="text-[0.82rem] font-semibold text-slate-900">{collection.name}</div>
-                  <div className="mt-1 text-[0.72rem] text-slate-500">{collection.slug}</div>
-                </button>
-                <button type="button" className="ghost-btn" disabled={collectionBusy} onClick={() => void handleDeleteCollection(collection)}>
-                  Delete
-                </button>
-              </div>
-              <div className="mt-3 text-[0.72rem] text-slate-500">
-                {(collection.impact?.documents ?? 0)} file(s) | {(collection.impact?.retrieval_artifacts ?? 0)} retrieval artifact(s) | {(collection.impact?.vector_points ?? 0)} vector point(s)
-              </div>
-              <div className="mt-1 text-[0.72rem] text-slate-500">
-                {(collection.impact?.agents ?? 0)} agent(s) | {(collection.impact?.conversations ?? 0)} conversation(s) | {(collection.impact?.active_runs ?? 0)} active run(s)
-              </div>
-            </div>
-          ))}
-          {collections.length === 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white/80 p-4 text-[0.78rem] text-slate-500">
-              Create the first collection before uploading files or attaching knowledge to agents.
-            </div>
-          )}
+        {status && (
+          <div className="mt-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-[0.74rem] text-slate-600">
+            {status}
+          </div>
+        )}
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        <div className="glass rounded-xl border border-slate-200 p-4">
+          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">System total</div>
+          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{systemDocuments}</div>
+          <div className="text-[0.74rem] text-slate-500">{systemVectors.toLocaleString()} vector point(s)</div>
+        </div>
+        <div className="glass rounded-xl border border-slate-200 p-4">
+          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Runtime access</div>
+          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{runtimeAccessibleDocuments}</div>
+          <div className="text-[0.74rem] text-slate-500">{runtimeAccessibleVectors.toLocaleString()} vector point(s)</div>
+        </div>
+        <div className="glass rounded-xl border border-slate-200 p-4">
+          <div className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-slate-400">Primary collection</div>
+          <div className="mt-1 text-[1.35rem] font-bold text-slate-900">{primaryCollection?.impact?.documents ?? 0}</div>
+          <div className="text-[0.74rem] text-slate-500">{primaryCollection?.slug ?? primaryCollectionSlug}</div>
         </div>
       </section>
-      <UploadArea
-        stagedFiles={stagedFiles}
-        selectedLane={lane}
-        collectionLabel={selectedCollection?.slug ?? "No collection selected"}
-        cloudReady={cloudReady}
-        uploading={uploading}
-        statusText={status}
-        onLaneChange={setLane}
-        onAddFiles={addFiles}
-        onRemove={(id) => setStagedFiles((items) => items.filter((item) => item.id !== id))}
-        onUploadAll={() => void uploadBatch()}
-        onClearCompleted={() => setStagedFiles((items) => items.filter((item) => item.status !== "uploaded"))}
-      />
-      <IngestionHistory history={documents} onRefresh={() => void refreshDocuments()} />
+
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_370px]">
+        <div className="space-y-3">
+          <section className="glass rounded-xl border border-slate-200 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-[0.84rem] font-semibold text-slate-900">Upload workspace</h3>
+              <div className="text-[0.7rem] text-slate-500">{selectedCollection?.slug ?? "No collection selected"}</div>
+            </div>
+            <UploadArea
+              stagedFiles={stagedFiles}
+              selectedLane={lane}
+              collectionLabel={selectedCollection?.slug ?? "No collection selected"}
+              cloudReady={cloudReady}
+              uploading={uploading}
+              statusText=""
+              onLaneChange={setLane}
+              onAddFiles={addFiles}
+              onRemove={(id) => setStagedFiles((items) => items.filter((item) => item.id !== id))}
+              onUploadAll={() => void uploadBatch()}
+              onClearCompleted={() => setStagedFiles((items) => items.filter((item) => item.status !== "uploaded"))}
+            />
+          </section>
+
+          <section className="glass rounded-xl border border-slate-200 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-[0.84rem] font-semibold text-slate-900">Ingestion history</h3>
+              <button type="button" className="ghost-btn" onClick={() => void refreshDocuments()}>
+                Refresh
+              </button>
+            </div>
+            <IngestionHistory history={documents} onRefresh={() => void refreshDocuments()} />
+          </section>
+        </div>
+
+        <aside className="glass rounded-xl border border-slate-200 p-3">
+          <div className="space-y-3">
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Collection target</div>
+              <label className="block text-[0.72rem] text-slate-500">
+                Upload target collection
+                <select
+                  className="ghost-select mt-1"
+                  value={selectedCollection?.id ?? ""}
+                  onChange={(event) => setSelectedCollectionId(event.target.value)}
+                >
+                  {collections.map((collection) => (
+                    <option key={collection.id} value={collection.id}>
+                      {collection.name} ({collection.slug})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Create collection</div>
+              <div className="grid gap-2">
+                <label className="block text-[0.72rem] text-slate-500">
+                  New collection slug
+                  <input className="ghost-input mt-1" value={newCollectionSlug} onChange={(event) => setNewCollectionSlug(event.target.value)} placeholder="finance-fy26" />
+                </label>
+                <label className="block text-[0.72rem] text-slate-500">
+                  Display name
+                  <input className="ghost-input mt-1" value={newCollectionName} onChange={(event) => setNewCollectionName(event.target.value)} placeholder="Finance FY26" />
+                </label>
+                <button type="button" className="ghost-btn-primary" disabled={collectionBusy || !newCollectionSlug.trim()} onClick={() => void handleCreateCollection()}>
+                  Create collection
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] text-slate-500">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Selected impact</div>
+              {selectedCollection ? (
+                <div className="space-y-1">
+                  <div><span className="font-semibold text-slate-900">{selectedCollection.name}</span> ({selectedCollection.slug})</div>
+                  <div>{selectedCollection.impact?.documents ?? 0} file(s) • {selectedCollection.impact?.vector_points ?? 0} vector point(s)</div>
+                  <div>{selectedCollection.impact?.agents ?? 0} agent(s) • {selectedCollection.impact?.conversations ?? 0} conversation(s)</div>
+                  <div>{selectedCollection.impact?.cache_entries ?? 0} cache entry(s) • {selectedCollection.impact?.ingestion_runs ?? 0} sync run(s)</div>
+                </div>
+              ) : (
+                <div>No collections are registered yet.</div>
+              )}
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white/80 p-2">
+              <div className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400">Managed collections</div>
+              <div className="space-y-2">
+                {collections.map((collection) => (
+                  <div key={collection.id} className={`rounded-md border px-2 py-2 ${selectedCollection?.id === collection.id ? "border-orange-300 bg-orange-50/50" : "border-slate-200 bg-white"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <button type="button" className="min-w-0 text-left" onClick={() => setSelectedCollectionId(collection.id)}>
+                        <div className="truncate text-[0.76rem] font-semibold text-slate-900">{collection.name}</div>
+                        <div className="mt-0.5 text-[0.68rem] text-slate-500">{collection.slug}</div>
+                      </button>
+                      <button type="button" className="ghost-btn" disabled={collectionBusy} onClick={() => void handleDeleteCollection(collection)}>
+                        Delete
+                      </button>
+                    </div>
+                    <div className="mt-2 text-[0.68rem] text-slate-500">
+                      {(collection.impact?.documents ?? 0)} file(s) • {(collection.impact?.vector_points ?? 0)} vector point(s)
+                    </div>
+                  </div>
+                ))}
+                {collections.length === 0 && (
+                  <div className="rounded-md border border-slate-200 bg-white px-2 py-2 text-[0.72rem] text-slate-500">
+                    Create the first collection before uploading files or attaching knowledge to agents.
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

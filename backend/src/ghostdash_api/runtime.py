@@ -8,6 +8,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
+import httpx
 from openai import OpenAI as OpenAIClient
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.openai.base import OpenAIEmbeddingModelType
@@ -96,6 +97,8 @@ def _provider_default_headers(connection: ProviderConnectionConfig) -> dict[str,
     auth_strategy = (connection.auth_strategy or "bearer").strip().lower()
     if auth_strategy == "x_api_key":
         return {"x-api-key": _provider_api_key(connection)}
+    if auth_strategy == "x_goog_api_key":
+        return {"x-goog-api-key": _provider_api_key(connection)}
     if auth_strategy == "custom_header":
         header_name = (connection.auth_header_name or "").strip() or "X-API-Key"
         return {header_name: _provider_api_key(connection)}
@@ -106,6 +109,88 @@ def _provider_default_headers(connection: ProviderConnectionConfig) -> dict[str,
     if hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1"):
         return {"X-Internal-Key": _provider_api_key(connection)}
     return None
+
+
+def _is_gemini_openai_compat_base_url(base_url: str) -> bool:
+    parsed = urlsplit(base_url.rstrip("/"))
+    hostname = (parsed.hostname or "").lower()
+    path = (parsed.path or "").rstrip("/")
+    return hostname == "generativelanguage.googleapis.com" and path.endswith("/v1beta/openai")
+
+
+def _is_gemini_native_base_url(base_url: str) -> bool:
+    normalized = _normalize_gemini_native_base_url(base_url)
+    parsed = urlsplit(normalized.rstrip("/"))
+    hostname = (parsed.hostname or "").lower()
+    path = (parsed.path or "").rstrip("/")
+    # Native REST base: .../v1beta
+    # Note: OpenAI compatibility base is .../v1beta/openai (handled separately).
+    return hostname == "generativelanguage.googleapis.com" and path.endswith("/v1beta")
+
+
+def _normalize_gemini_native_base_url(base_url: str) -> str:
+    normalized = base_url.rstrip("/")
+    # Some users paste .../v1beta/models/...
+    if normalized.endswith("/v1beta/models"):
+        return normalized[: -len("/models")]
+    if "/v1beta/models/" in normalized:
+        return normalized.split("/v1beta/models/", 1)[0] + "/v1beta"
+    return normalized
+
+
+def _normalize_gemini_model_id(model_id: str) -> str:
+    model = (model_id or "").strip()
+    if not model:
+        return ""
+    if model.startswith("models/"):
+        model = model.split("/", 1)[1]
+    return model
+
+
+def _gemini_native_auth_headers(connection: ProviderConnectionConfig) -> dict[str, str]:
+    strategy = (connection.auth_strategy or "bearer").strip().lower()
+    api_key = _provider_api_key(connection)
+    if strategy == "bearer":
+        return {"Authorization": f"Bearer {api_key}"}
+    if strategy == "x_api_key":
+        # Common misconfiguration: users expect x_api_key to mean x-goog-api-key.
+        return {"x-goog-api-key": api_key}
+    headers = _provider_default_headers(connection) or {}
+    return dict(headers)
+
+
+def _gemini_generate_content(
+    connection: ProviderConnectionConfig,
+    *,
+    prompt: str,
+    model_id: str,
+) -> str:
+    base_url = _normalize_gemini_native_base_url(_provider_base_url(connection))
+    model = _normalize_gemini_model_id(model_id)
+    if not model:
+        raise ValueError("Gemini model id is required (e.g. gemini-flash-latest)")
+    url = f"{base_url}/models/{model}:generateContent"
+    headers = {"Content-Type": "application/json", **_gemini_native_auth_headers(connection)}
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
+    timeout = float(getattr(settings, "app_llm_request_timeout_seconds", 120.0))
+    with httpx.Client(timeout=timeout) as client:
+        response = client.post(url, headers=headers, json=body)
+        if response.status_code >= 400:
+            raise ValueError(f"Gemini generateContent failed ({response.status_code}): {response.text[:800]}")
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise ValueError(f"Gemini generateContent returned non-JSON: {response.text[:800]}") from exc
+    candidates = payload.get("candidates") or []
+    content = (candidates[0] or {}).get("content") if candidates else None
+    parts = (content or {}).get("parts") if isinstance(content, dict) else None
+    if isinstance(parts, list):
+        texts = [str(part.get("text", "")) for part in parts if isinstance(part, dict) and part.get("text")]
+        out = "".join(texts).strip()
+        if out:
+            return out
+    # Fallback: some responses include output under different keys; surface entire payload.
+    raise ValueError(f"Gemini generateContent returned no text: {payload!r}")
 
 
 def _uses_rideai_chat_gateway(connection: ProviderConnectionConfig) -> bool:
@@ -134,6 +219,7 @@ def _build_openai_compatible_client(connection: ProviderConnectionConfig) -> Ope
         api_key=_provider_api_key(connection),
         base_url=_provider_base_url(connection),
         default_headers=_provider_default_headers(connection),
+        timeout=settings.app_llm_request_timeout_seconds,
     )
 
 
@@ -380,15 +466,24 @@ def seed_default_connections(session: Session) -> None:
             "api_key": settings.openai_api_key,
             "base_url": settings.openai_base_url,
             "enabled": bool(settings.openai_api_key),
-        }
+        },
+        "google-gemini": {
+            "label": "Google Gemini",
+            "provider_kind": "google_gemini",
+            "auth_strategy": "x_goog_api_key",
+            "auth_header_name": None,
+            "api_key": None,
+            "base_url": "https://generativelanguage.googleapis.com/v1beta",
+            "enabled": False,
+        },
     }
     for provider, payload in defaults.items():
         existing = session.scalar(select(ConnectionRecord).where(ConnectionRecord.provider == provider))
         if existing:
-            if settings.openai_api_key and not existing.api_key:
+            if provider == "openai" and settings.openai_api_key and not existing.api_key:
                 existing.api_key = settings.openai_api_key
                 existing.enabled = True
-            existing.base_url = existing.base_url or settings.openai_base_url
+            existing.base_url = existing.base_url or payload["base_url"]
             existing.provider_kind = existing.provider_kind or payload["provider_kind"]
             existing.auth_strategy = existing.auth_strategy or payload["auth_strategy"]
             if existing.auth_header_name is None:
@@ -556,6 +651,17 @@ def generate_answer(
     provider_connection = _merge_provider_connection(connection)
     resolved_model = _normalize_provider_model_id(provider_connection.provider, model_id, settings.app_default_chat_model)
 
+    base_url = _provider_base_url(provider_connection)
+    if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
+
+        def _run() -> LlmCompletionResult:
+            text = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model)
+            return LlmCompletionResult(text=text.strip(), openai_response_id=None)
+
+        if trace_id:
+            return wrap_outbound_call(trace_id=trace_id, service=service, route="gemini.generateContent", fn=_run)
+        return _run()
+
     if _uses_rideai_chat_gateway(provider_connection):
         client = _build_openai_compatible_client(provider_connection)
 
@@ -634,6 +740,17 @@ def stream_answer(
     error: str | None = None
     status: str = "ok"
     try:
+        base_url = _provider_base_url(provider_connection)
+        if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
+            # Native Gemini does not currently support token-delta streaming through this path.
+            # We still stream by yielding the completed answer once (or in a few chunks).
+            text = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model).strip()
+            if text:
+                chunk_size = 240
+                for i in range(0, len(text), chunk_size):
+                    yield text[i : i + chunk_size]
+            return
+
         if _uses_rideai_chat_gateway(provider_connection):
             client = _build_openai_compatible_client(provider_connection)
             stream = client.chat.completions.create(
@@ -766,6 +883,15 @@ def test_provider_connection(
     )
 
     def _run() -> dict[str, str]:
+        base = _provider_base_url(provider_connection)
+        if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base):
+            output = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model)
+            return {
+                "api_mode": api_mode,
+                "model": resolved_model,
+                "base_url": base,
+                "output": output.strip(),
+            }
         if _uses_rideai_chat_gateway(provider_connection):
             client = _build_openai_compatible_client(provider_connection)
             response = client.chat.completions.create(

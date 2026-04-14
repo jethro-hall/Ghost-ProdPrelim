@@ -14,7 +14,7 @@ function dotColor(status: string) {
 
 export default function IngestionHistory({ history, onRefresh }: Props) {
   return (
-    <div className="max-w-[650px]">
+    <div className="w-full">
       <div className="mb-2 flex items-center justify-between border-b border-slate-200 pb-2">
         <h2 className="text-[0.9rem] font-semibold text-slate-900">Ingestion Status History</h2>
         <button type="button" className="ghost-btn" onClick={onRefresh}>
