@@ -236,6 +236,7 @@ def build_response_cache_key(
     corpora: list[str],
     api_mode: str,
     llm_model_id_override: str | None = None,
+    tool_state: dict | None = None,
 ) -> str:
     llm_config = dict(runtime_profile.llm_config_json or {})
     guardrails_config = dict(runtime_profile.guardrails_config_json or {})
@@ -255,6 +256,7 @@ def build_response_cache_key(
         "message": message,
         "corpora": list(corpora),
         "api_mode": api_mode,
+        "tool_state": dict(tool_state or {}),
     }
     stripped = (llm_model_id_override or "").strip()
     if stripped:

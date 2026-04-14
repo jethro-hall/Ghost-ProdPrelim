@@ -17,10 +17,20 @@ export type ChatUsage = {
   total_tokens: number;
   estimate?: boolean;
 };
+
+export type ChatToolEvent = {
+  tool_id: string;
+  status: "planned" | "preview" | "executed" | "blocked" | "failed";
+  operation?: string | null;
+  summary?: string | null;
+  blocked_reason?: string | null;
+  payload: Record<string, unknown>;
+  latency_ms?: number | null;
+};
 export type RequestedLane = "default" | "local" | "cloud";
 export type ChatUploadPersistenceMode = "conversation_only" | "save_to_knowledge";
 export type ProviderKind = "openai" | "anthropic" | "google_gemini" | "openai_compatible";
-export type ConnectionAuthStrategy = "bearer" | "x_api_key" | "custom_header";
+export type ConnectionAuthStrategy = "bearer" | "x_api_key" | "x_goog_api_key" | "custom_header";
 export type ToolHealth = "healthy" | "unhealthy" | "unknown";
 
 export const REQUESTED_LANE_LABELS: Record<RequestedLane, string> = {
@@ -304,6 +314,7 @@ export type ConversationMessage = {
   content: string;
   query_mode: string | null;
   citations: unknown[];
+  tool_events?: ChatToolEvent[];
   api_mode: ChatApiMode | null;
   created_at: string;
 };
@@ -646,13 +657,23 @@ export async function streamChat(args: {
   conversationId?: string;
   useApprovedWeb?: boolean;
   signal?: AbortSignal;
-  onStart?: (payload: { citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean }) => void;
+  onStart?: (payload: {
+    citations: unknown[];
+    api_mode: ChatApiMode;
+    query_mode?: string;
+    conversation_id?: string;
+    agent_id?: string;
+    cached?: boolean;
+    tool_events?: ChatToolEvent[];
+  }) => void;
+  onToolEvent?: (payload: { tool_event: ChatToolEvent }) => void;
   onDelta: (delta: string) => void;
   onDone?: (payload: {
     citations: unknown[];
     conversation_id?: string;
     cached?: boolean;
     usage?: ChatUsage;
+    tool_events?: ChatToolEvent[];
   }) => void;
 }) {
   const response = await fetch(`${agentBaseUrl}/chat/stream`, {
@@ -693,9 +714,10 @@ export async function streamChat(args: {
         .find((candidate) => candidate.startsWith("data: "));
       if (!line) continue;
       const payload = JSON.parse(line.slice(6)) as
-        | { type: "start"; citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean }
+        | { type: "start"; citations: unknown[]; api_mode: ChatApiMode; query_mode?: string; conversation_id?: string; agent_id?: string; cached?: boolean; tool_events?: ChatToolEvent[] }
+        | { type: "tool_result"; tool_event: ChatToolEvent }
         | { type: "delta"; delta: string }
-        | { type: "done"; citations: unknown[]; conversation_id?: string; cached?: boolean; usage?: ChatUsage }
+        | { type: "done"; citations: unknown[]; conversation_id?: string; cached?: boolean; usage?: ChatUsage; tool_events?: ChatToolEvent[] }
         | { type: "error"; error: string };
 
       if (payload.type === "start") {
@@ -706,7 +728,10 @@ export async function streamChat(args: {
           conversation_id: payload.conversation_id,
           agent_id: payload.agent_id,
           cached: payload.cached,
+          tool_events: payload.tool_events,
         });
+      } else if (payload.type === "tool_result") {
+        args.onToolEvent?.({ tool_event: payload.tool_event });
       } else if (payload.type === "delta") {
         args.onDelta(payload.delta);
       } else if (payload.type === "done") {
@@ -715,6 +740,7 @@ export async function streamChat(args: {
           conversation_id: payload.conversation_id,
           cached: payload.cached,
           usage: payload.usage,
+          tool_events: payload.tool_events,
         });
       } else if (payload.type === "error") {
         throw new Error(payload.error);

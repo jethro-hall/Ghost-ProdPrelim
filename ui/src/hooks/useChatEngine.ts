@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   type AgentProfile,
   type ChatApiMode,
+  type ChatToolEvent,
   type ChatUpload,
   type Collection,
   type ConversationSummary,
@@ -22,7 +23,22 @@ export type ChatEntry = {
   text: string;
   queryMode?: string;
   citations?: unknown[];
+  toolEvents?: ChatToolEvent[];
 };
+
+function hydrateToolEvents(citations: unknown[] | undefined): ChatToolEvent[] {
+  return (citations ?? [])
+    .filter((cite: any) => cite?.source_type === "tool")
+    .map((cite: any) => ({
+      tool_id: cite?.tool_id || "odoo_primary",
+      status: cite?.tool_status || "executed",
+      operation: cite?.operation || null,
+      summary: cite?.title || cite?.filename || null,
+      blocked_reason: null,
+      payload: {},
+      latency_ms: null,
+    }));
+}
 
 type UseChatEngineOptions = {
   /** Fallback before agents load; session controls reset from the active agent when it changes. */
@@ -113,6 +129,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
             text: entry.content,
             queryMode: entry.query_mode ?? undefined,
             citations: entry.citations,
+            toolEvents: hydrateToolEvents(entry.citations),
           }))
         );
         
@@ -171,6 +188,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
           text: entry.content,
           queryMode: entry.query_mode ?? undefined,
           citations: entry.citations,
+          toolEvents: hydrateToolEvents(entry.citations),
         }))
       );
       await refreshUploadsInternal(conversationId);
@@ -202,7 +220,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
     setLog((items) => [
       ...items,
       { id: crypto.randomUUID(), role: "user", text: userText },
-      { id: assistantId, role: "assistant", text: "" },
+      { id: assistantId, role: "assistant", text: "", toolEvents: [] },
     ]);
 
     const controller = new AbortController();
@@ -217,13 +235,26 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
         conversationId: activeConversationId ?? undefined,
         useApprovedWeb,
         signal: controller.signal,
-        onStart: ({ query_mode, conversation_id }) => {
+        onStart: ({ query_mode, conversation_id, tool_events }) => {
           if (conversation_id && conversation_id !== activeConversationId) {
             setActiveConversationId(conversation_id);
             void refreshUploadsInternal(conversation_id).catch(() => null);
           }
           setLog((items) =>
-            items.map((entry) => (entry.id === assistantId ? { ...entry, queryMode: query_mode } : entry))
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, queryMode: query_mode, toolEvents: tool_events ?? entry.toolEvents ?? [] }
+                : entry
+            )
+          );
+        },
+        onToolEvent: ({ tool_event }) => {
+          setLog((items) =>
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, toolEvents: [...(entry.toolEvents ?? []), tool_event] }
+                : entry
+            )
           );
         },
         onDelta: (delta) => {
@@ -233,9 +264,13 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
             )
           );
         },
-        onDone: async ({ citations, conversation_id, usage }) => {
+        onDone: async ({ citations, conversation_id, usage, tool_events }) => {
           setLog((items) =>
-            items.map((entry) => (entry.id === assistantId ? { ...entry, citations } : entry))
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, citations, toolEvents: tool_events ?? entry.toolEvents ?? [] }
+                : entry
+            )
           );
           if (usage && typeof usage.total_tokens === "number") {
             setLlmTokenTotal((n) => n + usage.total_tokens);

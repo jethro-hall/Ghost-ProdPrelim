@@ -19,7 +19,6 @@ export default function ChatArea({ chatEngine }: Props) {
     useApprovedWeb,
     setUseApprovedWeb,
     approvedWebConfigured,
-    webTool,
     sendMessage,
     handleStageUpload,
     llmTokenTotal,
@@ -40,7 +39,7 @@ export default function ChatArea({ chatEngine }: Props) {
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col relative bg-slate-50/50">
       <div
-        className="shrink-0 border-b border-slate-100 bg-white/90 px-4 py-1.5 text-[0.7rem] text-slate-600"
+        className="shrink-0 border-b border-slate-100 bg-white/90 px-4 py-1 text-[0.68rem] text-slate-600"
         title="Approximate LLM tokens (cl100k) summed for this conversation."
       >
         <span className="font-medium text-slate-800">LLM tokens (est.)</span>{" "}
@@ -73,7 +72,6 @@ export default function ChatArea({ chatEngine }: Props) {
           useApprovedWeb={useApprovedWeb}
           onToggleWeb={() => setUseApprovedWeb(!useApprovedWeb)}
           approvedWebConfigured={approvedWebConfigured}
-          webToolEnabled={webTool?.enabled ?? false}
         />
       </div>
     </div>

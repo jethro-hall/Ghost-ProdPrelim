@@ -295,3 +295,204 @@ def test_odoo_connector_supports_quarterly_margin_summary(monkeypatch) -> None:
     assert quarters[0]["quarter"] == "2025-Q3"
     assert quarters[0]["gp"] == 400.0
     assert quarters[2]["running_gp"] == 1500.0
+
+
+def test_odoo_connector_supports_period_margin_summary(monkeypatch) -> None:
+    monkeypatch.setattr(odoo_connector.httpx, "Client", _DummyClient)
+    monkeypatch.setattr(odoo_connector, "_authenticate", lambda client, config: 7)
+
+    def fake_execute_kw(client, *, config, uid, model, method, args=None, kwargs=None):
+        assert method == "read_group"
+        if model == "account.move":
+            return [{"company_id": [5, "Ride Electric Burleigh"], "amount_untaxed_signed": 24000.0}]
+        if model == "account.move.line":
+            return [{"company_id": [5, "Ride Electric Burleigh"], "balance": 14000.0}]
+        raise AssertionError(f"Unexpected model {model}")
+
+    monkeypatch.setattr(odoo_connector, "_execute_kw", fake_execute_kw)
+
+    response = odoo_connector.execute_odoo_operation(
+        {
+            "base_url": "https://odoo.example.com",
+            "database": "ghost",
+            "username": "operator@example.com",
+            "password": "super-secret",
+            "read_only": True,
+        },
+        operation="odoo.finance.margin.period_summary",
+        payload={"company_id": 5, "date_from": "2026-03-01", "date_to": "2026-04-01"},
+    )
+
+    assert response["success"] is True
+    assert response["data"]["revenue"] == 24000.0
+    assert response["data"]["cogs"] == 14000.0
+    assert response["data"]["gp"] == 10000.0
+    assert round(response["data"]["gp_pct"], 4) == round(10000.0 / 24000.0, 4)
+
+
+def test_odoo_connector_supports_monthly_margin_comparison(monkeypatch) -> None:
+    monkeypatch.setattr(odoo_connector.httpx, "Client", _DummyClient)
+    monkeypatch.setattr(odoo_connector, "_authenticate", lambda client, config: 7)
+    monkeypatch.setattr(
+        odoo_connector,
+        "_company_name_map",
+        lambda client, *, config, uid, company_ids: {3: "Ride Electric Retail", 5: "Ride Electric Burleigh"},
+    )
+
+    def fake_execute_kw(client, *, config, uid, model, method, args=None, kwargs=None):
+        assert method == "read_group"
+        if model == "account.move":
+            return [
+                {
+                    "company_id": [3, "Ride Electric Retail"],
+                    "invoice_date:month": "2026-01",
+                    "amount_untaxed_signed": 1000.0,
+                    "__range": {"invoice_date:month": {"from": "2026-01-01", "to": "2026-02-01"}},
+                },
+                {
+                    "company_id": [3, "Ride Electric Retail"],
+                    "invoice_date:month": "2026-02",
+                    "amount_untaxed_signed": 1300.0,
+                    "__range": {"invoice_date:month": {"from": "2026-02-01", "to": "2026-03-01"}},
+                },
+                {
+                    "company_id": [5, "Ride Electric Burleigh"],
+                    "invoice_date:month": "2026-01",
+                    "amount_untaxed_signed": 1500.0,
+                    "__range": {"invoice_date:month": {"from": "2026-01-01", "to": "2026-02-01"}},
+                },
+            ]
+        if model == "account.move.line":
+            return [
+                {
+                    "company_id": [3, "Ride Electric Retail"],
+                    "date:month": "2026-01",
+                    "balance": 700.0,
+                    "__range": {"date:month": {"from": "2026-01-01", "to": "2026-02-01"}},
+                },
+                {
+                    "company_id": [3, "Ride Electric Retail"],
+                    "date:month": "2026-02",
+                    "balance": 1000.0,
+                    "__range": {"date:month": {"from": "2026-02-01", "to": "2026-03-01"}},
+                },
+                {
+                    "company_id": [5, "Ride Electric Burleigh"],
+                    "date:month": "2026-01",
+                    "balance": 900.0,
+                    "__range": {"date:month": {"from": "2026-01-01", "to": "2026-02-01"}},
+                },
+            ]
+        raise AssertionError(f"Unexpected model {model}")
+
+    monkeypatch.setattr(odoo_connector, "_execute_kw", fake_execute_kw)
+
+    response = odoo_connector.execute_odoo_operation(
+        {
+            "base_url": "https://odoo.example.com",
+            "database": "ghost",
+            "username": "operator@example.com",
+            "password": "super-secret",
+            "read_only": True,
+        },
+        operation="odoo.finance.margin.monthly_comparison",
+        payload={"company_ids": [3, 5], "months": 2, "date_from": "2026-01-01", "date_to": "2026-03-01"},
+    )
+
+    assert response["success"] is True
+    companies = response["data"]["companies"]
+    retail = next(company for company in companies if company["company_id"] == 3)
+    burleigh = next(company for company in companies if company["company_id"] == 5)
+    assert retail["company_name"] == "Ride Electric Retail"
+    assert retail["total_gp"] == 600.0
+    assert burleigh["company_name"] == "Ride Electric Burleigh"
+    assert burleigh["months"][0]["month"] == "2026-01"
+    assert response["data"]["anomalies"]
+
+
+def test_odoo_connector_supports_monthly_cogs_code_breakdown(monkeypatch) -> None:
+    monkeypatch.setattr(odoo_connector.httpx, "Client", _DummyClient)
+    monkeypatch.setattr(odoo_connector, "_authenticate", lambda client, config: 7)
+    monkeypatch.setattr(
+        odoo_connector,
+        "_company_name_map",
+        lambda client, *, config, uid, company_ids: {3: "Ride Electric Retail"},
+    )
+    monkeypatch.setattr(
+        odoo_connector,
+        "_account_identity_map",
+        lambda client, *, config, uid, account_ids: {
+            401: {"code": "COGS-401", "name": "Retail Accessories"},
+            402: {"code": "COGS-402", "name": "Retail Bikes"},
+        },
+    )
+
+    def fake_execute_kw(client, *, config, uid, model, method, args=None, kwargs=None):
+        assert method == "read_group"
+        assert model == "account.move.line"
+        return [
+            {
+                "company_id": [3, "Ride Electric Retail"],
+                "date:month": "2025-07",
+                "account_id": [401, "Retail Accessories"],
+                "balance": 1200.0,
+                "__range": {"date:month": {"from": "2025-07-01", "to": "2025-08-01"}},
+            },
+            {
+                "company_id": [3, "Ride Electric Retail"],
+                "date:month": "2025-08",
+                "account_id": [401, "Retail Accessories"],
+                "balance": 1800.0,
+                "__range": {"date:month": {"from": "2025-08-01", "to": "2025-09-01"}},
+            },
+            {
+                "company_id": [3, "Ride Electric Retail"],
+                "date:month": "2025-09",
+                "account_id": [402, "Retail Bikes"],
+                "balance": 2400.0,
+                "__range": {"date:month": {"from": "2025-09-01", "to": "2025-10-01"}},
+            },
+        ]
+
+    monkeypatch.setattr(odoo_connector, "_execute_kw", fake_execute_kw)
+
+    response = odoo_connector.execute_odoo_operation(
+        {
+            "base_url": "https://odoo.example.com",
+            "database": "ghost",
+            "username": "operator@example.com",
+            "password": "super-secret",
+            "read_only": True,
+        },
+        operation="odoo.finance.cogs.monthly_code_breakdown",
+        payload={"company_id": 3, "date_from": "2025-07-01", "date_to": "2025-10-01", "months": 3, "top_n": 5},
+    )
+
+    assert response["success"] is True
+    assert response["data"]["result_type"] == "monthly_cogs_code_breakdown"
+    assert response["data"]["buckets"][0]["month"] == "2025-07"
+    assert response["data"]["buckets"][0]["top_codes"][0]["account_code"] == "COGS-401"
+    assert response["data"]["anomalies"]
+
+
+def test_consumer_chat_allows_governed_low_level_odoo_reads() -> None:
+    allowed, reason = tool_registry._consumer_chat_operation_allowed(
+        "odoo.rpc.read_group",
+        {"model": "account.move.line"},
+    )
+    assert allowed is True
+    assert reason is None
+
+    allowed, reason = tool_registry._consumer_chat_operation_allowed(
+        "odoo.rpc.search_read",
+        {"model": "account.move.line"},
+    )
+    assert allowed is True
+    assert reason is None
+
+    allowed, reason = tool_registry._consumer_chat_operation_allowed(
+        "odoo.rpc.search_read",
+        {"model": "res.partner.bank"},
+    )
+    assert allowed is False
+    assert "Consumer chat only allows `odoo.rpc.search_read`" in str(reason)

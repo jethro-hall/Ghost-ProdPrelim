@@ -21,9 +21,17 @@ ODOO_SAFE_OPERATIONS = [
     "odoo.sales.orders.search_read",
     "odoo.finance.invoices.search_read",
     "odoo.finance.receivables.open",
+    "odoo.finance.payables.open",
     "odoo.rpc.search_read",
     "odoo.rpc.read_group",
     "odoo.rpc.execute_kw",
+    "odoo.finance.revenue.period",
+    "odoo.finance.cogs.period",
+    "odoo.finance.margin.period_summary",
+    "odoo.finance.revenue.monthly",
+    "odoo.finance.cogs.monthly",
+    "odoo.finance.cogs.monthly_code_breakdown",
+    "odoo.finance.margin.monthly_comparison",
     "odoo.finance.revenue.quarterly",
     "odoo.finance.cogs.quarterly",
     "odoo.finance.margin.quarterly_summary",
@@ -252,6 +260,41 @@ def _quarter_ranges(*, quarters: int, fiscal_year_start_month: int, include_curr
     return ranges
 
 
+def _resolve_period_window(payload: dict[str, Any]) -> tuple[str, str]:
+    date_from = str(payload.get("date_from") or "").strip()
+    date_to = str(payload.get("date_to") or "").strip()
+    if date_from and date_to:
+        return date_from, date_to
+
+    relative_period = str(payload.get("relative_period") or "").strip().lower()
+    today = date.today()
+    current_month_start = date(today.year, today.month, 1)
+    if relative_period == "last_month":
+        month_end = current_month_start
+        month_start = _add_months(current_month_start, -1)
+        return month_start.isoformat(), month_end.isoformat()
+    if relative_period == "this_month":
+        return current_month_start.isoformat(), _add_months(current_month_start, 1).isoformat()
+
+    raise OdooConnectorError("Odoo period helpers require `date_from` and `date_to`, or a supported `relative_period`.")
+
+
+def _resolve_monthly_window(payload: dict[str, Any]) -> tuple[str, str, int]:
+    date_from = str(payload.get("date_from") or "").strip()
+    date_to = str(payload.get("date_to") or "").strip()
+    if date_from and date_to:
+        months = max(1, min(24, int(payload.get("months") or 4)))
+        return date_from, date_to, months
+
+    months = max(1, min(24, int(payload.get("months") or 4)))
+    include_current_month = _coerce_bool(payload.get("include_current_month"), default=False)
+    today = date.today()
+    current_month_start = date(today.year, today.month, 1)
+    end_month_start = current_month_start if not include_current_month else _add_months(current_month_start, 1)
+    start_month = _add_months(end_month_start, -months)
+    return start_month.isoformat(), end_month_start.isoformat(), months
+
+
 def _extract_group_label(row: dict[str, Any], groupby_key: str, fallback: str) -> str:
     value = row.get(groupby_key)
     if isinstance(value, str) and value.strip():
@@ -287,6 +330,110 @@ def _extract_quarter_key(row: dict[str, Any], groupby_key: str, fallback: str) -
                     continue
                 return f"{quarter_start.year}-Q{(((quarter_start.month - 1) // 3) + 1)}"
     return _extract_group_label(row, groupby_key, fallback)
+
+
+def _extract_month_key(row: dict[str, Any], groupby_key: str, fallback: str) -> str:
+    range_meta = row.get("__range")
+    if isinstance(range_meta, dict):
+        group_range = range_meta.get(groupby_key)
+        if isinstance(group_range, dict):
+            from_value = group_range.get("from")
+            if isinstance(from_value, str):
+                try:
+                    month_start = date.fromisoformat(from_value)
+                except ValueError:
+                    pass
+                else:
+                    return month_start.strftime("%Y-%m")
+    domain = row.get("__domain")
+    if isinstance(domain, list):
+        for clause in domain:
+            if not isinstance(clause, (list, tuple)) or len(clause) != 3:
+                continue
+            field_name, operator, value = clause
+            if operator == ">=" and isinstance(value, str):
+                try:
+                    month_start = date.fromisoformat(value)
+                except ValueError:
+                    continue
+                return month_start.strftime("%Y-%m")
+    return _extract_group_label(row, groupby_key, fallback)
+
+
+def _coerce_company_ids(payload: dict[str, Any]) -> list[int]:
+    raw = payload.get("company_ids")
+    if not isinstance(raw, list):
+        company_id = payload.get("company_id")
+        try:
+            return [int(company_id)] if company_id is not None else []
+        except (TypeError, ValueError):
+            return []
+    output: list[int] = []
+    for value in raw:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            continue
+        if parsed not in output:
+            output.append(parsed)
+    return output
+
+
+def _company_name_map(client: httpx.Client, *, config: OdooConfig, uid: int, company_ids: list[int]) -> dict[int, str]:
+    if not company_ids:
+        return {}
+    records = _search_read(
+        client,
+        config=config,
+        uid=uid,
+        model="res.company",
+        domain=[["id", "in", company_ids]],
+        fields=["id", "name"],
+        limit=max(len(company_ids), 1),
+        offset=0,
+        order="id asc",
+    )
+    output: dict[int, str] = {}
+    for record in records:
+        try:
+            company_id = int(record.get("id"))
+        except (TypeError, ValueError):
+            continue
+        output[company_id] = str(record.get("name") or company_id)
+    return output
+
+
+def _account_identity_map(
+    client: httpx.Client,
+    *,
+    config: OdooConfig,
+    uid: int,
+    account_ids: list[int],
+) -> dict[int, dict[str, str]]:
+    if not account_ids:
+        return {}
+    records = _search_read(
+        client,
+        config=config,
+        uid=uid,
+        model="account.account",
+        domain=[["id", "in", account_ids]],
+        fields=["id", "code", "name"],
+        limit=max(len(account_ids), 1),
+        offset=0,
+        order="code asc",
+    )
+    output: dict[int, dict[str, str]] = {}
+    for record in records:
+        try:
+            account_id = int(record.get("id"))
+        except (TypeError, ValueError):
+            continue
+        output[account_id] = {
+            "code": str(record.get("code") or account_id),
+            "name": str(record.get("name") or account_id),
+        }
+    return output
 
 def _normalize_fields(requested: Any, allowed_fields: list[str], default_fields: list[str]) -> list[str]:
     if not isinstance(requested, list):
@@ -581,6 +728,52 @@ def _run_receivables(client: httpx.Client, *, config: OdooConfig, uid: int, payl
     return {"count": len(records), "total_residual": total_residual, "records": records}
 
 
+def _run_payables(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    allowed_fields = [
+        "id",
+        "name",
+        "invoice_date",
+        "invoice_date_due",
+        "state",
+        "payment_state",
+        "partner_id",
+        "amount_total",
+        "amount_residual",
+        "currency_id",
+    ]
+    default_fields = allowed_fields
+    domain: list[Any] = [
+        ["move_type", "=", "in_invoice"],
+        ["state", "=", "posted"],
+        ["amount_residual", ">", 0],
+    ]
+    due_before = str(payload.get("due_before") or "").strip()
+    if due_before:
+        domain.append(["invoice_date_due", "<=", due_before])
+    partner_query = str(payload.get("partner_query") or "").strip()
+    if partner_query:
+        domain.append(["partner_id.name", "ilike", partner_query])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    records = _search_read(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move",
+        domain=domain,
+        fields=_normalize_fields(payload.get("fields"), allowed_fields, default_fields),
+        limit=_coerce_limit(payload.get("limit")),
+        offset=_coerce_offset(payload.get("offset")),
+        order="invoice_date_due asc",
+    )
+    total_residual = 0.0
+    for record in records:
+        try:
+            total_residual += float(record.get("amount_residual") or 0)
+        except (TypeError, ValueError):
+            continue
+    return {"count": len(records), "total_residual": total_residual, "records": records}
+
+
 def _run_rpc_search_read(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
     model = _ensure_model_name(payload)
     records = _search_read(
@@ -651,6 +844,490 @@ def _run_rpc_execute_kw(client: httpx.Client, *, config: OdooConfig, uid: int, p
         kwargs=_coerce_kwargs(payload.get("kwargs")),
     )
     return _result_envelope(model=model, method=method, result=result)
+
+
+def _run_finance_revenue_period(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    date_from, date_to = _resolve_period_window(payload)
+    domain: list[Any] = [
+        ["state", "=", "posted"],
+        ["move_type", "in", ["out_invoice", "out_refund"]],
+        ["invoice_date", ">=", date_from],
+        ["invoice_date", "<", date_to],
+    ]
+    company_id = payload.get("company_id")
+    if company_id is not None:
+        domain.append(["company_id", "=", company_id])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    rows = _execute_kw(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move",
+        method="read_group",
+        kwargs={
+            "domain": domain,
+            "fields": ["amount_untaxed_signed:sum"],
+            "groupby": ["company_id"],
+            "lazy": False,
+        },
+    )
+    if not isinstance(rows, list):
+        raise OdooConnectorError("Unexpected response for account.move.read_group")
+    total = 0.0
+    clean_rows = [row for row in rows if isinstance(row, dict)]
+    for row in clean_rows:
+        try:
+            total += float(row.get("amount_untaxed_signed") or 0)
+        except (TypeError, ValueError):
+            continue
+    return {
+        "model": "account.move",
+        "method": "read_group",
+        "metric": "revenue",
+        "result_type": "period_aggregate",
+        "date_from": date_from,
+        "date_to": date_to,
+        "company_id": company_id,
+        "count": len(clean_rows),
+        "total": total,
+        "rows": clean_rows,
+    }
+
+
+def _run_finance_cogs_period(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    date_from, date_to = _resolve_period_window(payload)
+    domain: list[Any] = [
+        ["parent_state", "=", "posted"],
+        ["date", ">=", date_from],
+        ["date", "<", date_to],
+    ]
+    company_id = payload.get("company_id")
+    if company_id is not None:
+        domain.append(["company_id", "=", company_id])
+    cogs_account_ids = payload.get("cogs_account_ids")
+    if isinstance(cogs_account_ids, list) and cogs_account_ids:
+        domain.append(["account_id", "in", cogs_account_ids])
+    else:
+        domain.append(["account_id.account_type", "=", "expense_direct_cost"])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    rows = _execute_kw(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move.line",
+        method="read_group",
+        kwargs={
+            "domain": domain,
+            "fields": ["balance:sum"],
+            "groupby": ["company_id"],
+            "lazy": False,
+        },
+    )
+    if not isinstance(rows, list):
+        raise OdooConnectorError("Unexpected response for account.move.line.read_group")
+    total = 0.0
+    clean_rows = [row for row in rows if isinstance(row, dict)]
+    for row in clean_rows:
+        try:
+            total += float(row.get("balance") or 0)
+        except (TypeError, ValueError):
+            continue
+    return {
+        "model": "account.move.line",
+        "method": "read_group",
+        "metric": "cogs",
+        "result_type": "period_aggregate",
+        "date_from": date_from,
+        "date_to": date_to,
+        "company_id": company_id,
+        "count": len(clean_rows),
+        "total": total,
+        "rows": clean_rows,
+    }
+
+
+def _run_finance_margin_period_summary(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    revenue_data = _run_finance_revenue_period(client, config=config, uid=uid, payload=payload)
+    cogs_data = _run_finance_cogs_period(client, config=config, uid=uid, payload=payload)
+    revenue = float(revenue_data.get("total") or 0.0)
+    cogs = float(cogs_data.get("total") or 0.0)
+    gp = revenue - cogs
+    return {
+        "result_type": "period_margin_summary",
+        "date_from": revenue_data.get("date_from"),
+        "date_to": revenue_data.get("date_to"),
+        "company_id": payload.get("company_id"),
+        "revenue": revenue,
+        "cogs": cogs,
+        "gp": gp,
+        "gp_pct": (gp / revenue) if revenue else 0.0,
+        "revenue_source": revenue_data,
+        "cogs_source": cogs_data,
+    }
+
+
+def _run_finance_revenue_monthly(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    date_from, date_to, months = _resolve_monthly_window(payload)
+    domain: list[Any] = [
+        ["state", "=", "posted"],
+        ["move_type", "in", ["out_invoice", "out_refund"]],
+        ["invoice_date", ">=", date_from],
+        ["invoice_date", "<", date_to],
+    ]
+    company_ids = _coerce_company_ids(payload)
+    if company_ids:
+        domain.append(["company_id", "in", company_ids])
+    elif payload.get("company_id") is not None:
+        domain.append(["company_id", "=", payload.get("company_id")])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    rows = _execute_kw(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move",
+        method="read_group",
+        kwargs={
+            "domain": domain,
+            "fields": ["amount_untaxed_signed:sum"],
+            "groupby": ["company_id", "invoice_date:month"],
+            "orderby": "invoice_date asc",
+            "lazy": False,
+        },
+    )
+    if not isinstance(rows, list):
+        raise OdooConnectorError("Unexpected response for account.move.read_group")
+    company_name_by_id = _company_name_map(client, config=config, uid=uid, company_ids=company_ids)
+    clean_rows = [row for row in rows if isinstance(row, dict)]
+    return {
+        "model": "account.move",
+        "method": "read_group",
+        "metric": "revenue",
+        "result_type": "monthly_aggregate",
+        "date_from": date_from,
+        "date_to": date_to,
+        "months": months,
+        "company_ids": company_ids,
+        "company_name_by_id": company_name_by_id,
+        "count": len(clean_rows),
+        "rows": clean_rows,
+    }
+
+
+def _run_finance_cogs_monthly(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    date_from, date_to, months = _resolve_monthly_window(payload)
+    domain: list[Any] = [
+        ["parent_state", "=", "posted"],
+        ["date", ">=", date_from],
+        ["date", "<", date_to],
+    ]
+    company_ids = _coerce_company_ids(payload)
+    if company_ids:
+        domain.append(["company_id", "in", company_ids])
+    elif payload.get("company_id") is not None:
+        domain.append(["company_id", "=", payload.get("company_id")])
+    cogs_account_ids = payload.get("cogs_account_ids")
+    if isinstance(cogs_account_ids, list) and cogs_account_ids:
+        domain.append(["account_id", "in", cogs_account_ids])
+    else:
+        domain.append(["account_id.account_type", "=", "expense_direct_cost"])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    rows = _execute_kw(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move.line",
+        method="read_group",
+        kwargs={
+            "domain": domain,
+            "fields": ["balance:sum"],
+            "groupby": ["company_id", "date:month"],
+            "orderby": "date asc",
+            "lazy": False,
+        },
+    )
+    if not isinstance(rows, list):
+        raise OdooConnectorError("Unexpected response for account.move.line.read_group")
+    company_name_by_id = _company_name_map(client, config=config, uid=uid, company_ids=company_ids)
+    clean_rows = [row for row in rows if isinstance(row, dict)]
+    return {
+        "model": "account.move.line",
+        "method": "read_group",
+        "metric": "cogs",
+        "result_type": "monthly_aggregate",
+        "date_from": date_from,
+        "date_to": date_to,
+        "months": months,
+        "company_ids": company_ids,
+        "company_name_by_id": company_name_by_id,
+        "count": len(clean_rows),
+        "rows": clean_rows,
+    }
+
+
+def _run_finance_cogs_monthly_code_breakdown(
+    client: httpx.Client,
+    *,
+    config: OdooConfig,
+    uid: int,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    date_from, date_to, months = _resolve_monthly_window(payload)
+    domain: list[Any] = [
+        ["parent_state", "=", "posted"],
+        ["date", ">=", date_from],
+        ["date", "<", date_to],
+    ]
+    company_ids = _coerce_company_ids(payload)
+    if company_ids:
+        domain.append(["company_id", "in", company_ids])
+    elif payload.get("company_id") is not None:
+        domain.append(["company_id", "=", payload.get("company_id")])
+    cogs_account_ids = payload.get("cogs_account_ids")
+    if isinstance(cogs_account_ids, list) and cogs_account_ids:
+        domain.append(["account_id", "in", cogs_account_ids])
+    else:
+        domain.append(["account_id.account_type", "=", "expense_direct_cost"])
+    domain.extend(_coerce_domain(payload.get("domain")))
+    rows = _execute_kw(
+        client,
+        config=config,
+        uid=uid,
+        model="account.move.line",
+        method="read_group",
+        kwargs={
+            "domain": domain,
+            "fields": ["balance:sum"],
+            "groupby": ["company_id", "date:month", "account_id"],
+            "orderby": "date asc",
+            "lazy": False,
+        },
+    )
+    if not isinstance(rows, list):
+        raise OdooConnectorError("Unexpected response for account.move.line.read_group")
+
+    top_n = _coerce_limit(payload.get("top_n"), default=8, maximum=25)
+    clean_rows = [row for row in rows if isinstance(row, dict)]
+    parsed_rows: list[dict[str, Any]] = []
+    account_ids: list[int] = []
+    company_name_by_id = _company_name_map(client, config=config, uid=uid, company_ids=company_ids)
+
+    for row in clean_rows:
+        company_field = row.get("company_id")
+        if not isinstance(company_field, (list, tuple)) or not company_field:
+            continue
+        account_field = row.get("account_id")
+        if not isinstance(account_field, (list, tuple)) or not account_field:
+            continue
+        try:
+            company_id = int(company_field[0])
+            account_id = int(account_field[0])
+            balance = float(row.get("balance") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        month_key = _extract_month_key(row, "date:month", fallback="unknown")
+        if account_id not in account_ids:
+            account_ids.append(account_id)
+        parsed_rows.append(
+            {
+                "company_id": company_id,
+                "company_name": str(company_field[1]) if len(company_field) > 1 and company_field[1] else str(company_id),
+                "month": month_key,
+                "account_id": account_id,
+                "account_name": str(account_field[1]) if len(account_field) > 1 and account_field[1] else str(account_id),
+                "cogs": balance,
+            }
+        )
+
+    company_name_by_id = _company_name_map(client, config=config, uid=uid, company_ids=[row["company_id"] for row in parsed_rows])
+    account_identity_by_id = _account_identity_map(client, config=config, uid=uid, account_ids=account_ids)
+
+    buckets_by_key: dict[tuple[int, str], dict[str, Any]] = {}
+    previous_by_account: dict[tuple[int, int], dict[str, Any]] = {}
+    anomalies: list[dict[str, Any]] = []
+
+    for row in parsed_rows:
+        account_meta = account_identity_by_id.get(row["account_id"], {})
+        row["account_code"] = account_meta.get("code", str(row["account_id"]))
+        row["account_name"] = account_meta.get("name", row["account_name"])
+        row["company_name"] = company_name_by_id.get(row["company_id"], row["company_name"])
+
+        bucket_key = (row["company_id"], row["month"])
+        bucket = buckets_by_key.setdefault(
+            bucket_key,
+            {
+                "company_id": row["company_id"],
+                "company_name": row["company_name"],
+                "month": row["month"],
+                "total_cogs": 0.0,
+                "rows": [],
+            },
+        )
+        bucket["total_cogs"] += row["cogs"]
+        bucket["rows"].append(row)
+
+        previous_key = (row["company_id"], row["account_id"])
+        previous = previous_by_account.get(previous_key)
+        if previous and previous.get("cogs"):
+            delta_pct = (row["cogs"] - previous["cogs"]) / abs(previous["cogs"])
+            if abs(delta_pct) >= 0.2:
+                anomalies.append(
+                    {
+                        "company_id": row["company_id"],
+                        "company_name": row["company_name"],
+                        "month": row["month"],
+                        "account_id": row["account_id"],
+                        "account_code": row["account_code"],
+                        "account_name": row["account_name"],
+                        "cogs": row["cogs"],
+                        "previous_cogs": previous["cogs"],
+                        "delta_pct": delta_pct,
+                        "reason": "COGS code moved more than 20% versus the prior visible month.",
+                    }
+                )
+        previous_by_account[previous_key] = row
+
+    buckets = []
+    for (_company_id, _month), bucket in sorted(buckets_by_key.items(), key=lambda item: (item[0][0], item[0][1])):
+        sorted_rows = sorted(bucket["rows"], key=lambda item: abs(float(item.get("cogs") or 0.0)), reverse=True)
+        buckets.append(
+            {
+                "company_id": bucket["company_id"],
+                "company_name": bucket["company_name"],
+                "month": bucket["month"],
+                "total_cogs": bucket["total_cogs"],
+                "top_codes": sorted_rows[:top_n],
+                "row_count": len(sorted_rows),
+            }
+        )
+
+    anomalies.sort(key=lambda item: abs(float(item.get("delta_pct") or 0.0)), reverse=True)
+
+    return {
+        "model": "account.move.line",
+        "method": "read_group",
+        "metric": "cogs_code_breakdown",
+        "result_type": "monthly_cogs_code_breakdown",
+        "date_from": date_from,
+        "date_to": date_to,
+        "months": months,
+        "company_ids": company_ids,
+        "top_n": top_n,
+        "count": len(parsed_rows),
+        "buckets": buckets,
+        "anomalies": anomalies[:12],
+    }
+
+
+def _run_finance_margin_monthly_comparison(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
+    revenue_data = _run_finance_revenue_monthly(client, config=config, uid=uid, payload=payload)
+    cogs_data = _run_finance_cogs_monthly(client, config=config, uid=uid, payload=payload)
+    revenue_rows = revenue_data.get("rows") if isinstance(revenue_data.get("rows"), list) else []
+    cogs_rows = cogs_data.get("rows") if isinstance(cogs_data.get("rows"), list) else []
+    company_name_by_id = dict(revenue_data.get("company_name_by_id") or cogs_data.get("company_name_by_id") or {})
+
+    revenue_by_key: dict[tuple[int, str], float] = {}
+    for row in revenue_rows:
+        if not isinstance(row, dict):
+            continue
+        company_field = row.get("company_id")
+        if not isinstance(company_field, (list, tuple)) or not company_field:
+            continue
+        try:
+            company_id = int(company_field[0])
+            month_key = _extract_month_key(row, "invoice_date:month", fallback="unknown")
+            revenue_by_key[(company_id, month_key)] = float(row.get("amount_untaxed_signed") or 0.0)
+            if len(company_field) > 1 and company_field[1]:
+                company_name_by_id.setdefault(company_id, str(company_field[1]))
+        except (TypeError, ValueError):
+            continue
+
+    cogs_by_key: dict[tuple[int, str], float] = {}
+    for row in cogs_rows:
+        if not isinstance(row, dict):
+            continue
+        company_field = row.get("company_id")
+        if not isinstance(company_field, (list, tuple)) or not company_field:
+            continue
+        try:
+            company_id = int(company_field[0])
+            month_key = _extract_month_key(row, "date:month", fallback="unknown")
+            cogs_by_key[(company_id, month_key)] = float(row.get("balance") or 0.0)
+            if len(company_field) > 1 and company_field[1]:
+                company_name_by_id.setdefault(company_id, str(company_field[1]))
+        except (TypeError, ValueError):
+            continue
+
+    months_seen = sorted({month for (_company_id, month) in {*revenue_by_key.keys(), *cogs_by_key.keys()}})
+    company_ids = _coerce_company_ids(payload)
+    comparison_rows: list[dict[str, Any]] = []
+    company_summaries: list[dict[str, Any]] = []
+    for company_id in company_ids:
+        running_gp = 0.0
+        monthly_rows: list[dict[str, Any]] = []
+        previous_gp: float | None = None
+        anomalies: list[dict[str, Any]] = []
+        for month_key in months_seen:
+            revenue = revenue_by_key.get((company_id, month_key), 0.0)
+            cogs = cogs_by_key.get((company_id, month_key), 0.0)
+            gp = revenue - cogs
+            gp_pct = (gp / revenue) if revenue else 0.0
+            row = {
+                "company_id": company_id,
+                "company_name": company_name_by_id.get(company_id, str(company_id)),
+                "month": month_key,
+                "revenue": revenue,
+                "cogs": cogs,
+                "gp": gp,
+                "gp_pct": gp_pct,
+            }
+            if previous_gp is not None and previous_gp:
+                gp_delta_pct = (gp - previous_gp) / abs(previous_gp)
+                row["gp_delta_pct"] = gp_delta_pct
+                if abs(gp_delta_pct) >= 0.2:
+                    anomalies.append(
+                        {
+                            "company_id": company_id,
+                            "company_name": company_name_by_id.get(company_id, str(company_id)),
+                            "month": month_key,
+                            "metric": "gp",
+                            "delta_pct": gp_delta_pct,
+                            "reason": "GP moved more than 20% versus prior month.",
+                        }
+                    )
+            monthly_rows.append(row)
+            comparison_rows.append(row)
+            running_gp += gp
+            previous_gp = gp
+        company_summaries.append(
+            {
+                "company_id": company_id,
+                "company_name": company_name_by_id.get(company_id, str(company_id)),
+                "months": monthly_rows,
+                "total_revenue": sum(item["revenue"] for item in monthly_rows),
+                "total_cogs": sum(item["cogs"] for item in monthly_rows),
+                "total_gp": running_gp,
+                "avg_gp_pct": (
+                    sum(item["gp"] for item in monthly_rows) / sum(item["revenue"] for item in monthly_rows)
+                    if sum(item["revenue"] for item in monthly_rows)
+                    else 0.0
+                ),
+                "anomalies": anomalies,
+            }
+        )
+
+    return {
+        "result_type": "monthly_margin_comparison",
+        "date_from": revenue_data.get("date_from"),
+        "date_to": revenue_data.get("date_to"),
+        "months": revenue_data.get("months"),
+        "company_ids": company_ids,
+        "company_name_by_id": company_name_by_id,
+        "rows": comparison_rows,
+        "companies": company_summaries,
+        "anomalies": [item for company in company_summaries for item in company.get("anomalies", [])],
+        "revenue_source": revenue_data,
+        "cogs_source": cogs_data,
+    }
 
 
 def _run_finance_revenue_quarterly(client: httpx.Client, *, config: OdooConfig, uid: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -857,9 +1534,17 @@ def execute_odoo_operation(
         "odoo.sales.orders.search_read": _run_sales_orders,
         "odoo.finance.invoices.search_read": _run_invoices,
         "odoo.finance.receivables.open": _run_receivables,
+        "odoo.finance.payables.open": _run_payables,
         "odoo.rpc.search_read": _run_rpc_search_read,
         "odoo.rpc.read_group": _run_rpc_read_group,
         "odoo.rpc.execute_kw": _run_rpc_execute_kw,
+        "odoo.finance.revenue.period": _run_finance_revenue_period,
+        "odoo.finance.cogs.period": _run_finance_cogs_period,
+        "odoo.finance.margin.period_summary": _run_finance_margin_period_summary,
+        "odoo.finance.revenue.monthly": _run_finance_revenue_monthly,
+        "odoo.finance.cogs.monthly": _run_finance_cogs_monthly,
+        "odoo.finance.cogs.monthly_code_breakdown": _run_finance_cogs_monthly_code_breakdown,
+        "odoo.finance.margin.monthly_comparison": _run_finance_margin_monthly_comparison,
         "odoo.finance.revenue.quarterly": _run_finance_revenue_quarterly,
         "odoo.finance.cogs.quarterly": _run_finance_cogs_quarterly,
         "odoo.finance.margin.quarterly_summary": _run_finance_margin_quarterly_summary,

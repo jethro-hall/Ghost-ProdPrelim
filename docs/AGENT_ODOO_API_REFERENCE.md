@@ -185,7 +185,29 @@ Only these `operation` strings are accepted. Any other value returns `Unsupporte
 
 ---
 
-### 4.7 `odoo.rpc.search_read` (escape hatch)
+### 4.7 `odoo.finance.payables.open`
+
+**Model:** `account.move` — posted vendor bills with residual > 0.
+
+**Base domain:** `in_invoice`, `state = posted`, `amount_residual > 0`.
+
+**Payload:**
+
+| Field | Type | Notes |
+|-------|------|--------|
+| `due_before` | string (date) | Adds `invoice_date_due <= due_before` |
+| `partner_query` | string | `partner_id.name ilike` |
+| `domain` | list | Extra clauses |
+| `fields` | string[] | Same allowed set as invoices |
+| `limit` / `offset` | int | limit max 100 |
+
+**Response:** `count`, `records`, and **`total_residual`** for the returned rows.
+
+**Ordering:** `invoice_date_due asc`
+
+---
+
+### 4.8 `odoo.rpc.search_read` (escape hatch)
 
 **Payload:**
 
@@ -204,7 +226,7 @@ Use this for stock moves, products variants, CRM, etc., while respecting Odoo ac
 
 ---
 
-### 4.8 `odoo.rpc.read_group` (aggregations)
+### 4.9 `odoo.rpc.read_group` (aggregations)
 
 **Payload:**
 
@@ -223,7 +245,7 @@ Use this for stock moves, products variants, CRM, etc., while respecting Odoo ac
 
 ---
 
-### 4.9 `odoo.rpc.execute_kw` (generic read)
+### 4.10 `odoo.rpc.execute_kw` (generic read)
 
 **Payload:**
 
@@ -240,7 +262,79 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 
 ---
 
-### 4.10 `odoo.finance.revenue.quarterly`
+### 4.11 `odoo.finance.revenue.period`
+
+**Purpose:** Posted revenue over an explicit period on `account.move`.
+
+**Payload highlights:**
+
+| Field | Notes |
+|-------|--------|
+| `date_from` / `date_to` | Required ISO date window unless `relative_period` is provided |
+| `relative_period` | Supported: `last_month`, `this_month` |
+| `company_id` | If set, adds `["company_id","=", company_id]` |
+| `domain` | Extra domain clauses |
+
+**Response:** period aggregate with `revenue`, `date_from`, `date_to`, and grouped source rows.
+
+---
+
+### 4.12 `odoo.finance.cogs.period`
+
+**Purpose:** COGS-style expense lines over an explicit period on `account.move.line`.
+
+**Payload:** Same period and company knobs as revenue, plus optional `cogs_account_ids`.
+
+**Note:** Default account filter remains `account_id.account_type = expense_direct_cost` when `cogs_account_ids` is not provided.
+
+---
+
+### 4.13 `odoo.finance.margin.period_summary`
+
+**Purpose:** Combines period revenue and period COGS into `revenue`, `cogs`, `gp`, and `gp_pct` for the requested date window.
+
+**Payload:** Same as `odoo.finance.revenue.period` / `odoo.finance.cogs.period`.
+
+---
+
+### 4.14 `odoo.finance.revenue.monthly`
+
+**Purpose:** Posted revenue grouped by month for one or more companies.
+
+**Payload highlights:**
+
+| Field | Notes |
+|-------|--------|
+| `months` | Number of completed months to include, default `4`, max `24` |
+| `include_current_month` | bool, default `false` |
+| `company_ids` | Optional list of companies to compare |
+| `company_id` | Optional single-company fallback |
+| `date_from` / `date_to` | Optional explicit override |
+| `domain` | Extra domain clauses |
+
+**Response:** monthly grouped revenue rows with `company_name_by_id`.
+
+---
+
+### 4.15 `odoo.finance.cogs.monthly`
+
+**Purpose:** COGS-style expense lines grouped by month for one or more companies.
+
+**Payload:** Same month/date/company knobs as monthly revenue, plus optional `cogs_account_ids`.
+
+---
+
+### 4.16 `odoo.finance.margin.monthly_comparison`
+
+**Purpose:** Combine monthly revenue and monthly COGS into company-by-company monthly GP comparison rows, totals, and anomaly candidates.
+
+**Payload:** Same as the monthly revenue / COGS helpers.
+
+**Response:** `companies`, `rows`, `anomalies`, `revenue_source`, and `cogs_source`.
+
+---
+
+### 4.17 `odoo.finance.revenue.quarterly`
 
 **Purpose:** Posted revenue moves on `account.move`, grouped by `invoice_date:quarter`.
 
@@ -259,7 +353,7 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 
 ---
 
-### 4.11 `odoo.finance.cogs.quarterly`
+### 4.18 `odoo.finance.cogs.quarterly`
 
 **Purpose:** COGS-style lines on `account.move.line` via `read_group` by `date:quarter`.
 
@@ -271,7 +365,7 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 
 ---
 
-### 4.12 `odoo.finance.margin.quarterly_summary`
+### 4.19 `odoo.finance.margin.quarterly_summary`
 
 **Purpose:** Combines **4.10** and **4.11** and returns merged quarter rows with `revenue`, `cogs`, `gp`, `gp_pct`, and running totals.
 

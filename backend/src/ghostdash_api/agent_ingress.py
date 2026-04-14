@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass
+from typing import Any
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -41,12 +42,12 @@ from .runtime import (
 )
 from .runtime_defaults import resolve_query_top_k
 from .runtime_profiles import resolve_agent_runtime_profile, resolve_corpora
-from .schemas import ChatRequest, ChatResponse, ChatUsage
+from .schemas import ChatRequest, ChatResponse, ChatToolEvent, ChatUsage
 from .token_usage import estimate_llm_turn_usage_dict
 from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event
-from .tool_registry import build_tool_readiness_summary
+from .tool_registry import build_tool_readiness_summary, execute_tool_operation_for_agent
 
 settings = get_settings()
 
@@ -61,8 +62,12 @@ def _effective_chat_model_id(body: ChatRequest, llm_config: dict) -> str:
 PROMPT_TRIM_MARKER = "\n...[trimmed for prompt budget]...\n"
 USER_QUESTION_MARKER = "\n\nUser question:"
 CHAT_COMPLETIONS_CONTEXT_LIMIT_TOKENS = 8192
-CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP = 1536
+CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP = 4096
 CHAT_COMPLETIONS_CONTEXT_SAFETY_TOKENS = 512
+
+# OpenAI native /v1/responses is only used when talking to api.openai.com.
+# For other OpenAI-compatible gateways, we route through chat completions semantics and must clamp.
+OPENAI_NATIVE_RESPONSES_MAX_OUTPUT_TOKEN_CAP = 4096
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +93,15 @@ class PreparedAnswerPrompt:
     upload_chars: int
     approved_web_chars: int
     query_chars: int
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedToolEvidence:
+    plan: dict[str, Any]
+    prompt_prefix: str
+    citations: list[dict[str, Any]]
+    tool_events: list[ChatToolEvent]
+    can_cache_response: bool
 
 
 RESPONSES_PRIMARY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
@@ -130,6 +144,575 @@ CHAT_COMPLETIONS_RETRY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
 # Backwards-compatible aliases for tests and local helpers that use the default responses path.
 PRIMARY_ANSWER_PROMPT_BUDGET = RESPONSES_PRIMARY_ANSWER_PROMPT_BUDGET
 RETRY_ANSWER_PROMPT_BUDGET = RESPONSES_RETRY_ANSWER_PROMPT_BUDGET
+
+
+def _normalize_tool_plan(raw_plan: dict[str, Any] | None) -> dict[str, Any]:
+    normalized = dict(raw_plan or {})
+    normalized.setdefault("tool_id", "odoo_primary")
+    normalized.setdefault("mode", "none")
+    normalized.setdefault("operation", None)
+    normalized.setdefault("payload", {})
+    normalized.setdefault("reason", "")
+    normalized.setdefault("blocked_reason", None)
+    normalized.setdefault("company_scope", {})
+    normalized.setdefault("source_labels", [])
+    normalized.setdefault("direct_answer", None)
+    return normalized
+
+
+def _safe_json(value: Any, *, max_chars: int = 2400) -> str:
+    text = json.dumps(value, indent=2, sort_keys=True, default=str)
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - len(PROMPT_TRIM_MARKER)] + PROMPT_TRIM_MARKER
+
+
+def _tool_citation_from_event(event: ChatToolEvent) -> dict[str, Any]:
+    artifact_type = {
+        "preview": "tool_preview",
+        "blocked": "tool_blocked",
+        "failed": "tool_failed",
+        "executed": "tool_result",
+        "planned": "tool_planned",
+    }.get(event.status, "tool_result")
+    label = event.operation or event.tool_id
+    return {
+        "document_id": f"tool:{event.tool_id}:{label}:{event.status}",
+        "filename": f"Odoo {label}",
+        "corpus": "external",
+        "artifact_type": artifact_type,
+        "source_path": f"/api/tools/{event.tool_id}/execute",
+        "source_type": "tool",
+        "title": f"Odoo {event.status}: {label}",
+        "summary": event.summary,
+        "operation": event.operation,
+        "tool_id": event.tool_id,
+        "tool_status": event.status,
+    }
+
+
+def _summarize_tool_payload(tool_response_data: dict[str, Any]) -> str:
+    parts: list[str] = []
+    if isinstance(tool_response_data.get("count"), int):
+        parts.append(f"count={tool_response_data['count']}")
+    records = tool_response_data.get("records")
+    if isinstance(records, list):
+        parts.append(f"records={len(records)}")
+    rows = tool_response_data.get("rows")
+    if isinstance(rows, list):
+        parts.append(f"rows={len(rows)}")
+    if tool_response_data.get("total_residual") is not None:
+        parts.append(f"total_residual={tool_response_data['total_residual']}")
+    if tool_response_data.get("revenue") is not None:
+        parts.append(f"revenue={tool_response_data['revenue']}")
+    if tool_response_data.get("cogs") is not None:
+        parts.append(f"cogs={tool_response_data['cogs']}")
+    if tool_response_data.get("gp") is not None:
+        parts.append(f"gp={tool_response_data['gp']}")
+    model = str(tool_response_data.get("model") or "").strip()
+    if model:
+        parts.append(f"model={model}")
+    return ", ".join(parts) if parts else "tool response available"
+
+
+def _format_tool_result_for_prompt(*, operation: str, payload: dict[str, Any], message: str, data: dict[str, Any]) -> str:
+    if operation == "odoo.finance.margin.period_summary":
+        return "\n".join(
+            [
+                "Executed Odoo period margin summary:",
+                f"- revenue: {data.get('revenue')}",
+                f"- cogs: {data.get('cogs')}",
+                f"- gp: {data.get('gp')}",
+                f"- gp_pct: {data.get('gp_pct')}",
+                f"- date_from: {data.get('date_from')}",
+                f"- date_to: {data.get('date_to')}",
+            ]
+        ).strip()
+
+    if operation == "odoo.finance.margin.monthly_comparison":
+        lines = [
+            "Executed Odoo monthly margin comparison:",
+            f"- date_from: {data.get('date_from')}",
+            f"- date_to: {data.get('date_to')}",
+            "- monthly rows:",
+        ]
+        for row in list(data.get("rows") or [])[:8]:
+            if not isinstance(row, dict):
+                continue
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        str(row.get("company_name") or row.get("company_id") or "company"),
+                        str(row.get("month") or ""),
+                        f"revenue={row.get('revenue')}",
+                        f"cogs={row.get('cogs')}",
+                        f"gp={row.get('gp')}",
+                        f"gp_pct={row.get('gp_pct')}",
+                    ]
+                )
+            )
+        anomalies = list(data.get("anomalies") or [])
+        if anomalies:
+            lines.append("- anomaly candidates:")
+            for anomaly in anomalies[:6]:
+                if not isinstance(anomaly, dict):
+                    continue
+                lines.append(
+                    "  - "
+                    + " | ".join(
+                        [
+                            str(anomaly.get("company_name") or anomaly.get("company_id") or "company"),
+                            str(anomaly.get("month") or ""),
+                            str(anomaly.get("metric") or "metric"),
+                            f"delta_pct={anomaly.get('delta_pct')}",
+                            str(anomaly.get("reason") or ""),
+                        ]
+                    )
+                )
+        return "\n".join(lines).strip()
+
+    if operation == "odoo.finance.cogs.monthly_code_breakdown":
+        lines = [
+            "Executed Odoo monthly COGS code breakdown:",
+            f"- date_from: {data.get('date_from')}",
+            f"- date_to: {data.get('date_to')}",
+            "- monthly buckets:",
+        ]
+        for bucket in list(data.get("buckets") or [])[:6]:
+            if not isinstance(bucket, dict):
+                continue
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        str(bucket.get("company_name") or bucket.get("company_id") or "company"),
+                        str(bucket.get("month") or ""),
+                        f"total_cogs={bucket.get('total_cogs')}",
+                    ]
+                )
+            )
+            for code_row in list(bucket.get("top_codes") or [])[:3]:
+                if not isinstance(code_row, dict):
+                    continue
+                lines.append(
+                    "    - "
+                    + " | ".join(
+                        [
+                            str(code_row.get("account_code") or code_row.get("account_id") or "account"),
+                            str(code_row.get("account_name") or ""),
+                            f"cogs={code_row.get('cogs')}",
+                        ]
+                    )
+                )
+        anomalies = list(data.get("anomalies") or [])
+        if anomalies:
+            lines.append("- anomaly candidates:")
+            for anomaly in anomalies[:6]:
+                if not isinstance(anomaly, dict):
+                    continue
+                lines.append(
+                    "  - "
+                    + " | ".join(
+                        [
+                            str(anomaly.get("company_name") or anomaly.get("company_id") or "company"),
+                            str(anomaly.get("month") or ""),
+                            str(anomaly.get("account_code") or anomaly.get("account_id") or "account"),
+                            str(anomaly.get("account_name") or ""),
+                            f"cogs={anomaly.get('cogs')}",
+                            f"previous_cogs={anomaly.get('previous_cogs')}",
+                            f"delta_pct={anomaly.get('delta_pct')}",
+                            str(anomaly.get("reason") or ""),
+                        ]
+                    )
+                )
+        return "\n".join(lines).strip()
+
+    return (
+        "Executed Odoo result:\n"
+        + _safe_json(
+            {
+                "operation": operation,
+                "data": data,
+            },
+            max_chars=1600,
+        )
+    )
+
+
+def _build_tool_prompt_prefix(tool_events: list[ChatToolEvent], details: list[str]) -> str:
+    if not tool_events and not details:
+        return ""
+    sections = ["Tool evidence:"]
+    for event in tool_events:
+        line = f"- {event.status}: {event.operation or event.tool_id}"
+        if event.summary:
+            line += f" | {event.summary}"
+        sections.append(line)
+    if details:
+        sections.append("Tool details:\n" + "\n\n".join(details))
+    return "\n\n".join(section.strip() for section in sections if section.strip())
+
+
+def _coerce_monthly_margin_company_ids(
+    payload: dict[str, Any],
+    revenue_data: dict[str, Any],
+    cogs_data: dict[str, Any],
+) -> list[int]:
+    explicit_ids = [value for value in list(payload.get("company_ids") or []) if isinstance(value, int)]
+    if explicit_ids:
+        return explicit_ids
+    if isinstance(payload.get("company_id"), int):
+        return [int(payload["company_id"])]
+    seen_ids: list[int] = []
+    for data in (revenue_data, cogs_data):
+        for row in list(data.get("rows") or []):
+            if not isinstance(row, dict):
+                continue
+            company_field = row.get("company_id")
+            if not isinstance(company_field, (list, tuple)) or not company_field:
+                continue
+            try:
+                company_id = int(company_field[0])
+            except (TypeError, ValueError):
+                continue
+            if company_id not in seen_ids:
+                seen_ids.append(company_id)
+    return seen_ids
+
+
+def _extract_month_value(row: dict[str, Any], key: str) -> str:
+    value = row.get(key)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    range_block = row.get("__range")
+    if isinstance(range_block, dict):
+        range_value = range_block.get(key)
+        if isinstance(range_value, dict):
+            start_value = range_value.get("from")
+            if isinstance(start_value, str) and start_value:
+                return start_value
+    return "unknown"
+
+
+def _synthesize_monthly_margin_comparison(
+    *,
+    payload: dict[str, Any],
+    revenue_data: dict[str, Any],
+    cogs_data: dict[str, Any],
+) -> dict[str, Any]:
+    company_name_by_id: dict[int, str] = {}
+    for raw_map in (revenue_data.get("company_name_by_id"), cogs_data.get("company_name_by_id")):
+        if not isinstance(raw_map, dict):
+            continue
+        for key, value in raw_map.items():
+            try:
+                company_id = int(key)
+            except (TypeError, ValueError):
+                continue
+            if value:
+                company_name_by_id[company_id] = str(value)
+
+    revenue_by_key: dict[tuple[int, str], float] = {}
+    for row in list(revenue_data.get("rows") or []):
+        if not isinstance(row, dict):
+            continue
+        company_field = row.get("company_id")
+        if not isinstance(company_field, (list, tuple)) or not company_field:
+            continue
+        try:
+            company_id = int(company_field[0])
+        except (TypeError, ValueError):
+            continue
+        month_key = _extract_month_value(row, "invoice_date:month")
+        revenue_by_key[(company_id, month_key)] = float(row.get("amount_untaxed_signed") or 0.0)
+        if len(company_field) > 1 and company_field[1]:
+            company_name_by_id.setdefault(company_id, str(company_field[1]))
+
+    cogs_by_key: dict[tuple[int, str], float] = {}
+    for row in list(cogs_data.get("rows") or []):
+        if not isinstance(row, dict):
+            continue
+        company_field = row.get("company_id")
+        if not isinstance(company_field, (list, tuple)) or not company_field:
+            continue
+        try:
+            company_id = int(company_field[0])
+        except (TypeError, ValueError):
+            continue
+        month_key = _extract_month_value(row, "date:month")
+        cogs_by_key[(company_id, month_key)] = float(row.get("balance") or 0.0)
+        if len(company_field) > 1 and company_field[1]:
+            company_name_by_id.setdefault(company_id, str(company_field[1]))
+
+    months_seen = sorted({month for (_company_id, month) in {*revenue_by_key.keys(), *cogs_by_key.keys()}})
+    company_ids = _coerce_monthly_margin_company_ids(payload, revenue_data, cogs_data)
+    comparison_rows: list[dict[str, Any]] = []
+    company_summaries: list[dict[str, Any]] = []
+
+    for company_id in company_ids:
+        running_gp = 0.0
+        monthly_rows: list[dict[str, Any]] = []
+        previous_gp: float | None = None
+        anomalies: list[dict[str, Any]] = []
+        for month_key in months_seen:
+            revenue = revenue_by_key.get((company_id, month_key), 0.0)
+            cogs = cogs_by_key.get((company_id, month_key), 0.0)
+            gp = revenue - cogs
+            gp_pct = (gp / revenue) if revenue else 0.0
+            row = {
+                "company_id": company_id,
+                "company_name": company_name_by_id.get(company_id, str(company_id)),
+                "month": month_key,
+                "revenue": revenue,
+                "cogs": cogs,
+                "gp": gp,
+                "gp_pct": gp_pct,
+            }
+            if previous_gp is not None and previous_gp:
+                gp_delta_pct = (gp - previous_gp) / abs(previous_gp)
+                row["gp_delta_pct"] = gp_delta_pct
+                if abs(gp_delta_pct) >= 0.2:
+                    anomalies.append(
+                        {
+                            "company_id": company_id,
+                            "company_name": company_name_by_id.get(company_id, str(company_id)),
+                            "month": month_key,
+                            "metric": "gp",
+                            "delta_pct": gp_delta_pct,
+                            "reason": "GP moved more than 20% versus prior month.",
+                        }
+                    )
+            monthly_rows.append(row)
+            comparison_rows.append(row)
+            running_gp += gp
+            previous_gp = gp
+        total_revenue = sum(item["revenue"] for item in monthly_rows)
+        company_summaries.append(
+            {
+                "company_id": company_id,
+                "company_name": company_name_by_id.get(company_id, str(company_id)),
+                "months": monthly_rows,
+                "total_revenue": total_revenue,
+                "total_cogs": sum(item["cogs"] for item in monthly_rows),
+                "total_gp": running_gp,
+                "avg_gp_pct": (running_gp / total_revenue) if total_revenue else 0.0,
+                "anomalies": anomalies,
+            }
+        )
+
+    return {
+        "result_type": "monthly_margin_comparison",
+        "date_from": revenue_data.get("date_from"),
+        "date_to": revenue_data.get("date_to"),
+        "months": revenue_data.get("months"),
+        "company_ids": company_ids,
+        "company_name_by_id": company_name_by_id,
+        "rows": comparison_rows,
+        "companies": company_summaries,
+        "anomalies": [item for company in company_summaries for item in list(company.get("anomalies") or [])],
+        "revenue_source": revenue_data,
+        "cogs_source": cogs_data,
+    }
+
+
+def _fallback_monthly_margin_comparison(
+    session: Session,
+    *,
+    agent_id: str,
+    payload: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+) -> tuple[ChatToolEvent, str] | None:
+    revenue_response, _readiness = execute_tool_operation_for_agent(
+        session,
+        agent_id=agent_id,
+        operation="odoo.finance.revenue.monthly",
+        payload=payload,
+        tool_overrides=tool_overrides,
+        surface="consumer_chat",
+    )
+    cogs_response, _readiness = execute_tool_operation_for_agent(
+        session,
+        agent_id=agent_id,
+        operation="odoo.finance.cogs.monthly",
+        payload=payload,
+        tool_overrides=tool_overrides,
+        surface="consumer_chat",
+    )
+    if not revenue_response.success or not cogs_response.success:
+        return None
+    synthesized = _synthesize_monthly_margin_comparison(
+        payload=payload,
+        revenue_data=dict(revenue_response.data or {}),
+        cogs_data=dict(cogs_response.data or {}),
+    )
+    event = ChatToolEvent(
+        tool_id="odoo_primary",
+        status="executed",
+        operation="odoo.finance.margin.monthly_comparison",
+        summary="Monthly comparison synthesized from `odoo.finance.revenue.monthly` and `odoo.finance.cogs.monthly` fallback.",
+        payload=payload,
+        latency_ms=(revenue_response.latency_ms or 0) + (cogs_response.latency_ms or 0),
+    )
+    detail = (
+        "Named helper fallback used because `odoo.finance.margin.monthly_comparison` was unavailable in the live stack.\n"
+        + _format_tool_result_for_prompt(
+            operation="odoo.finance.margin.monthly_comparison",
+            payload=payload,
+            message="Synthesized from monthly revenue and monthly COGS fallback operations.",
+            data=synthesized,
+        )
+    )
+    return event, detail
+
+
+def prepare_tool_evidence(
+    session: Session,
+    *,
+    agent_id: str,
+    tool_overrides: dict[str, bool] | None,
+    tool_plan: dict[str, Any] | None,
+) -> PreparedToolEvidence:
+    normalized_plan = _normalize_tool_plan(tool_plan)
+    mode = str(normalized_plan.get("mode") or "none")
+    operation = str(normalized_plan.get("operation") or "").strip() or None
+    payload = dict(normalized_plan.get("payload") or {})
+    blocked_reason = str(normalized_plan.get("blocked_reason") or "").strip() or None
+    reason = str(normalized_plan.get("reason") or "").strip()
+
+    if mode == "none" or not operation:
+        return PreparedToolEvidence(
+            plan=normalized_plan,
+            prompt_prefix="",
+            citations=[],
+            tool_events=[],
+            can_cache_response=True,
+        )
+
+    tool_events: list[ChatToolEvent] = []
+    citations: list[dict[str, Any]] = []
+    detail_blocks: list[str] = []
+
+    if mode == "preview":
+        event = ChatToolEvent(
+            tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+            status="preview",
+            operation=operation,
+            summary=reason or "Operation preview only; no Odoo execution performed.",
+            payload=payload,
+        )
+        tool_events.append(event)
+        citations.append(_tool_citation_from_event(event))
+        detail_blocks.append(f"Preview only. Canonical operation payload:\n{_safe_json({'operation': operation, 'payload': payload})}")
+        return PreparedToolEvidence(
+            plan=normalized_plan,
+            prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+            citations=citations,
+            tool_events=tool_events,
+            can_cache_response=False,
+        )
+
+    if blocked_reason:
+        event = ChatToolEvent(
+            tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+            status="blocked",
+            operation=operation,
+            summary=reason or "Odoo execution blocked before dispatch.",
+            blocked_reason=blocked_reason,
+            payload=payload,
+        )
+        tool_events.append(event)
+        citations.append(_tool_citation_from_event(event))
+        return PreparedToolEvidence(
+            plan=normalized_plan,
+            prompt_prefix=_build_tool_prompt_prefix(tool_events, []),
+            citations=citations,
+            tool_events=tool_events,
+            can_cache_response=False,
+        )
+
+    tool_response, _readiness = execute_tool_operation_for_agent(
+        session,
+        agent_id=agent_id,
+        operation=operation,
+        payload=payload,
+        tool_overrides=tool_overrides,
+        surface="consumer_chat",
+    )
+    if tool_response.success:
+        summary = _summarize_tool_payload(tool_response.data)
+        event = ChatToolEvent(
+            tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+            status="executed",
+            operation=operation,
+            summary=summary,
+            payload=payload,
+            latency_ms=tool_response.latency_ms,
+        )
+        tool_events.append(event)
+        citations.append(_tool_citation_from_event(event))
+        detail_blocks.append(
+            _format_tool_result_for_prompt(
+                operation=operation,
+                payload=payload,
+                message=tool_response.message,
+                data=tool_response.data,
+            )
+        )
+    else:
+        fallback_result: tuple[ChatToolEvent, str] | None = None
+        if (
+            operation == "odoo.finance.margin.monthly_comparison"
+            and "unsupported odoo operation" in str(tool_response.message or "").casefold()
+        ):
+            fallback_result = _fallback_monthly_margin_comparison(
+                session,
+                agent_id=agent_id,
+                payload=payload,
+                tool_overrides=tool_overrides,
+            )
+        if fallback_result is not None:
+            event, detail = fallback_result
+            tool_events.append(event)
+            citations.append(_tool_citation_from_event(event))
+            detail_blocks.append(detail)
+            return PreparedToolEvidence(
+                plan=normalized_plan,
+                prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+                citations=citations,
+                tool_events=tool_events,
+                can_cache_response=False,
+            )
+        blocked_reasons = list((tool_response.data or {}).get("blocked_reasons") or [])
+        event = ChatToolEvent(
+            tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+            status="blocked" if "blocked_reasons" in (tool_response.data or {}) else "failed",
+            operation=operation,
+            summary=tool_response.message,
+            blocked_reason=blocked_reason or (blocked_reasons[0] if blocked_reasons else None),
+            payload=payload,
+            latency_ms=tool_response.latency_ms,
+        )
+        tool_events.append(event)
+        citations.append(_tool_citation_from_event(event))
+        detail_blocks.append(
+            "Odoo execution failed or was blocked:\n"
+            + _safe_json(
+                {
+                    "operation": operation,
+                    "payload": payload,
+                    "message": tool_response.message,
+                    "data": tool_response.data,
+                }
+            )
+        )
+    return PreparedToolEvidence(
+        plan=normalized_plan,
+        prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+        citations=citations,
+        tool_events=tool_events,
+        can_cache_response=False,
+    )
 
 
 def initialize_agent_runtime_state() -> None:
@@ -183,7 +766,7 @@ def build_runtime_context_block(
     openai_responses_chain: bool = False,
 ) -> str:
     memory_line = (
-        "Multi-turn context: carried by OpenAI Responses API state (previous_response_id); no transcript is pasted here."
+        "Conversation state is carried by OpenAI Responses API; no transcript is pasted here."
         if openai_responses_chain
         else f"Conversation memory loaded: {'yes' if history_context else 'no'}"
     )
@@ -193,10 +776,9 @@ def build_runtime_context_block(
             f"Runtime profile: {runtime_profile_name}",
             f"Active corpora: {', '.join(corpora) if corpora else 'none'}",
             memory_line,
-            f"Approved web sources configured: {', '.join(allowed_urls) if allowed_urls else 'none'}",
-            f"Approved web sources checked for this answer: {'yes' if used_approved_web else 'no'}",
+            f"Approved web used: {'yes' if used_approved_web else 'no'}",
             (
-                "External tool readiness: "
+                "Tool readiness: "
                 + (
                     "; ".join(
                         f"{item.get('id', 'tool')}={item.get('status', 'unknown')}"
@@ -205,18 +787,6 @@ def build_runtime_context_block(
                     if tool_summary
                     else "none"
                 )
-            ),
-            (
-                "External tool rule: never claim an Odoo lookup or any other tool action ran unless tool output is "
-                "explicitly present in the current prompt context."
-            ),
-            (
-                "File grounding rule: distinguish clearly between filename visibility in inventory, excerpt retrieval, "
-                "and verified full-content extraction. Never claim full file coverage unless the retrieved context proves it."
-            ),
-            (
-                "Upload policy: if the user appears to rely on a missing file or document, ask whether they want to upload it. "
-                "If they want it saved for future agent knowledge, ask whether it should be persisted and which collection it belongs in before treating it as durable knowledge."
             ),
         ]
     )
@@ -593,6 +1163,20 @@ def unique_answer_prompt_variants(*variants: PreparedAnswerPrompt) -> list[Prepa
     return unique_variants
 
 
+def build_staged_answer_directives(*, tool_plan: dict[str, Any] | None) -> str:
+    """Add answer-format constraints for expensive tool-heavy investigations."""
+    plan = dict(tool_plan or {})
+    operation = str(plan.get("operation") or "").strip()
+    if not operation.startswith("odoo.finance."):
+        return ""
+    return (
+        "Answer constraints (staged finance output):\n"
+        "- First pass only: executive summary + what changed month-to-month + top drivers.\n"
+        "- Keep it concise (no long-form report). Use bullets and a small month-by-month table.\n"
+        "- End with: 'Say CONTINUE for deeper drill-down by code/journal/vendor.'"
+    ).strip()
+
+
 def log_answer_prompt_compaction(*, trace_id: str, package: PreparedAnswerPrompt) -> None:
     if not package.compacted:
         return
@@ -630,6 +1214,35 @@ def is_length_guardrail_error(exc: Exception) -> bool:
             details.append(str(response))
     message = " ".join(fragment for fragment in details if fragment).lower()
     return "input exceeds max length" in message or ("guardrail" in message and "max length" in message)
+
+
+def is_context_length_error(exc: Exception) -> bool:
+    details = [repr(exc), str(exc)]
+    body = getattr(exc, "body", None)
+    if body is not None:
+        try:
+            details.append(json.dumps(body, sort_keys=True))
+        except TypeError:
+            details.append(str(body))
+    response = getattr(exc, "response", None)
+    if response is not None:
+        try:
+            details.append(json.dumps(response.json(), sort_keys=True))
+        except Exception:
+            details.append(str(response))
+    message = " ".join(fragment for fragment in details if fragment).lower()
+    return (
+        "maximum context length" in message
+        or "context_length_exceeded" in message
+        or ("requested" in message and "tokens" in message and "maximum" in message and "context" in message)
+    )
+
+
+def is_timeout_error(exc: Exception) -> bool:
+    if isinstance(exc, (TimeoutError, httpx.TimeoutException)):
+        return True
+    message = " ".join(fragment for fragment in (repr(exc), str(exc)) if fragment).lower()
+    return "timed out" in message or "timeout" in message or "readtimeout" in message
 
 
 def dedupe_answer_text(answer: str) -> str:
@@ -709,6 +1322,21 @@ def build_length_guardrail_fallback(*, citations: list[dict]) -> str:
     return "\n".join(fallback).strip()
 
 
+def build_context_length_fallback(*, citations: list[dict]) -> str:
+    fallback = [
+        "Model context window exceeded: the upstream model rejected the request size (prompt + requested completion).",
+        "",
+        "What I can confirm:",
+        "- grounded/tool evidence was retrieved and processed",
+        f"- citation count available: {len(citations)}",
+        "",
+        "Best next step:",
+        "1. reduce runtime `max_tokens` (output) and rerun, or use staged output (ask for an executive summary first)",
+        "2. narrow scope (one month / one company at a time) to keep the prompt smaller",
+    ]
+    return "\n".join(fallback).strip()
+
+
 def run_answer_with_prompt_variants(
     prompt_variants: list[PreparedAnswerPrompt],
     *,
@@ -753,20 +1381,41 @@ def resolve_answer_max_tokens(
     configured_max_tokens: int,
     prompt: str,
     trace_id: str,
-) -> int:
-    if api_mode != "chat_completions":
-        return configured_max_tokens
+    openai_responses_chain: bool,
+) -> int | None:
+    """Resolve max output tokens for the LLM call.
+
+    - For OpenAI native /v1/responses chains, avoid passing extreme `max_output_tokens`
+      values that can trigger immediate context validation errors on smaller models.
+    - For all OpenAI-compatible chat-completions style calls (including local gateways),
+      clamp to a safe completion cap + estimated available context.
+    """
+
+    configured = max(1, int(configured_max_tokens))
+
+    if openai_responses_chain:
+        if configured <= OPENAI_NATIVE_RESPONSES_MAX_OUTPUT_TOKEN_CAP:
+            return configured
+        log_instant_event(
+            trace_id=trace_id,
+            service="agent-ingress",
+            route="chat_answer.max_tokens_omitted",
+            status="ok",
+            details={
+                "api_mode": api_mode,
+                "configured_max_tokens": configured,
+                "reason": "openai_native_responses_chain",
+            },
+        )
+        return None
+
     estimated_prompt_tokens = max(1, math.ceil(len(prompt.strip()) / 2))
     available_completion_tokens = max(
         256,
         CHAT_COMPLETIONS_CONTEXT_LIMIT_TOKENS - estimated_prompt_tokens - CHAT_COMPLETIONS_CONTEXT_SAFETY_TOKENS,
     )
-    resolved_max_tokens = min(
-        configured_max_tokens,
-        CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP,
-        available_completion_tokens,
-    )
-    if resolved_max_tokens != configured_max_tokens:
+    resolved_max_tokens = min(configured, CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP, available_completion_tokens)
+    if resolved_max_tokens != configured:
         log_instant_event(
             trace_id=trace_id,
             service="agent-ingress",
@@ -774,7 +1423,7 @@ def resolve_answer_max_tokens(
             status="ok",
             details={
                 "api_mode": api_mode,
-                "configured_max_tokens": configured_max_tokens,
+                "configured_max_tokens": configured,
                 "resolved_max_tokens": resolved_max_tokens,
                 "prompt_chars": len(prompt),
                 "estimated_prompt_tokens": estimated_prompt_tokens,
@@ -878,7 +1527,33 @@ def create_app() -> FastAPI:
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
         )
-        if use_approved_web or use_openai_responses_chain:
+        plan = await fetch_query_plan(
+            plan_query_message,
+            corpora,
+            top_k,
+            request.state.trace_id,
+            current_message=body.message,
+        )
+        tool_evidence = prepare_tool_evidence(
+            session,
+            agent_id=agent.id,
+            tool_overrides=body.tool_overrides,
+            tool_plan=plan.get("tool_plan"),
+        )
+        tool_events = tool_evidence.tool_events
+        citations = [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+        plan_query_prompt = str(plan.get("prompt") or "")
+        if tool_evidence.prompt_prefix:
+            plan_query_prompt = (
+                f"{tool_evidence.prompt_prefix}\n\n{plan_query_prompt}".strip()
+                if plan_query_prompt
+                else tool_evidence.prompt_prefix
+            )
+        staged_directives = build_staged_answer_directives(tool_plan=tool_evidence.plan)
+        if staged_directives:
+            plan_query_prompt = f"{plan_query_prompt}\n\n{staged_directives}".strip() if plan_query_prompt else staged_directives
+        cache_key = None
+        if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
             cached = None
         else:
             cache_key = build_response_cache_key(
@@ -889,6 +1564,7 @@ def create_app() -> FastAPI:
                 corpora=corpora,
                 api_mode=body.api_mode,
                 llm_model_id_override=body.llm_model_id,
+                tool_state={"tool_summary": tool_summary, "tool_plan_mode": tool_evidence.plan.get("mode", "none")},
             )
             cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
         resolved_model_id = _effective_chat_model_id(body, llm_config)
@@ -930,21 +1606,14 @@ def create_app() -> FastAPI:
                 usage=ChatUsage(**estimate_llm_turn_usage_dict(system_prompt="", user_prompt=None, completion="", skip_llm=True)),
                 effective_snapshot_id=effective_snapshot_id,
                 tool_summary=tool_summary_models,
+                tool_events=[],
             )
-        plan = await fetch_query_plan(
-            plan_query_message,
-            corpora,
-            top_k,
-            request.state.trace_id,
-            current_message=body.message,
-        )
-        citations = [*plan.get("citations", []), *web_citations]
         if plan.get("direct_answer") and not chat_upload_context:
             answer = plan["direct_answer"]
         else:
             answer = ""
         configured_max_tokens = int(llm_config.get("max_tokens", 2000))
-        can_cache_response = True
+        can_cache_response = tool_evidence.can_cache_response
         prompt_variants: list[PreparedAnswerPrompt] = []
         used_prompt: str | None = None
         if not answer:
@@ -952,7 +1621,7 @@ def create_app() -> FastAPI:
                 api_mode=body.api_mode,
                 agent_name=agent.name,
                 system_prompt=str(guardrails_config.get("system_prompt", "")),
-                query_prompt=plan["prompt"],
+                query_prompt=plan_query_prompt,
                 history_context=history_for_prompt,
                 runtime_context=runtime_context,
                 approved_web_context=approved_web_context,
@@ -975,6 +1644,7 @@ def create_app() -> FastAPI:
                         configured_max_tokens=configured_max_tokens,
                         prompt=prompt,
                         trace_id=request.state.trace_id,
+                        openai_responses_chain=use_openai_responses_chain,
                     ),
                     trace_id=request.state.trace_id,
                     service="agent-ingress",
@@ -1000,6 +1670,7 @@ def create_app() -> FastAPI:
                             configured_max_tokens=configured_max_tokens,
                             prompt=prompt,
                             trace_id=request.state.trace_id,
+                            openai_responses_chain=use_openai_responses_chain,
                         ),
                         trace_id=request.state.trace_id,
                         service="agent-ingress",
@@ -1022,8 +1693,20 @@ def create_app() -> FastAPI:
                         error=repr(last_error),
                         details={"citation_count": len(citations)},
                     )
-                else:
+                elif last_error is not None and is_context_length_error(last_error):
+                    answer = build_context_length_fallback(citations=citations)
+                    log_instant_event(
+                        trace_id=request.state.trace_id,
+                        service="agent-ingress",
+                        route="chat_answer.context_length_fallback",
+                        status="ok",
+                        error=repr(last_error),
+                        details={"citation_count": len(citations)},
+                    )
+                elif last_error is not None and is_timeout_error(last_error):
                     answer = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
+                else:
+                    answer = build_blank_answer_fallback(citations=citations)
         answer = dedupe_answer_text(answer)
         system_sp = str(guardrails_config.get("system_prompt", ""))
         fallback_user = prompt_variants[0].prompt if prompt_variants else ""
@@ -1054,19 +1737,10 @@ def create_app() -> FastAPI:
             conversation.openai_last_response_id = new_openai_rid
         session.commit()
         if not use_approved_web and can_cache_response and not use_openai_responses_chain:
-            cache_key = build_response_cache_key(
-                agent=agent,
-                runtime_profile=runtime_profile,
-                history_context=history_context,
-                message=body.message + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else ""),
-                corpora=corpora,
-                api_mode=body.api_mode,
-                llm_model_id_override=body.llm_model_id,
-            )
             store_cached_response(
                 session,
                 agent_id=agent.id,
-                request_hash=cache_key,
+                request_hash=cache_key or "",
                 answer_text=answer,
                 query_mode=plan["query_mode"],
                 citations=citations,
@@ -1081,6 +1755,7 @@ def create_app() -> FastAPI:
             usage=response_usage,
             effective_snapshot_id=effective_snapshot_id,
             tool_summary=tool_summary_models,
+            tool_events=tool_events,
         )
 
     @app.post("/agent/chat/stream")
@@ -1163,7 +1838,31 @@ def create_app() -> FastAPI:
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
         )
-        if use_approved_web or use_openai_responses_chain:
+        plan = await fetch_query_plan(
+            plan_query_message,
+            corpora,
+            top_k,
+            request.state.trace_id,
+            current_message=body.message,
+        )
+        tool_evidence = prepare_tool_evidence(
+            session,
+            agent_id=agent.id,
+            tool_overrides=body.tool_overrides,
+            tool_plan=plan.get("tool_plan"),
+        )
+        plan_query_prompt = str(plan.get("prompt") or "")
+        if tool_evidence.prompt_prefix:
+            plan_query_prompt = (
+                f"{tool_evidence.prompt_prefix}\n\n{plan_query_prompt}".strip()
+                if plan_query_prompt
+                else tool_evidence.prompt_prefix
+            )
+        staged_directives = build_staged_answer_directives(tool_plan=tool_evidence.plan)
+        if staged_directives:
+            plan_query_prompt = f"{plan_query_prompt}\n\n{staged_directives}".strip() if plan_query_prompt else staged_directives
+        cache_key = None
+        if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
             cached = None
         else:
             cache_key = build_response_cache_key(
@@ -1174,28 +1873,20 @@ def create_app() -> FastAPI:
                 corpora=corpora,
                 api_mode=body.api_mode,
                 llm_model_id_override=body.llm_model_id,
+                tool_state={"tool_summary": tool_summary, "tool_plan_mode": tool_evidence.plan.get("mode", "none")},
             )
             cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
         resolved_model_id = _effective_chat_model_id(body, llm_config)
-        plan = None
-        if cached is None:
-            plan = await fetch_query_plan(
-                plan_query_message,
-                corpora,
-                top_k,
-                request.state.trace_id,
-                current_message=body.message,
-            )
         prev_openai_rid = (conversation.openai_last_response_id or "").strip() or None
         openai_rid_out: list[str | None] = [None]
         configured_max_tokens = int(llm_config.get("max_tokens", 2000))
         prompt_variants: list[PreparedAnswerPrompt] = []
-        if cached is None and plan is not None and not (plan.get("direct_answer") and not chat_upload_context):
+        if cached is None and not (plan.get("direct_answer") and not chat_upload_context):
             primary_prompt, retry_prompt = prepare_answer_prompt_variants(
                 api_mode=body.api_mode,
                 agent_name=agent.name,
                 system_prompt=str(guardrails_config.get("system_prompt", "")),
-                query_prompt=plan["prompt"],
+                query_prompt=plan_query_prompt,
                 history_context=history_for_prompt,
                 runtime_context=runtime_context,
                 approved_web_context=approved_web_context,
@@ -1210,9 +1901,9 @@ def create_app() -> FastAPI:
         def _stream():
             answer_parts: list[str] = []
             successful_user_prompt: str | None = None
-            citations = cached.citations_json if cached is not None else [*plan.get("citations", []), *web_citations]
+            citations = cached.citations_json if cached is not None else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
             query_mode = cached.query_mode if cached is not None else plan["query_mode"]
-            cache_response = True
+            cache_response = tool_evidence.can_cache_response
             yield _encode(
                 {
                     "type": "start",
@@ -1224,6 +1915,7 @@ def create_app() -> FastAPI:
                     "cached": cached is not None,
                     "effective_snapshot_id": effective_snapshot_id,
                     "tool_summary": tool_summary,
+                    "tool_events": [],
                 }
             )
             if cached is not None:
@@ -1237,10 +1929,26 @@ def create_app() -> FastAPI:
                     cached.answer_text = cached_answer
                 yield _encode({"type": "delta", "delta": cached.answer_text})
                 answer_parts.append(cached.answer_text)
-            elif plan.get("direct_answer") and not chat_upload_context:
+            else:
+                for tool_event in tool_evidence.tool_events:
+                    yield _encode(
+                        {
+                            "type": "tool_result",
+                            "tool_event": {
+                                "tool_id": tool_event.tool_id,
+                                "status": tool_event.status,
+                                "operation": tool_event.operation,
+                                "summary": tool_event.summary,
+                                "blocked_reason": tool_event.blocked_reason,
+                                "payload": tool_event.payload,
+                                "latency_ms": tool_event.latency_ms,
+                            },
+                        }
+                    )
+            if cached is None and plan.get("direct_answer") and not chat_upload_context:
                 yield _encode({"type": "delta", "delta": plan["direct_answer"]})
                 answer_parts.append(plan["direct_answer"])
-            else:
+            elif cached is None:
                 stream_error: Exception | None = None
                 for attempt_index, prompt_variant in enumerate(prompt_variants, start=1):
                     try:
@@ -1258,6 +1966,7 @@ def create_app() -> FastAPI:
                                 configured_max_tokens=configured_max_tokens,
                                 prompt=prompt_variant.prompt,
                                 trace_id=request.state.trace_id,
+                                openai_responses_chain=use_openai_responses_chain,
                             ),
                             trace_id=request.state.trace_id,
                             service="agent-ingress",
@@ -1291,16 +2000,8 @@ def create_app() -> FastAPI:
                 if stream_error is not None:
                     cache_response = False
                 if stream_error is not None and not answer_parts:
-                    fallback = (
-                        build_length_guardrail_fallback(citations=citations)
-                        if is_length_guardrail_error(stream_error)
-                        else (
-                            build_timeout_fallback(citations=citations)
-                            if citations
-                            else build_blank_answer_fallback(citations=citations)
-                        )
-                    )
                     if is_length_guardrail_error(stream_error):
+                        fallback = build_length_guardrail_fallback(citations=citations)
                         log_instant_event(
                             trace_id=request.state.trace_id,
                             service="agent-ingress",
@@ -1309,6 +2010,20 @@ def create_app() -> FastAPI:
                             error=repr(stream_error),
                             details={"citation_count": len(citations)},
                         )
+                    elif is_context_length_error(stream_error):
+                        fallback = build_context_length_fallback(citations=citations)
+                        log_instant_event(
+                            trace_id=request.state.trace_id,
+                            service="agent-ingress",
+                            route="chat_stream.context_length_fallback",
+                            status="ok",
+                            error=repr(stream_error),
+                            details={"citation_count": len(citations)},
+                        )
+                    elif is_timeout_error(stream_error):
+                        fallback = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
+                    else:
+                        fallback = build_blank_answer_fallback(citations=citations)
                     answer_parts.append(fallback)
                     yield _encode({"type": "delta", "delta": fallback})
             answer_text = dedupe_answer_text("".join(answer_parts))
@@ -1343,19 +2058,10 @@ def create_app() -> FastAPI:
                     and cache_response
                     and not use_openai_responses_chain
                 ):
-                    sk = build_response_cache_key(
-                        agent=agent,
-                        runtime_profile=runtime_profile,
-                        history_context=history_context,
-                        message=body.message + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else ""),
-                        corpora=corpora,
-                        api_mode=body.api_mode,
-                        llm_model_id_override=body.llm_model_id,
-                    )
                     store_cached_response(
                         stream_session,
                         agent_id=agent.id,
-                        request_hash=sk,
+                        request_hash=cache_key or "",
                         answer_text=answer_text,
                         query_mode=query_mode,
                         citations=citations,
@@ -1381,6 +2087,18 @@ def create_app() -> FastAPI:
                     "usage": usage_stream,
                     "effective_snapshot_id": effective_snapshot_id,
                     "tool_summary": tool_summary,
+                    "tool_events": [
+                        {
+                            "tool_id": tool_event.tool_id,
+                            "status": tool_event.status,
+                            "operation": tool_event.operation,
+                            "summary": tool_event.summary,
+                            "blocked_reason": tool_event.blocked_reason,
+                            "payload": tool_event.payload,
+                            "latency_ms": tool_event.latency_ms,
+                        }
+                        for tool_event in tool_evidence.tool_events
+                    ],
                 }
             )
 

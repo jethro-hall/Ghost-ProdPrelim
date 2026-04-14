@@ -9,8 +9,15 @@ from sqlalchemy.pool import StaticPool
 
 from ghostdash_api import agent_ingress, tool_registry
 from ghostdash_api.database import Base, get_session
-from ghostdash_api.models import AgentMessageRecord, AgentProfileRecord, ChatResponseCacheRecord, ConnectionRecord
+from ghostdash_api.models import (
+    AgentMessageRecord,
+    AgentProfileRecord,
+    ChatResponseCacheRecord,
+    ConnectionRecord,
+    RuntimeProfileRecord,
+)
 from ghostdash_api.runtime_profiles import seed_default_runtime_profile
+from ghostdash_api.schemas import ToolExecuteResponse, ToolReadinessSummary
 
 
 def build_client(monkeypatch):
@@ -65,6 +72,15 @@ def seed_agent(SessionLocal) -> str:
         session.add(agent)
         session.commit()
         return agent.id
+
+
+def configured_agent_max_tokens(SessionLocal, *, agent_id: str) -> int:
+    with SessionLocal() as session:
+        agent = session.get(AgentProfileRecord, agent_id)
+        assert agent is not None
+        profile = session.get(RuntimeProfileRecord, agent.runtime_profile_id)
+        assert profile is not None
+        return int((profile.llm_config_json or {}).get("max_tokens", 2000))
 
 
 def build_long_query_prompt(question: str) -> str:
@@ -194,7 +210,14 @@ def test_agent_chat_uses_compacted_prompt_for_sync_route(monkeypatch) -> None:
     assert response.json()["answer"] == "sync ok"
     assert len(captured_prompts) == 1
     assert len(captured_prompts[0]) <= agent_ingress.CHAT_COMPLETIONS_PRIMARY_ANSWER_PROMPT_BUDGET.max_total_chars
-    assert captured_max_tokens == [agent_ingress.CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP]
+    expected = agent_ingress.resolve_answer_max_tokens(
+        api_mode="chat_completions",
+        configured_max_tokens=configured_agent_max_tokens(SessionLocal, agent_id=agent_id),
+        prompt=captured_prompts[0],
+        trace_id="test",
+        openai_responses_chain=False,
+    )
+    assert captured_max_tokens == [expected]
     assert captured_prompts[0].endswith(f"User question: {question}")
 
 
@@ -232,10 +255,14 @@ def test_agent_chat_stream_retries_with_more_compact_prompt_before_first_delta(m
     assert events[1]["delta"] == "Recovered answer"
     assert len(attempt_prompts) == 2
     assert len(attempt_prompts[1]) <= len(attempt_prompts[0]) - 1200
-    assert attempt_max_tokens == [
-        agent_ingress.CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP,
-        agent_ingress.CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP,
-    ]
+    expected = agent_ingress.resolve_answer_max_tokens(
+        api_mode="chat_completions",
+        configured_max_tokens=configured_agent_max_tokens(SessionLocal, agent_id=agent_id),
+        prompt=attempt_prompts[0],
+        trace_id="test",
+        openai_responses_chain=False,
+    )
+    assert attempt_max_tokens == [expected, expected]
 
     with SessionLocal() as session:
         assistant_messages = list(
@@ -278,10 +305,14 @@ def test_agent_chat_stream_emits_length_fallback_and_done_when_retry_still_fails
     assert "upstream model rejected the prompt length" in events[1]["delta"]
     assert len(attempt_prompts) == 2
     assert len(attempt_prompts[1]) <= len(attempt_prompts[0]) - 1200
-    assert attempt_max_tokens == [
-        agent_ingress.CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP,
-        agent_ingress.CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP,
-    ]
+    expected = agent_ingress.resolve_answer_max_tokens(
+        api_mode="chat_completions",
+        configured_max_tokens=configured_agent_max_tokens(SessionLocal, agent_id=agent_id),
+        prompt=attempt_prompts[0],
+        trace_id="test",
+        openai_responses_chain=False,
+    )
+    assert attempt_max_tokens == [expected, expected]
 
     with SessionLocal() as session:
         assistant_messages = list(
@@ -345,3 +376,220 @@ def test_agent_chat_stream_start_includes_tool_summary_and_effective_snapshot_id
     assert "Turned off for this session" in events[0]["tool_summary"][0]["blocked_reasons"]
     assert events[0]["tool_summary"][0]["enabled_for_agent"] is True
     assert events[0]["tool_summary"][0]["health"] == "healthy"
+
+
+def test_agent_chat_returns_preview_tool_event_for_operation_only_requests(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    async def fake_fetch_query_plan(*args, **kwargs) -> dict:
+        return {
+            "query_mode": "semantic",
+            "direct_answer": "odoo.rpc.search_read\n\n```json\n{\"operation\":\"odoo.rpc.search_read\"}\n```",
+            "prompt": None,
+            "citations": [],
+            "tool_plan": {
+                "tool_id": "odoo_primary",
+                "mode": "preview",
+                "operation": "odoo.rpc.search_read",
+                "payload": {"model": "res.company", "fields": ["id", "name"]},
+                "reason": "Preview only",
+            },
+        }
+
+    monkeypatch.setattr(agent_ingress, "fetch_query_plan", fake_fetch_query_plan)
+
+    response = client.post(
+        "/agent/chat",
+        json={"message": "Do not execute Odoo; show the exact operation and payload.", "agent_id": agent_id},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "odoo.rpc.search_read" in body["answer"]
+    assert body["tool_events"][0]["status"] == "preview"
+    assert body["tool_events"][0]["operation"] == "odoo.rpc.search_read"
+    assert body["cached"] is False
+
+
+def test_agent_chat_stream_emits_tool_result_before_answer(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    async def fake_fetch_query_plan(*args, **kwargs) -> dict:
+        return {
+            "query_mode": "semantic",
+            "direct_answer": None,
+            "prompt": "User question: what are open receivables?",
+            "citations": [],
+            "tool_plan": {
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.receivables.open",
+                "payload": {"limit": 5},
+                "reason": "Need live AR evidence.",
+            },
+        }
+
+    def fake_execute_tool_operation_for_agent(*_args, **_kwargs):
+        return (
+            ToolExecuteResponse(
+                success=True,
+                message="ok",
+                operation="odoo.finance.receivables.open",
+                latency_ms=12,
+                data={"count": 2, "records": [{"id": 1}, {"id": 2}], "total_residual": 1200},
+            ),
+            ToolReadinessSummary(
+                id="odoo_primary",
+                status="ready",
+                blocked_reasons=[],
+                active=True,
+                enabled_for_agent=True,
+                session_enabled=True,
+                health="healthy",
+            ),
+        )
+
+    def fake_stream_answer(prompt, *_args, **_kwargs):
+        assert "Tool evidence:" in prompt
+        yield "Tool-backed answer"
+
+    monkeypatch.setattr(agent_ingress, "fetch_query_plan", fake_fetch_query_plan)
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+    monkeypatch.setattr(agent_ingress, "stream_answer", fake_stream_answer)
+
+    response = client.post(
+        "/agent/chat/stream",
+        json={"message": "What are open receivables?", "agent_id": agent_id, "api_mode": "responses"},
+    )
+    events = parse_sse_events(response.text)
+
+    assert response.status_code == 200
+    assert [event["type"] for event in events] == ["start", "tool_result", "delta", "done"]
+    assert events[1]["tool_event"]["status"] == "executed"
+    assert events[1]["tool_event"]["operation"] == "odoo.finance.receivables.open"
+    assert events[2]["delta"] == "Tool-backed answer"
+    assert events[3]["tool_events"][0]["status"] == "executed"
+
+
+def test_agent_chat_falls_back_when_monthly_margin_helper_is_unavailable(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+    captured_prompts: list[str] = []
+
+    async def fake_fetch_query_plan(*args, **kwargs) -> dict:
+        return {
+            "query_mode": "semantic",
+            "direct_answer": None,
+            "prompt": "User question: compare GP across companies 3, 4, and 5 for the last 4 completed months",
+            "citations": [],
+            "tool_plan": {
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.margin.monthly_comparison",
+                "payload": {"company_ids": [3, 4, 5], "months": 4, "include_current_month": False},
+                "reason": "Need monthly GP comparison.",
+            },
+        }
+
+    def fake_execute_tool_operation_for_agent(*_args, **kwargs):
+        operation = kwargs["operation"]
+        if operation == "odoo.finance.margin.monthly_comparison":
+            return (
+                ToolExecuteResponse(
+                    success=False,
+                    message="Unsupported Odoo operation: odoo.finance.margin.monthly_comparison",
+                    operation=operation,
+                    data={},
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        if operation == "odoo.finance.revenue.monthly":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=8,
+                    data={
+                        "date_from": "2026-01-01",
+                        "date_to": "2026-03-01",
+                        "months": 2,
+                        "company_name_by_id": {"3": "Ride Electric Retail"},
+                        "rows": [
+                            {"company_id": [3, "Ride Electric Retail"], "invoice_date:month": "2026-01", "amount_untaxed_signed": 1500.0},
+                            {"company_id": [3, "Ride Electric Retail"], "invoice_date:month": "2026-02", "amount_untaxed_signed": 1800.0},
+                        ],
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        if operation == "odoo.finance.cogs.monthly":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=7,
+                    data={
+                        "date_from": "2026-01-01",
+                        "date_to": "2026-03-01",
+                        "months": 2,
+                        "company_name_by_id": {"3": "Ride Electric Retail"},
+                        "rows": [
+                            {"company_id": [3, "Ride Electric Retail"], "date:month": "2026-01", "balance": 700.0},
+                            {"company_id": [3, "Ride Electric Retail"], "date:month": "2026-02", "balance": 1000.0},
+                        ],
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        raise AssertionError(f"Unexpected operation {operation}")
+
+    def fake_generate_answer(prompt, *_args, **_kwargs):
+        captured_prompts.append(prompt)
+        return "fallback ok"
+
+    monkeypatch.setattr(agent_ingress, "fetch_query_plan", fake_fetch_query_plan)
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+    monkeypatch.setattr(agent_ingress, "generate_answer", fake_generate_answer)
+
+    response = client.post(
+        "/agent/chat",
+        json={"message": "Compare GP across companies 3, 4, and 5 for the last 4 completed months.", "agent_id": agent_id},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"] == "fallback ok"
+    assert body["tool_events"][0]["status"] == "executed"
+    assert body["tool_events"][0]["operation"] == "odoo.finance.margin.monthly_comparison"
+    assert "fallback" in body["tool_events"][0]["summary"].lower()
+    assert captured_prompts
+    assert "Named helper fallback used" in captured_prompts[0]
+    assert "Executed Odoo monthly margin comparison:" in captured_prompts[0]

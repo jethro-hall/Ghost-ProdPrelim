@@ -11,7 +11,7 @@ RequestedParseLane = Literal["default", "local", "cloud"]
 ParseLanePolicy = Literal["local_default", "cloud_default", "auto"]
 ChatUploadPersistenceMode = Literal["conversation_only", "save_to_knowledge"]
 ProviderKind = Literal["openai", "anthropic", "google_gemini", "openai_compatible"]
-ConnectionAuthStrategy = Literal["bearer", "x_api_key", "custom_header"]
+ConnectionAuthStrategy = Literal["bearer", "x_api_key", "x_goog_api_key", "custom_header"]
 WorkflowExecutionMode = Literal["sequential"]
 WorkflowRunStatus = Literal["queued", "running", "completed", "completed_with_errors", "failed", "aborted"]
 WorkflowStepRunStatus = Literal["pending", "running", "completed", "failed", "aborted"]
@@ -20,6 +20,7 @@ WorkflowHeadAgentSelectionMode = Literal["active_agent", "fixed_agent"]
 WorkflowNodeType = Literal["child_agent", "head_agent_synthesis", "ui_grouped_results"]
 ToolHealth = Literal["healthy", "unhealthy", "unknown"]
 ToolAuthSource = Literal["direct_credentials"]
+ChatToolEventStatus = Literal["planned", "preview", "executed", "blocked", "failed"]
 
 
 class ConnectionPayload(BaseModel):
@@ -186,7 +187,7 @@ class RuntimeProfileLlmConfig(BaseModel):
     provider: str = Field(default="openai", min_length=1, max_length=32)
     model_id: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0, le=2)
-    max_tokens: int = Field(default=16000, ge=1, le=16000)
+    max_tokens: int = Field(default=2048, ge=1, le=16000)
     api_mode: ChatApiMode = "responses"
 
 
@@ -655,6 +656,16 @@ class ChatCitation(BaseModel):
     title: str | None = None
 
 
+class ChatToolEvent(BaseModel):
+    tool_id: str
+    status: ChatToolEventStatus
+    operation: str | None = None
+    summary: str | None = None
+    blocked_reason: str | None = None
+    payload: dict = Field(default_factory=dict)
+    latency_ms: int | None = None
+
+
 class ChatResponse(BaseModel):
     answer: str
     query_mode: QueryMode
@@ -665,3 +676,4 @@ class ChatResponse(BaseModel):
     usage: ChatUsage | None = None
     effective_snapshot_id: str | None = None
     tool_summary: list[ToolReadinessSummary] = Field(default_factory=list)
+    tool_events: list[ChatToolEvent] = Field(default_factory=list)

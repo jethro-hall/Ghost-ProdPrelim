@@ -13,7 +13,6 @@ type Props = {
   useApprovedWeb: boolean;
   onToggleWeb: () => void;
   approvedWebConfigured: boolean;
-  webToolEnabled: boolean;
 };
 
 export default function ChatComposer({
@@ -28,7 +27,6 @@ export default function ChatComposer({
   useApprovedWeb,
   onToggleWeb,
   approvedWebConfigured,
-  webToolEnabled,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,15 +48,15 @@ export default function ChatComposer({
   const sendDisabled = !message.trim() || busy || !activeAgentId;
 
   return (
-    <div className="relative mx-auto w-full max-w-4xl px-4 pb-6 pt-2">
-      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow focus-within:border-ghost-orange focus-within:ring-4 focus-within:ring-ghost-orange/10">
+    <div className="relative mx-auto w-full max-w-[1200px] px-4 pb-5 pt-2">
+      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm transition-shadow focus-within:border-ghost-orange focus-within:ring-4 focus-within:ring-ghost-orange/10">
         <textarea
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Message GHOST_CORE..."
-          className="w-full resize-none border-none bg-transparent py-1.5 text-[0.95rem] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 max-h-[200px] overflow-y-auto"
+          className="w-full resize-none border-none bg-transparent py-1 text-[0.92rem] leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 max-h-[180px] overflow-y-auto"
           rows={1}
           disabled={busy}
         />
@@ -96,7 +94,7 @@ export default function ChatComposer({
                   : useApprovedWeb ? "Disable web search" : "Enable web search"
               }
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="2" y1="12" x2="22" y2="12"></line>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
@@ -110,7 +108,7 @@ export default function ChatComposer({
               className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-not-allowed"
               title="Voice synthesis coming soon"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                 <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -135,9 +133,6 @@ export default function ChatComposer({
         </div>
       </div>
       
-      <div className="mt-2 text-center text-xs text-slate-400">
-        GhostChat can make mistakes. Consider verifying important information.
-      </div>
     </div>
   );
 }

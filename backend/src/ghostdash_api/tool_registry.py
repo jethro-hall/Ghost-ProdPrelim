@@ -380,3 +380,98 @@ def build_tool_readiness_summary(
             health=str(record.status or "unknown"),
         )
     ]
+
+
+def _consumer_chat_operation_allowed(operation: str, payload: dict[str, Any] | None = None) -> tuple[bool, str | None]:
+    normalized_payload = dict(payload or {})
+    generic_search_read_models = {
+        "res.company",
+        "account.move",
+        "account.move.line",
+    }
+    generic_read_group_models = {
+        "res.company",
+        "account.move",
+        "account.move.line",
+        "sale.order",
+        "sale.order.line",
+    }
+    if operation in {
+        "odoo.meta.current_user",
+        "odoo.products.search_read",
+        "odoo.customers.search_read",
+        "odoo.sales.orders.search_read",
+        "odoo.finance.invoices.search_read",
+        "odoo.finance.receivables.open",
+        "odoo.finance.payables.open",
+        "odoo.finance.revenue.period",
+        "odoo.finance.cogs.period",
+        "odoo.finance.margin.period_summary",
+        "odoo.finance.revenue.monthly",
+        "odoo.finance.cogs.monthly",
+        "odoo.finance.cogs.monthly_code_breakdown",
+        "odoo.finance.margin.monthly_comparison",
+        "odoo.finance.revenue.quarterly",
+        "odoo.finance.cogs.quarterly",
+        "odoo.finance.margin.quarterly_summary",
+    }:
+        return True, None
+    if operation == "odoo.rpc.search_read":
+        model = str(normalized_payload.get("model") or "").strip()
+        if model in generic_search_read_models:
+            return True, None
+        return (
+            False,
+            "Consumer chat only allows `odoo.rpc.search_read` against `res.company`, `account.move`, or `account.move.line`",
+        )
+    if operation == "odoo.rpc.read_group":
+        model = str(normalized_payload.get("model") or "").strip()
+        if model in generic_read_group_models:
+            return True, None
+        return (
+            False,
+            "Consumer chat only allows `odoo.rpc.read_group` against `res.company`, `account.move`, `account.move.line`, `sale.order`, or `sale.order.line`",
+        )
+    if operation == "odoo.rpc.execute_kw":
+        return False, "Consumer chat does not allow `odoo.rpc.execute_kw`"
+    return False, f"Operation {operation!r} is not allowed for consumer chat"
+
+
+def execute_tool_operation_for_agent(
+    session: Session,
+    *,
+    agent_id: str,
+    operation: str,
+    payload: dict[str, Any] | None = None,
+    tool_overrides: dict[str, bool] | None = None,
+    surface: str = "consumer_chat",
+) -> tuple[ToolExecuteResponse, ToolReadinessSummary]:
+    readiness = build_tool_readiness_summary(session, agent_id=agent_id, tool_overrides=tool_overrides)[0]
+    if readiness.status != "ready":
+        message = "Odoo is not available for this chat turn."
+        if readiness.blocked_reasons:
+            message = f"{message} {'; '.join(readiness.blocked_reasons)}."
+        return (
+            ToolExecuteResponse(
+                success=False,
+                message=message,
+                operation=operation,
+                data={"blocked_reasons": list(readiness.blocked_reasons), "tool_status": readiness.status},
+            ),
+            readiness,
+        )
+
+    if surface == "consumer_chat":
+        allowed, blocked_reason = _consumer_chat_operation_allowed(operation, payload)
+        if not allowed:
+            return (
+                ToolExecuteResponse(
+                    success=False,
+                    message=blocked_reason or "Operation blocked for this surface.",
+                    operation=operation,
+                    data={"blocked_reasons": [blocked_reason] if blocked_reason else [], "tool_status": readiness.status},
+                ),
+                readiness,
+            )
+
+    return execute_tool_operation(session, ODOO_TOOL_ID, operation=operation, payload=payload), readiness

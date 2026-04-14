@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { AgentProfile, ChatApiMode, ChatUpload, Collection, ConversationSummary, RequestedLane } from "../api";
+import type { AgentProfile, ChatApiMode, ChatToolEvent, ChatUpload, Collection, ConversationSummary, RequestedLane } from "../api";
 import {
   decideChatUpload,
   fetchAgentConversations,
@@ -19,7 +19,22 @@ type ChatEntry = {
   text: string;
   queryMode?: string;
   citations?: unknown[];
+  toolEvents?: ChatToolEvent[];
 };
+
+function hydrateToolEvents(citations: unknown[] | undefined): ChatToolEvent[] {
+  return (citations ?? [])
+    .filter((cite: any) => cite?.source_type === "tool")
+    .map((cite: any) => ({
+      tool_id: cite?.tool_id || "odoo_primary",
+      status: cite?.tool_status || "executed",
+      operation: cite?.operation || null,
+      summary: cite?.title || cite?.filename || null,
+      blocked_reason: null,
+      payload: {},
+      latency_ms: null,
+    }));
+}
 
 type Props = {
   open: boolean;
@@ -122,6 +137,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
           text: entry.content,
           queryMode: entry.query_mode ?? undefined,
           citations: entry.citations,
+          toolEvents: hydrateToolEvents(entry.citations),
         })),
       );
       await refreshUploads(recentConversation.id, nextCollections);
@@ -144,6 +160,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         text: entry.content,
         queryMode: entry.query_mode ?? undefined,
         citations: entry.citations,
+        toolEvents: hydrateToolEvents(entry.citations),
       })),
     );
     await refreshUploads(conversationId);
@@ -165,7 +182,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
     setLog((items) => [
       ...items,
       { id: crypto.randomUUID(), role: "user", text: userText },
-      { id: assistantId, role: "assistant", text: "" },
+      { id: assistantId, role: "assistant", text: "", toolEvents: [] },
     ]);
 
     const controller = new AbortController();
@@ -180,13 +197,26 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         conversationId: activeConversationId ?? undefined,
         useApprovedWeb,
         signal: controller.signal,
-        onStart: ({ query_mode, conversation_id }) => {
+        onStart: ({ query_mode, conversation_id, tool_events }) => {
           if (conversation_id) {
             setActiveConversationId(conversation_id);
             void refreshUploads(conversation_id).catch(() => null);
           }
           setLog((items) =>
-            items.map((entry) => (entry.id === assistantId ? { ...entry, queryMode: query_mode } : entry)),
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, queryMode: query_mode, toolEvents: tool_events ?? entry.toolEvents ?? [] }
+                : entry
+            ),
+          );
+        },
+        onToolEvent: ({ tool_event }) => {
+          setLog((items) =>
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, toolEvents: [...(entry.toolEvents ?? []), tool_event] }
+                : entry
+            ),
           );
         },
         onDelta: (delta) => {
@@ -196,9 +226,13 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
             ),
           );
         },
-        onDone: async ({ citations, conversation_id, usage }) => {
+        onDone: async ({ citations, conversation_id, usage, tool_events }) => {
           setLog((items) =>
-            items.map((entry) => (entry.id === assistantId ? { ...entry, citations } : entry)),
+            items.map((entry) =>
+              entry.id === assistantId
+                ? { ...entry, citations, toolEvents: tool_events ?? entry.toolEvents ?? [] }
+                : entry
+            ),
           );
           if (usage && typeof usage.total_tokens === "number") {
             setLlmTokenTotal((n) => n + usage.total_tokens);
@@ -313,7 +347,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
   }, [approvedWebConfigured]);
 
   return (
-    <div className="fixed bottom-0 left-1/2 z-[9999] flex w-1/2 max-w-[600px] -translate-x-1/2 flex-col items-center">
+    <div className="fixed bottom-4 left-1/2 z-[9999] flex w-[min(1120px,calc(100vw-1.5rem))] max-w-none -translate-x-1/2 flex-col items-center">
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -322,7 +356,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
             onClick={onOpen}
-            className="glass-chat mb-0 flex items-center gap-2 rounded-t-md border-b-0 px-4 py-1.5 text-[0.75rem] font-semibold text-slate-900"
+            className="glass-chat mb-0 flex items-center gap-2 rounded-t-xl border-b-0 px-4 py-2 text-[0.78rem] font-semibold text-slate-900"
           >
             <MessageSquareIcon size={14} />
             GhostChat
@@ -334,12 +368,12 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 380, opacity: 1 }}
+            animate={{ height: 430, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="glass-chat flex w-full flex-col overflow-hidden rounded-t-lg border-b-0"
+            className="ghost-chat-panel glass-chat flex w-full flex-col overflow-hidden rounded-2xl border-b-0"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/5 bg-white/50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/5 bg-white/50 px-3 py-2">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <div className="flex items-center gap-2 text-[0.85rem] font-semibold text-slate-900">
                   <MessageSquareIcon size={16} className="text-ghost-orange" />
@@ -363,7 +397,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   <PlusIcon size={16} />
                 </button>
                 <select
-                  className="ghost-select w-[170px] py-2 text-[0.72rem]"
+                  className="ghost-select w-[160px]"
                   value={activeAgentId ?? ""}
                   onChange={(event) => {
                     const nextAgentId = event.target.value;
@@ -382,7 +416,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   ))}
                 </select>
                 <select
-                  className="ghost-select w-[170px] py-2 text-[0.72rem]"
+                  className="ghost-select w-[160px]"
                   value={activeConversationId ?? "__new__"}
                   onChange={(event) => {
                     const nextConversationId = event.target.value === "__new__" ? null : event.target.value;
@@ -397,7 +431,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   ))}
                 </select>
                 <select
-                  className="ghost-select max-w-[148px] py-2 text-[0.68rem]"
+                  className="ghost-select max-w-[156px]"
                   value={sessionApiMode}
                   onChange={(event) => setSessionApiMode(event.target.value as ChatApiMode)}
                   title="OpenAI API path for the next message"
@@ -406,7 +440,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   <option value="chat_completions">Chat completions</option>
                 </select>
                 <input
-                  className="ghost-input max-w-[160px] py-2 text-[0.68rem]"
+                  className="ghost-input max-w-[160px]"
                   value={sessionLlmModelId}
                   onChange={(event) => setSessionLlmModelId(event.target.value)}
                   placeholder="Model id"
@@ -418,7 +452,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
               </div>
             </div>
             {showTools && (
-              <div className="border-b border-black/5 bg-white/60 p-3 text-[0.72rem] text-slate-600">
+              <div className="ghost-scroll max-h-[180px] overflow-y-auto border-b border-black/5 bg-white/60 px-3 py-2 text-[0.72rem] text-slate-600">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
                     <div className="font-semibold text-slate-900">Approved web sources</div>
@@ -572,7 +606,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
               </div>
             )}
 
-            <div className="ghost-scroll flex flex-1 flex-col gap-3 overflow-y-auto p-4 text-[0.8rem]">
+            <div className="ghost-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 text-[0.8rem]">
               {log.length === 0 && (
                 <div className="self-start rounded-lg rounded-tl-none border border-slate-200 bg-slate-50 p-2.5 text-slate-900">
                   {activeAgent?.first_message ?? "Hello! I&apos;m GhostChat. How can I help you with your RAG infrastructure today?"}
@@ -592,6 +626,32 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                       {entry.queryMode}
                     </div>
                   )}
+                  {entry.role === "assistant" && ((entry.toolEvents?.length ?? 0) > 0 || (entry.citations ?? []).some((cite: any) => cite?.source_type === "tool")) && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {(entry.toolEvents ?? []).map((toolEvent, idx) => (
+                        <span
+                          key={`${toolEvent.tool_id}-${toolEvent.operation ?? "none"}-${idx}`}
+                          className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[0.62rem] font-medium text-slate-600"
+                        >
+                          {toolEvent.status === "executed"
+                            ? `Verified via ${toolEvent.operation ?? toolEvent.tool_id}`
+                            : toolEvent.status === "preview"
+                              ? `Planned ${toolEvent.operation ?? toolEvent.tool_id}`
+                              : `Odoo ${toolEvent.status}`}
+                        </span>
+                      ))}
+                      {(entry.citations ?? [])
+                        .filter((cite: any) => cite?.source_type === "tool")
+                        .map((cite: any, idx) => (
+                          <span
+                            key={`tool-citation-${idx}`}
+                            className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.62rem] font-medium text-emerald-700"
+                          >
+                            {cite?.title || cite?.filename || "Odoo evidence"}
+                          </span>
+                        ))}
+                    </div>
+                  )}
                   <div className="whitespace-pre-wrap">{entry.text || (busy ? "..." : "")}</div>
                   {entry.citations && entry.citations.length > 0 && (
                     <div className="mt-2 text-[0.68rem] text-slate-500">{entry.citations.length} citation(s)</div>
@@ -600,7 +660,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
               ))}
             </div>
 
-            <div className="border-t border-black/5 bg-white/50 p-3">
+            <div className="border-t border-black/5 bg-white/50 px-3 py-2.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -625,7 +685,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                 <input
                   type="text"
                   placeholder="Ask anything..."
-                  className="ghost-input flex-1 py-2 text-[0.8rem]"
+                  className="ghost-input flex-1"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={(event) => {

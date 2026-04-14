@@ -235,7 +235,7 @@ def create_app() -> FastAPI:
 
     @app.post("/internal/query-plan")
     async def internal_query_plan(body: QueryTriggerPayload) -> dict:
-        workflow = QueryWorkflow(timeout=120, verbose=False)
+        workflow = QueryWorkflow(timeout=300, verbose=False)
         result = await workflow.run(
             message=body.message,
             current_message=body.current_message or body.message,

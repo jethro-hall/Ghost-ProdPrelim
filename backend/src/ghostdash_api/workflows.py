@@ -4,7 +4,7 @@ import hashlib
 import json
 import mimetypes
 import re
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +54,49 @@ DOCUMENT_DOMINANCE_MIN_HITS = 3
 DOCUMENT_DOMINANCE_MIN_SHARE = 0.6
 DOCUMENT_DOMINANCE_MIN_SCORE_SHARE = 0.65
 DOCUMENT_DOMINANCE_MIN_GAP = 2
+ODOO_COMPANY_ID_PATTERN = re.compile(r"\bcompany(?:[_\s-]?id)?\s*(?:=|:|#)?\s*(\d+)\b", re.IGNORECASE)
+ODOO_COMPANY_LIST_PATTERN = re.compile(r"\bcompan(?:y|ies)(?:[_\s-]?id)?s?\b([^\n\r]{0,80})", re.IGNORECASE)
+ODOO_OPERATION_PREVIEW_TERMS = (
+    "do not execute",
+    "don't execute",
+    "would use",
+    "what operation",
+    "what payload",
+    "exact operation",
+    "exact `odoo_primary` operation",
+    "exact odoo_primary operation",
+    "json-rpc equivalent",
+)
+ODOO_MONTH_NAME_ALIASES = {
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
+    "may": 5,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
+}
+ODOO_MONTH_TOKEN_PATTERN = re.compile(
+    r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b",
+    re.IGNORECASE,
+)
 
 # PostgreSQL rejects bound-parameter lists larger than ~65535; large IN (...) on row-derived
 # id lists must be chunked (see find_structured_candidates).
@@ -104,6 +147,13 @@ def iso_timestamp(value: datetime) -> str:
     if value.tzinfo is None:
         return value.replace(tzinfo=UTC).isoformat()
     return value.astimezone(UTC).isoformat()
+
+
+def _add_months(value: date, months: int) -> date:
+    zero_indexed = (value.year * 12) + (value.month - 1) + months
+    year = zero_indexed // 12
+    month = (zero_indexed % 12) + 1
+    return value.replace(year=year, month=month, day=1)
 
 
 def build_document_base_metadata(document: DocumentRecord, version: DocumentVersionRecord) -> dict[str, Any]:
@@ -1509,6 +1559,492 @@ def _document_selection_reason_label(reason: str) -> str:
     return "document dominance"
 
 
+def _extract_company_scope(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
+    match = ODOO_COMPANY_ID_PATTERN.search(message)
+    if match:
+        company_id = int(match.group(1))
+        return {
+            "company_id": company_id,
+            "scope_label": f"company_id={company_id}",
+            "ambiguous": False,
+        }
+    if fallback_message:
+        fallback_matches = ODOO_COMPANY_ID_PATTERN.findall(fallback_message)
+        if fallback_matches:
+            company_id = int(fallback_matches[-1])
+            return {
+                "company_id": company_id,
+                "scope_label": f"company_id={company_id}",
+                "ambiguous": False,
+            }
+
+    lowered = message.casefold()
+    scope_hint = any(
+        token in lowered
+        for token in (
+            "one company only",
+            "single company",
+            "specific company",
+            "this company only",
+            "company only",
+        )
+    )
+    return {
+        "company_id": None,
+        "company_ids": [],
+        "scope_label": None,
+        "ambiguous": scope_hint,
+    }
+
+
+def _extract_company_ids(message: str, *, fallback_message: str | None = None) -> list[int]:
+    def _parse(value: str) -> list[int]:
+        output: list[int] = []
+        for match in ODOO_COMPANY_ID_PATTERN.findall(value):
+            parsed = int(match)
+            if parsed not in output:
+                output.append(parsed)
+        list_match = ODOO_COMPANY_LIST_PATTERN.search(value)
+        if list_match:
+            for raw in re.findall(r"\b\d+\b", list_match.group(1)):
+                parsed = int(raw)
+                if parsed not in output:
+                    output.append(parsed)
+        return output
+
+    explicit = _parse(message)
+    if explicit:
+        return explicit
+    if fallback_message:
+        return _parse(fallback_message)
+    return []
+
+
+def _is_operation_preview_request(message: str) -> bool:
+    lowered = message.casefold()
+    return any(term in lowered for term in ODOO_OPERATION_PREVIEW_TERMS)
+
+
+def _tool_preview_payload(operation: str, payload: dict[str, Any]) -> str:
+    return json.dumps({"operation": operation, "payload": payload}, indent=2, sort_keys=True)
+
+
+def _build_odoo_preview_answer(
+    *,
+    operation: str,
+    payload: dict[str, Any],
+    why_correct: str,
+    why_meta_current_user_is_insufficient: str | None = None,
+) -> str:
+    lines = [
+        operation,
+        "",
+        "```json",
+        _tool_preview_payload(operation, payload),
+        "```",
+        "",
+        why_correct,
+    ]
+    if why_meta_current_user_is_insufficient:
+        lines.extend(
+            [
+                "",
+                why_meta_current_user_is_insufficient,
+            ]
+        )
+    return "\n".join(lines).strip()
+
+
+def _build_scope_clarification_answer(scope_hint: dict[str, Any], question: str) -> str:
+    scope_label = scope_hint.get("scope_label") or "a specific company_id"
+    return (
+        "I cannot safely execute Odoo for this question yet because the company scope is ambiguous.\n\n"
+        f"Please provide {scope_label} so I can apply explicit company filtering before answering:\n"
+        f"- requested question: {question.strip()}"
+    )
+
+
+def _extract_period_scope(message: str) -> dict[str, Any]:
+    lowered = message.casefold()
+    today = datetime.now(UTC).date()
+    current_month_start = today.replace(day=1)
+    year_matches = [int(value) for value in re.findall(r"\b(20\d{2}|19\d{2})\b", lowered)]
+    month_tokens = [ODOO_MONTH_NAME_ALIASES[token.group(1)] for token in ODOO_MONTH_TOKEN_PATTERN.finditer(lowered)]
+    if len(month_tokens) >= 2 and year_matches:
+        year_number = year_matches[-1]
+        start_month = month_tokens[0]
+        end_month = month_tokens[-1]
+        if start_month <= end_month:
+            period_start = date(year_number, start_month, 1)
+            period_end = _add_months(date(year_number, end_month, 1), 1)
+            label_start = date(year_number, start_month, 1).strftime("%b")
+            label_end = date(year_number, end_month, 1).strftime("%b")
+            return {
+                "relative_period": f"{year_number}-{start_month:02d}_to_{year_number}-{end_month:02d}",
+                "date_from": period_start.isoformat(),
+                "date_to": period_end.isoformat(),
+                "label": f"{label_start}-{label_end} {year_number}",
+                "month_count": (end_month - start_month) + 1,
+            }
+    month_name_match = re.search(
+        r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{4})\b",
+        lowered,
+    )
+    if month_name_match:
+        month_number = ODOO_MONTH_NAME_ALIASES[month_name_match.group(1)]
+        year_number = int(month_name_match.group(2))
+        period_start = date(year_number, month_number, 1)
+        return {
+            "relative_period": f"{month_name_match.group(1)}_{year_number}",
+            "date_from": period_start.isoformat(),
+            "date_to": _add_months(period_start, 1).isoformat(),
+            "label": f"{month_name_match.group(1).title()} {year_number}",
+            "month_count": 1,
+        }
+    if "last month" in lowered:
+        period_start = _add_months(current_month_start, -1)
+        return {
+            "relative_period": "last_month",
+            "date_from": period_start.isoformat(),
+            "date_to": current_month_start.isoformat(),
+            "label": "last month",
+            "month_count": 1,
+        }
+    if "this month" in lowered or "current month" in lowered:
+        return {
+            "relative_period": "this_month",
+            "date_from": current_month_start.isoformat(),
+            "date_to": _add_months(current_month_start, 1).isoformat(),
+            "label": "this month",
+            "month_count": 1,
+        }
+    return {"relative_period": None, "date_from": None, "date_to": None, "label": None, "month_count": None}
+
+
+def _extract_month_span(message: str) -> int | None:
+    lowered = message.casefold()
+    match = re.search(r"\b(?:last|past)\s+(\d+)\s+(?:completed\s+)?months?\b", lowered)
+    if match:
+        return max(1, min(24, int(match.group(1))))
+    if "last month" in lowered:
+        return 1
+    return None
+
+
+def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
+    lowered = message.casefold()
+    preview_only = _is_operation_preview_request(message)
+    scope = _extract_company_scope(message, fallback_message=fallback_message)
+    company_ids = _extract_company_ids(message, fallback_message=fallback_message)
+    if company_ids:
+        scope["company_ids"] = company_ids
+        if len(company_ids) == 1:
+            scope["company_id"] = company_ids[0]
+    period_scope = _extract_period_scope(message)
+    month_span = _extract_month_span(message)
+    company_list_intent = (
+        "company" in lowered
+        and (
+            re.search(r"\b(list|count|how many|ids?|names?)\b", lowered) is not None
+            or "legal entities" in lowered
+            or "legal entity" in lowered
+        )
+    )
+    default_plan = {
+        "tool_id": "odoo_primary",
+        "mode": "none",
+        "operation": None,
+        "payload": {},
+        "reason": "",
+        "blocked_reason": None,
+        "company_scope": scope,
+        "source_labels": [],
+        "suppress_retrieval": False,
+        "direct_answer": None,
+    }
+
+    finance_actual_terms = ("gross profit", " gp ", "revenue", "cogs", "cost of goods", "gross margin")
+    asks_for_actuals = any(term in f" {lowered} " for term in finance_actual_terms)
+    has_period = bool(period_scope.get("date_from") and period_scope.get("date_to"))
+    derived_month_count = int(period_scope.get("month_count") or 0) if period_scope.get("month_count") else None
+    asks_for_cogs_code_breakdown = any(
+        term in lowered
+        for term in (
+            "cogs code",
+            "cogs codes",
+            "cost code",
+            "cost codes",
+            "account code",
+            "account codes",
+        )
+    )
+    comparative_terms = ("compare", "across", "versus", "vs", "anomal", "outlier")
+    if asks_for_cogs_code_breakdown and has_period:
+        payload = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "months": derived_month_count or 1,
+            "top_n": 8,
+        }
+        if company_ids:
+            if len(company_ids) == 1:
+                payload["company_id"] = company_ids[0]
+            else:
+                payload["company_ids"] = company_ids
+        elif scope.get("company_id") is not None:
+            payload["company_id"] = scope["company_id"]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.cogs.monthly_code_breakdown",
+            "payload": payload,
+            "reason": (
+                "COGS code questions should use a governed monthly code breakdown over direct-cost move lines for the exact requested period "
+                f"({period_scope['label']})."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.cogs.monthly_code_breakdown",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because COGS-code analysis needs grouped direct-cost balances from "
+                        "`account.move.line`, broken out by month and account code for the requested period."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` only confirms the authenticated user context. It cannot return the "
+                        "COGS account-code balances needed to diagnose a GP anomaly."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
+    if asks_for_actuals and (month_span or derived_month_count) and len(company_ids) > 1:
+        payload: dict[str, Any] = {
+            "months": month_span or derived_month_count,
+            "include_current_month": False,
+            "company_ids": company_ids,
+        }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.margin.monthly_comparison",
+            "payload": payload,
+            "reason": (
+                "Multi-company monthly GP questions should use the named monthly comparison helper "
+                f"across companies {', '.join(str(company_id) for company_id in company_ids)}."
+            ),
+            "source_labels": ["odoo"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.margin.monthly_comparison",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because a multi-company GP comparison needs monthly revenue and COGS by company, "
+                        "plus company-name resolution, in one governed Odoo-backed result."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` can confirm who is authenticated, but it cannot deliver the monthly "
+                        "revenue, COGS, GP, and anomaly inputs needed for a CFO-grade comparison."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
+
+    if company_list_intent and not asks_for_actuals:
+        payload = {
+            "model": "res.company",
+            "domain": [],
+            "fields": ["id", "name"],
+            "limit": 100,
+            "offset": 0,
+            "order": "name asc",
+        }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.rpc.search_read",
+            "payload": payload,
+            "reason": "List company identifiers and canonical company names directly from `res.company`.",
+            "source_labels": ["odoo"],
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.rpc.search_read",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because `res.company` is the authoritative Odoo model for companies, "
+                        "and `search_read` returns exactly the company IDs and names needed with explicit fields."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` is insufficient because it is a user-context check, not an "
+                        "authoritative company-list endpoint. It can confirm the authenticated user and current "
+                        "company context, but it does not reliably enumerate the full set of accessible company "
+                        "records with canonical names."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
+    if asks_for_actuals and has_period:
+        payload: dict[str, Any] = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "relative_period": period_scope["relative_period"],
+        }
+        if scope.get("company_id") is not None:
+            payload["company_id"] = scope["company_id"]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        if any(term in lowered for term in ("gross profit", " gp ", "gross margin")):
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.finance.margin.period_summary",
+                "payload": payload,
+                "reason": f"Period GP questions should use the named period summary helper for {period_scope['label']}.",
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "direct_answer": (
+                    _build_odoo_preview_answer(
+                        operation="odoo.finance.margin.period_summary",
+                        payload=payload,
+                        why_correct=(
+                            "This is correct because period GP should be derived from Odoo-backed revenue and COGS for the "
+                            f"exact requested date window ({period_scope['label']}) and company scope."
+                        ),
+                        why_meta_current_user_is_insufficient=(
+                            "`odoo.meta.current_user` can confirm user/company context, but it cannot provide the revenue, "
+                            "COGS, or GP totals required for a month-end finance answer."
+                        ),
+                    )
+                    if preview_only
+                    else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+                ),
+            }
+        if "revenue" in lowered:
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.finance.revenue.period",
+                "payload": payload,
+                "reason": f"Period revenue questions should use the named period revenue helper for {period_scope['label']}.",
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
+            }
+        if any(term in lowered for term in ("cogs", "cost of goods")):
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.finance.cogs.period",
+                "payload": payload,
+                "reason": f"Period COGS questions should use the named period COGS helper for {period_scope['label']}.",
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
+            }
+
+    quarterly_margin_terms = ("quarter", "quarterly")
+    margin_terms = ("gross margin", "margin", "gross profit", "cogs", "revenue")
+    if any(term in lowered for term in quarterly_margin_terms) and any(term in lowered for term in margin_terms):
+        payload: dict[str, Any] = {"quarters": 4, "include_current_quarter": False}
+        if scope.get("company_id") is not None:
+            payload["company_id"] = scope["company_id"]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.margin.quarterly_summary",
+            "payload": payload,
+            "reason": "Quarterly board-style revenue, COGS, GP, and GP% summary is best served by the named margin helper.",
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.margin.quarterly_summary",
+                    payload=payload,
+                    why_correct=(
+                        "This is the best first operation because it returns the board-level quarterly revenue, "
+                        "COGS, gross profit, and gross margin outputs directly in grouped summary form."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` only validates the user and current company context. It does not "
+                        "produce quarterly finance summaries or diagnose margin compression on its own."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
+
+    if "receivable" in lowered or "accounts receivable" in lowered:
+        payload = {"limit": 20}
+        if scope.get("company_id") is not None:
+            payload["domain"] = [["company_id", "=", scope["company_id"]]]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        return {
+            **default_plan,
+            "mode": "required",
+            "operation": "odoo.finance.receivables.open",
+            "payload": payload,
+            "reason": "Use the named receivables helper for open AR exposure rather than broad invoice listing.",
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
+        }
+
+    if "invoice" in lowered:
+        payload = {"limit": 20}
+        if scope.get("company_id") is not None:
+            payload["domain"] = [["company_id", "=", scope["company_id"]]]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        return {
+            **default_plan,
+            "mode": "required",
+            "operation": "odoo.finance.invoices.search_read",
+            "payload": payload,
+            "reason": "Use the named invoice helper for customer invoice retrieval.",
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
+        }
+
+    if "sales order" in lowered or "sale order" in lowered or "order book" in lowered:
+        payload = {"limit": 20}
+        if scope.get("company_id") is not None:
+            payload["domain"] = [["company_id", "=", scope["company_id"]]]
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        return {
+            **default_plan,
+            "mode": "required",
+            "operation": "odoo.sales.orders.search_read",
+            "payload": payload,
+            "reason": "Use the named sales-order helper for operational order-book questions.",
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
+        }
+
+    if "current user" in lowered or "who am i" in lowered:
+        return {
+            **default_plan,
+            "mode": "required",
+            "operation": "odoo.meta.current_user",
+            "payload": {},
+            "reason": "Use the current-user helper for auth and current company context checks.",
+            "source_labels": ["odoo"],
+        }
+
+    return default_plan
+
+
 def select_semantic_target_document(message: str, semantic_hits: list[dict[str, Any]]) -> dict[str, Any] | None:
     documents = _summarize_semantic_documents(semantic_hits)
     if not documents:
@@ -1557,8 +2093,12 @@ def build_query_plan(
         kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
         embedding_model_id = kb_config.get("embedding_model_id")
         mode = classify_query_mode(user_message)
+        tool_plan = _plan_odoo_tool_usage(user_message, fallback_message=message)
+        suppress_retrieval = bool(tool_plan.get("suppress_retrieval"))
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
+        if tool_plan.get("direct_answer"):
+            direct_answer = str(tool_plan["direct_answer"])
         inventory_query = needs_document_inventory_context(user_message)
         inventory_listing_query = is_document_inventory_listing_question(user_message)
         inventory_documents = select_documents_for_corpora(session, corpora) if inventory_query else []
@@ -1572,8 +2112,17 @@ def build_query_plan(
                     "direct_answer": build_document_inventory_answer(inventory_documents, corpora),
                     "prompt": None,
                     "citations": citations,
+                    "tool_plan": tool_plan,
+                    "evidence_bundle": {
+                        "source_labels": ["kb"],
+                        "retrieval_citation_count": len(citations),
+                    },
                 }
-        structured_candidates = find_structured_candidates(user_message, corpora) if mode in {"structured", "blended"} else []
+        structured_candidates = (
+            find_structured_candidates(user_message, corpora)
+            if (mode in {"structured", "blended"} and not suppress_retrieval)
+            else []
+        )
         structured_context: list[str] = []
         if structured_candidates:
             target_field = None
@@ -1620,7 +2169,7 @@ def build_query_plan(
         semantic_context: list[str] = []
         document_scoped_context: list[str] = []
         target_document: dict[str, Any] | None = None
-        if mode in {"semantic", "blended"} or not direct_answer:
+        if (mode in {"semantic", "blended"} or not direct_answer) and not suppress_retrieval:
             query_vectors = embed_texts(
                 [user_message],
                 connection,
@@ -1673,7 +2222,17 @@ def build_query_plan(
                     citations.extend(document_scoped_citations)
 
         if direct_answer:
-            return {"query_mode": mode, "direct_answer": direct_answer, "prompt": None, "citations": citations}
+            return {
+                "query_mode": mode,
+                "direct_answer": direct_answer,
+                "prompt": None,
+                "citations": citations,
+                "tool_plan": tool_plan,
+                "evidence_bundle": {
+                    "source_labels": sorted({"kb", *list(tool_plan.get("source_labels") or [])}) if citations else list(tool_plan.get("source_labels") or []),
+                    "retrieval_citation_count": len(citations),
+                },
+            }
 
         all_context = []
         if inventory_context:
@@ -1690,11 +2249,14 @@ def build_query_plan(
                 + "\n".join(document_scoped_context)
             )
         if not all_context:
-            prompt = (
-                f"User question: {user_message}\n\n"
-                "No matching structured rows or semantic retrieval artifacts were found. "
-                "Say clearly that no grounded answer is available."
-            )
+            if suppress_retrieval and str(tool_plan.get("mode") or "") == "required":
+                prompt = f"User question: {user_message}"
+            else:
+                prompt = (
+                    f"User question: {user_message}\n\n"
+                    "No matching structured rows or semantic retrieval artifacts were found. "
+                    "Say clearly that no grounded answer is available."
+                )
         else:
             prompt = (
                 "Use only the grounded context below. If the question asks for an exact row value, prefer the "
@@ -1704,7 +2266,17 @@ def build_query_plan(
             )
         if mode == "structured" and structured_context and semantic_context:
             mode = "blended"
-        return {"query_mode": mode, "direct_answer": None, "prompt": prompt, "citations": citations}
+        return {
+            "query_mode": mode,
+            "direct_answer": None,
+            "prompt": prompt,
+            "citations": citations,
+            "tool_plan": tool_plan,
+            "evidence_bundle": {
+                "source_labels": sorted({"kb", *list(tool_plan.get("source_labels") or [])}) if citations else list(tool_plan.get("source_labels") or []),
+                "retrieval_citation_count": len(citations),
+            },
+        }
 
 
 class QueryWorkflow(Workflow):
