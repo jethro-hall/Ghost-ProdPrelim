@@ -14,6 +14,7 @@ from .settings import get_settings, should_backfill_default_embedding_model
 settings = get_settings()
 
 DEFAULT_RUNTIME_PROFILE_NAME = "GhostDASH Default Runtime"
+DEFAULT_CONVERSATION_MODE = "quick"
 DEFAULT_SYSTEM_PROMPT = (
     "You are GhostDASH Strategic Intelligence for RideAI / Ride Electric style business operations. "
     "Be direct, specific, fact-grounded, and commercially useful. "
@@ -137,6 +138,7 @@ def _default_guardrails_config() -> dict[str, Any]:
         "system_prompt": DEFAULT_SYSTEM_PROMPT,
         "grounding_mode": "retrieved_only",
         "insufficient_context_behavior": DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR,
+        "conversation_mode": DEFAULT_CONVERSATION_MODE,
     }
 
 
@@ -406,6 +408,7 @@ def runtime_defaults_view(session: Session, profile: RuntimeProfileRecord) -> di
     from .runtime import resolve_llm_connection
 
     llm_config = dict(profile.llm_config_json or {})
+    guardrails_config = dict(profile.guardrails_config_json or {})
     kb_config = dict(profile.kb_config_json or {})
     retrieval_config = dict(profile.retrieval_config_json or {})
     connection = None
@@ -421,6 +424,7 @@ def runtime_defaults_view(session: Session, profile: RuntimeProfileRecord) -> di
         "runtime_profile_id": profile.id,
         "runtime_profile_name": profile.name,
         "chat_api_mode": llm_config.get("api_mode", "responses"),
+        "conversation_mode": str(guardrails_config.get("conversation_mode", DEFAULT_CONVERSATION_MODE)),
         "llm_model_id": llm_config.get("model_id", settings.app_default_chat_model),
         "llm_connection_id": connection.id if connection is not None else llm_config.get("connection_id"),
         "llm_connection_label": connection.label if connection is not None else None,
@@ -510,6 +514,10 @@ def update_runtime_defaults(session: Session, payload: dict[str, Any]) -> Runtim
         "is_default": True,
         "enabled": profile.enabled,
     }
+    merged["guardrails_config"]["conversation_mode"] = payload.get(
+        "conversation_mode",
+        (profile.guardrails_config_json or {}).get("conversation_mode", DEFAULT_CONVERSATION_MODE),
+    )
     return save_runtime_profile(session, merged, existing_record=profile)
 
 

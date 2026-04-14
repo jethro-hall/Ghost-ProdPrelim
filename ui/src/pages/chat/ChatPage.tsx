@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchChatBootstrap, type ChatApiMode } from "../../api";
+import { fetchChatBootstrap, type ChatApiMode, type ConversationMode } from "../../api";
 import { useChatEngine } from "../../hooks/useChatEngine";
 import ChatSidebar from "./ChatSidebar";
 import ChatArea from "./ChatArea";
 
 export default function ChatPage() {
   const [apiMode, setApiMode] = useState<ChatApiMode>("chat_completions");
+  const [conversationMode, setConversationMode] = useState<ConversationMode>("quick");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -14,13 +15,14 @@ export default function ChatPage() {
       try {
         const bootstrap = await fetchChatBootstrap("ghostdash");
         setApiMode(bootstrap.runtime_defaults.chat_api_mode);
+        setConversationMode(bootstrap.runtime_defaults.conversation_mode);
       } catch (err) {
         console.error("Could not fetch chat bootstrap", err);
       }
     })();
   }, []);
 
-  const chatEngine = useChatEngine({ defaultApiMode: apiMode });
+  const chatEngine = useChatEngine({ defaultApiMode: apiMode, defaultConversationMode: conversationMode });
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-900">

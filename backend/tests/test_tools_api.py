@@ -85,6 +85,8 @@ def test_chat_bootstrap_includes_tool_catalog_and_policy_updates_clone_shared_pr
     assert bootstrap_response.status_code == 200
     bootstrap = bootstrap_response.json()
     assert any(tool["id"] == ODOO_TOOL_ID for tool in bootstrap["tools_catalog"])
+    assert bootstrap["runtime_defaults"]["conversation_mode"] == "quick"
+    assert bootstrap["features"]["allow_conversation_mode_override"] is True
 
     policy_before = client.get(f"/api/tools/policy/{peer_agent_id}")
     assert policy_before.status_code == 200

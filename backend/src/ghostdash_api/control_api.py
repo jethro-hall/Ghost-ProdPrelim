@@ -941,6 +941,7 @@ def create_app() -> FastAPI:
             features=ChatBootstrapFeatures(
                 allow_mock_provider=False,
                 allow_api_mode_override=False,
+                allow_conversation_mode_override=True,
                 allow_approved_web_toggle=True,
             ),
             agents=agents,

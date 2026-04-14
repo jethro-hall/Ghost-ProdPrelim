@@ -4,7 +4,7 @@ import hashlib
 import json
 import mimetypes
 import re
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +97,11 @@ ODOO_MONTH_TOKEN_PATTERN = re.compile(
     r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b",
     re.IGNORECASE,
 )
+ODOO_COMPANY_NAME_HINTS = {
+    "retail": ("retail",),
+    "burleigh": ("burleigh",),
+    "brisbane": ("brisbane",),
+}
 
 # PostgreSQL rejects bound-parameter lists larger than ~65535; large IN (...) on row-derived
 # id lists must be chunked (see find_structured_candidates).
@@ -1668,6 +1673,24 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
     lowered = message.casefold()
     today = datetime.now(UTC).date()
     current_month_start = today.replace(day=1)
+    if "year so far" in lowered or "ytd" in lowered or "year-to-date" in lowered:
+        period_start = date(today.year, 1, 1)
+        return {
+            "relative_period": f"ytd_{today.year}",
+            "date_from": period_start.isoformat(),
+            "date_to": (today + timedelta(days=1)).isoformat(),
+            "label": f"YTD {today.year}",
+            "month_count": today.month,
+        }
+    if "this year" in lowered and "last year" not in lowered:
+        period_start = date(today.year, 1, 1)
+        return {
+            "relative_period": f"this_year_{today.year}",
+            "date_from": period_start.isoformat(),
+            "date_to": (today + timedelta(days=1)).isoformat(),
+            "label": f"{today.year} year-to-date",
+            "month_count": today.month,
+        }
     year_matches = [int(value) for value in re.findall(r"\b(20\d{2}|19\d{2})\b", lowered)]
     month_tokens = [ODOO_MONTH_NAME_ALIASES[token.group(1)] for token in ODOO_MONTH_TOKEN_PATTERN.finditer(lowered)]
     if len(month_tokens) >= 2 and year_matches:
@@ -1731,11 +1754,39 @@ def _extract_month_span(message: str) -> int | None:
     return None
 
 
+def _extract_company_name_terms(message: str, *, fallback_message: str | None = None) -> list[str]:
+    haystacks = [message]
+    if fallback_message:
+        haystacks.append(fallback_message)
+    matches: list[str] = []
+    for canonical_name, aliases in ODOO_COMPANY_NAME_HINTS.items():
+        if any(alias in haystack.casefold() for haystack in haystacks for alias in aliases):
+            matches.append(canonical_name)
+    return matches
+
+
+def _looks_like_finance_performance_question(lowered: str) -> bool:
+    return any(
+        term in lowered
+        for term in (
+            "performer",
+            "performance",
+            "performing",
+            "breakdown",
+            "break down",
+            "year so far",
+            "ytd",
+            "year-to-date",
+        )
+    )
+
+
 def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
     lowered = message.casefold()
     preview_only = _is_operation_preview_request(message)
     scope = _extract_company_scope(message, fallback_message=fallback_message)
     company_ids = _extract_company_ids(message, fallback_message=fallback_message)
+    company_name_terms = _extract_company_name_terms(message, fallback_message=fallback_message)
     if company_ids:
         scope["company_ids"] = company_ids
         if len(company_ids) == 1:
@@ -1764,7 +1815,9 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
     }
 
     finance_actual_terms = ("gross profit", " gp ", "revenue", "cogs", "cost of goods", "gross margin")
-    asks_for_actuals = any(term in f" {lowered} " for term in finance_actual_terms)
+    asks_for_actuals = any(term in f" {lowered} " for term in finance_actual_terms) or _looks_like_finance_performance_question(
+        lowered
+    )
     has_period = bool(period_scope.get("date_from") and period_scope.get("date_to"))
     derived_month_count = int(period_scope.get("month_count") or 0) if period_scope.get("month_count") else None
     asks_for_cogs_code_breakdown = any(
@@ -1851,6 +1904,41 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                     why_meta_current_user_is_insufficient=(
                         "`odoo.meta.current_user` can confirm who is authenticated, but it cannot deliver the monthly "
                         "revenue, COGS, GP, and anomaly inputs needed for a CFO-grade comparison."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
+    if asks_for_actuals and has_period and len(company_name_terms) > 1:
+        payload = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "months": month_span or derived_month_count or period_scope.get("month_count") or 4,
+            "company_name_terms": company_name_terms,
+        }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.margin.monthly_comparison",
+            "payload": payload,
+            "reason": (
+                "Named multi-business YTD and performance questions should resolve company names first, then run the "
+                "governed monthly margin comparison helper across the matched companies."
+            ),
+            "source_labels": ["odoo"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.margin.monthly_comparison",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because the question asks for a grounded cross-business performance comparison, "
+                        "which requires resolving the named companies and then comparing monthly revenue, COGS, GP, and GP%."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot resolve the named companies or produce the finance comparison "
+                        "needed to identify the performer."
                     ),
                 )
                 if preview_only

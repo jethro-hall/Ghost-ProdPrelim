@@ -48,6 +48,7 @@ def test_save_agent_creates_and_links_runtime_profile() -> None:
                         "system_prompt": "Use retrieved finance context only.",
                         "grounding_mode": "retrieved_only",
                         "insufficient_context_behavior": "Say when finance context is missing.",
+                        "conversation_mode": "quick",
                     },
                     "kb_config": {
                         "default_corpora": ["finance"],
@@ -97,6 +98,7 @@ def test_runtime_defaults_update_default_runtime_profile_view() -> None:
             session,
             {
                 "chat_api_mode": "chat_completions",
+                "conversation_mode": "working_session",
                 "embedding_model_id": "openai/text-embedding-3-large",
                 "default_corpora": ["finance", "ops"],
                 "pdf_top_k": 9,
@@ -111,10 +113,13 @@ def test_runtime_defaults_update_default_runtime_profile_view() -> None:
         default_profile = session.query(RuntimeProfileRecord).filter(RuntimeProfileRecord.is_default.is_(True)).one()
 
     assert updated["chat_api_mode"] == "chat_completions"
+    assert updated["conversation_mode"] == "working_session"
     assert updated["embedding_model_id"] == "openai/text-embedding-3-large"
     assert updated["default_corpora"] == ["finance", "ops"]
     assert runtime_defaults["pdf_top_k"] == 9
+    assert runtime_defaults["conversation_mode"] == "working_session"
     assert default_profile.kb_config_json["default_corpora"] == ["finance", "ops"]
+    assert default_profile.guardrails_config_json["conversation_mode"] == "working_session"
     assert default_profile.retrieval_config_json["pdf_parse_lane_policy"] == "cloud_default"
 
 
@@ -221,6 +226,7 @@ def test_save_runtime_profile_rejects_duplicate_name_on_create() -> None:
                         "system_prompt": "Stay grounded.",
                         "grounding_mode": "retrieved_only",
                         "insufficient_context_behavior": "Say when context is missing.",
+                        "conversation_mode": "quick",
                     },
                     "kb_config": {
                         "default_corpora": ["default"],
@@ -284,6 +290,7 @@ def test_save_agent_can_create_unique_agent_when_default_agent_exists() -> None:
                         "system_prompt": "Stay grounded.",
                         "grounding_mode": "retrieved_only",
                         "insufficient_context_behavior": "Say when context is missing.",
+                        "conversation_mode": "quick",
                     },
                     "kb_config": {
                         "default_corpora": ["default"],

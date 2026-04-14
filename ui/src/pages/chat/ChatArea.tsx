@@ -19,6 +19,8 @@ export default function ChatArea({ chatEngine }: Props) {
     useApprovedWeb,
     setUseApprovedWeb,
     approvedWebConfigured,
+    sessionConversationMode,
+    setSessionConversationMode,
     sendMessage,
     handleStageUpload,
     llmTokenTotal,
@@ -72,6 +74,8 @@ export default function ChatArea({ chatEngine }: Props) {
           useApprovedWeb={useApprovedWeb}
           onToggleWeb={() => setUseApprovedWeb(!useApprovedWeb)}
           approvedWebConfigured={approvedWebConfigured}
+          conversationMode={sessionConversationMode}
+          onConversationModeChange={setSessionConversationMode}
         />
       </div>
     </div>

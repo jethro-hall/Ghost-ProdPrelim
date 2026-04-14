@@ -36,6 +36,7 @@ def default_runtime_defaults() -> dict[str, object]:
     payload = default_runtime_profile_payload()
     return {
         "chat_api_mode": payload["llm_config_json"]["api_mode"],
+        "conversation_mode": payload["guardrails_config_json"]["conversation_mode"],
         "llm_model_id": payload["llm_config_json"]["model_id"],
         "embedding_model_id": payload["kb_config_json"]["embedding_model_id"],
         "default_corpora": list(payload["kb_config_json"]["default_corpora"]),

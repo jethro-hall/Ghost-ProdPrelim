@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { PlusIcon, SendIcon } from "../../components/ReferenceIcons";
+import type { ConversationMode } from "../../api";
 
 type Props = {
   message: string;
@@ -13,6 +14,8 @@ type Props = {
   useApprovedWeb: boolean;
   onToggleWeb: () => void;
   approvedWebConfigured: boolean;
+  conversationMode: ConversationMode;
+  onConversationModeChange: (mode: ConversationMode) => void;
 };
 
 export default function ChatComposer({
@@ -27,6 +30,8 @@ export default function ChatComposer({
   useApprovedWeb,
   onToggleWeb,
   approvedWebConfigured,
+  conversationMode,
+  onConversationModeChange,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -46,6 +51,15 @@ export default function ChatComposer({
 
   const uploadDisabled = !activeConversationId || !activeAgentId || uploadBusy;
   const sendDisabled = !message.trim() || busy || !activeAgentId;
+  const conversationModes: Array<{
+    id: ConversationMode;
+    label: string;
+    hint: string;
+  }> = [
+    { id: "quick", label: "Quick", hint: "Fast first pass" },
+    { id: "board", label: "Board", hint: "Full executive answer" },
+    { id: "working_session", label: "Working Session", hint: "Coach through the data" },
+  ];
 
   return (
     <div className="relative mx-auto w-full max-w-[1200px] px-4 pb-5 pt-2">
@@ -61,6 +75,34 @@ export default function ChatComposer({
           disabled={busy}
         />
         
+        <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-1 pt-2">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-400">Mode</span>
+          <div className="flex flex-wrap items-center gap-1 rounded-full bg-slate-100 p-1">
+            {conversationModes.map((modeOption) => {
+              const active = conversationMode === modeOption.id;
+              return (
+                <button
+                  key={modeOption.id}
+                  type="button"
+                  onClick={() => onConversationModeChange(modeOption.id)}
+                  disabled={busy}
+                  className={`rounded-full px-3 py-1.5 text-[0.72rem] font-semibold transition-colors ${
+                    active
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900"
+                  } ${busy ? "cursor-not-allowed opacity-70" : ""}`}
+                  title={modeOption.hint}
+                >
+                  {modeOption.label}
+                </button>
+              );
+            })}
+          </div>
+          <span className="text-[0.72rem] text-slate-500">
+            {conversationModes.find((modeOption) => modeOption.id === conversationMode)?.hint}
+          </span>
+        </div>
+
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             <button

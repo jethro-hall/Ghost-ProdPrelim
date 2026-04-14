@@ -5,6 +5,7 @@ import {
   type ChatToolEvent,
   type ChatUpload,
   type Collection,
+  type ConversationMode,
   type ConversationSummary,
   type RequestedLane,
   decideChatUpload,
@@ -43,10 +44,15 @@ function hydrateToolEvents(citations: unknown[] | undefined): ChatToolEvent[] {
 type UseChatEngineOptions = {
   /** Fallback before agents load; session controls reset from the active agent when it changes. */
   defaultApiMode?: ChatApiMode;
+  defaultConversationMode?: ConversationMode;
   onSyncRequest?: (corpusSlug?: string) => Promise<void>;
 };
 
-export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: UseChatEngineOptions) {
+export function useChatEngine({
+  defaultApiMode = "responses",
+  defaultConversationMode = "quick",
+  onSyncRequest,
+}: UseChatEngineOptions) {
   const [log, setLog] = useState<ChatEntry[]>([]);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -67,6 +73,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
   const sendLockRef = useRef(false);
   const activeAgent = agents.find((entry) => entry.id === activeAgentId) ?? null;
   const [sessionApiMode, setSessionApiMode] = useState<ChatApiMode>(defaultApiMode);
+  const [sessionConversationMode, setSessionConversationMode] = useState<ConversationMode>(defaultConversationMode);
   const [sessionLlmModelId, setSessionLlmModelId] = useState("");
   const [llmTokenTotal, setLlmTokenTotal] = useState(0);
 
@@ -74,8 +81,9 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
     const agent = agents.find((entry) => entry.id === activeAgentId);
     if (!agent) return;
     setSessionApiMode(agent.runtime_profile.llm_config.api_mode);
+    setSessionConversationMode(agent.runtime_profile.guardrails_config.conversation_mode ?? defaultConversationMode);
     setSessionLlmModelId(agent.runtime_profile.llm_config.model_id);
-  }, [activeAgentId, agents]);
+  }, [activeAgentId, agents, defaultConversationMode]);
 
   useEffect(() => {
     setLlmTokenTotal(0);
@@ -230,6 +238,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
       await streamChat({
         message: userText,
         apiMode: sessionApiMode,
+        conversationMode: sessionConversationMode,
         llmModelId: sessionLlmModelId.trim() || null,
         agentId: activeAgentId,
         conversationId: activeConversationId ?? undefined,
@@ -296,6 +305,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
     busy,
     activeAgentId,
     sessionApiMode,
+    sessionConversationMode,
     sessionLlmModelId,
     activeConversationId,
     useApprovedWeb,
@@ -437,6 +447,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
     approvedWebConfigured,
     webTool,
     sessionApiMode,
+    sessionConversationMode,
     sessionLlmModelId,
     llmTokenTotal,
 
@@ -450,6 +461,7 @@ export function useChatEngine({ defaultApiMode = "responses", onSyncRequest }: U
     setSelectedCollectionByUpload,
     setUseApprovedWeb,
     setSessionApiMode,
+    setSessionConversationMode,
     setSessionLlmModelId,
     handleStageUpload,
     handleConversationOnly,

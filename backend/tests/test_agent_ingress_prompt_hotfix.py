@@ -593,3 +593,166 @@ def test_agent_chat_falls_back_when_monthly_margin_helper_is_unavailable(monkeyp
     assert captured_prompts
     assert "Named helper fallback used" in captured_prompts[0]
     assert "Executed Odoo monthly margin comparison:" in captured_prompts[0]
+
+
+def test_build_staged_answer_directives_respects_conversation_mode() -> None:
+    tool_plan = {"operation": "odoo.finance.margin.monthly_comparison"}
+
+    quick = agent_ingress.build_staged_answer_directives(tool_plan=tool_plan, conversation_mode="quick")
+    working_session = agent_ingress.build_staged_answer_directives(
+        tool_plan=tool_plan,
+        conversation_mode="working_session",
+    )
+
+    assert "Say CONTINUE" in quick
+    assert "Say CONTINUE" not in working_session
+    assert "working session mode" in working_session
+
+
+def test_prepare_tool_evidence_resolves_named_company_terms_before_finance_comparison(monkeypatch) -> None:
+    _client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    def fake_execute_tool_operation_for_agent(*_args, **kwargs):
+        operation = kwargs["operation"]
+        if operation == "odoo.rpc.search_read":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=5,
+                    data={
+                        "records": [
+                            {"id": 3, "name": "Ride Electric Retail"},
+                            {"id": 4, "name": "Ride Electric Burleigh"},
+                            {"id": 5, "name": "Ride Electric Brisbane"},
+                        ]
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        if operation == "odoo.finance.margin.monthly_comparison":
+            assert kwargs["payload"]["company_ids"] == [3, 4, 5]
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=12,
+                    data={
+                        "date_from": "2026-01-01",
+                        "date_to": "2026-04-15",
+                        "companies": [],
+                        "rows": [],
+                        "anomalies": [],
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        raise AssertionError(f"Unexpected operation {operation}")
+
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+
+    with SessionLocal() as session:
+        evidence = agent_ingress.prepare_tool_evidence(
+            session,
+            agent_id=agent_id,
+            tool_overrides=None,
+            tool_plan={
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.margin.monthly_comparison",
+                "payload": {
+                    "date_from": "2026-01-01",
+                    "date_to": "2026-04-15",
+                    "months": 4,
+                    "company_name_terms": ["retail", "burleigh", "brisbane"],
+                },
+            },
+        )
+
+    assert evidence.plan["payload"]["company_ids"] == [3, 4, 5]
+    assert evidence.tool_events[0].operation == "odoo.rpc.search_read"
+    assert evidence.tool_events[1].operation == "odoo.finance.margin.monthly_comparison"
+    assert "Resolved named company scope" in evidence.prompt_prefix
+
+
+def test_agent_chat_working_session_avoids_continue_directive(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+    captured_prompts: list[str] = []
+
+    async def fake_fetch_query_plan(*args, **kwargs) -> dict:
+        return {
+            "query_mode": "semantic",
+            "direct_answer": None,
+            "prompt": "User question: Across Retail, Burleigh, Brisbane break down the year so far and who is the performer?",
+            "citations": [],
+            "tool_plan": {
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.margin.monthly_comparison",
+                "payload": {"company_ids": [3, 4, 5], "months": 4},
+                "reason": "Need the finance comparison.",
+            },
+        }
+
+    def fake_execute_tool_operation_for_agent(*_args, **_kwargs):
+        return (
+            ToolExecuteResponse(
+                success=True,
+                message="ok",
+                operation="odoo.finance.margin.monthly_comparison",
+                latency_ms=8,
+                data={"date_from": "2026-01-01", "date_to": "2026-04-15", "companies": [], "rows": [], "anomalies": []},
+            ),
+            ToolReadinessSummary(
+                id="odoo_primary",
+                status="ready",
+                blocked_reasons=[],
+                active=True,
+                enabled_for_agent=True,
+                session_enabled=True,
+                health="healthy",
+            ),
+        )
+
+    def fake_generate_answer(prompt, *_args, **_kwargs):
+        captured_prompts.append(prompt)
+        return "working-session ok"
+
+    monkeypatch.setattr(agent_ingress, "fetch_query_plan", fake_fetch_query_plan)
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+    monkeypatch.setattr(agent_ingress, "generate_answer", fake_generate_answer)
+
+    response = client.post(
+        "/agent/chat",
+        json={
+            "message": "Across Retail, Burleigh, Brisbane break down the year so far and who is the performer?",
+            "agent_id": agent_id,
+            "conversation_mode": "working_session",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["conversation_mode"] == "working_session"
+    assert captured_prompts
+    assert "working session mode" in captured_prompts[0]
+    assert "Say CONTINUE" not in captured_prompts[0]

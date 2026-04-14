@@ -42,6 +42,18 @@ def test_plan_odoo_tool_usage_routes_multi_company_gp_question_to_monthly_compar
     assert plan["payload"]["months"] == 4
 
 
+def test_plan_odoo_tool_usage_routes_named_business_ytd_question_to_monthly_comparison() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Across the 3x main business Retail, Burleigh, Brisbane break down the year so far and who is the performer?"
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.monthly_comparison"
+    assert plan["payload"]["company_name_terms"] == ["retail", "burleigh", "brisbane"]
+    assert plan["payload"]["date_from"].endswith("-01-01")
+    assert int(plan["payload"]["months"]) >= 1
+    assert plan["suppress_retrieval"] is True
+
+
 def test_plan_odoo_tool_usage_routes_cogs_code_questions_to_read_group() -> None:
     plan = _plan_odoo_tool_usage(
         "Review the Retail COGS codes for July, Aug, Sept 2025 and tell me what caused gross profit to be way out for company_id 3."
