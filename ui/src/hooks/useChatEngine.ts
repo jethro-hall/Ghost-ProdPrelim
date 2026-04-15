@@ -127,6 +127,7 @@ export function useChatEngine({
         }
         
         setActiveConversationId(recentConversation.id);
+        setSessionConversationMode(recentConversation.conversation_mode ?? defaultConversationMode);
         const messages = await fetchConversationMessages(recentConversation.id);
         
         if (!mounted) return;
@@ -188,7 +189,16 @@ export function useChatEngine({
       return;
     }
     try {
+      const conversationSummary = conversations.find((entry) => entry.id === conversationId) ?? null;
+      if (conversationSummary?.conversation_mode) {
+        setSessionConversationMode(conversationSummary.conversation_mode);
+      }
       const messages = await fetchConversationMessages(conversationId);
+      const latestConversationMode =
+        [...messages].reverse().find((entry) => entry.conversation_mode)?.conversation_mode ?? conversationSummary?.conversation_mode;
+      if (latestConversationMode) {
+        setSessionConversationMode(latestConversationMode);
+      }
       setLog(
         messages.map((entry) => ({
           id: entry.id,
@@ -203,7 +213,7 @@ export function useChatEngine({
     } catch (err) {
       console.error("Failed to load conversation", err);
     }
-  }, [refreshUploadsInternal]);
+  }, [conversations, defaultConversationMode, refreshUploadsInternal]);
 
   const refreshConversations = useCallback(async (agentId: string, preferredConversationId?: string | null) => {
     try {

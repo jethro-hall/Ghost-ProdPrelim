@@ -535,6 +535,7 @@ def _conversation_to_view(conversation: AgentConversationRecord, message_count: 
         title=conversation.title,
         corpora=conversation.corpora_json or [],
         api_mode=conversation.api_mode,
+        conversation_mode=conversation.conversation_mode,
         message_count=message_count,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
@@ -551,6 +552,7 @@ def _message_to_view(message: AgentMessageRecord) -> ConversationMessageView:
         query_mode=message.query_mode,
         citations=message.citations_json or [],
         api_mode=message.api_mode,
+        conversation_mode=message.conversation_mode,
         created_at=message.created_at,
     )
 
@@ -1391,6 +1393,7 @@ def create_app() -> FastAPI:
                 result_json={
                     "request": {
                         "api_mode": body.api_mode,
+                        "conversation_mode": body.conversation_mode,
                         "use_approved_web": body.use_approved_web,
                     }
                 },
@@ -1416,6 +1419,7 @@ def create_app() -> FastAPI:
                 result_json={
                     "request": {
                         "api_mode": body.api_mode,
+                        "conversation_mode": body.conversation_mode,
                         "use_approved_web": body.use_approved_web,
                     }
                 },

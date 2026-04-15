@@ -172,6 +172,7 @@ def create_conversation(
     message: str,
     corpora: list[str],
     api_mode: str,
+    conversation_mode: str = "quick",
 ) -> AgentConversationRecord:
     title = (message.strip()[:80] or "New conversation").strip()
     conversation = AgentConversationRecord(
@@ -179,6 +180,7 @@ def create_conversation(
         title=title,
         corpora_json=list(corpora),
         api_mode=api_mode,
+        conversation_mode=conversation_mode,
     )
     session.add(conversation)
     session.flush()
@@ -195,6 +197,7 @@ def append_message(
     query_mode: str | None = None,
     citations: list[dict] | None = None,
     api_mode: str | None = None,
+    conversation_mode: str | None = None,
 ) -> AgentMessageRecord:
     message = AgentMessageRecord(
         conversation_id=conversation_id,
@@ -204,6 +207,7 @@ def append_message(
         query_mode=query_mode,
         citations_json=list(citations or []),
         api_mode=api_mode,
+        conversation_mode=conversation_mode,
     )
     session.add(message)
     return message

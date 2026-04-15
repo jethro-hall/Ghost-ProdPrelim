@@ -290,6 +290,48 @@ def _ensure_agent_conversation_openai_response_column(engine: Engine) -> None:
                 raise
 
 
+def _ensure_agent_conversation_mode_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_conversations" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_conversations")}
+    if "conversation_mode" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_conversations ADD COLUMN IF NOT EXISTS conversation_mode VARCHAR(32) DEFAULT 'quick'"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_conversations ADD COLUMN conversation_mode VARCHAR(32) DEFAULT 'quick'"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_message_conversation_mode_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_messages" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_messages")}
+    if "conversation_mode" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_messages ADD COLUMN IF NOT EXISTS conversation_mode VARCHAR(32)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_messages ADD COLUMN conversation_mode VARCHAR(32)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
 def _ensure_tool_registry_table(engine: Engine) -> None:
     inspector = inspect(engine)
     if "tool_registry" in inspector.get_table_names():
@@ -321,6 +363,8 @@ def run_startup_migrations(engine: Engine) -> None:
     _ensure_tool_registry_table(engine)
     _ensure_agent_runtime_profile_column(engine)
     _ensure_agent_conversation_openai_response_column(engine)
+    _ensure_agent_conversation_mode_column(engine)
+    _ensure_agent_message_conversation_mode_column(engine)
     _ensure_connection_metadata_columns(engine)
     _create_index_if_missing(engine, "agent_profiles", "ix_agent_profiles_runtime_profile_id", "runtime_profile_id")
     _backfill_connection_metadata(engine)

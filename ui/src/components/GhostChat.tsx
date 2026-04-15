@@ -1,6 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { AgentProfile, ChatApiMode, ChatToolEvent, ChatUpload, Collection, ConversationSummary, RequestedLane } from "../api";
+import type {
+  AgentProfile,
+  ChatApiMode,
+  ChatToolEvent,
+  ChatUpload,
+  Collection,
+  ConversationMode,
+  ConversationSummary,
+  RequestedLane,
+} from "../api";
 import {
   decideChatUpload,
   fetchAgentConversations,
@@ -64,13 +73,20 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const activeAgent = agents.find((entry) => entry.id === activeAgentId) ?? null;
   const [sessionApiMode, setSessionApiMode] = useState<ChatApiMode>(apiMode);
+  const [sessionConversationMode, setSessionConversationMode] = useState<ConversationMode>("quick");
   const [sessionLlmModelId, setSessionLlmModelId] = useState("");
   const [llmTokenTotal, setLlmTokenTotal] = useState(0);
+  const conversationModes: Array<{ id: ConversationMode; label: string; hint: string }> = [
+    { id: "quick", label: "Quick", hint: "Fast first pass" },
+    { id: "board", label: "Board", hint: "Full executive answer" },
+    { id: "working_session", label: "Working Session", hint: "Coach through the data" },
+  ];
 
   useEffect(() => {
     const agent = agents.find((entry) => entry.id === activeAgentId);
     if (!agent) return;
     setSessionApiMode(agent.runtime_profile.llm_config.api_mode);
+    setSessionConversationMode(agent.runtime_profile.guardrails_config.conversation_mode ?? "quick");
     setSessionLlmModelId(agent.runtime_profile.llm_config.model_id);
   }, [activeAgentId, agents]);
 
@@ -110,6 +126,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
       const bootstrap = await fetchChatBootstrap("ghostdash");
       const nextAgents = bootstrap.agents;
       const nextCollections = await fetchCollections();
+      setSessionConversationMode(bootstrap.runtime_defaults.conversation_mode ?? "quick");
       setAgents(nextAgents);
       setCollections(nextCollections);
       const targetAgent =
@@ -129,7 +146,13 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         return;
       }
       setActiveConversationId(recentConversation.id);
+      setSessionConversationMode(recentConversation.conversation_mode ?? bootstrap.runtime_defaults.conversation_mode ?? "quick");
       const messages = await fetchConversationMessages(recentConversation.id);
+      const latestConversationMode =
+        [...messages].reverse().find((entry) => entry.conversation_mode)?.conversation_mode ?? recentConversation.conversation_mode;
+      if (latestConversationMode) {
+        setSessionConversationMode(latestConversationMode);
+      }
       setLog(
         messages.map((entry) => ({
           id: entry.id,
@@ -152,7 +175,16 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
       setUploads([]);
       return;
     }
+    const conversationSummary = conversations.find((entry) => entry.id === conversationId) ?? null;
+    if (conversationSummary?.conversation_mode) {
+      setSessionConversationMode(conversationSummary.conversation_mode);
+    }
     const messages = await fetchConversationMessages(conversationId);
+    const latestConversationMode =
+      [...messages].reverse().find((entry) => entry.conversation_mode)?.conversation_mode ?? conversationSummary?.conversation_mode;
+    if (latestConversationMode) {
+      setSessionConversationMode(latestConversationMode);
+    }
     setLog(
       messages.map((entry) => ({
         id: entry.id,
@@ -192,6 +224,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
       await streamChat({
         message: userText,
         apiMode: sessionApiMode,
+        conversationMode: sessionConversationMode,
         llmModelId: sessionLlmModelId.trim() || null,
         agentId: activeAgentId,
         conversationId: activeConversationId ?? undefined,
@@ -698,6 +731,29 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                 <button type="button" className="ghost-btn-primary px-3" disabled={busy} onClick={() => void send()}>
                   <SendIcon size={16} />
                 </button>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-[0.68rem] text-slate-500">
+                <span className="font-semibold uppercase tracking-[0.16em] text-slate-400">Mode</span>
+                <div className="flex flex-wrap items-center gap-1 rounded-full bg-slate-100 p-1">
+                  {conversationModes.map((modeOption) => {
+                    const active = sessionConversationMode === modeOption.id;
+                    return (
+                      <button
+                        key={modeOption.id}
+                        type="button"
+                        onClick={() => setSessionConversationMode(modeOption.id)}
+                        disabled={busy}
+                        className={`rounded-full px-3 py-1 text-[0.7rem] font-semibold transition-colors ${
+                          active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                        } ${busy ? "cursor-not-allowed opacity-70" : ""}`}
+                        title={modeOption.hint}
+                      >
+                        {modeOption.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span>{conversationModes.find((modeOption) => modeOption.id === sessionConversationMode)?.hint}</span>
               </div>
             </div>
           </motion.div>
