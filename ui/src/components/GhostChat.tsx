@@ -8,13 +8,18 @@ import type {
   Collection,
   ConversationMode,
   ConversationSummary,
+  DocumentFrame,
   RequestedLane,
+  WorkflowMode,
 } from "../api";
 import {
+  approveConversationFragment,
+  createConversation,
   decideChatUpload,
   fetchAgentConversations,
   fetchChatBootstrap,
   fetchCollections,
+  fetchConversationDocumentFrame,
   fetchConversationMessages,
   fetchConversationUploads,
   stageConversationUpload,
@@ -69,11 +74,14 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
   const [showTools, setShowTools] = useState(false);
   const [useApprovedWeb, setUseApprovedWeb] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [documentFrame, setDocumentFrame] = useState<DocumentFrame | null>(null);
+  const [messageApprovalState, setMessageApprovalState] = useState<Record<string, "approved" | "rejected">>({});
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const activeAgent = agents.find((entry) => entry.id === activeAgentId) ?? null;
   const [sessionApiMode, setSessionApiMode] = useState<ChatApiMode>(apiMode);
   const [sessionConversationMode, setSessionConversationMode] = useState<ConversationMode>("quick");
+  const [sessionWorkflowMode, setSessionWorkflowMode] = useState<WorkflowMode>("standard");
   const [sessionLlmModelId, setSessionLlmModelId] = useState("");
   const [llmTokenTotal, setLlmTokenTotal] = useState(0);
   const conversationModes: Array<{ id: ConversationMode; label: string; hint: string }> = [
@@ -127,6 +135,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
       const nextAgents = bootstrap.agents;
       const nextCollections = await fetchCollections();
       setSessionConversationMode(bootstrap.runtime_defaults.conversation_mode ?? "quick");
+      setSessionWorkflowMode(bootstrap.default_workflow_mode ?? "standard");
       setAgents(nextAgents);
       setCollections(nextCollections);
       const targetAgent =
@@ -143,10 +152,13 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
       if (!recentConversation) {
         setActiveConversationId(null);
         setLog([]);
+        setDocumentFrame(null);
+        setMessageApprovalState({});
         return;
       }
       setActiveConversationId(recentConversation.id);
       setSessionConversationMode(recentConversation.conversation_mode ?? bootstrap.runtime_defaults.conversation_mode ?? "quick");
+      setSessionWorkflowMode(recentConversation.workflow_mode ?? bootstrap.default_workflow_mode ?? "standard");
       const messages = await fetchConversationMessages(recentConversation.id);
       const latestConversationMode =
         [...messages].reverse().find((entry) => entry.conversation_mode)?.conversation_mode ?? recentConversation.conversation_mode;
@@ -163,6 +175,16 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
           toolEvents: hydrateToolEvents(entry.citations),
         })),
       );
+      if (recentConversation.document_frame_id) {
+        try {
+          setDocumentFrame(await fetchConversationDocumentFrame(recentConversation.id));
+        } catch {
+          setDocumentFrame(null);
+        }
+      } else {
+        setDocumentFrame(null);
+      }
+      setMessageApprovalState({});
       await refreshUploads(recentConversation.id, nextCollections);
     })().catch(() => null);
   }, [open]);
@@ -173,11 +195,16 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
     if (!conversationId) {
       setLog([]);
       setUploads([]);
+      setDocumentFrame(null);
+      setMessageApprovalState({});
       return;
     }
     const conversationSummary = conversations.find((entry) => entry.id === conversationId) ?? null;
     if (conversationSummary?.conversation_mode) {
       setSessionConversationMode(conversationSummary.conversation_mode);
+    }
+    if (conversationSummary?.workflow_mode) {
+      setSessionWorkflowMode(conversationSummary.workflow_mode);
     }
     const messages = await fetchConversationMessages(conversationId);
     const latestConversationMode =
@@ -195,7 +222,51 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         toolEvents: hydrateToolEvents(entry.citations),
       })),
     );
+    if (conversationSummary?.document_frame_id) {
+      try {
+        setDocumentFrame(await fetchConversationDocumentFrame(conversationId));
+      } catch {
+        setDocumentFrame(null);
+      }
+    } else {
+      setDocumentFrame(null);
+    }
+    setMessageApprovalState({});
     await refreshUploads(conversationId);
+  }
+
+  function resolveWorkflowAgent(nextAgents: AgentProfile[], workflowMode: WorkflowMode): AgentProfile | null {
+    const byName = (name: string) => nextAgents.find((agent) => agent.name.trim().toLowerCase() === name.toLowerCase()) ?? null;
+    if (workflowMode === "data_collector") {
+      return byName("Business Strategist") ?? byName("RE- Business Strategist") ?? nextAgents[0] ?? null;
+    }
+    if (workflowMode === "documenter") {
+      return byName("Business Marketing & Strategy Documenter") ?? nextAgents[0] ?? null;
+    }
+    if (workflowMode === "odoo_specialist") {
+      return byName("Odoo Specialist") ?? nextAgents[0] ?? null;
+    }
+    return byName("GhostDASH Assistant") ?? nextAgents.find((agent) => agent.is_default) ?? nextAgents[0] ?? null;
+  }
+
+  async function startWorkflowConversation(workflowMode: WorkflowMode) {
+    const targetAgent = resolveWorkflowAgent(agents, workflowMode);
+    if (!targetAgent) return;
+    const created = await createConversation({
+      agentId: targetAgent.id,
+      workflowMode,
+      conversationMode:
+        workflowMode === "documenter"
+          ? "board"
+          : workflowMode === "standard"
+            ? "quick"
+            : "working_session",
+      sourceConversationId: workflowMode === "standard" ? null : activeConversationId ?? null,
+    });
+    const nextConversations = await fetchAgentConversations(targetAgent.id);
+    setConversations(nextConversations);
+    setSessionWorkflowMode(created.workflow_mode);
+    await loadConversation(targetAgent.id, created.id);
   }
 
   async function refreshConversations(agentId: string, preferredConversationId?: string | null) {
@@ -225,12 +296,14 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
         message: userText,
         apiMode: sessionApiMode,
         conversationMode: sessionConversationMode,
+        workflowMode: sessionWorkflowMode,
         llmModelId: sessionLlmModelId.trim() || null,
         agentId: activeAgentId,
         conversationId: activeConversationId ?? undefined,
         useApprovedWeb,
         signal: controller.signal,
-        onStart: ({ query_mode, conversation_id, tool_events }) => {
+        onStart: ({ query_mode, conversation_id, tool_events, workflow_mode }) => {
+          setSessionWorkflowMode(workflow_mode);
           if (conversation_id) {
             setActiveConversationId(conversation_id);
             void refreshUploads(conversation_id).catch(() => null);
@@ -259,7 +332,8 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
             ),
           );
         },
-        onDone: async ({ citations, conversation_id, usage, tool_events }) => {
+        onDone: async ({ citations, conversation_id, usage, tool_events, workflow_mode }) => {
+          setSessionWorkflowMode(workflow_mode);
           setLog((items) =>
             items.map((entry) =>
               entry.id === assistantId
@@ -288,6 +362,25 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
   function handleClose() {
     abortRef.current?.abort();
     onClose();
+  }
+
+  async function approveMessageForDocument(messageId: string, fragmentType: "snippet" | "paragraph" | "mini_analysis" | "scorecard" | "graph_idea" = "snippet") {
+    if (!activeConversationId) return;
+    try {
+      const frame = await approveConversationFragment({
+        conversationId: activeConversationId,
+        sourceMessageId: messageId,
+        fragmentType,
+      });
+      setDocumentFrame(frame);
+      setMessageApprovalState((current) => ({ ...current, [messageId]: "approved" }));
+    } catch (error) {
+      setUploadStatus(`Could not approve message for document: ${String(error)}`);
+    }
+  }
+
+  function rejectMessageForDocument(messageId: string) {
+    setMessageApprovalState((current) => ({ ...current, [messageId]: "rejected" }));
   }
 
   async function handleStageUpload(file: File) {
@@ -412,6 +505,14 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   <MessageSquareIcon size={16} className="text-ghost-orange" />
                   GhostChat
                 </div>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-slate-700">
+                  Workflow: {sessionWorkflowMode}
+                </span>
+                {documentFrame && (
+                  <span className="text-[0.68rem] text-slate-600">
+                    Document frame: <span className="font-semibold text-slate-900">{documentFrame.title}</span> ({documentFrame.fragments.length} approved)
+                  </span>
+                )}
                 <span
                   className="text-[0.68rem] text-slate-600"
                   title="Approximate LLM tokens (cl100k) for this conversation, summed across turns."
@@ -487,6 +588,30 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
             {showTools && (
               <div className="ghost-scroll max-h-[180px] overflow-y-auto border-b border-black/5 bg-white/60 px-3 py-2 text-[0.72rem] text-slate-600">
                 <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
+                    <div className="font-semibold text-slate-900">Workflow launchers</div>
+                    <div className="mt-1 text-[0.7rem] text-slate-500">
+                      Start a new workflow-bound conversation without mutating the current thread.
+                    </div>
+                    <div className="mt-3 grid gap-2">
+                      {([
+                        ["standard", "New Standard Chat"],
+                        ["data_collector", "New Data Collector"],
+                        ["documenter", "New Documenter"],
+                        ["odoo_specialist", "New Odoo Specialist"],
+                      ] as Array<[WorkflowMode, string]>).map(([workflowMode, label]) => (
+                        <button
+                          key={workflowMode}
+                          type="button"
+                          className="ghost-btn justify-between"
+                          disabled={busy}
+                          onClick={() => void startWorkflowConversation(workflowMode)}
+                        >
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
                     <div className="font-semibold text-slate-900">Approved web sources</div>
                     <div className="mt-1 text-[0.7rem] text-slate-500">
@@ -689,6 +814,35 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                   {entry.citations && entry.citations.length > 0 && (
                     <div className="mt-2 text-[0.68rem] text-slate-500">{entry.citations.length} citation(s)</div>
                   )}
+                  {entry.role === "assistant" && entry.text.trim() && sessionWorkflowMode !== "documenter" && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-200/70 pt-2">
+                      {messageApprovalState[entry.id] && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[0.62rem] font-semibold ${
+                            messageApprovalState[entry.id] === "approved"
+                              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border border-rose-200 bg-rose-50 text-rose-700"
+                          }`}
+                        >
+                          {messageApprovalState[entry.id] === "approved" ? "Approved for document" : "Rejected"}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        className="ghost-btn py-1 text-[0.66rem]"
+                        onClick={() => void approveMessageForDocument(entry.id)}
+                      >
+                        Approve for document
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-btn py-1 text-[0.66rem]"
+                        onClick={() => rejectMessageForDocument(entry.id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -718,7 +872,7 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                 <input
                   type="text"
                   placeholder="Ask anything..."
-                  className="ghost-input flex-1"
+                  className="ghost-input ghost-chat-composer-input flex-1 bg-slate-900 text-white placeholder:text-slate-400 caret-white border-slate-700"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={(event) => {
@@ -733,6 +887,10 @@ export default function GhostChat({ open, apiMode, startSync, onOpen, onClose }:
                 </button>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-[0.68rem] text-slate-500">
+                <span className="font-semibold uppercase tracking-[0.16em] text-slate-400">Workflow</span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[0.7rem] font-semibold text-slate-700">
+                  {sessionWorkflowMode}
+                </span>
                 <span className="font-semibold uppercase tracking-[0.16em] text-slate-400">Mode</span>
                 <div className="flex flex-wrap items-center gap-1 rounded-full bg-slate-100 p-1">
                   {conversationModes.map((modeOption) => {

@@ -562,6 +562,22 @@ body {
   padding: 0.5rem 0.8rem;
 }
 
+.ghost-chat-panel .ghost-chat-composer-input {
+  background: #182238;
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.35);
+  caret-color: #ffffff;
+}
+
+.ghost-chat-panel .ghost-chat-composer-input::placeholder {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.ghost-chat-panel .ghost-chat-composer-input:focus {
+  border-color: rgba(255, 80, 0, 0.85);
+  box-shadow: 0 0 0 3px rgba(255, 80, 0, 0.14);
+}
+
 .ghost-chat-panel .ghost-select {
   padding: 0.5rem 2rem 0.5rem 0.8rem;
   background-position:
