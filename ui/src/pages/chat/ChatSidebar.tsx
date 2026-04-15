@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { type AgentProfile, type ChatApiMode } from "../../api";
+import { type AgentProfile, type ChatApiMode, type WorkflowMode } from "../../api";
 
 type Props = {
   open: boolean;
@@ -13,6 +13,7 @@ export default function ChatSidebar({ open, onClose, chatEngine }: Props) {
     activeAgentId,
     changeAgent,
     clearChat,
+    startWorkflowConversation,
     sessionApiMode,
     setSessionApiMode,
     sessionLlmModelId,
@@ -42,17 +43,44 @@ export default function ChatSidebar({ open, onClose, chatEngine }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        <button
-          type="button"
-          onClick={clearChat}
-          className="mb-4 flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm border border-slate-200 hover:border-ghost-orange hover:text-ghost-orange transition-colors"
-        >
-          <span>New Chat</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
+        <div className="mb-4 rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="mb-2 px-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Workflow Launchers
+          </div>
+          {([
+            ["standard", "New Standard Chat"],
+            ["data_collector", "New Data Collector"],
+            ["documenter", "New Documenter"],
+            ["odoo_specialist", "New Odoo Specialist"],
+          ] as Array<[WorkflowMode, string]>).map(([workflowMode, label]) => (
+            <button
+              key={workflowMode}
+              type="button"
+              onClick={() => {
+                void startWorkflowConversation(workflowMode);
+                if (window.innerWidth < 1024) onClose();
+              }}
+              className="mb-2 flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-colors hover:border-ghost-orange hover:text-ghost-orange"
+            >
+              <span>{label}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={clearChat}
+            className="mt-1 flex w-full items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            <span>Clear Active View</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
 
         <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">LLM (this session)</div>

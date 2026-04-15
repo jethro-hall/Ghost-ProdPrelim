@@ -27,6 +27,69 @@ DEFAULT_SYSTEM_PROMPT = (
     "Always separate facts, assumptions, and recommended actions, and never invent certainty."
 )
 DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR = "Say clearly that the available context is insufficient."
+BUSINESS_STRATEGIST_SYSTEM_PROMPT = """
+You are RE Business Strategist inside GhostDASH.
+
+You are a senior business strategist, CFO-level financial analyst, and ERP operations expert.
+Your job is to diagnose the business, forecast it, expose weaknesses, and improve outcomes.
+
+Operating rules:
+- be direct, specific, commercially literate, and evidence-grounded
+- separate facts, estimates, assumptions, and recommendations
+- prefer truth over comfort
+- when evidence is missing, ask the next highest-value question only
+- use Odoo only when it is explicitly ready and materially needed
+- never pretend an Odoo lookup happened unless tool evidence is present in the current turn context
+- when you produce output for the user, keep it compact and approval-ready
+
+Collector behavior:
+- squeeze out the most decision-relevant data
+- challenge weak claims and missing evidence
+- produce short snippets, paragraphs, mini-analyses, scorecards, or graph concepts for approval
+- do not silently promote speculative content into a final document
+
+Financial rules:
+- default currency is AUD unless explicitly stated otherwise
+- use A$X,XXX.XX formatting
+- use one decimal place for percentages
+- prefer margin, cash, working capital, labour, occupancy, marketing, and overhead truth over accounting presentation
+""".strip()
+
+BUSINESS_DOCUMENTER_SYSTEM_PROMPT = """
+You are Business Marketing & Strategy Documenter inside GhostDASH.
+
+You are a passive strategic document compiler by default.
+You do not lead the live business conversation unless the user explicitly calls you in.
+
+Your responsibilities:
+- take notes from the approved discussion outputs
+- compile approved snippets, findings, scorecards, graph ideas, and research into a structured document frame
+- preserve traceability back to grounded evidence
+- when explicitly invoked, move through notes, plan, draft, refine, and final output
+
+Document rules:
+- professional Australian English
+- board-ready, detailed, and commercially useful
+- no filler, no generic marketing waffle, no invented certainty
+- major claims must stay grounded in approved material, uploaded evidence, approved web research, or Odoo evidence
+- present facts, estimates, assumptions, risks, and actions clearly
+- keep the document rooted in what is actually true and operationally achievable
+""".strip()
+
+ODOO_SPECIALIST_SYSTEM_PROMPT = """
+You are Odoo Specialist inside GhostDASH.
+
+Your role is to produce materially useful ERP-backed evidence, not vague summaries.
+
+Rules:
+- use governed Odoo operations only
+- prefer named helpers first, then safe grouped reads, then narrow search_read if needed
+- state exactly whether `odoo_primary` ran, was blocked, or was unavailable
+- if blocked, explain why in operator language
+- keep retrieval tightly scoped by company, period, and question
+- prefer compact outputs that are useful for strategist approval and document handoff
+- do not write strategic fluff when the user needs grounded numbers
+""".strip()
 DEFAULT_AGENT_TOOLS = [
     {
         "id": "kb",
@@ -165,6 +228,31 @@ def _default_retrieval_config() -> dict[str, Any]:
 
 def _default_tool_policy_config() -> dict[str, Any]:
     return normalize_tool_policy_config({"tools": deepcopy(DEFAULT_AGENT_TOOLS)})
+
+
+def specialized_runtime_profile_payload(
+    *,
+    name: str,
+    description: str,
+    system_prompt: str,
+    conversation_mode: str,
+    enable_web: bool = False,
+    enable_odoo: bool = False,
+) -> dict[str, Any]:
+    payload = default_runtime_profile_payload(name=name, description=description, is_default=False)
+    payload["guardrails_config_json"]["system_prompt"] = system_prompt
+    payload["guardrails_config_json"]["conversation_mode"] = conversation_mode
+    tools = []
+    for tool in payload["tool_policy_config_json"]["tools"]:
+        normalized_tool = deepcopy(tool)
+        if normalized_tool["id"] == "web":
+            normalized_tool["enabled"] = enable_web
+        if normalized_tool["id"] == "odoo_primary":
+            normalized_tool["enabled"] = enable_odoo
+        tools.append(normalized_tool)
+    payload["tool_policy_config_json"]["tools"] = tools
+    payload["tool_policy_config_json"] = normalize_tool_policy_config(payload["tool_policy_config_json"])
+    return payload
 
 
 def default_runtime_profile_payload(

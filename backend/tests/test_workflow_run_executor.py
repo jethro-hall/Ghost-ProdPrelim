@@ -66,15 +66,32 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
             prompt="Summarise the risk tradeoffs.",
             agent_ids=[finance_agent_id, operations_agent_id],
             head_agent_id=default_agent_id,
-            result_json={"request": {"api_mode": "responses", "use_approved_web": False}},
+            result_json={
+                "request": {
+                    "api_mode": "responses",
+                    "conversation_mode": "working_session",
+                    "use_approved_web": False,
+                }
+            },
         )
 
     seen_messages: dict[str, str] = {}
 
-    async def fake_consult_runner(*, message: str, agent_id: str, conversation_id: str | None, api_mode: str, use_approved_web: bool):
+    async def fake_consult_runner(
+        *,
+        message: str,
+        agent_id: str,
+        conversation_id: str | None,
+        api_mode: str,
+        conversation_mode: str,
+        workflow_mode: str,
+        use_approved_web: bool,
+    ):
         seen_messages[agent_id] = message
         assert "Summarise the risk tradeoffs." in message
         assert api_mode == "responses"
+        assert conversation_mode == "working_session"
+        assert workflow_mode == "standard"
         assert use_approved_web is False
         return {
             "answer": f"answer-for-{agent_id}",
@@ -102,6 +119,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
         f"answer-for-{operations_agent_id}",
         f"answer-for-{default_agent_id}",
     ]
+    assert all(step.metadata_json.get("conversation_mode") == "working_session" for step in steps)
     assert "Finance Agent" in seen_messages[default_agent_id]
     assert "Operations Agent" in seen_messages[default_agent_id]
     assert "Do not attempt the final synthesis" in seen_messages[finance_agent_id]
@@ -149,12 +167,29 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
             prompt="Summarise the risk tradeoffs.",
             agent_ids=[finance_agent_id, operations_agent_id],
             head_agent_id=default_agent_id,
-            result_json={"request": {"api_mode": "responses", "use_approved_web": False}},
+            result_json={
+                "request": {
+                    "api_mode": "responses",
+                    "conversation_mode": "board",
+                    "use_approved_web": False,
+                }
+            },
         )
 
-    async def flaky_consult_runner(*, message: str, agent_id: str, conversation_id: str | None, api_mode: str, use_approved_web: bool):
+    async def flaky_consult_runner(
+        *,
+        message: str,
+        agent_id: str,
+        conversation_id: str | None,
+        api_mode: str,
+        conversation_mode: str,
+        workflow_mode: str,
+        use_approved_web: bool,
+    ):
         if agent_id == finance_agent_id:
             raise RuntimeError("finance agent unavailable")
+        assert conversation_mode == "board"
+        assert workflow_mode == "standard"
         return {
             "answer": "default-answer",
             "query_mode": "semantic",
@@ -176,3 +211,4 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
     assert refreshed_run.result_json["failed_agents"] == 1
     assert [step.status for step in steps] == ["failed", "completed", "completed"]
     assert steps[0].error_message == "finance agent unavailable"
+    assert steps[0].metadata_json["conversation_mode"] == "board"

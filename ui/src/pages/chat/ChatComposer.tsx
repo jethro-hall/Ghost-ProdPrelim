@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { PlusIcon, SendIcon } from "../../components/ReferenceIcons";
-import type { ConversationMode } from "../../api";
+import type { ConversationMode, WorkflowMode } from "../../api";
 
 type Props = {
   message: string;
@@ -16,6 +16,7 @@ type Props = {
   approvedWebConfigured: boolean;
   conversationMode: ConversationMode;
   onConversationModeChange: (mode: ConversationMode) => void;
+  workflowMode: WorkflowMode;
 };
 
 export default function ChatComposer({
@@ -32,6 +33,7 @@ export default function ChatComposer({
   approvedWebConfigured,
   conversationMode,
   onConversationModeChange,
+  workflowMode,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -76,6 +78,10 @@ export default function ChatComposer({
         />
         
         <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-1 pt-2">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-400">Workflow</span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[0.72rem] font-semibold text-slate-700">
+            {workflowMode}
+          </span>
           <span className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-400">Mode</span>
           <div className="flex flex-wrap items-center gap-1 rounded-full bg-slate-100 p-1">
             {conversationModes.map((modeOption) => {

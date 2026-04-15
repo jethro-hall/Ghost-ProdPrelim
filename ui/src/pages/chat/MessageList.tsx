@@ -1,13 +1,26 @@
 import { useEffect, useRef } from "react";
 import { type ChatEntry } from "../../hooks/useChatEngine";
+import type { WorkflowMode } from "../../api";
 
 type Props = {
   log: ChatEntry[];
   busy: boolean;
   firstMessage: string;
+  workflowMode: WorkflowMode;
+  onApproveMessage: (messageId: string) => Promise<unknown>;
+  onRejectMessage: (messageId: string) => void;
+  documentDecisionByMessage: Record<string, "approved" | "rejected">;
 };
 
-export default function MessageList({ log, busy, firstMessage }: Props) {
+export default function MessageList({
+  log,
+  busy,
+  firstMessage,
+  workflowMode,
+  onApproveMessage,
+  onRejectMessage,
+  documentDecisionByMessage,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const citationSourceBadges = (entry: ChatEntry) =>
     (entry.citations ?? [])
@@ -110,6 +123,35 @@ export default function MessageList({ log, busy, firstMessage }: Props) {
                         {cite.filename || `Doc ${i+1}`}
                       </span>
                     ))}
+                  </div>
+                )}
+                {!isUser && entry.text.trim() && workflowMode !== "documenter" && (
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                    {documentDecisionByMessage[entry.id] && (
+                      <span
+                        className={`rounded-full px-3 py-1 text-[0.68rem] font-semibold ${
+                          documentDecisionByMessage[entry.id] === "approved"
+                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border border-rose-200 bg-rose-50 text-rose-700"
+                        }`}
+                      >
+                        {documentDecisionByMessage[entry.id] === "approved" ? "Approved for document" : "Rejected"}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void onApproveMessage(entry.id)}
+                      className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[0.68rem] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                    >
+                      Approve for document
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRejectMessage(entry.id)}
+                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[0.68rem] font-semibold text-rose-700 transition-colors hover:bg-rose-100"
+                    >
+                      Reject
+                    </button>
                   </div>
                 )}
               </div>

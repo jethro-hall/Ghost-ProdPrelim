@@ -15,7 +15,18 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .agent_memory import get_agent, list_agents, list_conversations, list_messages, save_agent, seed_default_agent_profiles
+from .agent_memory import (
+    append_document_frame_fragment,
+    create_conversation,
+    create_document_frame,
+    get_agent,
+    get_document_frame,
+    list_agents,
+    list_conversations,
+    list_messages,
+    save_agent,
+    seed_default_agent_profiles,
+)
 from .collections import (
     collection_delete_impact,
     delete_collection_and_storage,
@@ -34,6 +45,7 @@ from .models import (
     ChatUploadRecord,
     CollectionRecord,
     ConnectionRecord,
+    DocumentFrameRecord,
     DocumentRecord,
     IngestionRunRecord,
     RetrievalArtifactRecord,
@@ -64,6 +76,10 @@ from .schemas import (
     ConnectionTestPayload,
     ConnectionTestResponse,
     ConnectionView,
+    ConversationCreatePayload,
+    DocumentFrameFragmentCreatePayload,
+    DocumentFrameFragmentView,
+    DocumentFrameView,
     ConversationMessageView,
     ConversationSummaryView,
     DocumentArtifactView,
@@ -536,6 +552,8 @@ def _conversation_to_view(conversation: AgentConversationRecord, message_count: 
         corpora=conversation.corpora_json or [],
         api_mode=conversation.api_mode,
         conversation_mode=conversation.conversation_mode,
+        workflow_mode=cast(str, conversation.workflow_mode or "standard"),
+        document_frame_id=conversation.document_frame_id,
         message_count=message_count,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
@@ -553,7 +571,25 @@ def _message_to_view(message: AgentMessageRecord) -> ConversationMessageView:
         citations=message.citations_json or [],
         api_mode=message.api_mode,
         conversation_mode=message.conversation_mode,
+        workflow_mode=cast(str | None, message.workflow_mode),
         created_at=message.created_at,
+    )
+
+
+def _document_frame_to_view(frame: DocumentFrameRecord) -> DocumentFrameView:
+    fragments = [
+        DocumentFrameFragmentView(**fragment)
+        for fragment in list(frame.fragments_json or [])
+        if isinstance(fragment, dict)
+    ]
+    return DocumentFrameView(
+        id=frame.id,
+        title=frame.title,
+        status=cast(str, frame.status or "draft"),
+        fragments=fragments,
+        metadata_json=dict(frame.metadata_json or {}),
+        created_at=frame.created_at,
+        updated_at=frame.updated_at,
     )
 
 
@@ -938,6 +974,7 @@ def create_app() -> FastAPI:
         return ChatBootstrapView(
             surface=surface,
             default_agent_id=default_agent.id if default_agent is not None else None,
+            default_workflow_mode="standard",
             runtime_defaults=RuntimeDefaultsView(**get_runtime_defaults(session)),
             capabilities=_runtime_capabilities(),
             features=ChatBootstrapFeatures(
@@ -945,6 +982,7 @@ def create_app() -> FastAPI:
                 allow_api_mode_override=False,
                 allow_conversation_mode_override=True,
                 allow_approved_web_toggle=True,
+                allow_workflow_launchers=True,
             ),
             agents=agents,
             tools_catalog=list_tool_catalog(session),
@@ -1028,6 +1066,45 @@ def create_app() -> FastAPI:
             for conversation, message_count in list_conversations(session, agent_id)
         ]
 
+    @app.post("/api/agents/{agent_id}/conversations", response_model=ConversationSummaryView)
+    def api_create_agent_conversation(
+        agent_id: str,
+        body: ConversationCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> ConversationSummaryView:
+        agent = get_agent(session, agent_id)
+        runtime_profile = resolve_agent_runtime_profile(session, agent)
+        llm_config = dict(runtime_profile.llm_config_json or {})
+        frame_id = body.document_frame_id
+        if frame_id:
+            get_document_frame(session, frame_id)
+        elif body.source_conversation_id:
+            source_conversation = session.get(AgentConversationRecord, body.source_conversation_id)
+            if source_conversation is None:
+                raise HTTPException(404, "source conversation not found")
+            frame_id = source_conversation.document_frame_id
+        if frame_id is None and body.workflow_mode != "standard":
+            frame = create_document_frame(
+                session,
+                title=body.title or f"{agent.name} strategic document",
+                metadata_json={"seed_workflow_mode": body.workflow_mode},
+            )
+            frame_id = frame.id
+        conversation = create_conversation(
+            session,
+            agent_id=agent.id,
+            message=body.title or "New conversation",
+            title=body.title or "New conversation",
+            corpora=list(body.corpora),
+            api_mode=str(llm_config.get("api_mode") or "responses"),
+            conversation_mode=body.conversation_mode,
+            workflow_mode=body.workflow_mode,
+            document_frame_id=frame_id,
+        )
+        session.commit()
+        session.refresh(conversation)
+        return _conversation_to_view(conversation, 0)
+
     @app.get("/api/conversations/{conversation_id}/messages", response_model=list[ConversationMessageView])
     def api_conversation_messages(
         conversation_id: str,
@@ -1037,6 +1114,58 @@ def create_app() -> FastAPI:
         if conversation is None:
             raise HTTPException(404, "conversation not found")
         return [_message_to_view(message) for message in list_messages(session, conversation_id)]
+
+    @app.get("/api/conversations/{conversation_id}/document-frame", response_model=DocumentFrameView)
+    def api_conversation_document_frame(
+        conversation_id: str,
+        session: Session = Depends(get_session),
+    ) -> DocumentFrameView:
+        conversation = session.get(AgentConversationRecord, conversation_id)
+        if conversation is None:
+            raise HTTPException(404, "conversation not found")
+        if not conversation.document_frame_id:
+            raise HTTPException(404, "conversation has no document frame")
+        return _document_frame_to_view(get_document_frame(session, conversation.document_frame_id))
+
+    @app.post("/api/conversations/{conversation_id}/document-frame/fragments", response_model=DocumentFrameView)
+    def api_append_document_frame_fragment(
+        conversation_id: str,
+        body: DocumentFrameFragmentCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> DocumentFrameView:
+        conversation = session.get(AgentConversationRecord, conversation_id)
+        if conversation is None:
+            raise HTTPException(404, "conversation not found")
+        if not conversation.document_frame_id:
+            frame = create_document_frame(
+                session,
+                title=f"{conversation.title} document",
+                metadata_json={"seed_conversation_id": conversation.id},
+            )
+            conversation.document_frame_id = frame.id
+        content = (body.content or "").strip()
+        if body.source_message_id:
+            source_message = session.get(AgentMessageRecord, body.source_message_id)
+            if source_message is None or source_message.conversation_id != conversation.id:
+                raise HTTPException(404, "source message not found in conversation")
+            if source_message.role != "assistant":
+                raise HTTPException(400, "only assistant messages can be approved into the document frame")
+            if not content:
+                content = source_message.content.strip()
+        if not content:
+            raise HTTPException(400, "fragment content is required")
+        frame = append_document_frame_fragment(
+            session,
+            document_frame_id=conversation.document_frame_id,
+            source_conversation_id=conversation.id,
+            source_message_id=body.source_message_id,
+            fragment_type=body.fragment_type,
+            title=body.title,
+            content=content,
+        )
+        session.commit()
+        session.refresh(frame)
+        return _document_frame_to_view(frame)
 
     @app.get("/api/conversations/{conversation_id}/uploads", response_model=list[ChatUploadView])
     def api_list_conversation_uploads(

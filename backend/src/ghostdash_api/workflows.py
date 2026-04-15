@@ -2174,6 +2174,7 @@ def build_query_plan(
     top_k: int,
     trace_id: str,
     current_message: str | None = None,
+    workflow_mode: str | None = None,
 ) -> dict[str, Any]:
     user_message = (current_message or message).strip()
     with SessionLocal() as session:
@@ -2182,6 +2183,11 @@ def build_query_plan(
         embedding_model_id = kb_config.get("embedding_model_id")
         mode = classify_query_mode(user_message)
         tool_plan = _plan_odoo_tool_usage(user_message, fallback_message=message)
+        resolved_workflow_mode = str(workflow_mode or "standard").strip().casefold() or "standard"
+        if resolved_workflow_mode == "odoo_specialist":
+            tool_plan["source_labels"] = sorted({"odoo", *list(tool_plan.get("source_labels") or [])})
+            if str(tool_plan.get("mode") or "none") != "none":
+                tool_plan["suppress_retrieval"] = True
         suppress_retrieval = bool(tool_plan.get("suppress_retrieval"))
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
@@ -2376,5 +2382,6 @@ class QueryWorkflow(Workflow):
             corpora=list(start_event_value(ev, "corpora") or []),
             top_k=int(start_event_value(ev, "top_k") or 6),
             trace_id=str(start_event_value(ev, "trace_id")),
+            workflow_mode=str(start_event_value(ev, "workflow_mode") or "standard"),
         )
         return StopEvent(result=result)

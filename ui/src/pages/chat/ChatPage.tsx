@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchChatBootstrap, type ChatApiMode, type ConversationMode } from "../../api";
+import { fetchChatBootstrap, type ChatApiMode, type ConversationMode, type WorkflowMode } from "../../api";
 import { useChatEngine } from "../../hooks/useChatEngine";
 import ChatSidebar from "./ChatSidebar";
 import ChatArea from "./ChatArea";
@@ -8,6 +8,7 @@ import ChatArea from "./ChatArea";
 export default function ChatPage() {
   const [apiMode, setApiMode] = useState<ChatApiMode>("chat_completions");
   const [conversationMode, setConversationMode] = useState<ConversationMode>("quick");
+  const [workflowMode, setWorkflowMode] = useState<WorkflowMode>("standard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -16,13 +17,18 @@ export default function ChatPage() {
         const bootstrap = await fetchChatBootstrap("ghostdash");
         setApiMode(bootstrap.runtime_defaults.chat_api_mode);
         setConversationMode(bootstrap.runtime_defaults.conversation_mode);
+        setWorkflowMode(bootstrap.default_workflow_mode);
       } catch (err) {
         console.error("Could not fetch chat bootstrap", err);
       }
     })();
   }, []);
 
-  const chatEngine = useChatEngine({ defaultApiMode: apiMode, defaultConversationMode: conversationMode });
+  const chatEngine = useChatEngine({
+    defaultApiMode: apiMode,
+    defaultConversationMode: conversationMode,
+    defaultWorkflowMode: workflowMode,
+  });
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-900">

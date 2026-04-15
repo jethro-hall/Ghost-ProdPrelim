@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from ghostdash_api import control_api
 from ghostdash_api.agent_memory import seed_default_agent_profiles
 from ghostdash_api.database import Base, get_session
+from ghostdash_api.models import AgentMessageRecord, AgentProfileRecord
 from ghostdash_api.runtime import save_connection, seed_default_connections
 from ghostdash_api.runtime_profiles import seed_default_runtime_profile
 
@@ -93,12 +94,70 @@ def test_chat_bootstrap_returns_shared_runtime_and_agents(monkeypatch) -> None:
     payload = response.json()
     assert payload["surface"] == "ghost_chatui"
     assert payload["default_agent_id"]
+    assert payload["default_workflow_mode"] == "standard"
     assert payload["features"] == {
         "allow_mock_provider": False,
         "allow_api_mode_override": False,
+        "allow_conversation_mode_override": True,
         "allow_approved_web_toggle": True,
+        "allow_workflow_launchers": True,
     }
     assert payload["runtime_defaults"]["llm_provider_key"] == "openai"
     assert payload["runtime_defaults"]["llm_provider_kind"] == "openai"
     assert payload["runtime_defaults"]["llm_connection_label"] == "OpenAI"
-    assert len(payload["agents"]) >= 1
+    assert len(payload["agents"]) >= 4
+
+
+def test_workflow_conversation_and_document_frame_round_trip(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    seed_defaults(SessionLocal)
+
+    with SessionLocal() as session:
+        agents = list(session.scalars(select(AgentProfileRecord)))
+        strategist = next(agent for agent in agents if agent.name == "Business Strategist")
+        documenter = next(agent for agent in agents if agent.name == "Business Marketing & Strategy Documenter")
+
+    create_response = client.post(
+        f"/api/agents/{strategist.id}/conversations",
+        json={"workflow_mode": "data_collector", "conversation_mode": "working_session", "title": "FY26 strategy"},
+    )
+    assert create_response.status_code == 200
+    strategist_conversation = create_response.json()
+    assert strategist_conversation["workflow_mode"] == "data_collector"
+    assert strategist_conversation["document_frame_id"]
+
+    with SessionLocal() as session:
+        message = AgentMessageRecord(
+            conversation_id=strategist_conversation["id"],
+            agent_id=strategist.id,
+            role="assistant",
+            content="Approved strategist fragment.",
+            workflow_mode="data_collector",
+        )
+        session.add(message)
+        session.commit()
+        session.refresh(message)
+        message_id = message.id
+
+    approve_response = client.post(
+        f"/api/conversations/{strategist_conversation['id']}/document-frame/fragments",
+        json={"source_message_id": message_id, "fragment_type": "paragraph"},
+    )
+    assert approve_response.status_code == 200
+    frame = approve_response.json()
+    assert len(frame["fragments"]) == 1
+    assert frame["fragments"][0]["content"] == "Approved strategist fragment."
+
+    documenter_response = client.post(
+        f"/api/agents/{documenter.id}/conversations",
+        json={
+            "workflow_mode": "documenter",
+            "conversation_mode": "board",
+            "source_conversation_id": strategist_conversation["id"],
+            "title": "FY26 board paper",
+        },
+    )
+    assert documenter_response.status_code == 200
+    documenter_conversation = documenter_response.json()
+    assert documenter_conversation["workflow_mode"] == "documenter"
+    assert documenter_conversation["document_frame_id"] == strategist_conversation["document_frame_id"]

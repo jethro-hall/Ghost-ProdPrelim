@@ -30,6 +30,7 @@ class QueryTriggerPayload(BaseModel):
     corpora: list[str] = []
     top_k: int = 6
     trace_id: str
+    workflow_mode: str | None = None
 
 
 def split_recoverable_ingestion_runs(
@@ -242,6 +243,7 @@ def create_app() -> FastAPI:
             corpora=body.corpora,
             top_k=body.top_k,
             trace_id=body.trace_id,
+            workflow_mode=body.workflow_mode,
         )
         return result
 

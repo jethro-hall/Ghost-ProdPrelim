@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
+  approveConversationFragment,
   type AgentProfile,
   type ChatApiMode,
   type ChatToolEvent,
@@ -7,11 +8,15 @@ import {
   type Collection,
   type ConversationMode,
   type ConversationSummary,
+  type DocumentFrame,
   type RequestedLane,
+  type WorkflowMode,
+  createConversation,
   decideChatUpload,
   fetchAgentConversations,
   fetchChatBootstrap,
   fetchCollections,
+  fetchConversationDocumentFrame,
   fetchConversationMessages,
   fetchConversationUploads,
   stageConversationUpload,
@@ -45,12 +50,14 @@ type UseChatEngineOptions = {
   /** Fallback before agents load; session controls reset from the active agent when it changes. */
   defaultApiMode?: ChatApiMode;
   defaultConversationMode?: ConversationMode;
+  defaultWorkflowMode?: WorkflowMode;
   onSyncRequest?: (corpusSlug?: string) => Promise<void>;
 };
 
 export function useChatEngine({
   defaultApiMode = "responses",
   defaultConversationMode = "quick",
+  defaultWorkflowMode = "standard",
   onSyncRequest,
 }: UseChatEngineOptions) {
   const [log, setLog] = useState<ChatEntry[]>([]);
@@ -68,12 +75,15 @@ export function useChatEngine({
   
   const [useApprovedWeb, setUseApprovedWeb] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [documentFrame, setDocumentFrame] = useState<DocumentFrame | null>(null);
+  const [documentDecisionByMessage, setDocumentDecisionByMessage] = useState<Record<string, "approved" | "rejected">>({});
   
   const abortRef = useRef<AbortController | null>(null);
   const sendLockRef = useRef(false);
   const activeAgent = agents.find((entry) => entry.id === activeAgentId) ?? null;
   const [sessionApiMode, setSessionApiMode] = useState<ChatApiMode>(defaultApiMode);
   const [sessionConversationMode, setSessionConversationMode] = useState<ConversationMode>(defaultConversationMode);
+  const [sessionWorkflowMode, setSessionWorkflowMode] = useState<WorkflowMode>(defaultWorkflowMode);
   const [sessionLlmModelId, setSessionLlmModelId] = useState("");
   const [llmTokenTotal, setLlmTokenTotal] = useState(0);
 
@@ -105,6 +115,7 @@ export function useChatEngine({
         
         setAgents(nextAgents);
         setCollections(nextCollections);
+        setSessionWorkflowMode(bootstrap.default_workflow_mode ?? defaultWorkflowMode);
         
         const targetAgent =
           nextAgents.find((a) => a.id === bootstrap.default_agent_id) ??
@@ -123,11 +134,14 @@ export function useChatEngine({
         if (!recentConversation) {
           setActiveConversationId(null);
           setLog([]);
+          setDocumentFrame(null);
+          setDocumentDecisionByMessage({});
           return;
         }
         
         setActiveConversationId(recentConversation.id);
         setSessionConversationMode(recentConversation.conversation_mode ?? defaultConversationMode);
+        setSessionWorkflowMode(recentConversation.workflow_mode ?? defaultWorkflowMode);
         const messages = await fetchConversationMessages(recentConversation.id);
         
         if (!mounted) return;
@@ -141,6 +155,16 @@ export function useChatEngine({
             toolEvents: hydrateToolEvents(entry.citations),
           }))
         );
+        setDocumentDecisionByMessage({});
+        if (recentConversation.document_frame_id) {
+          try {
+            setDocumentFrame(await fetchConversationDocumentFrame(recentConversation.id));
+          } catch {
+            setDocumentFrame(null);
+          }
+        } else {
+          setDocumentFrame(null);
+        }
         
         await refreshUploadsInternal(recentConversation.id, nextCollections);
       } catch (err) {
@@ -186,12 +210,17 @@ export function useChatEngine({
     if (!conversationId) {
       setLog([]);
       setUploads([]);
+        setDocumentFrame(null);
+        setDocumentDecisionByMessage({});
       return;
     }
     try {
       const conversationSummary = conversations.find((entry) => entry.id === conversationId) ?? null;
       if (conversationSummary?.conversation_mode) {
         setSessionConversationMode(conversationSummary.conversation_mode);
+      }
+      if (conversationSummary?.workflow_mode) {
+        setSessionWorkflowMode(conversationSummary.workflow_mode);
       }
       const messages = await fetchConversationMessages(conversationId);
       const latestConversationMode =
@@ -209,6 +238,16 @@ export function useChatEngine({
           toolEvents: hydrateToolEvents(entry.citations),
         }))
       );
+      setDocumentDecisionByMessage({});
+      if (conversationSummary?.document_frame_id) {
+        try {
+          setDocumentFrame(await fetchConversationDocumentFrame(conversationId));
+        } catch {
+          setDocumentFrame(null);
+        }
+      } else {
+        setDocumentFrame(null);
+      }
       await refreshUploadsInternal(conversationId);
     } catch (err) {
       console.error("Failed to load conversation", err);
@@ -249,12 +288,14 @@ export function useChatEngine({
         message: userText,
         apiMode: sessionApiMode,
         conversationMode: sessionConversationMode,
+        workflowMode: sessionWorkflowMode,
         llmModelId: sessionLlmModelId.trim() || null,
         agentId: activeAgentId,
         conversationId: activeConversationId ?? undefined,
         useApprovedWeb,
         signal: controller.signal,
-        onStart: ({ query_mode, conversation_id, tool_events }) => {
+        onStart: ({ query_mode, conversation_id, tool_events, workflow_mode }) => {
+          setSessionWorkflowMode(workflow_mode);
           if (conversation_id && conversation_id !== activeConversationId) {
             setActiveConversationId(conversation_id);
             void refreshUploadsInternal(conversation_id).catch(() => null);
@@ -283,7 +324,8 @@ export function useChatEngine({
             )
           );
         },
-        onDone: async ({ citations, conversation_id, usage, tool_events }) => {
+        onDone: async ({ citations, conversation_id, usage, tool_events, workflow_mode }) => {
+          setSessionWorkflowMode(workflow_mode);
           setLog((items) =>
             items.map((entry) =>
               entry.id === assistantId
@@ -335,7 +377,52 @@ export function useChatEngine({
     setLog([]);
     setUploads([]);
     setLlmTokenTotal(0);
-  }, []);
+    setDocumentFrame(null);
+    setDocumentDecisionByMessage({});
+    setSessionWorkflowMode(defaultWorkflowMode);
+  }, [defaultWorkflowMode]);
+
+  const resolveWorkflowAgent = useCallback((workflowMode: WorkflowMode) => {
+    const byName = (name: string) => agents.find((agent) => agent.name.trim().toLowerCase() === name.toLowerCase()) ?? null;
+    if (workflowMode === "data_collector") {
+      return byName("Business Strategist") ?? activeAgent ?? agents[0] ?? null;
+    }
+    if (workflowMode === "documenter") {
+      return byName("Business Marketing & Strategy Documenter") ?? activeAgent ?? agents[0] ?? null;
+    }
+    if (workflowMode === "odoo_specialist") {
+      return byName("Odoo Specialist") ?? activeAgent ?? agents[0] ?? null;
+    }
+    return activeAgent ?? agents[0] ?? null;
+  }, [activeAgent, agents]);
+
+  const startWorkflowConversation = useCallback(async (workflowMode: WorkflowMode) => {
+    const targetAgent = resolveWorkflowAgent(workflowMode);
+    if (!targetAgent) {
+      return null;
+    }
+    const created = await createConversation({
+      agentId: targetAgent.id,
+      workflowMode,
+      conversationMode:
+        workflowMode === "documenter"
+          ? "board"
+          : workflowMode === "data_collector"
+            ? "working_session"
+            : workflowMode === "odoo_specialist"
+              ? "working_session"
+              : defaultConversationMode,
+      sourceConversationId: workflowMode === "standard" ? null : activeConversationId ?? null,
+    });
+    if (targetAgent.id !== activeAgentId) {
+      setActiveAgentId(targetAgent.id);
+    }
+    const nextConversations = await fetchAgentConversations(targetAgent.id);
+    setConversations(nextConversations);
+    setSessionWorkflowMode(created.workflow_mode);
+    await loadConversation(targetAgent.id, created.id);
+    return created;
+  }, [activeAgentId, activeConversationId, defaultConversationMode, loadConversation, resolveWorkflowAgent]);
 
   const changeAgent = useCallback((agentId: string) => {
     void (async () => {
@@ -349,6 +436,24 @@ export function useChatEngine({
       }
     })();
   }, [loadConversation]);
+
+  const approveMessageForDocument = useCallback(async (messageId: string, fragmentType: "snippet" | "paragraph" | "mini_analysis" | "scorecard" | "graph_idea" = "snippet") => {
+    if (!activeConversationId) {
+      return null;
+    }
+    const frame = await approveConversationFragment({
+      conversationId: activeConversationId,
+      sourceMessageId: messageId,
+      fragmentType,
+    });
+    setDocumentFrame(frame);
+    setDocumentDecisionByMessage((current) => ({ ...current, [messageId]: "approved" }));
+    return frame;
+  }, [activeConversationId]);
+
+  const rejectMessageForDocument = useCallback((messageId: string) => {
+    setDocumentDecisionByMessage((current) => ({ ...current, [messageId]: "rejected" }));
+  }, []);
 
   // Upload Handlers
   const handleStageUpload = useCallback(async (file: File) => {
@@ -454,10 +559,13 @@ export function useChatEngine({
     selectedCollectionByUpload,
     useApprovedWeb,
     busy,
+    documentFrame,
+    documentDecisionByMessage,
     approvedWebConfigured,
     webTool,
     sessionApiMode,
     sessionConversationMode,
+    sessionWorkflowMode,
     sessionLlmModelId,
     llmTokenTotal,
 
@@ -465,13 +573,17 @@ export function useChatEngine({
     sendMessage,
     stopGeneration,
     clearChat,
+    startWorkflowConversation,
     changeAgent,
     loadConversation,
+    approveMessageForDocument,
+    rejectMessageForDocument,
     setUploadLane,
     setSelectedCollectionByUpload,
     setUseApprovedWeb,
     setSessionApiMode,
     setSessionConversationMode,
+    setSessionWorkflowMode,
     setSessionLlmModelId,
     handleStageUpload,
     handleConversationOnly,

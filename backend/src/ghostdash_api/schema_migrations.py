@@ -332,6 +332,92 @@ def _ensure_agent_message_conversation_mode_column(engine: Engine) -> None:
                 raise
 
 
+def _ensure_document_frames_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "document_frames" in inspector.get_table_names():
+        return
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS document_frames (
+                    id VARCHAR(64) PRIMARY KEY,
+                    title VARCHAR(256) NOT NULL DEFAULT 'Strategic document',
+                    status VARCHAR(32) NOT NULL DEFAULT 'draft',
+                    fragments_json JSON NOT NULL DEFAULT '[]',
+                    metadata_json JSON NOT NULL DEFAULT '{}',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+
+
+def _ensure_agent_conversation_workflow_mode_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_conversations" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_conversations")}
+    if "workflow_mode" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_conversations ADD COLUMN IF NOT EXISTS workflow_mode VARCHAR(32) DEFAULT 'standard'"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_conversations ADD COLUMN workflow_mode VARCHAR(32) DEFAULT 'standard'"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_conversation_document_frame_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_conversations" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_conversations")}
+    if "document_frame_id" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_conversations ADD COLUMN IF NOT EXISTS document_frame_id VARCHAR(64)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_conversations ADD COLUMN document_frame_id VARCHAR(64)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+    _create_index_if_missing(engine, "agent_conversations", "ix_agent_conversations_document_frame_id", "document_frame_id")
+
+
+def _ensure_agent_message_workflow_mode_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_messages" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_messages")}
+    if "workflow_mode" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_messages ADD COLUMN IF NOT EXISTS workflow_mode VARCHAR(32)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_messages ADD COLUMN workflow_mode VARCHAR(32)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
 def _ensure_tool_registry_table(engine: Engine) -> None:
     inspector = inspect(engine)
     if "tool_registry" in inspector.get_table_names():
@@ -360,11 +446,15 @@ def _ensure_tool_registry_table(engine: Engine) -> None:
 
 
 def run_startup_migrations(engine: Engine) -> None:
+    _ensure_document_frames_table(engine)
     _ensure_tool_registry_table(engine)
     _ensure_agent_runtime_profile_column(engine)
     _ensure_agent_conversation_openai_response_column(engine)
     _ensure_agent_conversation_mode_column(engine)
+    _ensure_agent_conversation_workflow_mode_column(engine)
+    _ensure_agent_conversation_document_frame_column(engine)
     _ensure_agent_message_conversation_mode_column(engine)
+    _ensure_agent_message_workflow_mode_column(engine)
     _ensure_connection_metadata_columns(engine)
     _create_index_if_missing(engine, "agent_profiles", "ix_agent_profiles_runtime_profile_id", "runtime_profile_id")
     _backfill_connection_metadata(engine)

@@ -16,12 +16,17 @@ export default function ChatArea({ chatEngine }: Props) {
     activeConversationId,
     activeAgentId,
     uploadBusy,
+    documentFrame,
+    documentDecisionByMessage,
     useApprovedWeb,
     setUseApprovedWeb,
     approvedWebConfigured,
     sessionConversationMode,
     setSessionConversationMode,
+    sessionWorkflowMode,
     sendMessage,
+    approveMessageForDocument,
+    rejectMessageForDocument,
     handleStageUpload,
     llmTokenTotal,
   } = chatEngine;
@@ -47,10 +52,26 @@ export default function ChatArea({ chatEngine }: Props) {
         <span className="font-medium text-slate-800">LLM tokens (est.)</span>{" "}
         <span className="font-mono tabular-nums text-slate-900">{llmTokenTotal.toLocaleString()}</span>
       </div>
+      <div className="shrink-0 border-b border-slate-100 bg-slate-50/80 px-4 py-2 text-[0.72rem] text-slate-600">
+        <div className="flex flex-wrap items-center gap-3">
+          <span>
+            <span className="font-semibold text-slate-800">Workflow</span> {sessionWorkflowMode}
+          </span>
+          {documentFrame && (
+            <span>
+              <span className="font-semibold text-slate-800">Document frame</span> {documentFrame.title} ({documentFrame.fragments.length} approved)
+            </span>
+          )}
+        </div>
+      </div>
       <MessageList 
         log={log} 
         busy={busy} 
         firstMessage={activeAgent?.first_message ?? "Hello! I'm GhostChat. How can I help you today?"} 
+        workflowMode={sessionWorkflowMode}
+        onApproveMessage={approveMessageForDocument}
+        onRejectMessage={rejectMessageForDocument}
+        documentDecisionByMessage={documentDecisionByMessage}
       />
       
       <div className="sticky bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-white via-white to-transparent pt-6">
@@ -76,6 +97,7 @@ export default function ChatArea({ chatEngine }: Props) {
           approvedWebConfigured={approvedWebConfigured}
           conversationMode={sessionConversationMode}
           onConversationModeChange={setSessionConversationMode}
+          workflowMode={sessionWorkflowMode}
         />
       </div>
     </div>

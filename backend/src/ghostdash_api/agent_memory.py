@@ -7,11 +7,22 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .models import AgentConversationRecord, AgentMessageRecord, AgentProfileRecord, ChatResponseCacheRecord, RuntimeProfileRecord
+from .models import (
+    AgentConversationRecord,
+    AgentMessageRecord,
+    AgentProfileRecord,
+    ChatResponseCacheRecord,
+    DocumentFrameRecord,
+    RuntimeProfileRecord,
+)
 from .runtime_profiles import (
+    BUSINESS_DOCUMENTER_SYSTEM_PROMPT,
+    BUSINESS_STRATEGIST_SYSTEM_PROMPT,
+    ODOO_SPECIALIST_SYSTEM_PROMPT,
     resolve_agent_runtime_profile,
     save_runtime_profile,
     seed_default_runtime_profile,
+    specialized_runtime_profile_payload,
 )
 from .settings import get_settings
 
@@ -30,17 +41,114 @@ def default_agent_payload(runtime_profile_id: str) -> dict:
     }
 
 
+def special_agent_payloads() -> list[dict]:
+    return [
+        {
+            "name": "Business Strategist",
+            "first_message": "Load me with the facts, constraints, and questions that matter. I will pressure-test them and build only grounded strategic outputs.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Business Strategist Runtime",
+            "runtime_profile_description": "Truth-first strategic analysis runtime for controlled document development.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Business Strategist Runtime",
+                description="Truth-first strategic analysis runtime for controlled document development.",
+                system_prompt=BUSINESS_STRATEGIST_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=True,
+                enable_odoo=True,
+            ),
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "Business Marketing & Strategy Documenter",
+            "first_message": "I am tracking approved material in the background. Call me in when you want structure, draft, refinement, or final document output.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Business Marketing & Strategy Documenter Runtime",
+            "runtime_profile_description": "Passive document compilation runtime for strategic document framing.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Business Marketing & Strategy Documenter Runtime",
+                description="Passive document compilation runtime for strategic document framing.",
+                system_prompt=BUSINESS_DOCUMENTER_SYSTEM_PROMPT,
+                conversation_mode="board",
+                enable_web=True,
+                enable_odoo=False,
+            ),
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "Odoo Specialist",
+            "first_message": "Give me the business question, company scope, and period scope. I will tell you what Odoo can actually prove.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Odoo Specialist Runtime",
+            "runtime_profile_description": "ERP-first governed retrieval runtime for exact Odoo evidence.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Odoo Specialist Runtime",
+                description="ERP-first governed retrieval runtime for exact Odoo evidence.",
+                system_prompt=ODOO_SPECIALIST_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=True,
+            ),
+            "is_default": False,
+            "enabled": True,
+        },
+    ]
+
+
 def seed_default_agent_profiles(session: Session) -> None:
     default_runtime_profile = seed_default_runtime_profile(session)
     existing = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.is_default.is_(True)))
-    if existing is not None:
-        if not existing.runtime_profile_id:
-            existing.runtime_profile_id = default_runtime_profile.id
-            session.commit()
-        return
-    payload = default_agent_payload(default_runtime_profile.id)
-    session.add(AgentProfileRecord(**payload))
-    session.commit()
+    changed = False
+    if existing is None:
+        payload = default_agent_payload(default_runtime_profile.id)
+        session.add(AgentProfileRecord(**payload))
+        changed = True
+    elif not existing.runtime_profile_id:
+        existing.runtime_profile_id = default_runtime_profile.id
+        changed = True
+
+    existing_by_name = {
+        agent.name: agent for agent in session.scalars(select(AgentProfileRecord))
+    }
+    existing_runtime_profiles_by_name = {
+        profile.name: profile for profile in session.scalars(select(RuntimeProfileRecord))
+    }
+    for payload in special_agent_payloads():
+        existing_runtime_profile = existing_runtime_profiles_by_name.get(payload["runtime_profile_name"])
+        runtime_profile_payload = {
+            **payload["runtime_profile_payload"],
+            "id": existing_runtime_profile.id if existing_runtime_profile is not None else None,
+        }
+        runtime_profile = save_runtime_profile(
+            session,
+            runtime_profile_payload,
+            existing_record=existing_runtime_profile,
+        )
+        existing_agent = existing_by_name.get(payload["name"])
+        if existing_agent is None:
+            session.add(
+                AgentProfileRecord(
+                    name=payload["name"],
+                    first_message=payload["first_message"],
+                    language=payload["language"],
+                    voice_id=payload["voice_id"],
+                    runtime_profile_id=runtime_profile.id,
+                    is_default=False,
+                    enabled=payload["enabled"],
+                )
+            )
+            changed = True
+            continue
+        if existing_agent.runtime_profile_id != runtime_profile.id:
+            existing_agent.runtime_profile_id = runtime_profile.id
+            changed = True
+    if changed:
+        session.commit()
 
 
 def list_agents(session: Session) -> list[AgentProfileRecord]:
@@ -165,6 +273,30 @@ def list_messages(session: Session, conversation_id: str, *, limit: int = 100) -
     return rows
 
 
+def create_document_frame(
+    session: Session,
+    *,
+    title: str = "Strategic document",
+    metadata_json: dict | None = None,
+) -> DocumentFrameRecord:
+    frame = DocumentFrameRecord(
+        title=(title.strip() or "Strategic document")[:256],
+        status="draft",
+        fragments_json=[],
+        metadata_json=dict(metadata_json or {}),
+    )
+    session.add(frame)
+    session.flush()
+    return frame
+
+
+def get_document_frame(session: Session, document_frame_id: str) -> DocumentFrameRecord:
+    frame = session.get(DocumentFrameRecord, document_frame_id)
+    if frame is None:
+        raise ValueError(f"document frame {document_frame_id} not found")
+    return frame
+
+
 def create_conversation(
     session: Session,
     *,
@@ -173,14 +305,19 @@ def create_conversation(
     corpora: list[str],
     api_mode: str,
     conversation_mode: str = "quick",
+    workflow_mode: str = "standard",
+    document_frame_id: str | None = None,
+    title: str | None = None,
 ) -> AgentConversationRecord:
-    title = (message.strip()[:80] or "New conversation").strip()
+    resolved_title = (title or message.strip()[:80] or "New conversation").strip()
     conversation = AgentConversationRecord(
         agent_id=agent_id,
-        title=title,
+        title=resolved_title,
         corpora_json=list(corpora),
         api_mode=api_mode,
         conversation_mode=conversation_mode,
+        workflow_mode=workflow_mode,
+        document_frame_id=document_frame_id,
     )
     session.add(conversation)
     session.flush()
@@ -198,6 +335,7 @@ def append_message(
     citations: list[dict] | None = None,
     api_mode: str | None = None,
     conversation_mode: str | None = None,
+    workflow_mode: str | None = None,
 ) -> AgentMessageRecord:
     message = AgentMessageRecord(
         conversation_id=conversation_id,
@@ -208,9 +346,44 @@ def append_message(
         citations_json=list(citations or []),
         api_mode=api_mode,
         conversation_mode=conversation_mode,
+        workflow_mode=workflow_mode,
     )
     session.add(message)
     return message
+
+
+def append_document_frame_fragment(
+    session: Session,
+    *,
+    document_frame_id: str,
+    source_conversation_id: str,
+    source_message_id: str | None,
+    fragment_type: str,
+    content: str,
+    title: str | None = None,
+) -> DocumentFrameRecord:
+    frame = get_document_frame(session, document_frame_id)
+    fragments = list(frame.fragments_json or [])
+    timestamp = datetime.now(UTC).isoformat()
+    fragments.append(
+        {
+            "id": hashlib.sha256(
+                f"{document_frame_id}:{source_conversation_id}:{source_message_id or ''}:{fragment_type}:{content}:{timestamp}".encode(
+                    "utf-8"
+                )
+            ).hexdigest()[:16],
+            "source_conversation_id": source_conversation_id,
+            "source_message_id": source_message_id,
+            "fragment_type": fragment_type,
+            "title": title,
+            "content": content,
+            "approved": True,
+            "created_at": timestamp,
+            "updated_at": timestamp,
+        }
+    )
+    frame.fragments_json = fragments
+    return frame
 
 
 def build_history_context(messages: list[AgentMessageRecord], *, window_messages: int) -> str:

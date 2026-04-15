@@ -33,6 +33,8 @@ async def default_consult_runner(
     agent_id: str,
     conversation_id: str | None,
     api_mode: str,
+    conversation_mode: str,
+    workflow_mode: str,
     use_approved_web: bool,
 ) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=300.0) as client:
@@ -43,6 +45,8 @@ async def default_consult_runner(
                 "agent_id": agent_id,
                 "conversation_id": conversation_id,
                 "api_mode": api_mode,
+                "conversation_mode": conversation_mode,
+                "workflow_mode": workflow_mode,
                 "use_approved_web": use_approved_web,
             },
         )
@@ -151,6 +155,8 @@ async def execute_workflow_run(
             workflow_config = dict((run.result_json or {}).get("workflow", {}))
             prompt = run.prompt
             api_mode = str(request_config.get("api_mode") or "responses")
+            conversation_mode = str(request_config.get("conversation_mode") or "quick")
+            workflow_mode = str(request_config.get("workflow_mode") or "standard")
             use_approved_web = bool(request_config.get("use_approved_web"))
             workflow_name = str(workflow_config.get("name") or run.workflow_id)
 
@@ -186,6 +192,8 @@ async def execute_workflow_run(
                     agent_id=step.agent_id,
                     conversation_id=step_conversation_id,
                     api_mode=api_mode,
+                    conversation_mode=conversation_mode,
+                    workflow_mode=workflow_mode,
                     use_approved_web=use_approved_web,
                 )
                 with session_factory() as session:
@@ -199,6 +207,8 @@ async def execute_workflow_run(
                         citations=result.get("citations") or [],
                         metadata_json={
                             "query_mode": result.get("query_mode"),
+                            "conversation_mode": result.get("conversation_mode") or conversation_mode,
+                            "workflow_mode": result.get("workflow_mode") or workflow_mode,
                             "cached": bool(result.get("cached")),
                             "usage": result.get("usage"),
                         },
@@ -224,6 +234,8 @@ async def execute_workflow_run(
                         error_message=str(exc)[:2000],
                         metadata_json={
                             "executor": "control-api",
+                            "conversation_mode": conversation_mode,
+                            "workflow_mode": workflow_mode,
                         },
                     )
 
