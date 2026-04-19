@@ -4,6 +4,7 @@ import AgentConfigPage from "./pages/AgentConfigPage";
 import ConnectionsPage from "./pages/ConnectionsPage";
 import Dashboard from "./pages/Dashboard";
 import DataSourcesPage from "./pages/DataSourcesPage";
+import ConfigExplorerPage from "./pages/ConfigExplorerPage";
 import KnowledgeLabPage from "./pages/KnowledgeLabPage";
 import Logs from "./pages/Logs";
 import PipelinesPage from "./pages/PipelinesPage";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="knowledge-lab" element={<KnowledgeLabPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="tools" element={<ToolsPage />} />
+        <Route path="config-explorer" element={<ConfigExplorerPage />} />
         <Route path="agent" element={<AgentConfigPage />} />
         <Route path="logs" element={<Logs />} />
       </Route>

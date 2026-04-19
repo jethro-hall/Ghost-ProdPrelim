@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import mimetypes
 import re
 import shutil
@@ -113,6 +114,7 @@ from .schemas import (
     RuntimeDefaultsPayload,
     RuntimeDefaultsView,
     PolicyChangeAuditView,
+    ConfigExplorerEntryView,
     RuntimeProfileView,
     RunSummaryView,
     RequestedParseLane,
@@ -570,6 +572,32 @@ def _policy_change_audit_to_view(record) -> PolicyChangeAuditView:
         created_at=record.created_at,
         updated_at=record.updated_at,
     )
+
+
+def _build_config_explorer_entries(session: Session) -> list[ConfigExplorerEntryView]:
+    rows = list(session.scalars(select(RuntimeProfileRecord).order_by(RuntimeProfileRecord.updated_at.desc())))
+    entries: list[ConfigExplorerEntryView] = []
+    for row in rows:
+        chunks = [
+            ("guardrails", dict(row.guardrails_config_json or {})),
+            ("llm", dict(row.llm_config_json or {})),
+            ("kb", dict(row.kb_config_json or {})),
+            ("retrieval", dict(row.retrieval_config_json or {})),
+            ("tool_policy", dict(row.tool_policy_config_json or {})),
+        ]
+        for namespace, payload in chunks:
+            entries.append(
+                ConfigExplorerEntryView(
+                    key=f"runtime_profile.{row.id}.{namespace}",
+                    namespace=namespace,
+                    source_type="runtime_profile",
+                    source_id=row.id,
+                    source_name=row.name,
+                    value_json=payload,
+                    updated_at=row.updated_at,
+                )
+            )
+    return entries
 
 
 def _compute_vector_stats(session: Session, corpus: str | None = None) -> VectorStatsView:
@@ -1381,6 +1409,33 @@ def create_app() -> FastAPI:
             return RuntimeDefaultsView(**save_runtime_defaults(session, body.model_dump()))
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
+
+    @app.get("/api/config/explorer", response_model=list[ConfigExplorerEntryView])
+    def api_config_explorer(
+        q: str | None = Query(default=None),
+        namespace: str | None = Query(default=None),
+        session: Session = Depends(get_session),
+    ) -> list[ConfigExplorerEntryView]:
+        entries = _build_config_explorer_entries(session)
+        search_term = str(q or "").strip().casefold()
+        namespace_filter = str(namespace or "").strip().casefold()
+        if namespace_filter:
+            entries = [entry for entry in entries if entry.namespace.casefold() == namespace_filter]
+        if search_term:
+            filtered: list[ConfigExplorerEntryView] = []
+            for entry in entries:
+                haystack = " ".join(
+                    [
+                        entry.key,
+                        entry.namespace,
+                        entry.source_name,
+                        json.dumps(entry.value_json, sort_keys=True),
+                    ]
+                ).casefold()
+                if search_term in haystack:
+                    filtered.append(entry)
+            entries = filtered
+        return entries
 
     @app.get("/api/connections", response_model=list[ConnectionView])
     def api_list_connections(session: Session = Depends(get_session)) -> list[ConnectionView]:

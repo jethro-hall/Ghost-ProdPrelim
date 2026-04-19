@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -1317,6 +1318,16 @@ async def fetch_query_plan(
         return response.json()
 
 
+def resolve_docx_operation(docx_mode: Any) -> str:
+    raw = getattr(docx_mode, "operation", "preview")
+    if hasattr(raw, "value"):
+        raw = getattr(raw, "value")
+    operation = str(raw or "preview").strip().lower()
+    if "." in operation:
+        operation = operation.split(".")[-1]
+    return operation or "preview"
+
+
 async def render_docx_with_sidecar(
     *,
     docx_mode: Any,
@@ -1327,7 +1338,7 @@ async def render_docx_with_sidecar(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
         return [], []
-    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    operation = resolve_docx_operation(docx_mode)
     path = "/render/finalize" if operation == "finalize" else "/render/preview"
     template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
     payload = {
@@ -1363,12 +1374,14 @@ async def render_docx_with_sidecar(
         ]
 
 
-def validate_docx_finalize_output(*, operation: str, answer_text: str) -> list[dict[str, Any]]:
+def validate_docx_finalize_output(
+    *, operation: str, answer_text: str, required_sections: list[str] | None = None
+) -> list[dict[str, Any]]:
     if operation != "finalize":
         return []
     lowered = str(answer_text or "").casefold()
-    required_sections = ("facts", "inferences", "assumptions", "risks", "actions")
-    missing = [section for section in required_sections if section not in lowered]
+    sections = list(required_sections or ["facts", "inferences", "assumptions", "risks", "actions"])
+    missing = [section for section in sections if section not in lowered]
     if not missing:
         return []
     return [
@@ -1390,7 +1403,7 @@ def render_docx_with_sidecar_sync(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
         return [], []
-    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    operation = resolve_docx_operation(docx_mode)
     path = "/render/finalize" if operation == "finalize" else "/render/preview"
     template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
     payload = {
@@ -1450,7 +1463,115 @@ def resolve_workflow_mode(*, requested_mode: str | None, conversation: AgentConv
     return "standard"
 
 
-def build_effective_system_prompt(*, base_system_prompt: str, conversation_mode: str, workflow_mode: str) -> str:
+def build_owner_operator_questionnaire_directives(*, guardrails_config: dict[str, Any]) -> str:
+    questionnaire = str(guardrails_config.get("owner_operator_questionnaire") or "").strip()
+    compact = str(guardrails_config.get("owner_operator_questionnaire_compact") or "").strip()
+    if not questionnaire and not compact:
+        return ""
+    return (
+        "Owner-operator guidance template (high priority):\n"
+        f"{questionnaire or compact}\n\n"
+        "Enforcement notes:\n"
+        "- Treat branch/location/store/site/shop as equivalent scope words.\n"
+        "- If Retail, Burleigh, Brisbane, or Online are present, avoid redundant branch-mapping blockers.\n"
+        "- Lead with a decisive answer and recommended actions; ask permission before destructive changes.\n"
+        "- Expand key abbreviations once, for example return on ad spend (ROAS)."
+    ).strip()
+
+
+def _looks_like_strategy_document_request(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    return any(
+        token in lowered
+        for token in ("business plan", "board strategy", "strategy memo", "board memo", "memo", "plan")
+    )
+
+
+def _looks_like_financial_report_request(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    finance_terms = ("financial report", "revenue", "cogs", "gross profit", "gross margin", "cashflow", "p&l", "profit")
+    board_terms = ("board", "startup", "monthly", "report")
+    return any(term in lowered for term in finance_terms) and any(term in lowered for term in board_terms)
+
+
+def build_reporting_format_directives(*, message: str, guardrails_config: dict[str, Any]) -> str:
+    strategy = _looks_like_strategy_document_request(message)
+    financial = _looks_like_financial_report_request(message)
+    if not strategy and not financial:
+        return ""
+    board_contract = str(guardrails_config.get("board_document_format_contract") or "").strip()
+    financial_contract = str(guardrails_config.get("financial_report_format_contract") or "").strip()
+    lines = ["Formatting contract (mandatory):"]
+    if strategy:
+        lines.extend(
+            [
+                "- Strategy, plan, and memo outputs must follow a board-ready business-plan structure.",
+                (
+                    f"- Use this configured section order:\n{board_contract}"
+                    if board_contract
+                    else "- Use sections in order: Executive summary, Context, Objectives, Strategic options, Chosen plan, Execution roadmap, Risks and mitigations, Decision requests."
+                ),
+                "- End with explicit owners, due dates, and measurable outcomes.",
+            ]
+        )
+    if financial:
+        lines.extend(
+            [
+                "- Financial reports must follow board reporting principles and be decision-first.",
+                (
+                    f"- Use this configured financial structure:\n{financial_contract}"
+                    if financial_contract
+                    else "- Include: headline performance summary, concise KPI table, variance vs prior period/plan, cash and runway implications, top drivers, risks, and next actions."
+                ),
+                "- Do not output raw ledger dumps without executive framing and variance commentary.",
+            ]
+        )
+    return "\n".join(lines).strip()
+
+
+def resolve_docx_finalize_required_sections(*, guardrails_config: dict[str, Any] | None) -> list[str]:
+    incoming = (guardrails_config or {}).get("docx_finalize_required_sections")
+    if not isinstance(incoming, list):
+        incoming = ["facts", "inferences", "assumptions", "risks", "actions"]
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in incoming:
+        section = str(raw or "").strip().casefold()
+        if not section or section in seen:
+            continue
+        seen.add(section)
+        normalized.append(section)
+    return normalized or ["facts", "inferences", "assumptions", "risks", "actions"]
+
+
+def normalize_docx_finalize_answer(*, operation: str, answer_text: str, required_sections: list[str]) -> str:
+    if operation != "finalize":
+        return answer_text
+    text = str(answer_text or "").strip()
+    lowered = text.casefold()
+    missing = [section for section in required_sections if section not in lowered]
+    if not missing:
+        return text
+    section_chunks: list[str] = []
+    if text:
+        section_chunks.append(text)
+    for section in missing:
+        title = section.capitalize()
+        section_chunks.append(
+            f"### {title}\n- PROVISIONAL: section auto-inserted for finalize contract compliance. "
+            "Use source evidence and operator review to harden this section."
+        )
+    return "\n\n".join(section_chunks).strip()
+
+
+def build_effective_system_prompt(
+    *,
+    base_system_prompt: str,
+    conversation_mode: str,
+    workflow_mode: str,
+    guardrails_config: dict[str, Any] | None = None,
+    message: str = "",
+) -> str:
     workflow_directives = ""
     if workflow_mode == "data_collector":
         workflow_directives = (
@@ -1495,6 +1616,17 @@ def build_effective_system_prompt(*, base_system_prompt: str, conversation_mode:
         prompt = base_system_prompt.strip()
     if workflow_directives:
         prompt = f"{prompt}\n\n{workflow_directives}".strip()
+    owner_operator_directives = build_owner_operator_questionnaire_directives(
+        guardrails_config=dict(guardrails_config or {})
+    )
+    if owner_operator_directives:
+        prompt = f"{prompt}\n\n{owner_operator_directives}".strip()
+    reporting_format_directives = build_reporting_format_directives(
+        message=message,
+        guardrails_config=dict(guardrails_config or {}),
+    )
+    if reporting_format_directives:
+        prompt = f"{prompt}\n\n{reporting_format_directives}".strip()
     return prompt
 
 
@@ -1518,7 +1650,7 @@ def resolve_docx_fixed_agent(session: Session, *, fallback_agent) -> Any:
 def apply_docx_mode_directives(*, base_prompt: str, docx_mode: Any) -> str:
     if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
         return base_prompt
-    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    operation = resolve_docx_operation(docx_mode)
     template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
     directives = [
         "Doc mode: Apryse document workflow is enabled.",
@@ -1582,6 +1714,7 @@ def build_runtime_context_block(
     used_approved_web: bool,
     tool_summary: list[dict] | None = None,
     openai_responses_chain: bool = False,
+    owner_operator_template_compact: str = "",
 ) -> str:
     memory_line = (
         "Conversation state is carried by OpenAI Responses API; no transcript is pasted here."
@@ -1608,6 +1741,11 @@ def build_runtime_context_block(
                     else "none"
                 )
             ),
+            (
+                f"Owner-operator compact guidance: {owner_operator_template_compact}"
+                if owner_operator_template_compact.strip()
+                else "Owner-operator compact guidance: default"
+            ),
         ]
     )
 
@@ -1621,6 +1759,7 @@ def build_effective_snapshot_id(
     workflow_mode: str,
     tool_summary: list[dict],
     use_approved_web: bool,
+    owner_operator_template_compact: str = "",
 ) -> str:
     snapshot_payload = {
         "agent_id": agent_id,
@@ -1630,6 +1769,7 @@ def build_effective_snapshot_id(
         "workflow_mode": workflow_mode,
         "tool_summary": tool_summary,
         "use_approved_web": use_approved_web,
+        "owner_operator_template_compact": owner_operator_template_compact,
     }
     return hashlib.sha256(json.dumps(snapshot_payload, sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
@@ -2266,6 +2406,24 @@ def _looks_like_blocking_finance_answer(answer_text: str) -> bool:
     return any(phrase in lowered for phrase in blocker_phrases)
 
 
+def normalize_business_abbreviations(answer_text: str) -> str:
+    text = str(answer_text or "")
+    lowered = text.casefold()
+    replacements: list[tuple[str, str]] = [
+        ("roas", "return on ad spend (ROAS)"),
+        ("cogs", "cost of goods sold (COGS)"),
+        ("aov", "average order value (AOV)"),
+    ]
+    for token, expanded in replacements:
+        if expanded.casefold() in lowered:
+            continue
+        pattern = re.compile(rf"\b{re.escape(token)}\b", re.IGNORECASE)
+        text, count = pattern.subn(expanded, text, count=1)
+        if count:
+            lowered = text.casefold()
+    return text
+
+
 def normalize_finance_closeout_answer(
     *,
     answer_text: str,
@@ -2274,10 +2432,10 @@ def normalize_finance_closeout_answer(
     tool_events: list[ChatToolEvent],
 ) -> str:
     if not _is_business_finance_closeout_request(request_message):
-        return answer_text
+        return normalize_business_abbreviations(answer_text)
     executed_events = [event for event in tool_events if event.tool_id == "odoo_primary" and event.status == "executed"]
     if not executed_events:
-        return answer_text
+        return normalize_business_abbreviations(answer_text)
     plan = dict(tool_plan or {})
     payload = dict(plan.get("payload") or {})
     date_from = str(payload.get("date_from") or "unknown")
@@ -2298,7 +2456,7 @@ def normalize_finance_closeout_answer(
             + normalized.strip()
         ).strip()
     if not _looks_like_blocking_finance_answer(answer_text):
-        return normalized
+        return normalize_business_abbreviations(normalized)
     evidence_lines = [
         f"- `{event.operation or event.tool_id}`: {event.summary or 'executed'}"
         for event in executed_events[:5]
@@ -2319,7 +2477,7 @@ def normalize_finance_closeout_answer(
         "#### Analyst Notes",
         normalized.strip(),
     ]
-    return "\n".join(rewritten).strip()
+    return normalize_business_abbreviations("\n".join(rewritten).strip())
 
 
 def log_answer_prompt_compaction(*, trace_id: str, package: PreparedAnswerPrompt) -> None:
@@ -2944,7 +3102,7 @@ def create_app() -> FastAPI:
         requested_agent = get_agent(session, body.agent_id)
         agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
-        if body.docx_mode.enabled and body.docx_mode.operation == "finalize" and not str(body.docx_mode.template_id or "").strip():
+        if body.docx_mode.enabled and resolve_docx_operation(body.docx_mode) == "finalize" and not str(body.docx_mode.template_id or "").strip():
             raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
@@ -2964,6 +3122,8 @@ def create_app() -> FastAPI:
             base_system_prompt=str(guardrails_config.get("system_prompt", "")),
             conversation_mode=conversation_mode,
             workflow_mode=workflow_mode,
+            guardrails_config=guardrails_config,
+            message=body.message,
         )
         effective_system_prompt = apply_docx_mode_directives(base_prompt=effective_system_prompt, docx_mode=body.docx_mode)
         top_k = resolve_effective_query_top_k(
@@ -3050,6 +3210,9 @@ def create_app() -> FastAPI:
             workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
+            owner_operator_template_compact=str(
+                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            ),
         )
         runtime_context = build_runtime_context_block(
             agent_name=agent.name,
@@ -3062,6 +3225,9 @@ def create_app() -> FastAPI:
             used_approved_web=use_approved_web,
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
+            owner_operator_template_compact=str(
+                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            ),
         )
         plan = await fetch_query_plan(
             plan_query_message,
@@ -3230,8 +3396,18 @@ def create_app() -> FastAPI:
                 details={"agent_id": agent.id, "conversation_id": conversation.id},
             )
             if body.docx_mode.enabled:
-                operation = str(body.docx_mode.operation or "preview")
-                finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=cached.answer_text)
+                operation = resolve_docx_operation(body.docx_mode)
+                required_sections = resolve_docx_finalize_required_sections(guardrails_config=guardrails_config)
+                docx_answer_text = normalize_docx_finalize_answer(
+                    operation=operation,
+                    answer_text=cached.answer_text,
+                    required_sections=required_sections,
+                )
+                finalize_diagnostics = validate_docx_finalize_output(
+                    operation=operation,
+                    answer_text=docx_answer_text,
+                    required_sections=required_sections,
+                )
                 if finalize_diagnostics:
                     docx_artifacts = []
                     docx_diagnostics = list(finalize_diagnostics)
@@ -3241,7 +3417,7 @@ def create_app() -> FastAPI:
                         trace_id=request.state.trace_id,
                         agent_id=agent.id,
                         conversation_id=conversation.id,
-                        answer_text=cached.answer_text,
+                        answer_text=docx_answer_text,
                     )
                 upsert_docx_session(
                     session,
@@ -3545,8 +3721,18 @@ def create_app() -> FastAPI:
                 citations=citations,
             )
         if body.docx_mode.enabled:
-            operation = str(body.docx_mode.operation or "preview")
-            finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=answer)
+            operation = resolve_docx_operation(body.docx_mode)
+            required_sections = resolve_docx_finalize_required_sections(guardrails_config=guardrails_config)
+            docx_answer_text = normalize_docx_finalize_answer(
+                operation=operation,
+                answer_text=answer,
+                required_sections=required_sections,
+            )
+            finalize_diagnostics = validate_docx_finalize_output(
+                operation=operation,
+                answer_text=docx_answer_text,
+                required_sections=required_sections,
+            )
             if finalize_diagnostics:
                 docx_artifacts = []
                 docx_diagnostics = list(finalize_diagnostics)
@@ -3556,7 +3742,7 @@ def create_app() -> FastAPI:
                     trace_id=request.state.trace_id,
                     agent_id=agent.id,
                     conversation_id=conversation.id,
-                    answer_text=answer,
+                    answer_text=docx_answer_text,
                 )
             upsert_docx_session(
                 session,
@@ -3597,7 +3783,7 @@ def create_app() -> FastAPI:
         requested_agent = get_agent(session, body.agent_id)
         agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
-        if body.docx_mode.enabled and body.docx_mode.operation == "finalize" and not str(body.docx_mode.template_id or "").strip():
+        if body.docx_mode.enabled and resolve_docx_operation(body.docx_mode) == "finalize" and not str(body.docx_mode.template_id or "").strip():
             raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
@@ -3617,6 +3803,8 @@ def create_app() -> FastAPI:
             base_system_prompt=str(guardrails_config.get("system_prompt", "")),
             conversation_mode=conversation_mode,
             workflow_mode=workflow_mode,
+            guardrails_config=guardrails_config,
+            message=body.message,
         )
         effective_system_prompt = apply_docx_mode_directives(base_prompt=effective_system_prompt, docx_mode=body.docx_mode)
         top_k = resolve_effective_query_top_k(
@@ -3703,6 +3891,9 @@ def create_app() -> FastAPI:
             workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
+            owner_operator_template_compact=str(
+                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            ),
         )
         runtime_context = build_runtime_context_block(
             agent_name=agent.name,
@@ -3715,6 +3906,9 @@ def create_app() -> FastAPI:
             used_approved_web=use_approved_web,
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
+            owner_operator_template_compact=str(
+                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            ),
         )
         plan = await fetch_query_plan(
             plan_query_message,
@@ -4197,8 +4391,18 @@ def create_app() -> FastAPI:
             route_decision_with_execution = dict(route_decision)
             route_decision_with_execution["llm_execution"] = llm_execution_steps
             if body.docx_mode.enabled:
-                operation = str(body.docx_mode.operation or "preview")
-                finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=answer_text)
+                operation = resolve_docx_operation(body.docx_mode)
+                required_sections = resolve_docx_finalize_required_sections(guardrails_config=guardrails_config)
+                docx_answer_text = normalize_docx_finalize_answer(
+                    operation=operation,
+                    answer_text=answer_text,
+                    required_sections=required_sections,
+                )
+                finalize_diagnostics = validate_docx_finalize_output(
+                    operation=operation,
+                    answer_text=docx_answer_text,
+                    required_sections=required_sections,
+                )
                 if finalize_diagnostics:
                     stream_docx_artifacts = []
                     stream_docx_diagnostics = list(finalize_diagnostics)
@@ -4208,7 +4412,7 @@ def create_app() -> FastAPI:
                         trace_id=request.state.trace_id,
                         agent_id=agent.id,
                         conversation_id=conversation.id,
-                        answer_text=answer_text,
+                        answer_text=docx_answer_text,
                     )
             with SessionLocal() as stream_session:
                 append_message(

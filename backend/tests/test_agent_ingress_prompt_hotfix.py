@@ -211,7 +211,7 @@ def test_chat_completions_budgets_are_tighter_and_retry_drops_history() -> None:
         for index in range(48)
     )
 
-    responses_primary, responses_retry = agent_ingress.prepare_answer_prompt_variants(
+    responses_primary, responses_retry, responses_tertiary = agent_ingress.prepare_answer_prompt_variants(
         api_mode="responses",
         agent_name="Hotfix Agent",
         system_prompt="System prompt is passed separately.",
@@ -221,7 +221,7 @@ def test_chat_completions_budgets_are_tighter_and_retry_drops_history() -> None:
         approved_web_context="Approved source evidence " * 80,
         upload_context="Upload context " * 120,
     )
-    chat_primary, chat_retry = agent_ingress.prepare_answer_prompt_variants(
+    chat_primary, chat_retry, chat_tertiary = agent_ingress.prepare_answer_prompt_variants(
         api_mode="chat_completions",
         agent_name="Hotfix Agent",
         system_prompt="System prompt is passed separately.",
@@ -235,7 +235,10 @@ def test_chat_completions_budgets_are_tighter_and_retry_drops_history() -> None:
     assert chat_primary.total_chars < responses_primary.total_chars
     assert chat_retry.total_chars < responses_retry.total_chars
     assert chat_retry.total_chars <= chat_primary.total_chars - 1200
+    assert chat_tertiary.total_chars <= chat_retry.total_chars
+    assert responses_tertiary.total_chars <= responses_retry.total_chars
     assert chat_retry.history_chars == 0
+    assert chat_tertiary.history_chars == 0
     assert chat_primary.prompt.endswith(f"User question: {question}")
     assert chat_retry.prompt.endswith(f"User question: {question}")
 
@@ -358,8 +361,9 @@ def test_agent_chat_stream_emits_length_fallback_and_done_when_retry_still_fails
     assert events[0]["type"] == "start"
     assert events[-1]["type"] == "done"
     assert "upstream model rejected the prompt length" in events[1]["delta"]
-    assert len(attempt_prompts) == 2
+    assert len(attempt_prompts) == 3
     assert len(attempt_prompts[1]) <= len(attempt_prompts[0]) - 1200
+    assert len(attempt_prompts[2]) <= len(attempt_prompts[1]) - 800
     expected = agent_ingress.resolve_answer_max_tokens(
         api_mode="chat_completions",
         configured_max_tokens=configured_agent_max_tokens(SessionLocal, agent_id=agent_id),
@@ -367,7 +371,7 @@ def test_agent_chat_stream_emits_length_fallback_and_done_when_retry_still_fails
         trace_id="test",
         openai_responses_chain=False,
     )
-    assert attempt_max_tokens == [expected, expected]
+    assert attempt_max_tokens == [expected, expected, expected]
 
     with SessionLocal() as session:
         assistant_messages = list(
@@ -820,6 +824,47 @@ def test_validate_docx_finalize_output_allows_preview_without_sections() -> None
         answer_text="Short preview content.",
     )
     assert diagnostics == []
+
+
+def test_build_owner_operator_questionnaire_directives_uses_guardrail_template() -> None:
+    directives = agent_ingress.build_owner_operator_questionnaire_directives(
+        guardrails_config={
+            "owner_operator_questionnaire": "Q1: decision needed. Q2: scope.",
+            "owner_operator_questionnaire_compact": "decision-first compact",
+        }
+    )
+    assert "Owner-operator guidance template" in directives
+    assert "Q1: decision needed" in directives
+    assert "branch/location/store/site/shop" in directives
+
+
+def test_normalize_business_abbreviations_expands_once() -> None:
+    normalized = agent_ingress.normalize_business_abbreviations("ROAS improved while AOV held steady and COGS fell.")
+    assert "return on ad spend (ROAS)" in normalized
+    assert "average order value (AOV)" in normalized
+    assert "cost of goods sold (COGS)" in normalized
+
+
+def test_build_reporting_format_directives_for_strategy_and_finance() -> None:
+    directives = agent_ingress.build_reporting_format_directives(
+        message="Create a board strategy memo and financial report covering revenue, cogs, cashflow.",
+        guardrails_config={},
+    )
+    assert "Formatting contract (mandatory)" in directives
+    assert "board-ready business-plan structure" in directives
+    assert "board reporting principles" in directives
+
+
+def test_normalize_docx_finalize_answer_inserts_missing_sections() -> None:
+    normalized = agent_ingress.normalize_docx_finalize_answer(
+        operation="finalize",
+        answer_text="### Facts\n- Revenue increased.",
+        required_sections=["facts", "inferences", "assumptions", "risks", "actions"],
+    )
+    assert "### Inferences" in normalized
+    assert "### Assumptions" in normalized
+    assert "### Risks" in normalized
+    assert "### Actions" in normalized
 
 
 def test_prepare_tool_evidence_resolves_named_company_terms_before_finance_comparison(monkeypatch) -> None:
