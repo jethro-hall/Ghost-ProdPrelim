@@ -9,14 +9,23 @@ from sqlalchemy.orm import Session
 from .models import (
     AgentProfileRecord,
     WorkflowDefinitionRecord,
+    WorkflowRunEventRecord,
     WorkflowRunRecord,
     WorkflowStepRunRecord,
+    WorkflowTaskRecord,
     utc_now,
 )
 
 STEP_TERMINAL_STATUSES = {"completed", "failed", "aborted"}
 RUN_TERMINAL_STATUSES = {"completed", "completed_with_errors", "failed", "aborted"}
 SUPPORTED_WORKFLOW_NODE_TYPES = {"child_agent", "head_agent_synthesis", "ui_grouped_results"}
+TASK_STATUS_FROM_STEP_STATUS = {
+    "pending": "pending",
+    "running": "running",
+    "completed": "completed",
+    "failed": "failed",
+    "aborted": "aborted",
+}
 
 DEFAULT_SUB_AGENT_PROMPT_TEMPLATE = (
     "You are acting as a specialist sub-agent inside the workflow '{{workflow_name}}'.\n\n"
@@ -235,6 +244,92 @@ def list_workflow_steps(session: Session, run_id: str) -> list[WorkflowStepRunRe
     )
 
 
+def list_workflow_tasks(session: Session, run_id: str) -> list[WorkflowTaskRecord]:
+    return list(
+        session.scalars(
+            select(WorkflowTaskRecord)
+            .where(WorkflowTaskRecord.run_id == run_id)
+            .order_by(WorkflowTaskRecord.sequence.asc(), WorkflowTaskRecord.created_at.asc())
+        )
+    )
+
+
+def list_workflow_run_events(session: Session, run_id: str) -> list[WorkflowRunEventRecord]:
+    return list(
+        session.scalars(
+            select(WorkflowRunEventRecord)
+            .where(WorkflowRunEventRecord.run_id == run_id)
+            .order_by(WorkflowRunEventRecord.sequence.asc(), WorkflowRunEventRecord.created_at.asc())
+        )
+    )
+
+
+def _next_event_sequence(session: Session, run_id: str) -> int:
+    latest = session.scalar(
+        select(WorkflowRunEventRecord.sequence)
+        .where(WorkflowRunEventRecord.run_id == run_id)
+        .order_by(WorkflowRunEventRecord.sequence.desc())
+        .limit(1)
+    )
+    return int(latest or 0) + 1
+
+
+def append_workflow_run_event(
+    session: Session,
+    *,
+    run_id: str,
+    event_type: str,
+    task_key: str | None = None,
+    actor_id: str | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> WorkflowRunEventRecord:
+    event = WorkflowRunEventRecord(
+        run_id=run_id,
+        sequence=_next_event_sequence(session, run_id),
+        event_type=event_type,
+        task_key=task_key,
+        actor_id=actor_id,
+        metadata_json=metadata_json or {},
+    )
+    session.add(event)
+    session.flush()
+    return event
+
+
+def replay_workflow_run_state_from_events(session: Session, run_id: str) -> dict[str, Any]:
+    events = list_workflow_run_events(session, run_id)
+    state: dict[str, Any] = {
+        "status": "queued",
+        "tasks": {},
+        "last_sequence": 0,
+    }
+    for event in events:
+        state["last_sequence"] = event.sequence
+        event_type = str(event.event_type or "")
+        task_key = str(event.task_key or "").strip() or None
+        if event_type == "RUN_ABORTED":
+            state["status"] = "aborted"
+        elif event_type == "RUN_FAILED":
+            state["status"] = "failed"
+        elif event_type == "RUN_COMPLETED":
+            state["status"] = "completed"
+        elif event_type in {"TASK_CREATED", "TASK_DISPATCHED", "TASK_STARTED", "TASK_COMPLETED", "TASK_FAILED", "TASK_ABORTED"}:
+            if task_key is None:
+                continue
+            task_state = state["tasks"].setdefault(task_key, {"status": "pending"})
+            if event_type == "TASK_DISPATCHED":
+                task_state["status"] = "queued"
+            elif event_type == "TASK_STARTED":
+                task_state["status"] = "running"
+            elif event_type == "TASK_COMPLETED":
+                task_state["status"] = "completed"
+            elif event_type == "TASK_FAILED":
+                task_state["status"] = "failed"
+            elif event_type == "TASK_ABORTED":
+                task_state["status"] = "aborted"
+    return state
+
+
 def get_workflow_run(session: Session, run_id: str) -> WorkflowRunRecord:
     run = session.get(WorkflowRunRecord, run_id)
     if run is None:
@@ -309,6 +404,100 @@ def _apply_run_rollup(run: WorkflowRunRecord, steps: list[WorkflowStepRunRecord]
     }
 
 
+def _task_key_for_step(step: WorkflowStepRunRecord) -> str:
+    return f"{step.node_id}:{step.sequence}"
+
+
+def _ensure_workflow_tasks_for_run(session: Session, run_id: str) -> None:
+    existing_by_step_id = {
+        str(task.step_run_id): task
+        for task in list_workflow_tasks(session, run_id)
+        if task.step_run_id is not None
+    }
+    for step in list_workflow_steps(session, run_id):
+        task = existing_by_step_id.get(step.id)
+        if task is None:
+            task = WorkflowTaskRecord(
+                run_id=run_id,
+                task_key=_task_key_for_step(step),
+                title=f"{step.agent_name or step.node_id}: {step.node_type}",
+                task_kind="head_synthesis" if step.node_type == "head_agent_synthesis" else "child_agent",
+                status=TASK_STATUS_FROM_STEP_STATUS.get(step.status, "pending"),
+                sequence=step.sequence,
+                assigned_agent_id=step.agent_id,
+                assigned_agent_name=step.agent_name,
+                step_run_id=step.id,
+                metadata_json={
+                    "node_id": step.node_id,
+                    "node_type": step.node_type,
+                    "step_role": str((step.metadata_json or {}).get("step_role") or ""),
+                },
+                started_at=step.started_at,
+                completed_at=step.completed_at,
+            )
+            session.add(task)
+            append_workflow_run_event(
+                session,
+                run_id=run_id,
+                event_type="TASK_CREATED",
+                task_key=task.task_key,
+                actor_id=step.agent_id,
+                metadata_json={
+                    "step_id": step.id,
+                    "node_type": step.node_type,
+                    "agent_name": step.agent_name,
+                },
+            )
+            continue
+        next_status = TASK_STATUS_FROM_STEP_STATUS.get(step.status, "pending")
+        if task.status != next_status:
+            task.status = next_status
+        task.started_at = step.started_at
+        task.completed_at = step.completed_at
+        task.assigned_agent_id = step.agent_id
+        task.assigned_agent_name = step.agent_name
+
+
+def _sync_task_from_step(
+    session: Session,
+    *,
+    run_id: str,
+    step: WorkflowStepRunRecord,
+    event_type: str | None = None,
+    metadata_json: dict[str, Any] | None = None,
+) -> None:
+    task = session.scalar(
+        select(WorkflowTaskRecord).where(
+            WorkflowTaskRecord.run_id == run_id,
+            WorkflowTaskRecord.step_run_id == step.id,
+        )
+    )
+    if task is None:
+        _ensure_workflow_tasks_for_run(session, run_id)
+        task = session.scalar(
+            select(WorkflowTaskRecord).where(
+                WorkflowTaskRecord.run_id == run_id,
+                WorkflowTaskRecord.step_run_id == step.id,
+            )
+        )
+    if task is None:
+        return
+    task.status = TASK_STATUS_FROM_STEP_STATUS.get(step.status, "pending")
+    task.started_at = step.started_at
+    task.completed_at = step.completed_at
+    task.assigned_agent_id = step.agent_id
+    task.assigned_agent_name = step.agent_name
+    if event_type:
+        append_workflow_run_event(
+            session,
+            run_id=run_id,
+            event_type=event_type,
+            task_key=task.task_key,
+            actor_id=step.agent_id,
+            metadata_json=metadata_json or {},
+        )
+
+
 def create_workflow_run(
     session: Session,
     *,
@@ -375,6 +564,27 @@ def create_workflow_run(
     )
     session.add(run)
     session.flush()
+    append_workflow_run_event(
+        session,
+        run_id=run.id,
+        event_type="RUN_CREATED",
+        actor_id=resolved_head_agent_id,
+        metadata_json={
+            "workflow_id": definition.workflow_id,
+            "surface": surface,
+            "requested_agent_ids": normalized_agent_ids,
+        },
+    )
+    append_workflow_run_event(
+        session,
+        run_id=run.id,
+        event_type="PLAN_GRAPH_CREATED",
+        actor_id=resolved_head_agent_id,
+        metadata_json={
+            "workflow_name": definition_payload["name"],
+            "node_count": len(definition_payload["nodes"]),
+        },
+    )
 
     sequence = 1
     for node in definition_payload["nodes"]:
@@ -422,6 +632,7 @@ def create_workflow_run(
             sequence += 1
 
     session.flush()
+    _ensure_workflow_tasks_for_run(session, run.id)
     steps = list_workflow_steps(session, run.id)
     _apply_run_rollup(run, steps)
     session.commit()
@@ -438,6 +649,7 @@ def update_workflow_run(
     result_json: dict[str, Any] | None = None,
 ) -> WorkflowRunRecord:
     run = get_workflow_run(session, run_id)
+    prior_status = run.status
     if status is not None:
         run.status = status
         run.current_step = "completed" if status in RUN_TERMINAL_STATUSES else run.current_step
@@ -448,6 +660,13 @@ def update_workflow_run(
                     if step.status not in STEP_TERMINAL_STATUSES:
                         step.status = "aborted"
                         step.completed_at = step.completed_at or utc_now()
+                        _sync_task_from_step(
+                            session,
+                            run_id=run.id,
+                            step=step,
+                            event_type="TASK_ABORTED",
+                            metadata_json={"reason": "run_aborted"},
+                        )
         else:
             run.started_at = run.started_at or utc_now()
     if error_message is not None:
@@ -457,6 +676,22 @@ def update_workflow_run(
 
     session.flush()
     _apply_run_rollup(run, list_workflow_steps(session, run.id))
+    if status is not None and status != prior_status:
+        terminal_event = None
+        if status == "completed":
+            terminal_event = "RUN_COMPLETED"
+        elif status in {"completed_with_errors", "failed"}:
+            terminal_event = "RUN_FAILED"
+        elif status == "aborted":
+            terminal_event = "RUN_ABORTED"
+        if terminal_event is not None:
+            append_workflow_run_event(
+                session,
+                run_id=run.id,
+                event_type=terminal_event,
+                actor_id=str((run.result_json or {}).get("workflow", {}).get("head_agent_id") or "") or None,
+                metadata_json={"status": status, "error_message": run.error_message},
+            )
     if status is not None and status in {"aborted", "failed"}:
         run.status = status
         run.completed_at = run.completed_at or utc_now()
@@ -483,6 +718,7 @@ def update_workflow_step_run(
     if step is None or step.run_id != run.id:
         raise ValueError(f"workflow step '{step_id}' not found for run '{run_id}'")
 
+    previous_status = step.status
     if status is not None:
         step.status = status
         if status == "running":
@@ -500,6 +736,29 @@ def update_workflow_step_run(
         step.error_message = error_message
     if metadata_json is not None:
         step.metadata_json = metadata_json
+
+    if status is not None and status != previous_status:
+        event_type = None
+        if status == "running":
+            event_type = "TASK_STARTED"
+        elif status == "completed":
+            event_type = "TASK_COMPLETED"
+        elif status == "failed":
+            event_type = "TASK_FAILED"
+        elif status == "aborted":
+            event_type = "TASK_ABORTED"
+        _sync_task_from_step(
+            session,
+            run_id=run.id,
+            step=step,
+            event_type=event_type,
+            metadata_json={
+                "step_id": step.id,
+                "node_type": step.node_type,
+                "conversation_id": step.conversation_id,
+                "error_message": step.error_message,
+            },
+        )
 
     session.flush()
     _apply_run_rollup(run, list_workflow_steps(session, run.id))

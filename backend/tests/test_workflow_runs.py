@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from ghostdash_api.agent_memory import save_agent, seed_default_agent_profiles
 from ghostdash_api.database import Base
-from ghostdash_api.runtime_profiles import seed_default_runtime_profile
+from ghostdash_api.runtime_profiles import get_default_runtime_profile, seed_default_runtime_profile
 from ghostdash_api.workflow_runs import (
     create_workflow_run,
     list_workflow_steps,
@@ -26,6 +26,7 @@ def test_create_workflow_run_persists_selected_agents() -> None:
 
     with SessionLocal() as session:
         seed_default_runtime_profile(session)
+        default_profile_id = get_default_runtime_profile(session).id
         seed_default_agent_profiles(session)
         seed_workflow_definitions(session)
         finance_agent = save_agent(
@@ -37,6 +38,7 @@ def test_create_workflow_run_persists_selected_agents() -> None:
                 "voice_id": "alloy",
                 "is_default": False,
                 "enabled": True,
+                "runtime_profile_id": default_profile_id,
             },
         )
         default_agent = next(agent for agent in session.query(type(finance_agent)).all() if agent.is_default)
@@ -64,6 +66,7 @@ def test_update_workflow_step_run_rolls_up_run_status() -> None:
 
     with SessionLocal() as session:
         seed_default_runtime_profile(session)
+        default_profile_id = get_default_runtime_profile(session).id
         seed_default_agent_profiles(session)
         seed_workflow_definitions(session)
         finance_agent = save_agent(
@@ -75,6 +78,7 @@ def test_update_workflow_step_run_rolls_up_run_status() -> None:
                 "voice_id": "alloy",
                 "is_default": False,
                 "enabled": True,
+                "runtime_profile_id": default_profile_id,
             },
         )
         default_agent = next(agent for agent in session.query(type(finance_agent)).all() if agent.is_default)
@@ -135,6 +139,7 @@ def test_create_workflow_run_materialises_head_agent_synthesis_step() -> None:
 
     with SessionLocal() as session:
         seed_default_runtime_profile(session)
+        default_profile_id = get_default_runtime_profile(session).id
         seed_default_agent_profiles(session)
         seed_workflow_definitions(session)
         finance_agent = save_agent(
@@ -146,6 +151,7 @@ def test_create_workflow_run_materialises_head_agent_synthesis_step() -> None:
                 "voice_id": "alloy",
                 "is_default": False,
                 "enabled": True,
+                "runtime_profile_id": default_profile_id,
             },
         )
         operations_agent = save_agent(
@@ -157,6 +163,7 @@ def test_create_workflow_run_materialises_head_agent_synthesis_step() -> None:
                 "voice_id": "alloy",
                 "is_default": False,
                 "enabled": True,
+                "runtime_profile_id": default_profile_id,
             },
         )
         default_agent = next(agent for agent in session.query(type(finance_agent)).all() if agent.is_default)

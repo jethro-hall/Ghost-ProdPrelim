@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -16,6 +17,7 @@ from ghostdash_api.models import (
     ConnectionRecord,
     RuntimeProfileRecord,
 )
+from ghostdash_api.runtime import LlmCompletionResult
 from ghostdash_api.runtime_profiles import seed_default_runtime_profile
 from ghostdash_api.schemas import ToolExecuteResponse, ToolReadinessSummary
 
@@ -120,6 +122,59 @@ def build_plan(question: str) -> dict:
             }
         ],
     }
+
+
+def test_execute_sub_agent_with_retries_retries_then_succeeds(monkeypatch) -> None:
+    attempts = {"count": 0}
+
+    def fake_run_sub_agent_completion(**_kwargs):
+        attempts["count"] += 1
+        if attempts["count"] < 2:
+            raise RuntimeError("transient worker failure")
+        return LlmCompletionResult(text="worker-ok", openai_response_id=None, usage=None)
+
+    monkeypatch.setattr(agent_ingress, "_run_sub_agent_completion", fake_run_sub_agent_completion)
+    monkeypatch.setattr(agent_ingress, "SUB_AGENT_MAX_RETRIES", 1)
+    monkeypatch.setattr(agent_ingress, "SUB_AGENT_RETRY_BACKOFF_SECONDS", 0.01)
+
+    worker = AgentProfileRecord(name="[SA] Finance Worker", first_message="x", language="en-US", voice_id="alloy")
+    result, attempts_used = agent_ingress._execute_sub_agent_with_retries(
+        session=None,
+        worker=worker,
+        user_message="Need financial brief",
+        tool_grounding_prompt="Grounded facts",
+        prior_worker_outputs=[],
+        fallback_api_mode="responses",
+        trace_id="test-trace",
+    )
+
+    assert result.text == "worker-ok"
+    assert attempts_used == 2
+
+
+def test_execute_sub_agent_with_retries_exhausts_budget(monkeypatch) -> None:
+    attempts = {"count": 0}
+
+    def fake_run_sub_agent_completion(**_kwargs):
+        attempts["count"] += 1
+        raise RuntimeError("persistent worker failure")
+
+    monkeypatch.setattr(agent_ingress, "_run_sub_agent_completion", fake_run_sub_agent_completion)
+    monkeypatch.setattr(agent_ingress, "SUB_AGENT_MAX_RETRIES", 1)
+    monkeypatch.setattr(agent_ingress, "SUB_AGENT_RETRY_BACKOFF_SECONDS", 0.0)
+
+    worker = AgentProfileRecord(name="[SA] Document Worker", first_message="x", language="en-US", voice_id="alloy")
+    with pytest.raises(RuntimeError, match="persistent worker failure"):
+        agent_ingress._execute_sub_agent_with_retries(
+            session=None,
+            worker=worker,
+            user_message="Need board-ready document",
+            tool_grounding_prompt="Grounded facts",
+            prior_worker_outputs=[],
+            fallback_api_mode="responses",
+            trace_id="test-trace",
+        )
+    assert attempts["count"] == 2
 
 
 def test_prepare_answer_prompt_drops_history_before_query_and_preserves_question() -> None:
@@ -376,6 +431,7 @@ def test_agent_chat_stream_start_includes_tool_summary_and_effective_snapshot_id
     assert "Turned off for this session" in events[0]["tool_summary"][0]["blocked_reasons"]
     assert events[0]["tool_summary"][0]["enabled_for_agent"] is True
     assert events[0]["tool_summary"][0]["health"] == "healthy"
+    assert events[0]["route_decision"]["route_type"] == "direct"
 
 
 def test_agent_chat_returns_preview_tool_event_for_operation_only_requests(monkeypatch) -> None:
@@ -409,7 +465,13 @@ def test_agent_chat_returns_preview_tool_event_for_operation_only_requests(monke
     assert "odoo.rpc.search_read" in body["answer"]
     assert body["tool_events"][0]["status"] == "preview"
     assert body["tool_events"][0]["operation"] == "odoo.rpc.search_read"
+    assert body["route_decision"]["route_type"] == "workers"
     assert body["cached"] is False
+
+    with SessionLocal() as session:
+        assistant = session.scalar(select(AgentMessageRecord).where(AgentMessageRecord.role == "assistant"))
+        assert assistant is not None
+        assert (assistant.route_decision_json or {}).get("route_type") == "workers"
 
 
 def test_agent_chat_stream_emits_tool_result_before_answer(monkeypatch) -> None:
@@ -466,11 +528,68 @@ def test_agent_chat_stream_emits_tool_result_before_answer(monkeypatch) -> None:
     events = parse_sse_events(response.text)
 
     assert response.status_code == 200
-    assert [event["type"] for event in events] == ["start", "tool_result", "delta", "done"]
-    assert events[1]["tool_event"]["status"] == "executed"
-    assert events[1]["tool_event"]["operation"] == "odoo.finance.receivables.open"
-    assert events[2]["delta"] == "Tool-backed answer"
-    assert events[3]["tool_events"][0]["status"] == "executed"
+    assert events[0]["type"] == "start"
+    assert events[-1]["type"] == "done"
+    tool_events = [event["tool_event"] for event in events if event["type"] == "tool_result"]
+    assert any(event["status"] == "executed" and event["operation"] == "odoo.finance.receivables.open" for event in tool_events)
+    delta_events = [event for event in events if event["type"] == "delta"]
+    assert delta_events
+    assert delta_events[-1]["delta"] == "Tool-backed answer"
+    assert any(event["status"] == "executed" for event in events[-1]["tool_events"])
+
+    with SessionLocal() as session:
+        assistant_messages = list(
+            session.scalars(select(AgentMessageRecord).where(AgentMessageRecord.role == "assistant"))
+        )
+
+    assert assistant_messages[-1].tool_events_json[0]["operation"] == "odoo.finance.receivables.open"
+    assert assistant_messages[-1].usage_json is not None
+    assert int(assistant_messages[-1].usage_json["total_tokens"]) >= 0
+
+
+def test_agent_chat_persists_provider_usage_from_final_hop(monkeypatch) -> None:
+    client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    async def fake_fetch_query_plan(*args, **kwargs) -> dict:
+        return {
+            "query_mode": "semantic",
+            "direct_answer": None,
+            "prompt": "User question: persist provider usage",
+            "citations": [],
+        }
+
+    def fake_generate_answer(*_args, **_kwargs):
+        return LlmCompletionResult(
+            text="usage ok",
+            usage={"prompt_tokens": 111, "completion_tokens": 29, "total_tokens": 140, "estimate": False},
+        )
+
+    monkeypatch.setattr(agent_ingress, "fetch_query_plan", fake_fetch_query_plan)
+    monkeypatch.setattr(agent_ingress, "generate_answer", fake_generate_answer)
+
+    response = client.post("/agent/chat", json={"message": "persist provider usage", "agent_id": agent_id})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["usage"] == {
+        "prompt_tokens": 111,
+        "completion_tokens": 29,
+        "total_tokens": 140,
+        "estimate": False,
+    }
+
+    with SessionLocal() as session:
+        assistant_messages = list(
+            session.scalars(select(AgentMessageRecord).where(AgentMessageRecord.role == "assistant"))
+        )
+
+    assert assistant_messages[-1].usage_json == {
+        "prompt_tokens": 111,
+        "completion_tokens": 29,
+        "total_tokens": 140,
+        "estimate": False,
+    }
 
 
 def test_agent_chat_falls_back_when_monthly_margin_helper_is_unavailable(monkeypatch) -> None:
@@ -609,6 +728,100 @@ def test_build_staged_answer_directives_respects_conversation_mode() -> None:
     assert "working session mode" in working_session
 
 
+def test_build_business_closeout_directives_for_finance_operator_request() -> None:
+    directives = agent_ingress.build_business_closeout_directives(
+        message="As of today give me up-to-date financials with Shopify orders and AOV.",
+        tool_plan={"operation": "odoo.finance.shopify.monthly_roi", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.shopify.monthly_roi",
+                summary="rows=2",
+                payload={},
+            )
+        ],
+    )
+    assert "Business closeout constraints" in directives
+    assert "do not reply with only blocker questions" in directives
+
+
+def test_build_owner_operator_contract_directives_includes_sections_and_freshness() -> None:
+    directives = agent_ingress.build_owner_operator_contract_directives(
+        message="As of today give me up-to-date financials with Shopify orders and AOV.",
+        tool_plan={"operation": "odoo.finance.shopify.monthly_roi", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.shopify.monthly_roi",
+                summary="rows=2",
+                payload={},
+            )
+        ],
+    )
+    assert "Owner-operator response contract" in directives
+    assert "Facts" in directives and "Inferences" in directives and "Assumptions" in directives
+    assert "Evidence window: 2026-04-01 -> 2026-04-19" in directives
+
+
+def test_normalize_finance_closeout_answer_rewrites_blocking_response() -> None:
+    normalized = agent_ingress.normalize_finance_closeout_answer(
+        answer_text="I can't produce this yet. What I need from you is one more confirmation.",
+        request_message="As of today give me up-to-date financials with Shopify orders and AOV.",
+        tool_plan={"operation": "odoo.finance.shopify.monthly_roi", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.shopify.monthly_roi",
+                summary="rows=2",
+                payload={},
+            )
+        ],
+    )
+    assert "Executive Dashboard (Provisional" in normalized
+    assert "Executed Odoo Evidence" in normalized
+
+
+def test_normalize_finance_closeout_answer_injects_contract_sections_when_missing() -> None:
+    normalized = agent_ingress.normalize_finance_closeout_answer(
+        answer_text="Here is a short answer with no explicit structured sections.",
+        request_message="As of today give me up-to-date financials with Shopify orders and AOV.",
+        tool_plan={"operation": "odoo.finance.shopify.monthly_roi", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.shopify.monthly_roi",
+                summary="rows=2",
+                payload={},
+            )
+        ],
+    )
+    assert "Evidence window" in normalized
+    assert "### Facts" in normalized
+    assert "### Inferences" in normalized
+    assert "### Assumptions" in normalized
+
+
+def test_validate_docx_finalize_output_requires_structured_sections() -> None:
+    diagnostics = agent_ingress.validate_docx_finalize_output(
+        operation="finalize",
+        answer_text="Facts: okay. Risks: present. Need more detail.",
+    )
+    assert diagnostics
+    assert diagnostics[0]["code"] == "docx_finalize_validation_failed"
+
+
+def test_validate_docx_finalize_output_allows_preview_without_sections() -> None:
+    diagnostics = agent_ingress.validate_docx_finalize_output(
+        operation="preview",
+        answer_text="Short preview content.",
+    )
+    assert diagnostics == []
+
+
 def test_prepare_tool_evidence_resolves_named_company_terms_before_finance_comparison(monkeypatch) -> None:
     _client, SessionLocal = build_client(monkeypatch)
     agent_id = seed_agent(SessionLocal)
@@ -692,6 +905,160 @@ def test_prepare_tool_evidence_resolves_named_company_terms_before_finance_compa
     assert evidence.tool_events[0].operation == "odoo.rpc.search_read"
     assert evidence.tool_events[1].operation == "odoo.finance.margin.monthly_comparison"
     assert "Resolved named company scope" in evidence.prompt_prefix
+
+
+def test_prepare_tool_evidence_replaces_year_like_company_ids_with_named_company_resolution(monkeypatch) -> None:
+    _client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    def fake_execute_tool_operation_for_agent(*_args, **kwargs):
+        operation = kwargs["operation"]
+        if operation == "odoo.rpc.search_read":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=4,
+                    data={
+                        "records": [
+                            {"id": 3, "name": "Ride Electric Retail"},
+                            {"id": 4, "name": "Ride Electric Burleigh"},
+                        ]
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        if operation == "odoo.finance.shopify.monthly_roi":
+            assert kwargs["payload"]["company_ids"] == [3]
+            assert kwargs["payload"]["company_id"] == 3
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=9,
+                    data={"line_count": 0, "rows": []},
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        raise AssertionError(f"Unexpected operation {operation}")
+
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+
+    with SessionLocal() as session:
+        evidence = agent_ingress.prepare_tool_evidence(
+            session,
+            agent_id=agent_id,
+            tool_overrides=None,
+            tool_plan={
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.shopify.monthly_roi",
+                "payload": {
+                    "date_from": "2024-07-01",
+                    "date_to": "2026-07-01",
+                    "company_ids": [2024, 2026],
+                    "company_name_terms": ["retail"],
+                },
+            },
+        )
+
+    assert evidence.plan["payload"]["company_ids"] == [3]
+    assert evidence.plan["payload"]["company_id"] == 3
+    assert evidence.tool_events[0].operation == "odoo.rpc.search_read"
+    assert evidence.tool_events[1].operation == "odoo.finance.shopify.monthly_roi"
+
+
+def test_prepare_tool_evidence_adds_shopify_order_metrics_when_requested(monkeypatch) -> None:
+    _client, SessionLocal = build_client(monkeypatch)
+    agent_id = seed_agent(SessionLocal)
+
+    def fake_execute_tool_operation_for_agent(*_args, **kwargs):
+        operation = kwargs["operation"]
+        if operation == "odoo.finance.shopify.monthly_roi":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=8,
+                    data={"date_from": "2026-04-01", "date_to": "2026-04-19", "companies": []},
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        if operation == "odoo.sales.orders.search_read":
+            return (
+                ToolExecuteResponse(
+                    success=True,
+                    message="ok",
+                    operation=operation,
+                    latency_ms=5,
+                    data={
+                        "records": [
+                            {"id": 1, "amount_total": 100.0, "company_id": [3, "Ride Electric Retail"]},
+                            {"id": 2, "amount_total": 150.0, "company_id": [3, "Ride Electric Retail"]},
+                        ]
+                    },
+                ),
+                ToolReadinessSummary(
+                    id="odoo_primary",
+                    status="ready",
+                    blocked_reasons=[],
+                    active=True,
+                    enabled_for_agent=True,
+                    session_enabled=True,
+                    health="healthy",
+                ),
+            )
+        raise AssertionError(f"Unexpected operation {operation}")
+
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+
+    with SessionLocal() as session:
+        evidence = agent_ingress.prepare_tool_evidence(
+            session,
+            agent_id=agent_id,
+            tool_overrides=None,
+            tool_plan={
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.shopify.monthly_roi",
+                "payload": {
+                    "date_from": "2026-04-01",
+                    "date_to": "2026-04-19",
+                    "company_ids": [3],
+                },
+            },
+            request_message="Need Shopify orders and AOV for this period.",
+        )
+
+    assert any(event.operation == "odoo.sales.orders.search_read" for event in evidence.tool_events)
+    assert "supplemental odoo order-level pull" in evidence.prompt_prefix.lower()
 
 
 def test_agent_chat_working_session_avoids_continue_directive(monkeypatch) -> None:

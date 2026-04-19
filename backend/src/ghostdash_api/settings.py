@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     app_control_api_base_url: str = 'http://control-api:8000'
     app_agent_ingress_base_url: str = 'http://agent-ingress:8001'
     app_workflow_runtime_url: str = 'http://workflow-runtime:8100'
+    app_docx_sidecar_url: str = 'http://docx-templater:8080'
+    app_redis_url: str | None = None
     app_qdrant_url: str = 'http://qdrant:6333'
     app_qdrant_collection: str = DEFAULT_QDRANT_COLLECTION
     app_qdrant_vector_size: int = DEFAULT_QDRANT_VECTOR_SIZE
@@ -57,6 +59,9 @@ class Settings(BaseSettings):
     app_chat_response_cache_enabled: bool = True
     app_chat_response_cache_ttl_seconds: int = 60 * 60 * 24 * 7
     app_agent_memory_window_messages: int = 8
+    app_sub_agent_max_retries: int = 1
+    app_sub_agent_retry_backoff_ms: int = 300
+    app_working_memory_ttl_seconds: int = 1800
     app_qdrant_upsert_max_payload_bytes: int = 24 * 1024 * 1024
     app_qdrant_upsert_max_points: int = 128
     app_llm_request_timeout_seconds: float = 300.0

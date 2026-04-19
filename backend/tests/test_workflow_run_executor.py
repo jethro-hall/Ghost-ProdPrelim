@@ -29,7 +29,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
     SessionLocal = build_session_factory()
 
     with SessionLocal() as session:
-        seed_default_runtime_profile(session)
+        runtime_profile = seed_default_runtime_profile(session)
         seed_default_agent_profiles(session)
         seed_workflow_definitions(session)
         finance_agent = save_agent(
@@ -39,6 +39,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
                 "first_message": "Finance ready.",
                 "language": "en-US",
                 "voice_id": "alloy",
+                "runtime_profile_id": runtime_profile.id,
                 "is_default": False,
                 "enabled": True,
             },
@@ -50,6 +51,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
                 "first_message": "Operations ready.",
                 "language": "en-US",
                 "voice_id": "alloy",
+                "runtime_profile_id": runtime_profile.id,
                 "is_default": False,
                 "enabled": True,
             },
@@ -70,6 +72,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
                 "request": {
                     "api_mode": "responses",
                     "conversation_mode": "working_session",
+                    "workflow_mode": "documenter",
                     "use_approved_web": False,
                 }
             },
@@ -91,7 +94,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
         assert "Summarise the risk tradeoffs." in message
         assert api_mode == "responses"
         assert conversation_mode == "working_session"
-        assert workflow_mode == "standard"
+        assert workflow_mode == "documenter"
         assert use_approved_web is False
         return {
             "answer": f"answer-for-{agent_id}",
@@ -120,6 +123,7 @@ async def test_execute_workflow_run_completes_all_steps() -> None:
         f"answer-for-{default_agent_id}",
     ]
     assert all(step.metadata_json.get("conversation_mode") == "working_session" for step in steps)
+    assert all(step.metadata_json.get("workflow_mode") == "documenter" for step in steps)
     assert "Finance Agent" in seen_messages[default_agent_id]
     assert "Operations Agent" in seen_messages[default_agent_id]
     assert "Do not attempt the final synthesis" in seen_messages[finance_agent_id]
@@ -130,7 +134,7 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
     SessionLocal = build_session_factory()
 
     with SessionLocal() as session:
-        seed_default_runtime_profile(session)
+        runtime_profile = seed_default_runtime_profile(session)
         seed_default_agent_profiles(session)
         seed_workflow_definitions(session)
         finance_agent = save_agent(
@@ -140,6 +144,7 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
                 "first_message": "Finance ready.",
                 "language": "en-US",
                 "voice_id": "alloy",
+                "runtime_profile_id": runtime_profile.id,
                 "is_default": False,
                 "enabled": True,
             },
@@ -151,6 +156,7 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
                 "first_message": "Operations ready.",
                 "language": "en-US",
                 "voice_id": "alloy",
+                "runtime_profile_id": runtime_profile.id,
                 "is_default": False,
                 "enabled": True,
             },
@@ -171,6 +177,7 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
                 "request": {
                     "api_mode": "responses",
                     "conversation_mode": "board",
+                    "workflow_mode": "odoo_specialist",
                     "use_approved_web": False,
                 }
             },
@@ -189,7 +196,7 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
         if agent_id == finance_agent_id:
             raise RuntimeError("finance agent unavailable")
         assert conversation_mode == "board"
-        assert workflow_mode == "standard"
+        assert workflow_mode == "odoo_specialist"
         return {
             "answer": "default-answer",
             "query_mode": "semantic",
@@ -212,3 +219,4 @@ async def test_execute_workflow_run_rolls_up_partial_failure() -> None:
     assert [step.status for step in steps] == ["failed", "completed", "completed"]
     assert steps[0].error_message == "finance agent unavailable"
     assert steps[0].metadata_json["conversation_mode"] == "board"
+    assert steps[0].metadata_json["workflow_mode"] == "odoo_specialist"

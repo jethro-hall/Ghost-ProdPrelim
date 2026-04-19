@@ -1605,14 +1605,18 @@ def _extract_company_scope(message: str, *, fallback_message: str | None = None)
 def _extract_company_ids(message: str, *, fallback_message: str | None = None) -> list[int]:
     def _parse(value: str) -> list[int]:
         output: list[int] = []
-        for match in ODOO_COMPANY_ID_PATTERN.findall(value):
-            parsed = int(match)
+        explicit_matches = [int(match) for match in ODOO_COMPANY_ID_PATTERN.findall(value)]
+        for parsed in explicit_matches:
             if parsed not in output:
                 output.append(parsed)
         list_match = ODOO_COMPANY_LIST_PATTERN.search(value)
         if list_match:
             for raw in re.findall(r"\b\d+\b", list_match.group(1)):
                 parsed = int(raw)
+                # Ignore year-like values that often appear in finance periods (e.g., FY25/2026)
+                # when parsing loose "companies ..." text. Explicit company_id forms still pass above.
+                if 1900 <= parsed <= 2100 and parsed not in explicit_matches:
+                    continue
                 if parsed not in output:
                     output.append(parsed)
         return output
@@ -1669,10 +1673,78 @@ def _build_scope_clarification_answer(scope_hint: dict[str, Any], question: str)
     )
 
 
+def _normalize_fiscal_year(value: str) -> int:
+    raw = str(value or "").strip()
+    if len(raw) == 4:
+        return int(raw)
+    if len(raw) == 2:
+        candidate = int(raw)
+        return 2000 + candidate if candidate < 70 else 1900 + candidate
+    raise ValueError(f"Unsupported fiscal year token: {value}")
+
+
+def _extract_fiscal_year_ranges(message: str) -> list[tuple[date, date, str]]:
+    matches = re.finditer(r"\bfy\s*(\d{2,4})(?:\s*/\s*(\d{2,4}))?\b", message.casefold())
+    ranges: list[tuple[date, date, str]] = []
+    seen_labels: set[str] = set()
+    for match in matches:
+        first = _normalize_fiscal_year(match.group(1))
+        second_raw = match.group(2)
+        if second_raw:
+            second = _normalize_fiscal_year(second_raw)
+            start_year = first
+            end_year = second
+            label = f"FY{str(first)[-2:]}/{str(second)[-2:]}"
+        else:
+            end_year = first
+            start_year = end_year - 1
+            label = f"FY{str(end_year)[-2:]}"
+        if end_year <= start_year:
+            continue
+        if label in seen_labels:
+            continue
+        seen_labels.add(label)
+        ranges.append((date(start_year, 7, 1), date(end_year, 7, 1), label))
+    ranges.sort(key=lambda item: item[0])
+    return ranges
+
+
+def _normalize_planning_text(message: str) -> str:
+    """Normalize common user typos so Odoo tool planning stays robust."""
+    lowered = (message or "").casefold()
+    # Collapse repeated letters in words (e.g. "lasst", "monthss", "saless").
+    collapsed = re.sub(r"([a-z])\1{1,}", r"\1", lowered)
+    replacements = {
+        "maraketing": "marketing",
+        "marketting": "marketing",
+        "shopfy": "shopify",
+        "finacial": "financial",
+        "finanical": "financial",
+        "financials": "financial",
+    }
+    normalized = collapsed
+    for source, target in replacements.items():
+        normalized = normalized.replace(source, target)
+    return normalized
+
+
 def _extract_period_scope(message: str) -> dict[str, Any]:
-    lowered = message.casefold()
+    lowered = _normalize_planning_text(message)
     today = datetime.now(UTC).date()
     current_month_start = today.replace(day=1)
+    fiscal_year_ranges = _extract_fiscal_year_ranges(lowered)
+    if fiscal_year_ranges:
+        start_date = fiscal_year_ranges[0][0]
+        end_date = fiscal_year_ranges[-1][1]
+        labels = [label for _start, _end, label in fiscal_year_ranges]
+        month_count = max(1, ((end_date.year - start_date.year) * 12) + (end_date.month - start_date.month))
+        return {
+            "relative_period": "_to_".join(label.lower().replace("/", "_") for label in labels),
+            "date_from": start_date.isoformat(),
+            "date_to": end_date.isoformat(),
+            "label": " to ".join(labels),
+            "month_count": month_count,
+        }
     if "year so far" in lowered or "ytd" in lowered or "year-to-date" in lowered:
         period_start = date(today.year, 1, 1)
         return {
@@ -1741,11 +1813,46 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
             "label": "this month",
             "month_count": 1,
         }
+    if "month-to-date" in lowered or "month to date" in lowered or re.search(r"\bmtd\b", lowered):
+        return {
+            "relative_period": "month_to_date",
+            "date_from": current_month_start.isoformat(),
+            "date_to": (today + timedelta(days=1)).isoformat(),
+            "label": "month-to-date",
+            "month_count": 1,
+        }
+    day_span_match = re.search(r"\b(?:last|past)\s+(\d+)\s+days?\b", lowered)
+    if day_span_match:
+        day_span = max(1, min(120, int(day_span_match.group(1))))
+        period_start = today - timedelta(days=day_span - 1)
+        return {
+            "relative_period": f"last_{day_span}_days",
+            "date_from": period_start.isoformat(),
+            "date_to": (today + timedelta(days=1)).isoformat(),
+            "label": f"last {day_span} days",
+            "month_count": 1,
+        }
+    if (
+        "as of today" in lowered
+        or "up to date" in lowered
+        or "up-to-date" in lowered
+        or "upto date" in lowered
+        or "today" in lowered
+        or "real-time" in lowered
+        or "realtime" in lowered
+    ):
+        return {
+            "relative_period": "month_to_date",
+            "date_from": current_month_start.isoformat(),
+            "date_to": (today + timedelta(days=1)).isoformat(),
+            "label": "month-to-date through today",
+            "month_count": 1,
+        }
     return {"relative_period": None, "date_from": None, "date_to": None, "label": None, "month_count": None}
 
 
 def _extract_month_span(message: str) -> int | None:
-    lowered = message.casefold()
+    lowered = _normalize_planning_text(message)
     match = re.search(r"\b(?:last|past)\s+(\d+)\s+(?:completed\s+)?months?\b", lowered)
     if match:
         return max(1, min(24, int(match.group(1))))
@@ -1772,6 +1879,15 @@ def _looks_like_finance_performance_question(lowered: str) -> bool:
             "performer",
             "performance",
             "performing",
+            "underperform",
+            "under performer",
+            "underperformer",
+            "worst",
+            "best",
+            "rank",
+            "ranking",
+            "branch",
+            "branches",
             "breakdown",
             "break down",
             "year so far",
@@ -1781,8 +1897,20 @@ def _looks_like_finance_performance_question(lowered: str) -> bool:
     )
 
 
+def _looks_like_mixed_finance_period_request(*, lowered: str, asks_for_cogs_scope: bool) -> bool:
+    asks_for_revenue = "revenue" in lowered
+    asks_for_margin = any(term in lowered for term in ("gross margin", "gross profit", " gp ", " margin "))
+    return asks_for_revenue and (asks_for_cogs_scope or asks_for_margin)
+
+
+def _looks_like_branch_ranking_request(lowered: str) -> bool:
+    ranking_terms = ("underperform", "underperformer", "worst", "best", "rank", "ranking", "performer")
+    branch_terms = ("branch", "branches", "retail", "burleigh", "brisbane", "entity", "entities", "business", "businesses")
+    return any(term in lowered for term in ranking_terms) and any(term in lowered for term in branch_terms)
+
+
 def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
-    lowered = message.casefold()
+    lowered = _normalize_planning_text(message)
     preview_only = _is_operation_preview_request(message)
     scope = _extract_company_scope(message, fallback_message=fallback_message)
     company_ids = _extract_company_ids(message, fallback_message=fallback_message)
@@ -1814,12 +1942,51 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
         "direct_answer": None,
     }
 
-    finance_actual_terms = ("gross profit", " gp ", "revenue", "cogs", "cost of goods", "gross margin")
+    finance_actual_terms = ("gross profit", " gp ", "revenue", "cogs", "cost of goods", "gross margin", "financial")
     asks_for_actuals = any(term in f" {lowered} " for term in finance_actual_terms) or _looks_like_finance_performance_question(
         lowered
     )
     has_period = bool(period_scope.get("date_from") and period_scope.get("date_to"))
     derived_month_count = int(period_scope.get("month_count") or 0) if period_scope.get("month_count") else None
+    asks_for_shopify_roi = "shopify" in lowered and any(
+        term in lowered
+        for term in (
+            "marketing",
+            "roas",
+            "roi",
+            "refund",
+            "discount",
+            "shipping",
+            "merchant fee",
+            "merchant fees",
+            "fee account",
+            "marketing wages",
+            "commission factory",
+            "google",
+            "meta",
+            "facebook",
+            "tiktok",
+            "website",
+            "vendor",
+            "journal",
+            "sale",
+            "sales",
+            "order",
+            "orders",
+            "aov",
+            "revenue",
+        )
+    )
+    asks_for_cogs_scope = any(
+        term in lowered
+        for term in (
+            "cogs",
+            "cost of goods",
+            "gross profit",
+            "gross margin",
+            "margin",
+        )
+    )
     asks_for_cogs_code_breakdown = any(
         term in lowered
         for term in (
@@ -1827,11 +1994,67 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "cogs codes",
             "cost code",
             "cost codes",
-            "account code",
-            "account codes",
+        )
+    ) or (
+        asks_for_cogs_scope
+        and any(
+            term in lowered
+            for term in (
+                "account code",
+                "account codes",
+            )
         )
     )
-    comparative_terms = ("compare", "across", "versus", "vs", "anomal", "outlier")
+    has_comparative_intent = any(term in lowered for term in ("compare", "across", "versus", "vs", "anomal", "outlier"))
+    asks_for_branch_ranking = _looks_like_branch_ranking_request(lowered)
+    if asks_for_shopify_roi and has_period:
+        payload: dict[str, Any] = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "relative_period": period_scope["relative_period"],
+        }
+        if company_ids:
+            if len(company_ids) == 1:
+                payload["company_id"] = company_ids[0]
+            else:
+                payload["company_ids"] = company_ids
+        elif len(company_name_terms) >= 1:
+            payload["company_name_terms"] = company_name_terms
+        elif scope.get("company_id") is not None:
+            payload["company_id"] = scope["company_id"]
+        blocked_reason = (
+            "company_scope_ambiguous"
+            if scope.get("ambiguous") and not payload.get("company_id") and not payload.get("company_ids") and not payload.get("company_name_terms")
+            else None
+        )
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.shopify.monthly_roi",
+            "payload": payload,
+            "reason": (
+                "Shopify revenue, discounts, refunds, shipping, merchant fees, and marketing-spend ROI questions "
+                "should use the named Shopify monthly ROI helper for the requested company scope and period."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.shopify.monthly_roi",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because Shopify ROI requires one governed Odoo result that combines Shopify-linked "
+                        "revenue and fee accounts with marketing expense accounts and vendor-ledger evidence."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot identify Shopify journals, marketing accounts, or compute ROAS."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
     if asks_for_cogs_code_breakdown and has_period:
         payload = {
             "date_from": period_scope["date_from"],
@@ -1945,6 +2168,44 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 else None
             ),
         }
+    if (
+        has_period
+        and len(company_name_terms) > 1
+        and (asks_for_branch_ranking or has_comparative_intent or asks_for_actuals)
+    ):
+        payload = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "months": month_span or derived_month_count or period_scope.get("month_count") or 4,
+            "company_name_terms": company_name_terms,
+        }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.margin.monthly_comparison",
+            "payload": payload,
+            "reason": (
+                "Branch ranking/comparison questions across multiple named businesses should execute the governed "
+                "monthly margin comparison helper over the resolved company scope."
+            ),
+            "source_labels": ["odoo"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.margin.monthly_comparison",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because branch/entity ranking requires side-by-side monthly revenue, COGS, GP, and GP% "
+                        "across the named businesses in the requested period."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot produce comparative branch/entity profitability rankings."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
 
     if company_list_intent and not asks_for_actuals:
         payload = {
@@ -2016,6 +2277,35 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                     else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
                 ),
             }
+        if _looks_like_mixed_finance_period_request(lowered=lowered, asks_for_cogs_scope=asks_for_cogs_scope):
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.finance.margin.period_summary",
+                "payload": payload,
+                "reason": (
+                    "Mixed period-finance prompts mentioning revenue with margin/COGS should use period summary so "
+                    "the owner gets revenue, COGS, and GP in one governed response."
+                ),
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "direct_answer": (
+                    _build_odoo_preview_answer(
+                        operation="odoo.finance.margin.period_summary",
+                        payload=payload,
+                        why_correct=(
+                            "This is correct because mixed finance reality questions require the combined period totals "
+                            "for revenue, COGS, gross profit, and gross margin."
+                        ),
+                        why_meta_current_user_is_insufficient=(
+                            "`odoo.meta.current_user` cannot provide combined period financial totals for a decisive "
+                            "owner-operator answer."
+                        ),
+                    )
+                    if preview_only
+                    else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+                ),
+            }
         if "revenue" in lowered:
             return {
                 **default_plan,
@@ -2038,6 +2328,34 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 "source_labels": ["odoo"],
                 "direct_answer": _build_scope_clarification_answer(scope, message) if blocked_reason else None,
             }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.margin.period_summary",
+            "payload": payload,
+            "reason": (
+                "General finance reality and real-time BI prompts should default to the governed period margin summary "
+                "when no narrower metric-specific operation is explicitly requested."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo"],
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.margin.period_summary",
+                    payload=payload,
+                    why_correct=(
+                        "This is correct because owner-operator finance reality requires the core period totals "
+                        "(revenue, COGS, GP, GP%) from a governed Odoo-backed summary."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot provide the business financial reality metrics required for "
+                        "a decision-grade BI view."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
 
     quarterly_margin_terms = ("quarter", "quarterly")
     margin_terms = ("gross margin", "margin", "gross profit", "cogs", "revenue")
@@ -2175,25 +2493,41 @@ def build_query_plan(
     trace_id: str,
     current_message: str | None = None,
     workflow_mode: str | None = None,
+    embedding_model_id: str | None = None,
+    kb_enabled: bool = True,
+    odoo_ready: bool = False,
 ) -> dict[str, Any]:
     user_message = (current_message or message).strip()
     with SessionLocal() as session:
         connection = get_active_connection(session, "openai")
-        kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
-        embedding_model_id = kb_config.get("embedding_model_id")
+        if not embedding_model_id:
+            kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
+            embedding_model_id = kb_config.get("embedding_model_id")
         mode = classify_query_mode(user_message)
         tool_plan = _plan_odoo_tool_usage(user_message, fallback_message=message)
+        if (
+            str(tool_plan.get("mode") or "none") == "none"
+            and message.strip()
+            and message.strip() != user_message
+        ):
+            history_aware_tool_plan = _plan_odoo_tool_usage(message, fallback_message=user_message)
+            if str(history_aware_tool_plan.get("mode") or "none") != "none":
+                tool_plan = history_aware_tool_plan
         resolved_workflow_mode = str(workflow_mode or "standard").strip().casefold() or "standard"
         if resolved_workflow_mode == "odoo_specialist":
             tool_plan["source_labels"] = sorted({"odoo", *list(tool_plan.get("source_labels") or [])})
-            if str(tool_plan.get("mode") or "none") != "none":
+            if str(tool_plan.get("mode") or "none") != "none" and odoo_ready:
                 tool_plan["suppress_retrieval"] = True
         suppress_retrieval = bool(tool_plan.get("suppress_retrieval"))
+        if str(tool_plan.get("tool_id") or "") == "odoo_primary" and not odoo_ready:
+            suppress_retrieval = False
+        if not kb_enabled:
+            suppress_retrieval = True
         citations: list[dict[str, Any]] = []
         direct_answer: str | None = None
         if tool_plan.get("direct_answer"):
             direct_answer = str(tool_plan["direct_answer"])
-        inventory_query = needs_document_inventory_context(user_message)
+        inventory_query = kb_enabled and needs_document_inventory_context(user_message)
         inventory_listing_query = is_document_inventory_listing_question(user_message)
         inventory_documents = select_documents_for_corpora(session, corpora) if inventory_query else []
         inventory_context = build_document_inventory_context(inventory_documents) if inventory_query else ""
@@ -2214,7 +2548,7 @@ def build_query_plan(
                 }
         structured_candidates = (
             find_structured_candidates(user_message, corpora)
-            if (mode in {"structured", "blended"} and not suppress_retrieval)
+            if (kb_enabled and mode in {"structured", "blended"} and not suppress_retrieval)
             else []
         )
         structured_context: list[str] = []
@@ -2263,7 +2597,7 @@ def build_query_plan(
         semantic_context: list[str] = []
         document_scoped_context: list[str] = []
         target_document: dict[str, Any] | None = None
-        if (mode in {"semantic", "blended"} or not direct_answer) and not suppress_retrieval:
+        if kb_enabled and (mode in {"semantic", "blended"} or not direct_answer) and not suppress_retrieval:
             query_vectors = embed_texts(
                 [user_message],
                 connection,
@@ -2383,5 +2717,8 @@ class QueryWorkflow(Workflow):
             top_k=int(start_event_value(ev, "top_k") or 6),
             trace_id=str(start_event_value(ev, "trace_id")),
             workflow_mode=str(start_event_value(ev, "workflow_mode") or "standard"),
+            embedding_model_id=str(start_event_value(ev, "embedding_model_id") or "") or None,
+            kb_enabled=bool(start_event_value(ev, "kb_enabled", default=True)),
+            odoo_ready=bool(start_event_value(ev, "odoo_ready", default=False)),
         )
         return StopEvent(result=result)

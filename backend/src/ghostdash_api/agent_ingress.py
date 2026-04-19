@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -23,14 +24,23 @@ from .agent_memory import (
     build_history_context,
     build_response_cache_key,
     create_conversation,
+    create_document_frame,
     get_agent,
     list_messages,
     lookup_cached_response,
     seed_default_agent_profiles,
     store_cached_response,
+    upsert_docx_session,
 )
 from .database import SessionLocal, get_session
-from .models import AgentConversationRecord, ChatUploadRecord
+from .models import (
+    AgentConversationRecord,
+    AgentMessageRecord,
+    AgentProfileRecord,
+    ChatUploadRecord,
+    ConnectionRecord,
+    DocumentFrameRecord,
+)
 from .runtime import (
     LlmCompletionResult,
     generate_answer,
@@ -43,7 +53,7 @@ from .runtime import (
 from .runtime_defaults import resolve_query_top_k
 from .runtime_profiles import resolve_agent_runtime_profile, resolve_corpora
 from .schemas import ChatRequest, ChatResponse, ChatToolEvent, ChatUsage
-from .token_usage import estimate_llm_turn_usage_dict
+from .token_usage import estimate_token_count, resolve_chat_usage_dict
 from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event
@@ -68,6 +78,9 @@ CHAT_COMPLETIONS_CONTEXT_SAFETY_TOKENS = 512
 # OpenAI native /v1/responses is only used when talking to api.openai.com.
 # For other OpenAI-compatible gateways, we route through chat completions semantics and must clamp.
 OPENAI_NATIVE_RESPONSES_MAX_OUTPUT_TOKEN_CAP = 4096
+MULTI_AGENT_HANDOFF_DELAY_SECONDS = 0.85
+SUB_AGENT_MAX_RETRIES = max(0, int(getattr(settings, "app_sub_agent_max_retries", 1)))
+SUB_AGENT_RETRY_BACKOFF_SECONDS = max(0.0, float(getattr(settings, "app_sub_agent_retry_backoff_ms", 300)) / 1000.0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +117,87 @@ class PreparedToolEvidence:
     can_cache_response: bool
 
 
+def build_route_decision(
+    *,
+    message: str,
+    workflow_mode: str,
+    tool_plan: dict[str, Any] | None,
+    kb_enabled: bool,
+    web_enabled: bool,
+    odoo_ready: bool,
+) -> dict[str, Any]:
+    text = (message or "").strip()
+    lower = text.lower()
+    document_intent = any(
+        needle in lower
+        for needle in (
+            "business strategy",
+            "strategy document",
+            "board",
+            "board-ready",
+            "board ready",
+            "30 page",
+            "30-page",
+            "document",
+            "report",
+        )
+    )
+    suggest_specialist = any(
+        needle in lower
+        for needle in (
+            "create an agent",
+            "create a new agent",
+            "new agent",
+            "specialist agent",
+            "suggest an agent",
+            "suggest a specialist",
+        )
+    )
+    normalized_tool_plan = _normalize_tool_plan(tool_plan)
+    tool_mode = str(normalized_tool_plan.get("mode") or "none")
+    tool_op = normalized_tool_plan.get("operation")
+    uses_tool = tool_mode not in ("none", "")
+    recommended_workers: list[dict[str, str]] = []
+
+    if suggest_specialist and not uses_tool:
+        route_type = "suggest_specialist"
+        rationale = "Suggested specialist: request implies new capability; approve creation or choose an existing agent."
+    elif uses_tool or workflow_mode in ("data_collector", "odoo_specialist"):
+        route_type = "workers"
+        if tool_op:
+            rationale = f"Escalated to evidence-backed work: tool plan {tool_mode} for {tool_op}."
+        else:
+            rationale = "Escalated to worker/evidence-backed work for higher certainty."
+        recommended_workers = [
+            {"id": "finance_analyst", "name": "GhostDASH Finance Analyst", "role": "financial_extraction_and_interpretation"},
+            {"id": "business_documenter", "name": "GhostDASH Business Documenter", "role": "board_ready_document_formatting"},
+        ]
+    else:
+        route_type = "direct"
+        rationale = "Direct answer: no tool-backed or multi-agent escalation required for this turn."
+        recommended_workers = []
+
+    return {
+        "route_type": route_type,
+        "rationale_summary": rationale,
+        "document_intent": document_intent,
+        "tool_expectations": {
+            "kb_enabled": bool(kb_enabled),
+            "web_enabled": bool(web_enabled),
+            "odoo_ready": bool(odoo_ready),
+            "tool_plan": {
+                "tool_id": normalized_tool_plan.get("tool_id"),
+                "mode": tool_mode,
+                "operation": tool_op,
+            }
+            if uses_tool
+            else None,
+        },
+        "recommended_workers": recommended_workers,
+        "suggested_specialist_template": None,
+    }
+
+
 RESPONSES_PRIMARY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
     name="responses.primary",
     max_total_chars=18000,
@@ -122,6 +216,19 @@ RESPONSES_RETRY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
     max_query_chars=6500,
     query_prefix_compaction_mode="middle",
 )
+
+# Tertiary prompt budget is used only when the provider length guardrail is triggered again.
+# This prevents a deadend fallback ("prompt too long") by aggressively removing context
+# until the provider accepts the request.
+RESPONSES_TERTIARY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
+    name="responses.tertiary",
+    max_total_chars=6500,
+    max_history_chars=0,
+    max_upload_chars=600,
+    max_approved_web_chars=0,
+    max_query_chars=3000,
+    query_prefix_compaction_mode="head",
+)
 CHAT_COMPLETIONS_PRIMARY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
     name="chat_completions.primary",
     max_total_chars=5200,
@@ -138,6 +245,16 @@ CHAT_COMPLETIONS_RETRY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
     max_upload_chars=450,
     max_approved_web_chars=0,
     max_query_chars=1800,
+    query_prefix_compaction_mode="head",
+)
+
+CHAT_COMPLETIONS_TERTIARY_ANSWER_PROMPT_BUDGET = AnswerPromptBudget(
+    name="chat_completions.tertiary",
+    max_total_chars=1900,
+    max_history_chars=0,
+    max_upload_chars=250,
+    max_approved_web_chars=0,
+    max_query_chars=900,
     query_prefix_compaction_mode="head",
 )
 
@@ -234,8 +351,52 @@ def _format_tool_result_for_prompt(*, operation: str, payload: dict[str, Any], m
             "Executed Odoo monthly margin comparison:",
             f"- date_from: {data.get('date_from')}",
             f"- date_to: {data.get('date_to')}",
-            "- monthly rows:",
+            f"- requested_company_ids: {payload.get('company_ids') or payload.get('company_id')}",
+            "- company summaries:",
         ]
+        companies = list(data.get("companies") or [])
+        for company in companies[:8]:
+            if not isinstance(company, dict):
+                continue
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        str(company.get("company_name") or company.get("company_id") or "company"),
+                        f"total_revenue={company.get('total_revenue')}",
+                        f"total_cogs={company.get('total_cogs')}",
+                        f"total_gp={company.get('total_gp')}",
+                        f"avg_gp_pct={company.get('avg_gp_pct')}",
+                    ]
+                )
+            )
+        total_revenue = 0.0
+        total_cogs = 0.0
+        total_gp = 0.0
+        for company in companies:
+            if not isinstance(company, dict):
+                continue
+            try:
+                total_revenue += float(company.get("total_revenue") or 0.0)
+                total_cogs += float(company.get("total_cogs") or 0.0)
+                total_gp += float(company.get("total_gp") or 0.0)
+            except (TypeError, ValueError):
+                continue
+        if companies:
+            lines.extend(
+                [
+                    "- derived group totals:",
+                    f"  - revenue={total_revenue}",
+                    f"  - cogs={total_cogs}",
+                    f"  - gp={total_gp}",
+                    f"  - gp_pct={(total_gp / total_revenue) if total_revenue else 0.0}",
+                ]
+            )
+        lines.extend(
+            [
+                "- monthly rows:",
+            ]
+        )
         for row in list(data.get("rows") or [])[:8]:
             if not isinstance(row, dict):
                 continue
@@ -267,6 +428,109 @@ def _format_tool_result_for_prompt(*, operation: str, payload: dict[str, Any], m
                             str(anomaly.get("metric") or "metric"),
                             f"delta_pct={anomaly.get('delta_pct')}",
                             str(anomaly.get("reason") or ""),
+                        ]
+                    )
+                )
+        return "\n".join(lines).strip()
+
+    if operation == "odoo.finance.shopify.monthly_roi":
+        lines = [
+            "Executed Odoo Shopify monthly ROI helper:",
+            f"- date_from: {data.get('date_from')}",
+            f"- date_to: {data.get('date_to')}",
+            f"- company_ids: {data.get('company_ids')}",
+            f"- line_count: {data.get('line_count')}",
+            "- company summaries:",
+        ]
+        for company in list(data.get("companies") or [])[:8]:
+            if not isinstance(company, dict):
+                continue
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        str(company.get("company_name") or company.get("company_id") or "company"),
+                        f"shopify_revenue={company.get('shopify_revenue')}",
+                        f"discounts={company.get('shopify_discounts')}",
+                        f"refunds={company.get('shopify_refunds')}",
+                        f"shipping={company.get('shopify_shipping')}",
+                        f"fees={company.get('shopify_fees')}",
+                        f"marketing_spend={company.get('marketing_spend')}",
+                        f"net_shopify_revenue={company.get('net_shopify_revenue')}",
+                        f"roas={company.get('roas')}",
+                        f"contribution_after_marketing={company.get('contribution_after_marketing')}",
+                    ]
+                )
+            )
+        if isinstance(data.get("group_totals"), dict):
+            group_totals = dict(data.get("group_totals") or {})
+            lines.extend(
+                [
+                    "- group totals:",
+                    "  - "
+                    + " | ".join(
+                        [
+                            f"shopify_revenue={group_totals.get('shopify_revenue')}",
+                            f"discounts={group_totals.get('shopify_discounts')}",
+                            f"refunds={group_totals.get('shopify_refunds')}",
+                            f"shipping={group_totals.get('shopify_shipping')}",
+                            f"fees={group_totals.get('shopify_fees')}",
+                            f"marketing_spend={group_totals.get('marketing_spend')}",
+                            f"net_shopify_revenue={group_totals.get('net_shopify_revenue')}",
+                            f"roas={group_totals.get('roas')}",
+                            f"contribution_after_marketing={group_totals.get('contribution_after_marketing')}",
+                        ]
+                    ),
+                ]
+            )
+        accounts_used = data.get("accounts_used")
+        if isinstance(accounts_used, dict):
+            lines.append("- accounts used:")
+            for category, account_names in accounts_used.items():
+                if not isinstance(account_names, list):
+                    continue
+                lines.append(f"  - {category}: {', '.join(str(item) for item in account_names[:12])}")
+        journals_used = list(data.get("journals_used") or [])
+        if journals_used:
+            lines.append("- journals used:")
+            for journal_name in journals_used[:12]:
+                lines.append(f"  - {journal_name}")
+        vendors_used = list(data.get("vendors_used") or [])
+        if vendors_used:
+            lines.append("- vendors used:")
+            for vendor_name in vendors_used[:12]:
+                lines.append(f"  - {vendor_name}")
+        attribution_note = str(data.get("attribution_note") or "").strip()
+        if attribution_note:
+            lines.append(f"- attribution_note: {attribution_note}")
+        order_metrics = data.get("shopify_order_metrics")
+        if isinstance(order_metrics, dict):
+            lines.extend(
+                [
+                    "- supplemental order metrics:",
+                    "  - "
+                    + " | ".join(
+                        [
+                            f"date_from={order_metrics.get('date_from')}",
+                            f"date_to={order_metrics.get('date_to')}",
+                            f"order_count={order_metrics.get('order_count')}",
+                            f"order_total={order_metrics.get('order_total')}",
+                            f"aov={order_metrics.get('aov')}",
+                        ]
+                    ),
+                ]
+            )
+            for company_metrics in list(order_metrics.get("companies") or [])[:8]:
+                if not isinstance(company_metrics, dict):
+                    continue
+                lines.append(
+                    "  - company orders: "
+                    + " | ".join(
+                        [
+                            str(company_metrics.get("company_name") or company_metrics.get("company_id") or "company"),
+                            f"order_count={company_metrics.get('order_count')}",
+                            f"order_total={company_metrics.get('order_total')}",
+                            f"aov={company_metrics.get('aov')}",
                         ]
                     )
                 )
@@ -566,12 +830,273 @@ def _fallback_monthly_margin_comparison(
     return event, detail
 
 
+def _normalize_company_lookup(value: str) -> str:
+    return "".join(ch for ch in value.casefold() if ch.isalnum())
+
+
+def _extract_year_from_iso_date(value: Any) -> int | None:
+    raw = str(value or "").strip()
+    if len(raw) < 4 or not raw[:4].isdigit():
+        return None
+    year = int(raw[:4])
+    if 1900 <= year <= 2100:
+        return year
+    return None
+
+
+def _resolve_company_terms_for_payload(
+    session: Session,
+    *,
+    agent_id: str,
+    payload: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+) -> tuple[dict[str, Any], ChatToolEvent | None, str | None, dict[str, Any] | None]:
+    resolved_input = dict(payload)
+    company_terms = [str(term).strip() for term in list(payload.get("company_name_terms") or []) if str(term).strip()]
+    parsed_company_ids: list[int] = []
+    for raw in list(resolved_input.get("company_ids") or []):
+        try:
+            parsed_company_ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+    candidate_years = {
+        year
+        for year in (
+            _extract_year_from_iso_date(resolved_input.get("date_from")),
+            _extract_year_from_iso_date(resolved_input.get("date_to")),
+        )
+        if year is not None
+    }
+    if company_terms and parsed_company_ids and candidate_years and all(company_id in candidate_years for company_id in parsed_company_ids):
+        resolved_input.pop("company_ids", None)
+        raw_company_id = resolved_input.get("company_id")
+        try:
+            parsed_company_id = int(raw_company_id)
+        except (TypeError, ValueError):
+            parsed_company_id = None
+        if parsed_company_id in candidate_years:
+            resolved_input.pop("company_id", None)
+    if not company_terms or resolved_input.get("company_ids"):
+        return resolved_input, None, None, None
+
+    lookup_payload = {
+        "model": "res.company",
+        "domain": [],
+        "fields": ["id", "name"],
+        "limit": 100,
+        "offset": 0,
+        "order": "name asc",
+    }
+    tool_response, _readiness = execute_tool_operation_for_agent(
+        session,
+        agent_id=agent_id,
+        operation="odoo.rpc.search_read",
+        payload=lookup_payload,
+        tool_overrides=tool_overrides,
+        surface="consumer_chat",
+    )
+    if not tool_response.success:
+        event = ChatToolEvent(
+            tool_id="odoo_primary",
+            status="blocked" if "blocked_reasons" in (tool_response.data or {}) else "failed",
+            operation="odoo.rpc.search_read",
+            summary=tool_response.message or "Could not resolve company names from Odoo.",
+            blocked_reason=next(iter((tool_response.data or {}).get("blocked_reasons") or []), None),
+            payload={"company_name_terms": company_terms, "requested_company_ids": parsed_company_ids},
+            latency_ms=tool_response.latency_ms,
+        )
+        detail = (
+            "Company-name resolution failed before the finance comparison could run:\n"
+            + _safe_json(
+                {
+                    "operation": "odoo.rpc.search_read",
+                    "payload": lookup_payload,
+                    "message": tool_response.message,
+                    "data": tool_response.data,
+                }
+            )
+        )
+        return resolved_input, event, detail, None
+
+    records = list((tool_response.data or {}).get("records") or [])
+    matches: list[tuple[str, int, str]] = []
+    ambiguous_terms: list[dict[str, Any]] = []
+    missing_terms: list[str] = []
+    for term in company_terms:
+        normalized_term = _normalize_company_lookup(term)
+        candidates: list[tuple[int, str]] = []
+        for record in records:
+            try:
+                company_id = int(record.get("id"))
+            except (TypeError, ValueError):
+                continue
+            company_name = str(record.get("name") or "").strip()
+            normalized_name = _normalize_company_lookup(company_name)
+            if not normalized_name:
+                continue
+            if normalized_term == normalized_name or normalized_term in normalized_name:
+                candidates.append((company_id, company_name))
+        deduped_candidates = list(dict.fromkeys(candidates))
+        if len(deduped_candidates) == 1:
+            company_id, company_name = deduped_candidates[0]
+            matches.append((term, company_id, company_name))
+        elif len(deduped_candidates) > 1:
+            ambiguous_terms.append(
+                {
+                    "term": term,
+                    "matches": [{"id": company_id, "name": company_name} for company_id, company_name in deduped_candidates[:5]],
+                }
+            )
+        else:
+            missing_terms.append(term)
+
+    if ambiguous_terms or missing_terms:
+        event = ChatToolEvent(
+            tool_id="odoo_primary",
+            status="blocked",
+            operation="odoo.rpc.search_read",
+            summary="Could not safely resolve all named businesses to canonical Odoo companies.",
+            blocked_reason="company_name_resolution_failed",
+            payload={"company_name_terms": company_terms, "requested_company_ids": parsed_company_ids},
+            latency_ms=tool_response.latency_ms,
+        )
+        detail = (
+            "Named company resolution needs clarification before the finance comparison can run:\n"
+            + _safe_json(
+                {
+                    "requested_terms": company_terms,
+                    "matched": [{"term": term, "company_id": company_id, "company_name": company_name} for term, company_id, company_name in matches],
+                    "ambiguous_terms": ambiguous_terms,
+                    "missing_terms": missing_terms,
+                }
+            )
+        )
+        return resolved_input, event, detail, None
+
+    resolved_payload = dict(resolved_input)
+    resolved_payload["company_ids"] = [company_id for _term, company_id, _company_name in matches]
+    if len(resolved_payload["company_ids"]) == 1:
+        resolved_payload["company_id"] = resolved_payload["company_ids"][0]
+    resolved_payload.pop("company_name_terms", None)
+    resolution_summary = ", ".join(f"{term}->{company_name} ({company_id})" for term, company_id, company_name in matches)
+    event = ChatToolEvent(
+        tool_id="odoo_primary",
+        status="executed",
+        operation="odoo.rpc.search_read",
+        summary=f"Resolved company names: {resolution_summary}",
+        payload={"company_name_terms": company_terms, "company_ids": resolved_payload["company_ids"]},
+        latency_ms=tool_response.latency_ms,
+    )
+    detail = (
+        "Resolved named company scope from `res.company` before running the finance comparison:\n"
+        + _safe_json(
+            {
+                "requested_terms": company_terms,
+                "resolved": [
+                    {"term": term, "company_id": company_id, "company_name": company_name}
+                    for term, company_id, company_name in matches
+                ],
+            }
+        )
+    )
+    return resolved_payload, event, detail, dict(tool_response.data or {})
+
+
+def _supplement_shopify_orders_aov(
+    session: Session,
+    *,
+    agent_id: str,
+    payload: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+) -> tuple[dict[str, Any] | None, ChatToolEvent | None, str]:
+    date_from = str(payload.get("date_from") or "").strip()
+    date_to = str(payload.get("date_to") or "").strip()
+    if not date_from or not date_to:
+        return None, None, ""
+    company_ids = [value for value in list(payload.get("company_ids") or []) if isinstance(value, int)]
+    company_id = payload.get("company_id")
+    if isinstance(company_id, int) and company_id not in company_ids:
+        company_ids.append(company_id)
+    domain: list[Any] = [
+        ["date_order", ">=", date_from],
+        ["date_order", "<", date_to],
+    ]
+    if company_ids:
+        domain.append(["company_id", "in", company_ids])
+    orders_response, _readiness = execute_tool_operation_for_agent(
+        session,
+        agent_id=agent_id,
+        operation="odoo.sales.orders.search_read",
+        payload={
+            "domain": domain,
+            "limit": 500,
+            "fields": ["id", "name", "state", "date_order", "amount_total", "company_id", "currency_id"],
+        },
+        tool_overrides=tool_overrides,
+        surface="consumer_chat",
+    )
+    if not orders_response.success:
+        return None, None, ""
+    records = list((orders_response.data or {}).get("records") or [])
+    total_orders = len(records)
+    total_amount = 0.0
+    by_company: dict[int, dict[str, Any]] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        try:
+            amount = float(record.get("amount_total") or 0)
+        except (TypeError, ValueError):
+            amount = 0.0
+        total_amount += amount
+        company_field = record.get("company_id")
+        if isinstance(company_field, list) and company_field and isinstance(company_field[0], int):
+            resolved_company_id = int(company_field[0])
+            entry = by_company.setdefault(
+                resolved_company_id,
+                {
+                    "company_id": resolved_company_id,
+                    "company_name": str(company_field[1]) if len(company_field) > 1 else f"Company {resolved_company_id}",
+                    "order_count": 0,
+                    "order_total": 0.0,
+                    "aov": 0.0,
+                },
+            )
+            entry["order_count"] += 1
+            entry["order_total"] += amount
+    for entry in by_company.values():
+        count = int(entry.get("order_count") or 0)
+        entry["aov"] = (float(entry.get("order_total") or 0.0) / count) if count else None
+    summary_data = {
+        "date_from": date_from,
+        "date_to": date_to,
+        "order_count": total_orders,
+        "order_total": total_amount,
+        "aov": (total_amount / total_orders) if total_orders else None,
+        "companies": sorted(by_company.values(), key=lambda item: str(item.get("company_name") or "")),
+    }
+    event = ChatToolEvent(
+        tool_id="odoo_primary",
+        status="executed",
+        operation="odoo.sales.orders.search_read",
+        summary=f"orders={total_orders}",
+        payload={"date_from": date_from, "date_to": date_to, "company_ids": company_ids},
+        latency_ms=orders_response.latency_ms,
+    )
+    detail = (
+        "Supplemental Odoo order-level pull for Shopify order_count/AOV:\n"
+        + _safe_json(summary_data, max_chars=1800)
+    )
+    return summary_data, event, detail
+
+
 def prepare_tool_evidence(
     session: Session,
     *,
     agent_id: str,
     tool_overrides: dict[str, bool] | None,
     tool_plan: dict[str, Any] | None,
+    request_message: str | None = None,
 ) -> PreparedToolEvidence:
     normalized_plan = _normalize_tool_plan(tool_plan)
     mode = str(normalized_plan.get("mode") or "none")
@@ -592,6 +1117,30 @@ def prepare_tool_evidence(
     tool_events: list[ChatToolEvent] = []
     citations: list[dict[str, Any]] = []
     detail_blocks: list[str] = []
+
+    if operation in {"odoo.finance.margin.monthly_comparison", "odoo.finance.shopify.monthly_roi"} and payload.get("company_name_terms"):
+        payload, resolution_event, resolution_detail, resolution_data = _resolve_company_terms_for_payload(
+            session,
+            agent_id=agent_id,
+            payload=payload,
+            tool_overrides=tool_overrides,
+        )
+        normalized_plan["payload"] = payload
+        if resolution_event is not None:
+            tool_events.append(resolution_event)
+            citations.append(_tool_citation_from_event(resolution_event))
+        if resolution_detail:
+            detail_blocks.append(resolution_detail)
+        if resolution_event is not None and resolution_event.status != "executed":
+            return PreparedToolEvidence(
+                plan=normalized_plan,
+                prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+                citations=citations,
+                tool_events=tool_events,
+                can_cache_response=False,
+            )
+        if resolution_data:
+            detail_blocks.append(_safe_json({"company_lookup": resolution_data}, max_chars=1600))
 
     if mode == "preview":
         event = ChatToolEvent(
@@ -640,6 +1189,22 @@ def prepare_tool_evidence(
         surface="consumer_chat",
     )
     if tool_response.success:
+        if operation == "odoo.finance.shopify.monthly_roi" and _requests_shopify_order_metrics(request_message or ""):
+            supplemental_metrics, supplemental_event, supplemental_detail = _supplement_shopify_orders_aov(
+                session,
+                agent_id=agent_id,
+                payload=payload,
+                tool_overrides=tool_overrides,
+            )
+            if supplemental_metrics is not None:
+                merged_data = dict(tool_response.data or {})
+                merged_data["shopify_order_metrics"] = supplemental_metrics
+                tool_response.data = merged_data
+            if supplemental_event is not None:
+                tool_events.append(supplemental_event)
+                citations.append(_tool_citation_from_event(supplemental_event))
+            if supplemental_detail:
+                detail_blocks.append(supplemental_detail)
         summary = _summarize_tool_payload(tool_response.data)
         event = ChatToolEvent(
             tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
@@ -728,6 +1293,10 @@ async def fetch_query_plan(
     trace_id: str,
     *,
     current_message: str | None = None,
+    workflow_mode: str | None = None,
+    embedding_model_id: str | None = None,
+    kb_enabled: bool = True,
+    odoo_ready: bool = False,
 ) -> dict:
     async with httpx.AsyncClient(timeout=240.0) as client:
         response = await client.post(
@@ -738,10 +1307,123 @@ async def fetch_query_plan(
                 "corpora": corpora,
                 "top_k": top_k,
                 "trace_id": trace_id,
+                "workflow_mode": workflow_mode,
+                "embedding_model_id": embedding_model_id,
+                "kb_enabled": kb_enabled,
+                "odoo_ready": odoo_ready,
             },
         )
         response.raise_for_status()
         return response.json()
+
+
+async def render_docx_with_sidecar(
+    *,
+    docx_mode: Any,
+    trace_id: str,
+    agent_id: str,
+    conversation_id: str,
+    answer_text: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
+        return [], []
+    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    path = "/render/finalize" if operation == "finalize" else "/render/preview"
+    template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
+    payload = {
+        "template_id": template_id or None,
+        "binding_overrides": dict(getattr(docx_mode, "binding_overrides", {}) or {}),
+        "message_context": answer_text,
+        "trace_id": trace_id,
+        "agent_id": agent_id,
+        "conversation_id": conversation_id,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(f"{settings.app_docx_sidecar_url.rstrip('/')}{path}", json=payload)
+        if response.status_code >= 400:
+            return [], [
+                {
+                    "code": "docx_sidecar_error",
+                    "message": f"Docx sidecar returned {response.status_code}",
+                    "field": None,
+                }
+            ]
+        data = response.json()
+        artifacts = list(data.get("artifacts") or [])
+        diagnostics = list(data.get("diagnostics") or [])
+        return artifacts, diagnostics
+    except Exception as exc:
+        return [], [
+            {
+                "code": "docx_sidecar_unavailable",
+                "message": f"Docx sidecar request failed: {exc!r}",
+                "field": None,
+            }
+        ]
+
+
+def validate_docx_finalize_output(*, operation: str, answer_text: str) -> list[dict[str, Any]]:
+    if operation != "finalize":
+        return []
+    lowered = str(answer_text or "").casefold()
+    required_sections = ("facts", "inferences", "assumptions", "risks", "actions")
+    missing = [section for section in required_sections if section not in lowered]
+    if not missing:
+        return []
+    return [
+        {
+            "code": "docx_finalize_validation_failed",
+            "message": f"Finalize output is missing required section(s): {', '.join(missing)}.",
+            "field": "message_context",
+        }
+    ]
+
+
+def render_docx_with_sidecar_sync(
+    *,
+    docx_mode: Any,
+    trace_id: str,
+    agent_id: str,
+    conversation_id: str,
+    answer_text: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
+        return [], []
+    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    path = "/render/finalize" if operation == "finalize" else "/render/preview"
+    template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
+    payload = {
+        "template_id": template_id or None,
+        "binding_overrides": dict(getattr(docx_mode, "binding_overrides", {}) or {}),
+        "message_context": answer_text,
+        "trace_id": trace_id,
+        "agent_id": agent_id,
+        "conversation_id": conversation_id,
+    }
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(f"{settings.app_docx_sidecar_url.rstrip('/')}{path}", json=payload)
+        if response.status_code >= 400:
+            return [], [
+                {
+                    "code": "docx_sidecar_error",
+                    "message": f"Docx sidecar returned {response.status_code}",
+                    "field": None,
+                }
+            ]
+        data = response.json()
+        artifacts = list(data.get("artifacts") or [])
+        diagnostics = list(data.get("diagnostics") or [])
+        return artifacts, diagnostics
+    except Exception as exc:
+        return [], [
+            {
+                "code": "docx_sidecar_unavailable",
+                "message": f"Docx sidecar request failed: {exc!r}",
+                "field": None,
+            }
+        ]
 
 
 def build_query_message(*, message: str, history_context: str) -> str:
@@ -754,11 +1436,147 @@ def build_query_message(*, message: str, history_context: str) -> str:
     )
 
 
+def resolve_conversation_mode(*, requested_mode: str | None, guardrails_config: dict[str, Any]) -> str:
+    candidate = str(requested_mode or guardrails_config.get("conversation_mode") or "quick").strip().casefold()
+    if candidate in {"quick", "board", "working_session"}:
+        return candidate
+    return "quick"
+
+
+def resolve_workflow_mode(*, requested_mode: str | None, conversation: AgentConversationRecord | None = None) -> str:
+    candidate = str(requested_mode or getattr(conversation, "workflow_mode", None) or "standard").strip().casefold()
+    if candidate in {"standard", "data_collector", "documenter", "odoo_specialist"}:
+        return candidate
+    return "standard"
+
+
+def build_effective_system_prompt(*, base_system_prompt: str, conversation_mode: str, workflow_mode: str) -> str:
+    workflow_directives = ""
+    if workflow_mode == "data_collector":
+        workflow_directives = (
+            "Workflow mode: data_collector.\n"
+            "- Lead the discussion like a strategist collecting truth.\n"
+            "- Ask only the next highest-value question.\n"
+            "- Produce short approval-ready outputs rather than long essays.\n"
+            "- Do not silently promote speculative content into final document claims."
+        )
+    elif workflow_mode == "documenter":
+        workflow_directives = (
+            "Workflow mode: documenter.\n"
+            "- Stay passive by default and operate from approved material.\n"
+            "- Treat the document frame as the primary approved source.\n"
+            "- Do not convert tentative discussion into final claims without clear grounding."
+        )
+    elif workflow_mode == "odoo_specialist":
+        workflow_directives = (
+            "Workflow mode: odoo_specialist.\n"
+            "- Be retrieval-first, not prose-first.\n"
+            "- Prefer exact governed Odoo evidence over generic strategy language.\n"
+            "- State clearly whether Odoo ran, was blocked, or was unavailable."
+        )
+    if conversation_mode == "board":
+        prompt = (
+            f"{base_system_prompt}\n\n"
+            "Conversation mode: board.\n"
+            "- Deliver a full executive-grade first answer when the evidence supports it.\n"
+            "- Start with the direct answer, then a compact scorecard, key drivers, risks, and next actions.\n"
+            "- Do not force a staged 'continue' pattern for finance comparisons."
+        ).strip()
+    elif conversation_mode == "working_session":
+        prompt = (
+            f"{base_system_prompt}\n\n"
+            "Conversation mode: working_session.\n"
+            "- Work through ambiguity like a finance lead, using grounded evidence before asking the user to continue.\n"
+            "- Resolve obvious company/entity ambiguity from Odoo when the required lookup is safe and available.\n"
+            "- For board-style finance questions, return a developed first pass with: direct answer, scorecard, performer rationale, confidence limits, and recommended drill-down.\n"
+            "- Do not force a staged 'continue' pattern when the first-pass answer can be completed."
+        ).strip()
+    else:
+        prompt = base_system_prompt.strip()
+    if workflow_directives:
+        prompt = f"{prompt}\n\n{workflow_directives}".strip()
+    return prompt
+
+
+DOCX_FIXED_AGENT_CANDIDATES = (
+    "Docxtemplater Specialist",
+    "Apryse Docs Specialist",
+    "Business Marketing & Strategy Documenter",
+)
+
+
+def resolve_docx_fixed_agent(session: Session, *, fallback_agent) -> Any:
+    candidates = list(session.scalars(select(AgentProfileRecord).where(AgentProfileRecord.enabled.is_(True))))
+    by_name = {str(candidate.name).strip().casefold(): candidate for candidate in candidates}
+    for preferred in DOCX_FIXED_AGENT_CANDIDATES:
+        matched = by_name.get(preferred.casefold())
+        if matched is not None:
+            return matched
+    return fallback_agent
+
+
+def apply_docx_mode_directives(*, base_prompt: str, docx_mode: Any) -> str:
+    if not docx_mode or not bool(getattr(docx_mode, "enabled", False)):
+        return base_prompt
+    operation = str(getattr(docx_mode, "operation", "preview") or "preview").strip().lower()
+    template_id = str(getattr(docx_mode, "template_id", "") or "").strip()
+    directives = [
+        "Doc mode: Apryse document workflow is enabled.",
+        f"- Operation: {operation}.",
+        "- Produce deterministic JSON-ready document binding data.",
+        "- Do not invent template fields outside the provided template id and binding schema.",
+        "- Prefer concise structured outputs suitable for iterative preview/finalize loops.",
+    ]
+    if template_id:
+        directives.append(f"- Template id: {template_id}.")
+    return f"{base_prompt}\n\n" + "\n".join(directives)
+
+
+def _is_finance_analysis_message(message: str) -> bool:
+    lowered = message.casefold()
+    return any(
+        term in lowered
+        for term in (
+            "revenue",
+            "cogs",
+            "gross margin",
+            "gross profit",
+            "performer",
+            "performance",
+            "ytd",
+            "year so far",
+            "year-to-date",
+            "board",
+            "finance",
+        )
+    )
+
+
+def resolve_effective_query_top_k(
+    *,
+    session: Session,
+    requested_top_k: int | None,
+    runtime_profile,
+    message: str,
+    conversation_mode: str,
+) -> int:
+    base_top_k = resolve_query_top_k(session, requested_top_k, runtime_profile=runtime_profile)
+    if requested_top_k is not None or not _is_finance_analysis_message(message):
+        return base_top_k
+    if conversation_mode == "working_session":
+        return min(max(base_top_k, 12), 20)
+    if conversation_mode == "board":
+        return min(max(base_top_k, 10), 20)
+    return base_top_k
+
+
 def build_runtime_context_block(
     *,
     agent_name: str,
     runtime_profile_name: str,
     corpora: list[str],
+    conversation_mode: str,
+    workflow_mode: str,
     history_context: str,
     allowed_urls: list[str],
     used_approved_web: bool,
@@ -775,6 +1593,8 @@ def build_runtime_context_block(
             f"Agent name: {agent_name}",
             f"Runtime profile: {runtime_profile_name}",
             f"Active corpora: {', '.join(corpora) if corpora else 'none'}",
+            f"Conversation mode: {conversation_mode}",
+            f"Workflow mode: {workflow_mode}",
             memory_line,
             f"Approved web used: {'yes' if used_approved_web else 'no'}",
             (
@@ -797,6 +1617,8 @@ def build_effective_snapshot_id(
     agent_id: str,
     runtime_profile_id: str,
     corpora: list[str],
+    conversation_mode: str,
+    workflow_mode: str,
     tool_summary: list[dict],
     use_approved_web: bool,
 ) -> str:
@@ -804,6 +1626,8 @@ def build_effective_snapshot_id(
         "agent_id": agent_id,
         "runtime_profile_id": runtime_profile_id,
         "corpora": list(corpora),
+        "conversation_mode": conversation_mode,
+        "workflow_mode": workflow_mode,
         "tool_summary": tool_summary,
         "use_approved_web": use_approved_web,
     }
@@ -876,6 +1700,31 @@ def build_chat_upload_prompt_context(uploads: list[ChatUploadRecord]) -> str:
     return "Conversation upload context:\n\n" + "\n\n".join(sections)
 
 
+def build_document_frame_prompt_context(frame: DocumentFrameRecord | None) -> str:
+    if frame is None:
+        return ""
+    fragments = [fragment for fragment in list(frame.fragments_json or []) if isinstance(fragment, dict)]
+    if not fragments:
+        return ""
+    lines = [
+        f"Document frame: {frame.title}",
+        f"Status: {frame.status}",
+        "Approved document fragments:",
+    ]
+    for fragment in fragments[-12:]:
+        fragment_type = str(fragment.get("fragment_type") or "snippet")
+        title = str(fragment.get("title") or "").strip()
+        content = str(fragment.get("content") or "").strip()
+        if not content:
+            continue
+        header = f"- {fragment_type}"
+        if title:
+            header += f": {title}"
+        lines.append(header)
+        lines.append(content[:1200])
+    return "\n".join(lines).strip()
+
+
 def build_answer_prompt(
     *,
     agent_name: str,
@@ -914,6 +1763,32 @@ def _compact_text(text: str, max_chars: int, *, mode: str) -> str:
     head_chars = keep_chars // 2
     tail_chars = keep_chars - head_chars
     return value[:head_chars] + PROMPT_TRIM_MARKER + value[-tail_chars:]
+
+
+def _normalize_prompt_excerpt(text: str, *, max_chars: int, mode: str) -> str:
+    """Collapse whitespace so first/last prompt excerpts are single-line and readable."""
+    normalized = " ".join((text or "").split())
+    if not normalized:
+        return ""
+    return _compact_text(normalized, max_chars, mode=mode)
+
+
+def _build_llm_io_payload(
+    usage: dict[str, int | bool],
+    *,
+    first_prompt_text: str,
+    last_prompt_text: str,
+) -> dict[str, Any]:
+    prompt_tokens = int(usage.get("prompt_tokens") or 0)
+    completion_tokens = int(usage.get("completion_tokens") or 0)
+    total_tokens = int(usage.get("total_tokens") or (prompt_tokens + completion_tokens))
+    return {
+        "input_tokens": prompt_tokens,
+        "output_tokens": completion_tokens,
+        "total_tokens": total_tokens,
+        "input_first_text": _normalize_prompt_excerpt(first_prompt_text, max_chars=220, mode="head"),
+        "input_last_text": _normalize_prompt_excerpt(last_prompt_text, max_chars=220, mode="tail"),
+    }
 
 
 def _extract_user_question_block(query_prompt: str) -> str:
@@ -1121,8 +1996,8 @@ def prepare_answer_prompt_variants(
     runtime_context: str,
     approved_web_context: str,
     upload_context: str,
-) -> tuple[PreparedAnswerPrompt, PreparedAnswerPrompt]:
-    primary_budget, retry_budget = resolve_answer_prompt_budgets(api_mode)
+) -> tuple[PreparedAnswerPrompt, PreparedAnswerPrompt, PreparedAnswerPrompt]:
+    primary_budget, retry_budget, tertiary_budget = resolve_answer_prompt_budgets(api_mode)
     primary = prepare_answer_prompt(
         agent_name=agent_name,
         system_prompt=system_prompt,
@@ -1143,13 +2018,31 @@ def prepare_answer_prompt_variants(
         upload_context=upload_context,
         budget=retry_budget,
     )
-    return primary, retry
+    tertiary = prepare_answer_prompt(
+        agent_name=agent_name,
+        system_prompt=system_prompt,
+        query_prompt=query_prompt,
+        history_context=history_context,
+        runtime_context=runtime_context,
+        approved_web_context=approved_web_context,
+        upload_context=upload_context,
+        budget=tertiary_budget,
+    )
+    return primary, retry, tertiary
 
 
-def resolve_answer_prompt_budgets(api_mode: str) -> tuple[AnswerPromptBudget, AnswerPromptBudget]:
+def resolve_answer_prompt_budgets(api_mode: str) -> tuple[AnswerPromptBudget, AnswerPromptBudget, AnswerPromptBudget]:
     if api_mode == "chat_completions":
-        return CHAT_COMPLETIONS_PRIMARY_ANSWER_PROMPT_BUDGET, CHAT_COMPLETIONS_RETRY_ANSWER_PROMPT_BUDGET
-    return RESPONSES_PRIMARY_ANSWER_PROMPT_BUDGET, RESPONSES_RETRY_ANSWER_PROMPT_BUDGET
+        return (
+            CHAT_COMPLETIONS_PRIMARY_ANSWER_PROMPT_BUDGET,
+            CHAT_COMPLETIONS_RETRY_ANSWER_PROMPT_BUDGET,
+            CHAT_COMPLETIONS_TERTIARY_ANSWER_PROMPT_BUDGET,
+        )
+    return (
+        RESPONSES_PRIMARY_ANSWER_PROMPT_BUDGET,
+        RESPONSES_RETRY_ANSWER_PROMPT_BUDGET,
+        RESPONSES_TERTIARY_ANSWER_PROMPT_BUDGET,
+    )
 
 
 def unique_answer_prompt_variants(*variants: PreparedAnswerPrompt) -> list[PreparedAnswerPrompt]:
@@ -1163,18 +2056,270 @@ def unique_answer_prompt_variants(*variants: PreparedAnswerPrompt) -> list[Prepa
     return unique_variants
 
 
-def build_staged_answer_directives(*, tool_plan: dict[str, Any] | None) -> str:
+def build_staged_answer_directives(*, tool_plan: dict[str, Any] | None, conversation_mode: str) -> str:
     """Add answer-format constraints for expensive tool-heavy investigations."""
     plan = dict(tool_plan or {})
     operation = str(plan.get("operation") or "").strip()
+    payload = dict(plan.get("payload") or {})
+    requested_company_ids = [value for value in list(payload.get("company_ids") or []) if isinstance(value, int)]
     if not operation.startswith("odoo.finance."):
         return ""
+    if conversation_mode == "board":
+        return (
+            "Answer constraints (board mode):\n"
+            "- Return a full first-pass executive answer in one response.\n"
+            "- Start with the direct answer and performer ranking.\n"
+            "- Include a compact scorecard table for the compared businesses.\n"
+            "- Explain top drivers, key risks, and recommended actions.\n"
+            "- Do not end with a staged drill-down invitation."
+        ).strip()
+    if conversation_mode == "working_session":
+        return (
+            "Answer constraints (working session mode):\n"
+            "- Work through the evidence like an analyst, not a passive summarizer.\n"
+            "- Use the available grounded and Odoo evidence to resolve obvious ambiguity before asking the user for more.\n"
+            "- Deliver a developed first pass with sections for direct answer, scorecard, performer rationale, uncertainty, and next drill-down.\n"
+            "- Do not force staged output or append a staged drill-down invitation."
+        ).strip()
+    if operation == "odoo.finance.shopify.monthly_roi":
+        return (
+            "Answer constraints (Shopify ROI helper):\n"
+            "- Use only the returned Odoo evidence. Do not mix in KB or web claims.\n"
+            "- Return a monthly table with Shopify revenue, discounts, refunds, shipping, fees, marketing spend, net Shopify revenue, ROAS, and contribution after marketing spend.\n"
+            "- State the exact journals, account codes/names, and vendors used from the Odoo result.\n"
+            "- If attribution to Shopify is only proxy-level, say that explicitly and explain why.\n"
+            "- Do not replace the requested table with a generic summary."
+        ).strip()
+    if operation == "odoo.finance.margin.monthly_comparison" and len(requested_company_ids) > 1:
+        return (
+            "Answer constraints (multi-company monthly comparison):\n"
+            "- You must split the answer by each requested business, not just one example entity.\n"
+            "- Include separate subsections for each requested company plus one combined group total.\n"
+            "- Name the businesses explicitly and keep their totals distinct.\n"
+            "- Do not collapse a multi-company Odoo result into a Retail-only summary.\n"
+            "- If marketing or full overhead lines are not present in the returned Odoo operation, say that clearly and ask for the next Odoo drill-down needed."
+        ).strip()
     return (
         "Answer constraints (staged finance output):\n"
         "- First pass only: executive summary + what changed month-to-month + top drivers.\n"
         "- Keep it concise (no long-form report). Use bullets and a small month-by-month table.\n"
         "- End with: 'Say CONTINUE for deeper drill-down by code/journal/vendor.'"
     ).strip()
+
+
+def build_tool_truthfulness_directives(*, tool_plan: dict[str, Any] | None, tool_events: list[ChatToolEvent]) -> str:
+    plan = dict(tool_plan or {})
+    tool_id = str(plan.get("tool_id") or "").strip()
+    mode = str(plan.get("mode") or "none").strip()
+    operation = str(plan.get("operation") or "").strip()
+    if tool_id != "odoo_primary" or mode == "none":
+        return ""
+
+    executed = any(event.tool_id == "odoo_primary" and event.status == "executed" for event in tool_events)
+    blocked = next((event for event in tool_events if event.tool_id == "odoo_primary" and event.status in {"blocked", "failed"}), None)
+    preview = any(event.tool_id == "odoo_primary" and event.status in {"preview", "planned"} for event in tool_events)
+
+    base = [
+        "Critical tool truth constraints:",
+        "- Never claim Odoo executed, started, triggered, is still running, or injected data unless a tool event in this turn proves it.",
+        "- Treat tool events as authoritative over assistant prose.",
+    ]
+
+    if executed:
+        base.extend(
+            [
+                "- Odoo executed in this turn. Use only the returned tool evidence.",
+                "- Do not add imaginary post-processing steps like 'awaiting data injection' if the execution already completed.",
+            ]
+        )
+    elif blocked is not None:
+        base.extend(
+            [
+                f"- Odoo did not complete. State clearly that `{operation or 'the planned Odoo operation'}` was {blocked.status}.",
+                "- Explain the blocked or failed state plainly instead of writing speculative progress language.",
+            ]
+        )
+    elif preview or mode == "preview":
+        base.extend(
+            [
+                "- This turn only contains a preview/planned Odoo operation, not a real execution result.",
+                "- Do not say the data is being injected or that the lookup is underway unless a later tool event proves it.",
+            ]
+        )
+    else:
+        base.extend(
+            [
+                f"- Odoo was required for `{operation or 'this request'}`, but no executed or blocked tool result was returned.",
+                "- Say explicitly that the Odoo handoff did not complete in the returned tool evidence.",
+                "- Do not let semantic retrieval or document citations sound like ERP evidence.",
+            ]
+        )
+
+    return "\n".join(base).strip()
+
+
+def _is_business_finance_closeout_request(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    finance_terms = (
+        "financial",
+        "revenue",
+        "cogs",
+        "gross margin",
+        "marketing spend",
+        "shopify",
+        "aov",
+        "orders",
+        "board-ready",
+        "dashboard",
+    )
+    recency_terms = (
+        "today",
+        "up to date",
+        "up-to-date",
+        "upto date",
+        "month-to-date",
+        "mtd",
+        "last 30 days",
+        "as of",
+    )
+    return any(term in lowered for term in finance_terms) and any(term in lowered for term in recency_terms)
+
+
+def _requests_shopify_order_metrics(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    return "shopify" in lowered and any(term in lowered for term in ("orders", "order count", "aov"))
+
+
+def build_business_closeout_directives(
+    *,
+    message: str,
+    tool_plan: dict[str, Any] | None,
+    tool_events: list[ChatToolEvent],
+) -> str:
+    if not _is_business_finance_closeout_request(message):
+        return ""
+    plan = dict(tool_plan or {})
+    operation = str(plan.get("operation") or "").strip().lower()
+    if not operation.startswith("odoo.finance."):
+        return ""
+    executed = any(event.tool_id == "odoo_primary" and event.status == "executed" for event in tool_events)
+    if not executed:
+        return ""
+    payload = dict(plan.get("payload") or {})
+    date_from = str(payload.get("date_from") or "").strip()
+    date_to = str(payload.get("date_to") or "").strip()
+    assumptions = (
+        f"- Use the current planned window `{date_from} -> {date_to}` as the reporting scope."
+        if date_from and date_to
+        else "- If user asks 'as of today' without a concrete period, default to month-to-date through today and label it as an assumption."
+    )
+    order_metric_instruction = (
+        "- If orders/AOV are requested but missing from the executed operation, mark those fields `PROVISIONAL` or `UNAVAILABLE_FROM_CURRENT_OPERATION`, and continue with the dashboard."
+        if _requests_shopify_order_metrics(message)
+        else "- If one metric is missing, continue with a complete dashboard and mark only that metric as `PROVISIONAL`."
+    )
+    return (
+        "Business closeout constraints (operator mode):\n"
+        "- Deliver a complete board-ready dashboard in this turn; do not reply with only blocker questions.\n"
+        "- Never output 'I cannot produce' or equivalent when at least one Odoo execution completed in this turn.\n"
+        f"{assumptions}\n"
+        f"{order_metric_instruction}\n"
+        "- Include: Executive snapshot, scorecard by entity, anomalies, immediate actions, and explicit confidence labels.\n"
+        "- If additional drill-downs are needed, place them in 'Next pulls' while still finalizing the current answer."
+    )
+
+
+def build_owner_operator_contract_directives(
+    *,
+    message: str,
+    tool_plan: dict[str, Any] | None,
+    tool_events: list[ChatToolEvent],
+) -> str:
+    if not _is_business_finance_closeout_request(message):
+        return ""
+    has_executed_odoo = any(event.tool_id == "odoo_primary" and event.status == "executed" for event in tool_events)
+    plan = dict(tool_plan or {})
+    payload = dict(plan.get("payload") or {})
+    date_from = str(payload.get("date_from") or "").strip() or "unknown"
+    date_to = str(payload.get("date_to") or "").strip() or "unknown"
+    return (
+        "Owner-operator response contract:\n"
+        "- Start with a one-paragraph direct decision answer for 'what matters now'.\n"
+        f"- Include a freshness line: `Evidence window: {date_from} -> {date_to}` and whether this turn executed Odoo ({'yes' if has_executed_odoo else 'no'}).\n"
+        "- Separate sections explicitly: `Facts`, `Inferences`, and `Assumptions`.\n"
+        "- End with `What to do next` containing 3-5 actions with owner, urgency, and expected business impact.\n"
+        "- If data is incomplete, mark affected outputs as `PROVISIONAL` and list one exact highest-value next pull."
+    )
+
+
+def _looks_like_blocking_finance_answer(answer_text: str) -> bool:
+    lowered = str(answer_text or "").casefold()
+    blocker_phrases = (
+        "i can't produce",
+        "i cannot produce",
+        "what i need from you",
+        "one blocker",
+        "please confirm",
+        "to proceed",
+        "choose one",
+    )
+    return any(phrase in lowered for phrase in blocker_phrases)
+
+
+def normalize_finance_closeout_answer(
+    *,
+    answer_text: str,
+    request_message: str,
+    tool_plan: dict[str, Any] | None,
+    tool_events: list[ChatToolEvent],
+) -> str:
+    if not _is_business_finance_closeout_request(request_message):
+        return answer_text
+    executed_events = [event for event in tool_events if event.tool_id == "odoo_primary" and event.status == "executed"]
+    if not executed_events:
+        return answer_text
+    plan = dict(tool_plan or {})
+    payload = dict(plan.get("payload") or {})
+    date_from = str(payload.get("date_from") or "unknown")
+    date_to = str(payload.get("date_to") or "unknown")
+    normalized = answer_text
+    lowered = normalized.casefold()
+    if "facts" not in lowered or "inferences" not in lowered or "assumptions" not in lowered:
+        normalized = (
+            f"Evidence window: `{date_from} -> {date_to}`\n\n"
+            "### Facts\n"
+            "- Derived from executed Odoo tool events in this turn.\n\n"
+            "### Inferences\n"
+            "- Pattern-level interpretation based on the returned evidence.\n\n"
+            "### Assumptions\n"
+            "- State any provisional assumptions explicitly.\n\n"
+            "### What to do next\n"
+            "- Provide 3-5 owner actions with urgency and impact.\n\n"
+            + normalized.strip()
+        ).strip()
+    if not _looks_like_blocking_finance_answer(answer_text):
+        return normalized
+    evidence_lines = [
+        f"- `{event.operation or event.tool_id}`: {event.summary or 'executed'}"
+        for event in executed_events[:5]
+    ]
+    rewritten = [
+        "### Executive Dashboard (Provisional, Odoo-Grounded)",
+        f"- Reporting window: `{date_from} -> {date_to}`",
+        "- Status: Odoo executed in this turn; returning best-available board-ready output now.",
+        "- Confidence: medium for executed metrics, low where fields are unavailable from current operation.",
+        "",
+        "#### Executed Odoo Evidence",
+        *evidence_lines,
+        "",
+        "#### Immediate Actions",
+        "- Confirm any requested metrics that remain unavailable from the current operation as `PROVISIONAL`.",
+        "- Run the listed next pulls in parallel for higher-confidence refresh (do not block current dashboard delivery).",
+        "",
+        "#### Analyst Notes",
+        normalized.strip(),
+    ]
+    return "\n".join(rewritten).strip()
 
 
 def log_answer_prompt_compaction(*, trace_id: str, package: PreparedAnswerPrompt) -> None:
@@ -1270,69 +2415,84 @@ def dedupe_answer_text(answer: str) -> str:
     return text
 
 
+# User-visible fallbacks when the LLM returns nothing or a classified error.
+# Copy is intentionally domain-neutral (no scenario-specific examples). When each runs: see
+# artefacts/CHAT_ANSWER_FALLBACKS_2026-04-17.md
+
+
 def build_blank_answer_fallback(*, citations: list[dict]) -> str:
+    """Replace empty model output after generate + stream retry; error not length/context/timeout."""
+    n = len(citations)
+    citation_line = (
+        f"- {n} citation(s) were prepared from retrieved context before generation."
+        if n
+        else "- No citations were attached before generation (retrieval may have returned nothing usable)."
+    )
     fallback = [
-        "There is not enough reliable generated answer content available from the model response for me to give you a complete strategic paper yet.",
+        "The language model returned no usable text for this turn, so this message replaces the assistant reply.",
         "",
-        "What I can confirm:",
-        "- grounded source material was retrieved",
-        f"- citation count available: {len(citations)}",
-        "- the request should be re-run or narrowed into staged steps such as market impact, FY26 risks, and response options",
+        "What we know:",
+        citation_line,
+        "- Retrieval can succeed even when generation fails; the Citations list may still show sources.",
+        "- Typical causes: transient provider errors, empty completions, policy blocks with no body, or response shapes the client could not parse into text.",
         "",
-        "Immediate best next step:",
-        "1. split the position paper into demand impact, legal/regulatory impact, and strategic options",
-        "2. confirm the exact Queensland law change and effective date",
-        "3. isolate which product categories are exposed to the projected 4-6 million turnover risk",
-        "4. rebuild the FY26 strategy from those grounded components",
+        "What to try:",
+        "1. Retry the same question once.",
+        "2. Ask for a shorter answer or one subsection at a time (one metric, one period, or one table).",
+        "3. In Agent Config, confirm model id, API mode, and optional max output tokens.",
+        "4. If this repeats, check agent-ingress logs for the request trace id.",
     ]
     return "\n".join(fallback).strip()
 
 
 def build_timeout_fallback(*, citations: list[dict]) -> str:
+    """Model or network stopped before finishing; classified timeout."""
     fallback = [
-        "Insufficient execution window warning: the strategic request is valid, but the model timed out before it could finish a full long-form answer.",
+        "Generation timed out before the model could finish this answer.",
         "",
-        "What I can confirm:",
-        "- the request was grounded and processed",
-        f"- citation count available: {len(citations)}",
-        "- this is a response-time failure, not a grounded-data failure",
+        "What we know:",
+        "- The request reached the provider and grounded context was used",
+        f"- {len(citations)} citation(s) were available when the timeout occurred",
+        "- This is a latency or execution-window limit, not missing retrieval data",
         "",
-        "Best next step:",
-        "1. rerun the request in smaller stages such as regulatory impact, financial exposure, and FY26 strategic options",
-        "2. or continue in streaming mode so the answer can arrive incrementally",
-        "3. or narrow the first pass to an executive summary, then expand section by section",
+        "What to try:",
+        "1. Ask for a shorter answer or split the work into smaller steps.",
+        "2. Retry; streaming often delivers partial text before the window elapses.",
+        "3. Narrow scope (one entity, one period, or one document) per message.",
     ]
     return "\n".join(fallback).strip()
 
 
 def build_length_guardrail_fallback(*, citations: list[dict]) -> str:
+    """Upstream rejected prompt size (provider length guardrail)."""
     fallback = [
-        "The grounded answer could not be completed because the upstream model rejected the prompt length after retrieval.",
+        "The upstream model rejected the prompt length because the combined request was too long after retrieval.",
         "",
-        "What I can confirm:",
-        "- your question was preserved for the retry path",
-        f"- citation count available: {len(citations)}",
-        "- this is a prompt-size guardrail failure, not a workflow-runtime retrieval failure",
+        "What we know:",
+        "- Your question was kept for a shorter retry variant when possible",
+        f"- {len(citations)} citation(s) were in play when the guardrail fired",
+        "- This is a prompt-size limit at the provider, not a failure to retrieve",
         "",
-        "Best next step:",
-        "1. retry with a narrower follow-up or shorter conversation thread",
-        "2. ask for an executive summary first, then expand section by section",
-        "3. keep the same question if you want the system to rebuild with less history",
+        "What to try:",
+        "1. Retry with a narrower question or less chat history in the thread.",
+        "2. Ask for a brief summary first, then follow up for detail.",
+        "3. Repeat the same intent with fewer uploaded files in one turn if applicable.",
     ]
     return "\n".join(fallback).strip()
 
 
 def build_context_length_fallback(*, citations: list[dict]) -> str:
+    """Context window exceeded (tokens: prompt + requested completion)."""
     fallback = [
-        "Model context window exceeded: the upstream model rejected the request size (prompt + requested completion).",
+        "Context window exceeded: the model rejected the total size of prompt plus requested completion.",
         "",
-        "What I can confirm:",
-        "- grounded/tool evidence was retrieved and processed",
-        f"- citation count available: {len(citations)}",
+        "What we know:",
+        "- Grounded or tool context was assembled",
+        f"- {len(citations)} citation(s) were included before the limit was hit",
         "",
-        "Best next step:",
-        "1. reduce runtime `max_tokens` (output) and rerun, or use staged output (ask for an executive summary first)",
-        "2. narrow scope (one month / one company at a time) to keep the prompt smaller",
+        "What to try:",
+        "1. Lower max output tokens in the agent runtime profile and retry, or ask for a shorter answer first.",
+        "2. Narrow the question (one month, one product line, one location) to shrink the prompt.",
     ]
     return "\n".join(fallback).strip()
 
@@ -1343,15 +2503,15 @@ def run_answer_with_prompt_variants(
     runner,
     trace_id: str,
     retry_route: str,
-) -> tuple[str, Exception | None, str | None, str | None]:
-    """Returns (answer, error, user_prompt_used_on_success, openai_response_id)."""
+) -> tuple[LlmCompletionResult | None, Exception | None, str | None]:
+    """Returns (completion_result, error, user_prompt_used_on_success)."""
     last_error: Exception | None = None
     for index, prompt_variant in enumerate(prompt_variants, start=1):
         try:
             result = runner(prompt_variant.prompt)
             if isinstance(result, LlmCompletionResult):
-                return result.text, None, prompt_variant.prompt, result.openai_response_id
-            return result, None, prompt_variant.prompt, None
+                return result, None, prompt_variant.prompt
+            return LlmCompletionResult(text=str(result)), None, prompt_variant.prompt
         except Exception as exc:  # pragma: no cover - behavior validated through route tests
             last_error = exc
             if index >= len(prompt_variants) or not is_length_guardrail_error(exc):
@@ -1372,30 +2532,373 @@ def run_answer_with_prompt_variants(
                     "to_trimmed_sections": list(next_variant.trimmed_sections),
                 },
             )
-    return "", last_error, None, None
+    return None, last_error, None
+
+
+def _resolved_llm_orchestration(llm_config: dict[str, Any]) -> dict[str, Any]:
+    raw = dict((llm_config or {}).get("llm_orchestration") or {})
+    trigger_mode = str(raw.get("trigger_mode") or "on_prompt_overflow").strip().lower()
+    if trigger_mode not in {"on_prompt_overflow", "always_second_pass"}:
+        trigger_mode = "on_prompt_overflow"
+    prompt_token_soft_limit = raw.get("prompt_token_soft_limit")
+    try:
+        prompt_token_soft_limit = int(prompt_token_soft_limit) if prompt_token_soft_limit not in (None, "") else None
+    except Exception:
+        prompt_token_soft_limit = None
+    return {
+        "enabled": bool(raw.get("enabled", False)),
+        "trigger_mode": trigger_mode,
+        "prompt_token_soft_limit": prompt_token_soft_limit,
+        "fallback_connection_id": str(raw.get("fallback_connection_id") or "").strip() or None,
+        "fallback_provider": str(raw.get("fallback_provider") or "openai").strip() or "openai",
+        "fallback_model_id": str(raw.get("fallback_model_id") or "").strip() or None,
+        "include_primary_answer_context": bool(raw.get("include_primary_answer_context", True)),
+    }
+
+
+def _canonical_model_id(model_id: str | None) -> str:
+    value = str(model_id or "").strip().lower()
+    if value.startswith("openai/"):
+        value = value.split("/", 1)[1]
+    if value.startswith("model/"):
+        value = value.split("/", 1)[1]
+    return value.lstrip("/")
+
+
+def _is_model_not_found_error(exc: Exception) -> bool:
+    response = getattr(exc, "response", None)
+    if response is not None and hasattr(response, "json"):
+        try:
+            payload = response.json()
+        except Exception:
+            payload = None
+        error = payload.get("error") if isinstance(payload, dict) else None
+        if isinstance(error, dict) and str(error.get("code") or "").strip().lower() == "model_not_found":
+            return True
+    text = repr(exc).lower()
+    return "model_not_found" in text or "does not exist" in text
+
+
+def _resolve_fallback_model_id(orchestration: dict[str, Any], *, primary_model_id: str) -> str:
+    configured = str(orchestration.get("fallback_model_id") or "").strip()
+    if configured and _canonical_model_id(configured) != _canonical_model_id(primary_model_id):
+        return configured
+    default_model = str(settings.app_default_chat_model or "").strip()
+    if default_model and _canonical_model_id(default_model) != _canonical_model_id(primary_model_id):
+        return default_model
+    return primary_model_id
+
+
+def _should_emit_multi_agent_handoff_trace(
+    *,
+    workflow_mode: str,
+    route_decision: dict[str, Any] | None,
+    tool_plan: dict[str, Any] | None,
+) -> bool:
+    route_type = str((route_decision or {}).get("route_type") or "").strip().lower()
+    if route_type != "workers":
+        return False
+    normalized_plan = _normalize_tool_plan(tool_plan)
+    tool_mode = str(normalized_plan.get("mode") or "none").strip().lower()
+    operation = str(normalized_plan.get("operation") or "").strip().lower()
+    if workflow_mode in {"data_collector", "odoo_specialist", "documenter"}:
+        return True
+    return tool_mode in {"required", "preview"} and operation.startswith("odoo.finance.")
+
+
+def _classify_sub_agent_role(name: str) -> str | None:
+    lowered = (name or "").strip().casefold()
+    if not lowered:
+        return None
+    if any(token in lowered for token in ("finance", "financial", "cfo")):
+        return "finance_analyst"
+    if any(token in lowered for token in ("documenter", "documentor", "writer", "board")):
+        return "business_documenter"
+    return None
+
+
+def _resolve_orchestration_sub_agents(session: Session, lead_agent: AgentProfileRecord) -> list[AgentProfileRecord]:
+    if str(lead_agent.agent_role or "lead").strip().lower() != "lead":
+        return []
+    sub_agents = list(
+        session.scalars(
+            select(AgentProfileRecord)
+            .where(
+                AgentProfileRecord.enabled.is_(True),
+                AgentProfileRecord.agent_role == "sub",
+                AgentProfileRecord.parent_agent_id == lead_agent.id,
+            )
+            .order_by(AgentProfileRecord.position.asc(), AgentProfileRecord.updated_at.desc())
+        )
+    )
+    if not sub_agents:
+        return []
+    finance = next((agent for agent in sub_agents if _classify_sub_agent_role(agent.name) == "finance_analyst"), None)
+    documenter = next((agent for agent in sub_agents if _classify_sub_agent_role(agent.name) == "business_documenter"), None)
+    ordered: list[AgentProfileRecord] = []
+    if finance is not None:
+        ordered.append(finance)
+    if documenter is not None and (finance is None or documenter.id != finance.id):
+        ordered.append(documenter)
+    for agent in sub_agents:
+        if all(existing.id != agent.id for existing in ordered):
+            ordered.append(agent)
+    return ordered
+
+
+def _build_worker_prompt(
+    *,
+    worker: AgentProfileRecord,
+    user_message: str,
+    tool_grounding_prompt: str,
+    prior_worker_outputs: list[dict[str, str]],
+) -> str:
+    role_hint = _classify_sub_agent_role(worker.name)
+    role_instruction = (
+        "Return normalized financial facts, metrics, drivers, risks, assumptions, missing data, and a strategist-ready interpretation."
+        if role_hint == "finance_analyst"
+        else "Produce a board-ready structured document draft using only grounded facts and explicit assumptions."
+        if role_hint == "business_documenter"
+        else "Perform your specialist analysis using grounded evidence and return concise structured output."
+    )
+    prior_block = ""
+    if prior_worker_outputs:
+        prior_lines = [
+            f"- {item['worker_name']} output:\n{item['content']}"
+            for item in prior_worker_outputs
+            if str(item.get("content") or "").strip()
+        ]
+        if prior_lines:
+            prior_block = "Prior sub-agent outputs:\n" + "\n\n".join(prior_lines)
+    sections = [
+        f"Lead request:\n{user_message.strip()}",
+        f"Role instruction:\n{role_instruction}",
+        f"Grounded evidence bundle:\n{tool_grounding_prompt.strip()}",
+    ]
+    if prior_block:
+        sections.append(prior_block)
+    if _is_business_finance_closeout_request(user_message):
+        sections.append(
+            "Closeout rule:\n"
+            "- Do not return only blocker questions.\n"
+            "- Deliver a complete provisional output with confidence labels when evidence is partial."
+        )
+    sections.append("Respond with only your specialist output for the lead orchestrator.")
+    return "\n\n".join(section for section in sections if section.strip()).strip()
+
+
+def _run_sub_agent_completion(
+    *,
+    session: Session,
+    worker: AgentProfileRecord,
+    user_message: str,
+    tool_grounding_prompt: str,
+    prior_worker_outputs: list[dict[str, str]],
+    fallback_api_mode: str,
+    trace_id: str,
+) -> LlmCompletionResult:
+    worker_runtime_profile = resolve_agent_runtime_profile(session, worker)
+    worker_llm_config = dict(worker_runtime_profile.llm_config_json or {})
+    worker_connection = resolve_llm_connection(
+        session,
+        connection_id=worker_llm_config.get("connection_id"),
+        provider=str(worker_llm_config.get("provider", "openai")),
+    )
+    worker_prompt = _build_worker_prompt(
+        worker=worker,
+        user_message=user_message,
+        tool_grounding_prompt=tool_grounding_prompt,
+        prior_worker_outputs=prior_worker_outputs,
+    )
+    return generate_answer(
+        worker_prompt,
+        worker_connection,
+        api_mode=str(worker_llm_config.get("api_mode") or fallback_api_mode),
+        system_prompt=str((worker_runtime_profile.guardrails_config_json or {}).get("system_prompt") or ""),
+        model_id=str(worker_llm_config.get("model_id") or ""),
+        temperature=float(worker_llm_config.get("temperature", 0)),
+        max_tokens=int(worker_llm_config["max_tokens"]) if worker_llm_config.get("max_tokens") not in (None, "") else None,
+        trace_id=trace_id,
+        service="agent-ingress",
+    )
+
+
+def _execute_sub_agent_with_retries(
+    *,
+    session: Session,
+    worker: AgentProfileRecord,
+    user_message: str,
+    tool_grounding_prompt: str,
+    prior_worker_outputs: list[dict[str, str]],
+    fallback_api_mode: str,
+    trace_id: str,
+) -> tuple[LlmCompletionResult, int]:
+    attempts = max(1, SUB_AGENT_MAX_RETRIES + 1)
+    last_error: Exception | None = None
+    for attempt_number in range(1, attempts + 1):
+        try:
+            result = _run_sub_agent_completion(
+                session=session,
+                worker=worker,
+                user_message=user_message,
+                tool_grounding_prompt=tool_grounding_prompt,
+                prior_worker_outputs=prior_worker_outputs,
+                fallback_api_mode=fallback_api_mode,
+                trace_id=trace_id,
+            )
+            return result, attempt_number
+        except Exception as exc:  # pragma: no cover - tested via stream path behavior
+            last_error = exc
+    assert last_error is not None
+    raise last_error
+
+
+def _augment_prompt_with_worker_outputs(base_prompt: str, worker_outputs: list[dict[str, str]]) -> str:
+    rendered = [
+        f"{item['worker_name']}:\n{item['content']}"
+        for item in worker_outputs
+        if str(item.get("content") or "").strip()
+    ]
+    if not rendered:
+        return base_prompt
+    worker_block = (
+        "Sub-agent handoff results (authoritative for this turn):\n"
+        + "\n\n".join(rendered)
+        + "\n\nUse these outputs directly in your final synthesis; do not ignore them."
+    )
+    if not base_prompt.strip():
+        return worker_block
+    return f"{worker_block}\n\n{base_prompt}".strip()
+
+
+def _llm_orchestration_should_second_pass(
+    orchestration: dict[str, Any],
+    *,
+    primary_prompt: str,
+    primary_error: Exception | None,
+) -> tuple[bool, str | None]:
+    if not orchestration.get("enabled"):
+        return False, None
+    trigger_mode = str(orchestration.get("trigger_mode") or "on_prompt_overflow")
+    if trigger_mode == "always_second_pass":
+        return True, "always_second_pass"
+
+    estimated_prompt_tokens = estimate_token_count(primary_prompt)
+    configured_soft_limit = orchestration.get("prompt_token_soft_limit")
+    default_soft_limit = CHAT_COMPLETIONS_CONTEXT_LIMIT_TOKENS - CHAT_COMPLETIONS_CONTEXT_SAFETY_TOKENS
+    soft_limit = int(configured_soft_limit) if configured_soft_limit not in (None, "") else default_soft_limit
+
+    if estimated_prompt_tokens >= soft_limit:
+        return True, "prompt_soft_limit_exceeded"
+    if primary_error is not None and is_length_guardrail_error(primary_error):
+        return True, "primary_length_guardrail"
+    if primary_error is not None and is_context_length_error(primary_error):
+        return True, "primary_context_window"
+    if primary_error is not None and _is_model_not_found_error(primary_error):
+        return True, "primary_model_not_found"
+    return False, None
+
+
+def _build_step_usage(usage: dict[str, int | bool] | None) -> dict[str, int | bool]:
+    if usage is None:
+        return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "estimate": True}
+    return {
+        "prompt_tokens": int(usage.get("prompt_tokens") or 0),
+        "completion_tokens": int(usage.get("completion_tokens") or 0),
+        "total_tokens": int(usage.get("total_tokens") or 0),
+        "estimate": bool(usage.get("estimate", False)),
+    }
+
+
+def _aggregate_usage(steps: list[dict[str, Any]]) -> dict[str, int | bool] | None:
+    if not steps:
+        return None
+    prompt_tokens = 0
+    completion_tokens = 0
+    total_tokens = 0
+    any_step = False
+    estimate = False
+    for step in steps:
+        if isinstance(step.get("usage"), dict):
+            usage = _build_step_usage(step.get("usage"))
+        else:
+            usage = {
+                "prompt_tokens": int(step.get("prompt_tokens") or 0),
+                "completion_tokens": int(step.get("completion_tokens") or 0),
+                "total_tokens": int(step.get("total_tokens") or 0),
+                "estimate": bool(step.get("estimate", True)),
+            }
+        if usage["prompt_tokens"] or usage["completion_tokens"] or usage["total_tokens"]:
+            any_step = True
+        prompt_tokens += int(usage["prompt_tokens"])
+        completion_tokens += int(usage["completion_tokens"])
+        total_tokens += int(usage["total_tokens"])
+        estimate = estimate or bool(usage["estimate"])
+    if not any_step:
+        return None
+    if total_tokens <= 0:
+        total_tokens = prompt_tokens + completion_tokens
+    return {
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": total_tokens,
+        "estimate": estimate,
+    }
+
+
+def _build_execution_step(
+    *,
+    stage: str,
+    reason: str | None,
+    connection: ConnectionRecord,
+    model_id: str,
+    api_mode: str,
+    usage: dict[str, int | bool] | None,
+    prompt: str,
+) -> dict[str, Any]:
+    normalized_usage = _build_step_usage(usage)
+    prompt_tokens = int(normalized_usage["prompt_tokens"] or estimate_token_count(prompt))
+    completion_tokens = int(normalized_usage["completion_tokens"])
+    total_tokens = int(normalized_usage["total_tokens"] or (prompt_tokens + completion_tokens))
+    return {
+        "stage": stage,
+        "provider": connection.provider,
+        "connection_label": connection.label,
+        "model_id": model_id,
+        "api_mode": api_mode,
+        "reason": reason,
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": total_tokens,
+        "estimate": bool(normalized_usage["estimate"]),
+    }
+
+
+def _with_primary_answer_context(prompt: str, primary_answer: str) -> str:
+    draft = primary_answer.strip()
+    if not draft:
+        return prompt
+    return (
+        f"{prompt}\n\nIntermediate grounded draft (same guardrails, for refinement only):\n"
+        f"{draft}\n\nRefine and return the final answer using the same grounding constraints."
+    ).strip()
 
 
 def resolve_answer_max_tokens(
     *,
     api_mode: str,
-    configured_max_tokens: int,
+    configured_max_tokens: int | None,
     prompt: str,
     trace_id: str,
     openai_responses_chain: bool,
 ) -> int | None:
     """Resolve max output tokens for the LLM call.
 
-    - For OpenAI native /v1/responses chains, avoid passing extreme `max_output_tokens`
-      values that can trigger immediate context validation errors on smaller models.
-    - For all OpenAI-compatible chat-completions style calls (including local gateways),
-      clamp to a safe completion cap + estimated available context.
+    If `configured_max_tokens` is omitted/null, we omit a max token setting entirely
+    (provider/model defaults apply).
     """
 
-    configured = max(1, int(configured_max_tokens))
-
-    if openai_responses_chain:
-        if configured <= OPENAI_NATIVE_RESPONSES_MAX_OUTPUT_TOKEN_CAP:
-            return configured
+    if configured_max_tokens in (None, ""):
         log_instant_event(
             trace_id=trace_id,
             service="agent-ingress",
@@ -1403,34 +2906,19 @@ def resolve_answer_max_tokens(
             status="ok",
             details={
                 "api_mode": api_mode,
-                "configured_max_tokens": configured,
-                "reason": "openai_native_responses_chain",
+                "reason": "not_configured",
             },
         )
         return None
 
-    estimated_prompt_tokens = max(1, math.ceil(len(prompt.strip()) / 2))
-    available_completion_tokens = max(
-        256,
-        CHAT_COMPLETIONS_CONTEXT_LIMIT_TOKENS - estimated_prompt_tokens - CHAT_COMPLETIONS_CONTEXT_SAFETY_TOKENS,
-    )
-    resolved_max_tokens = min(configured, CHAT_COMPLETIONS_COMPLETION_TOKEN_CAP, available_completion_tokens)
-    if resolved_max_tokens != configured:
-        log_instant_event(
-            trace_id=trace_id,
-            service="agent-ingress",
-            route="chat_answer.max_tokens_clamped",
-            status="ok",
-            details={
-                "api_mode": api_mode,
-                "configured_max_tokens": configured,
-                "resolved_max_tokens": resolved_max_tokens,
-                "prompt_chars": len(prompt),
-                "estimated_prompt_tokens": estimated_prompt_tokens,
-                "available_completion_tokens": available_completion_tokens,
-            },
-        )
-    return resolved_max_tokens
+    configured = max(1, int(configured_max_tokens))
+
+    if openai_responses_chain:
+        return configured
+
+    # For chat-completions style calls (including OpenAI-compatible gateways), honor the operator's
+    # configured value and let the provider enforce its own limits.
+    return configured
 
 
 def create_app() -> FastAPI:
@@ -1453,27 +2941,68 @@ def create_app() -> FastAPI:
         request: Request,
         session: Session = Depends(get_session),
     ) -> ChatResponse:
-        agent = get_agent(session, body.agent_id)
+        requested_agent = get_agent(session, body.agent_id)
+        agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
+        if body.docx_mode.enabled and body.docx_mode.operation == "finalize" and not str(body.docx_mode.template_id or "").strip():
+            raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
+        docx_artifacts: list[dict[str, Any]] = []
+        docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
-        top_k = resolve_query_top_k(session, body.top_k, runtime_profile=runtime_profile)
+        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
         if conversation is not None and conversation.agent_id != agent.id:
             raise HTTPException(400, "conversation does not belong to the selected agent")
+        conversation_mode = resolve_conversation_mode(
+            requested_mode=body.conversation_mode,
+            guardrails_config=guardrails_config,
+        )
+        workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        effective_system_prompt = build_effective_system_prompt(
+            base_system_prompt=str(guardrails_config.get("system_prompt", "")),
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
+        )
+        effective_system_prompt = apply_docx_mode_directives(base_prompt=effective_system_prompt, docx_mode=body.docx_mode)
+        top_k = resolve_effective_query_top_k(
+            session=session,
+            requested_top_k=body.top_k,
+            runtime_profile=runtime_profile,
+            message=body.message,
+            conversation_mode=conversation_mode,
+        )
         if conversation is None:
+            frame_id: str | None = None
+            if workflow_mode != "standard":
+                frame = create_document_frame(
+                    session,
+                    title=f"{agent.name} strategic document",
+                    metadata_json={"seed_workflow_mode": workflow_mode},
+                )
+                frame_id = frame.id
             conversation = create_conversation(
                 session,
                 agent_id=agent.id,
                 message=body.message,
                 corpora=corpora,
                 api_mode=body.api_mode,
+                conversation_mode=conversation_mode,
+                workflow_mode=workflow_mode,
+                document_frame_id=frame_id,
             )
             session.commit()
             session.refresh(conversation)
         chat_uploads = load_chat_uploads(session, conversation_id=conversation.id)
         chat_upload_context = build_chat_upload_prompt_context(chat_uploads)
+        document_frame = (
+            session.get(DocumentFrameRecord, conversation.document_frame_id) if conversation.document_frame_id else None
+        )
+        document_frame_context = build_document_frame_prompt_context(document_frame)
+        combined_upload_context = "\n\n".join(
+            part for part in (chat_upload_context, document_frame_context) if part.strip()
+        )
         chat_upload_cache_context = build_chat_upload_cache_context(chat_uploads)
         history = list_messages(session, conversation.id, limit=max(settings.app_agent_memory_window_messages * 2, 20))
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
@@ -1488,7 +3017,6 @@ def create_app() -> FastAPI:
         plan_query_message = body.message if use_openai_responses_chain else build_query_message(
             message=body.message, history_context=history_context
         )
-        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
         tool_policy_config = dict(runtime_profile.tool_policy_config_json or {})
         web_tool = get_tool_config(tool_policy_config, "web") or {}
         allowed_urls = normalize_allowed_urls(web_tool.get("allowed_urls"))
@@ -1510,10 +3038,16 @@ def create_app() -> FastAPI:
             tool_overrides=body.tool_overrides,
         )
         tool_summary = [item.model_dump() for item in tool_summary_models]
+        kb_tool = get_tool_config(tool_policy_config, "kb") or {}
+        kb_enabled = bool(kb_tool.get("enabled", True))
+        odoo_ready = any(item.id == "odoo_primary" and item.status == "ready" for item in tool_summary_models)
+        web_enabled = bool(web_tool.get("enabled", False))
         effective_snapshot_id = build_effective_snapshot_id(
             agent_id=agent.id,
             runtime_profile_id=runtime_profile.id,
             corpora=corpora,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
         )
@@ -1521,6 +3055,8 @@ def create_app() -> FastAPI:
             agent_name=agent.name,
             runtime_profile_name=str(runtime_profile.name),
             corpora=corpora,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
             history_context=history_for_prompt,
             allowed_urls=allowed_urls,
             used_approved_web=use_approved_web,
@@ -1533,15 +3069,50 @@ def create_app() -> FastAPI:
             top_k,
             request.state.trace_id,
             current_message=body.message,
+            workflow_mode=workflow_mode,
+            embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
+            kb_enabled=kb_enabled,
+            odoo_ready=odoo_ready,
         )
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
             tool_overrides=body.tool_overrides,
             tool_plan=plan.get("tool_plan"),
+            request_message=body.message,
         )
         tool_events = tool_evidence.tool_events
+        if body.docx_mode.enabled:
+            tool_events.append(
+                ChatToolEvent(
+                    tool_id="apryse_docs",
+                    status="planned",
+                    operation=f"apryse_{body.docx_mode.operation}",
+                    summary=(
+                        f"Apryse doc mode active ({body.docx_mode.operation})"
+                        + (
+                            f" for template {body.docx_mode.template_id}"
+                            if str(body.docx_mode.template_id or "").strip()
+                            else ""
+                        )
+                    ),
+                    payload={
+                        "template_id": body.docx_mode.template_id,
+                        "operation": body.docx_mode.operation,
+                        "binding_override_keys": sorted(list((body.docx_mode.binding_overrides or {}).keys())),
+                    },
+                )
+            )
         citations = [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+        route_decision = build_route_decision(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            tool_plan=plan.get("tool_plan"),
+            kb_enabled=kb_enabled,
+            web_enabled=web_enabled,
+            odoo_ready=odoo_ready,
+        )
+        route_decision["llm_execution"] = []
         plan_query_prompt = str(plan.get("prompt") or "")
         if tool_evidence.prompt_prefix:
             plan_query_prompt = (
@@ -1549,9 +3120,40 @@ def create_app() -> FastAPI:
                 if plan_query_prompt
                 else tool_evidence.prompt_prefix
             )
-        staged_directives = build_staged_answer_directives(tool_plan=tool_evidence.plan)
+        staged_directives = build_staged_answer_directives(
+            tool_plan=tool_evidence.plan,
+            conversation_mode=conversation_mode,
+        )
         if staged_directives:
             plan_query_prompt = f"{plan_query_prompt}\n\n{staged_directives}".strip() if plan_query_prompt else staged_directives
+        tool_truth_directives = build_tool_truthfulness_directives(
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_events,
+        )
+        if tool_truth_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{tool_truth_directives}".strip() if plan_query_prompt else tool_truth_directives
+            )
+        closeout_directives = build_business_closeout_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_events,
+        )
+        if closeout_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{closeout_directives}".strip() if plan_query_prompt else closeout_directives
+            )
+        owner_contract_directives = build_owner_operator_contract_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_events,
+        )
+        if owner_contract_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{owner_contract_directives}".strip()
+                if plan_query_prompt
+                else owner_contract_directives
+            )
         cache_key = None
         if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
             cached = None
@@ -1560,22 +3162,46 @@ def create_app() -> FastAPI:
                 agent=agent,
                 runtime_profile=runtime_profile,
                 history_context=history_context,
-                message=body.message + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else ""),
+                message=body.message
+                + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else "")
+                + ("\n\n[document_frame]\n" + document_frame_context if document_frame_context else ""),
                 corpora=corpora,
                 api_mode=body.api_mode,
                 llm_model_id_override=body.llm_model_id,
-                tool_state={"tool_summary": tool_summary, "tool_plan_mode": tool_evidence.plan.get("mode", "none")},
+                tool_state={
+                    "tool_summary": tool_summary,
+                    "tool_plan_mode": tool_evidence.plan.get("mode", "none"),
+                    "conversation_mode": conversation_mode,
+                    "workflow_mode": workflow_mode,
+                },
             )
             cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
         resolved_model_id = _effective_chat_model_id(body, llm_config)
         new_openai_rid: str | None = None
         if cached is not None:
+            cached_usage = ChatUsage(
+                **resolve_chat_usage_dict(
+                    provider_usage=None,
+                    system_prompt="",
+                    user_prompt=None,
+                    completion="",
+                    skip_llm=True,
+                )
+            )
             cached_answer = dedupe_answer_text(cached.answer_text)
             if cached_answer != cached.answer_text:
                 cached.answer_text = cached_answer
                 session.commit()
                 session.refresh(cached)
-            append_message(session, conversation_id=conversation.id, agent_id=agent.id, role="user", content=body.message)
+            append_message(
+                session,
+                conversation_id=conversation.id,
+                agent_id=agent.id,
+                role="user",
+                content=body.message,
+                conversation_mode=conversation_mode,
+                workflow_mode=workflow_mode,
+            )
             append_message(
                 session,
                 conversation_id=conversation.id,
@@ -1584,10 +3210,17 @@ def create_app() -> FastAPI:
                 content=cached.answer_text,
                 query_mode=cached.query_mode,
                 citations=cached.citations_json,
+                tool_events=[],
+                usage=cached_usage.model_dump(),
+                route_decision=route_decision,
                 api_mode=body.api_mode,
+                conversation_mode=conversation_mode,
+                workflow_mode=workflow_mode,
             )
             conversation.corpora_json = list(corpora)
             conversation.api_mode = body.api_mode
+            conversation.conversation_mode = conversation_mode
+            conversation.workflow_mode = workflow_mode
             session.commit()
             log_instant_event(
                 trace_id=request.state.trace_id,
@@ -1596,6 +3229,32 @@ def create_app() -> FastAPI:
                 status="ok",
                 details={"agent_id": agent.id, "conversation_id": conversation.id},
             )
+            if body.docx_mode.enabled:
+                operation = str(body.docx_mode.operation or "preview")
+                finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=cached.answer_text)
+                if finalize_diagnostics:
+                    docx_artifacts = []
+                    docx_diagnostics = list(finalize_diagnostics)
+                else:
+                    docx_artifacts, docx_diagnostics = await render_docx_with_sidecar(
+                        docx_mode=body.docx_mode,
+                        trace_id=request.state.trace_id,
+                        agent_id=agent.id,
+                        conversation_id=conversation.id,
+                        answer_text=cached.answer_text,
+                    )
+                upsert_docx_session(
+                    session,
+                    conversation_id=conversation.id,
+                    agent_id=agent.id,
+                    template_id=body.docx_mode.template_id,
+                    operation=body.docx_mode.operation,
+                    status="rendered",
+                    binding_json=body.docx_mode.binding_overrides or {},
+                    artifacts_json=docx_artifacts,
+                    diagnostics_json=docx_diagnostics,
+                )
+                session.commit()
             return ChatResponse(
                 answer=cached.answer_text,
                 query_mode=cached.query_mode,
@@ -1603,40 +3262,51 @@ def create_app() -> FastAPI:
                 conversation_id=conversation.id,
                 agent_id=agent.id,
                 cached=True,
-                usage=ChatUsage(**estimate_llm_turn_usage_dict(system_prompt="", user_prompt=None, completion="", skip_llm=True)),
+                usage=cached_usage,
+                conversation_mode=conversation_mode,
+                workflow_mode=workflow_mode,
                 effective_snapshot_id=effective_snapshot_id,
                 tool_summary=tool_summary_models,
-                tool_events=[],
+                tool_events=tool_events,
+                route_decision=route_decision,
+                docx_artifacts=docx_artifacts,
+                docx_diagnostics=docx_diagnostics,
             )
-        if plan.get("direct_answer") and not chat_upload_context:
+        if plan.get("direct_answer") and not combined_upload_context:
             answer = plan["direct_answer"]
         else:
             answer = ""
-        configured_max_tokens = int(llm_config.get("max_tokens", 2000))
+        completion_result: LlmCompletionResult | None = None
+        raw_max_tokens = llm_config.get("max_tokens")
+        configured_max_tokens = int(raw_max_tokens) if raw_max_tokens not in (None, "") else None
         can_cache_response = tool_evidence.can_cache_response
+        llm_orchestration = _resolved_llm_orchestration(llm_config)
+        llm_execution_steps: list[dict[str, Any]] = []
         prompt_variants: list[PreparedAnswerPrompt] = []
         used_prompt: str | None = None
         if not answer:
-            primary_prompt, retry_prompt = prepare_answer_prompt_variants(
+            generate_error: Exception | None = None
+            stream_error: Exception | None = None
+            primary_prompt, retry_prompt, tertiary_prompt = prepare_answer_prompt_variants(
                 api_mode=body.api_mode,
                 agent_name=agent.name,
-                system_prompt=str(guardrails_config.get("system_prompt", "")),
+                system_prompt=effective_system_prompt,
                 query_prompt=plan_query_prompt,
                 history_context=history_for_prompt,
                 runtime_context=runtime_context,
                 approved_web_context=approved_web_context,
-                upload_context=chat_upload_context,
+                upload_context=combined_upload_context,
             )
             log_answer_prompt_compaction(trace_id=request.state.trace_id, package=primary_prompt)
-            prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt)
+            prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt, tertiary_prompt)
             prev_rid = (conversation.openai_last_response_id or "").strip() or None
-            answer, generate_error, used_prompt, new_openai_rid = run_answer_with_prompt_variants(
+            completion_result, generate_error, used_prompt = run_answer_with_prompt_variants(
                 prompt_variants,
                 runner=lambda prompt: generate_answer(
                     prompt,
                     connection,
                     api_mode=body.api_mode,
-                    system_prompt=str(guardrails_config.get("system_prompt", "")),
+                    system_prompt=effective_system_prompt,
                     model_id=resolved_model_id,
                     temperature=float(llm_config.get("temperature", 0)),
                     max_tokens=resolve_answer_max_tokens(
@@ -1654,15 +3324,17 @@ def create_app() -> FastAPI:
                 trace_id=request.state.trace_id,
                 retry_route="chat_answer.length_retry",
             )
-            stream_error: Exception | None = None
+            answer = completion_result.text if completion_result is not None else ""
+            if completion_result is not None:
+                new_openai_rid = completion_result.openai_response_id
             if not answer.strip():
-                answer, stream_error, used_prompt, new_openai_rid = run_answer_with_prompt_variants(
+                completion_result, stream_error, used_prompt = run_answer_with_prompt_variants(
                     prompt_variants,
                     runner=lambda prompt: stream_answer_to_result(
                         prompt,
                         connection,
                         api_mode=body.api_mode,
-                        system_prompt=str(guardrails_config.get("system_prompt", "")),
+                        system_prompt=effective_system_prompt,
                         model_id=resolved_model_id,
                         temperature=float(llm_config.get("temperature", 0)),
                         max_tokens=resolve_answer_max_tokens(
@@ -1680,6 +3352,96 @@ def create_app() -> FastAPI:
                     trace_id=request.state.trace_id,
                     retry_route="chat_answer.length_retry_stream",
                 )
+                answer = completion_result.text if completion_result is not None else ""
+                if completion_result is not None:
+                    new_openai_rid = completion_result.openai_response_id
+            primary_prompt_used = used_prompt or (prompt_variants[0].prompt if prompt_variants else "")
+            primary_last_error = stream_error or generate_error
+            if completion_result is not None and primary_prompt_used:
+                llm_execution_steps.append(
+                    _build_execution_step(
+                        stage="primary",
+                        reason="primary_generation",
+                        connection=connection,
+                        model_id=resolved_model_id,
+                        api_mode=body.api_mode,
+                        usage=completion_result.usage,
+                        prompt=primary_prompt_used,
+                    )
+                )
+
+            should_second_pass, second_pass_reason = _llm_orchestration_should_second_pass(
+                llm_orchestration,
+                primary_prompt=primary_prompt_used or "",
+                primary_error=primary_last_error,
+            )
+            if should_second_pass:
+                try:
+                    fallback_connection = resolve_llm_connection(
+                        session,
+                        connection_id=llm_orchestration.get("fallback_connection_id"),
+                        provider=str(llm_orchestration.get("fallback_provider") or "openai"),
+                    )
+                    fallback_model_id = _resolve_fallback_model_id(
+                        llm_orchestration,
+                        primary_model_id=resolved_model_id,
+                    )
+                    second_prompt = primary_prompt_used or (prompt_variants[0].prompt if prompt_variants else "")
+                    if llm_orchestration.get("include_primary_answer_context", True) and answer.strip():
+                        second_prompt = _with_primary_answer_context(second_prompt, answer)
+                    fallback_use_openai_responses_chain = should_use_openai_responses_chain(
+                        fallback_connection, body.api_mode
+                    )
+                    fallback_prev_rid = prev_rid if fallback_connection.id == connection.id else None
+                    second_result = generate_answer(
+                        second_prompt,
+                        fallback_connection,
+                        api_mode=body.api_mode,
+                        system_prompt=effective_system_prompt,
+                        model_id=fallback_model_id,
+                        temperature=float(llm_config.get("temperature", 0)),
+                        max_tokens=resolve_answer_max_tokens(
+                            api_mode=body.api_mode,
+                            configured_max_tokens=configured_max_tokens,
+                            prompt=second_prompt,
+                            trace_id=request.state.trace_id,
+                            openai_responses_chain=fallback_use_openai_responses_chain,
+                        ),
+                        trace_id=request.state.trace_id,
+                        service="agent-ingress",
+                        previous_response_id=fallback_prev_rid,
+                        use_openai_responses_http=fallback_use_openai_responses_chain,
+                    )
+                    llm_execution_steps.append(
+                        _build_execution_step(
+                            stage="secondary",
+                            reason=second_pass_reason,
+                            connection=fallback_connection,
+                            model_id=fallback_model_id,
+                            api_mode=body.api_mode,
+                            usage=second_result.usage,
+                            prompt=second_prompt,
+                        )
+                    )
+                    if second_result.text.strip():
+                        answer = second_result.text
+                        completion_result = second_result
+                        used_prompt = second_prompt
+                        if fallback_connection.id == connection.id:
+                            new_openai_rid = second_result.openai_response_id
+                except Exception as orchestration_exc:
+                    can_cache_response = False
+                    log_instant_event(
+                        trace_id=request.state.trace_id,
+                        service="agent-ingress",
+                        route="chat_answer.second_pass.failed",
+                        status="error",
+                        error=repr(orchestration_exc),
+                        details={
+                            "reason": second_pass_reason,
+                            "fallback_provider": llm_orchestration.get("fallback_provider"),
+                        },
+                    )
             if not answer.strip():
                 can_cache_response = False
                 last_error = stream_error or generate_error
@@ -1707,12 +3469,21 @@ def create_app() -> FastAPI:
                     answer = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
                 else:
                     answer = build_blank_answer_fallback(citations=citations)
+        answer = normalize_finance_closeout_answer(
+            answer_text=answer,
+            request_message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_events,
+        )
         answer = dedupe_answer_text(answer)
-        system_sp = str(guardrails_config.get("system_prompt", ""))
+        system_sp = effective_system_prompt
         fallback_user = prompt_variants[0].prompt if prompt_variants else ""
-        skip_llm_turn = bool(plan.get("direct_answer") and not chat_upload_context)
+        skip_llm_turn = bool(plan.get("direct_answer") and not combined_upload_context)
+        aggregated_provider_usage = _aggregate_usage(llm_execution_steps)
         response_usage = ChatUsage(
-            **estimate_llm_turn_usage_dict(
+            **resolve_chat_usage_dict(
+                provider_usage=aggregated_provider_usage
+                or (completion_result.usage if completion_result is not None else None),
                 system_prompt=system_sp,
                 user_prompt=used_prompt,
                 completion=answer,
@@ -1720,7 +3491,28 @@ def create_app() -> FastAPI:
                 skip_llm=skip_llm_turn,
             )
         )
-        append_message(session, conversation_id=conversation.id, agent_id=agent.id, role="user", content=body.message)
+        route_decision["llm_execution"] = llm_execution_steps
+        tool_events_payload = [
+            {
+                "tool_id": tool_event.tool_id,
+                "status": tool_event.status,
+                "operation": tool_event.operation,
+                "summary": tool_event.summary,
+                "blocked_reason": tool_event.blocked_reason,
+                "payload": tool_event.payload,
+                "latency_ms": tool_event.latency_ms,
+            }
+            for tool_event in tool_events
+        ]
+        append_message(
+            session,
+            conversation_id=conversation.id,
+            agent_id=agent.id,
+            role="user",
+            content=body.message,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
+        )
         append_message(
             session,
             conversation_id=conversation.id,
@@ -1729,10 +3521,17 @@ def create_app() -> FastAPI:
             content=answer,
             query_mode=plan["query_mode"],
             citations=citations,
+            tool_events=tool_events_payload,
+            usage=response_usage.model_dump(),
+            route_decision=route_decision,
             api_mode=body.api_mode,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
         )
         conversation.corpora_json = list(corpora)
         conversation.api_mode = body.api_mode
+        conversation.conversation_mode = conversation_mode
+        conversation.workflow_mode = workflow_mode
         if use_openai_responses_chain and new_openai_rid:
             conversation.openai_last_response_id = new_openai_rid
         session.commit()
@@ -1745,10 +3544,38 @@ def create_app() -> FastAPI:
                 query_mode=plan["query_mode"],
                 citations=citations,
             )
+        if body.docx_mode.enabled:
+            operation = str(body.docx_mode.operation or "preview")
+            finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=answer)
+            if finalize_diagnostics:
+                docx_artifacts = []
+                docx_diagnostics = list(finalize_diagnostics)
+            else:
+                docx_artifacts, docx_diagnostics = await render_docx_with_sidecar(
+                    docx_mode=body.docx_mode,
+                    trace_id=request.state.trace_id,
+                    agent_id=agent.id,
+                    conversation_id=conversation.id,
+                    answer_text=answer,
+                )
+            upsert_docx_session(
+                session,
+                conversation_id=conversation.id,
+                agent_id=agent.id,
+                template_id=body.docx_mode.template_id,
+                operation=body.docx_mode.operation,
+                status="rendered",
+                binding_json=body.docx_mode.binding_overrides or {},
+                artifacts_json=docx_artifacts,
+                diagnostics_json=docx_diagnostics,
+            )
+            session.commit()
         return ChatResponse(
             answer=answer,
             query_mode=plan["query_mode"],
             citations=citations,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
             conversation_id=conversation.id,
             agent_id=agent.id,
             cached=False,
@@ -1756,6 +3583,9 @@ def create_app() -> FastAPI:
             effective_snapshot_id=effective_snapshot_id,
             tool_summary=tool_summary_models,
             tool_events=tool_events,
+            route_decision=route_decision,
+            docx_artifacts=docx_artifacts,
+            docx_diagnostics=docx_diagnostics,
         )
 
     @app.post("/agent/chat/stream")
@@ -1764,27 +3594,68 @@ def create_app() -> FastAPI:
         request: Request,
         session: Session = Depends(get_session),
     ) -> StreamingResponse:
-        agent = get_agent(session, body.agent_id)
+        requested_agent = get_agent(session, body.agent_id)
+        agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
+        if body.docx_mode.enabled and body.docx_mode.operation == "finalize" and not str(body.docx_mode.template_id or "").strip():
+            raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
+        docx_artifacts: list[dict[str, Any]] = []
+        docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
-        top_k = resolve_query_top_k(session, body.top_k, runtime_profile=runtime_profile)
+        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
         if conversation is not None and conversation.agent_id != agent.id:
             raise HTTPException(400, "conversation does not belong to the selected agent")
+        conversation_mode = resolve_conversation_mode(
+            requested_mode=body.conversation_mode,
+            guardrails_config=guardrails_config,
+        )
+        workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        effective_system_prompt = build_effective_system_prompt(
+            base_system_prompt=str(guardrails_config.get("system_prompt", "")),
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
+        )
+        effective_system_prompt = apply_docx_mode_directives(base_prompt=effective_system_prompt, docx_mode=body.docx_mode)
+        top_k = resolve_effective_query_top_k(
+            session=session,
+            requested_top_k=body.top_k,
+            runtime_profile=runtime_profile,
+            message=body.message,
+            conversation_mode=conversation_mode,
+        )
         if conversation is None:
+            frame_id: str | None = None
+            if workflow_mode != "standard":
+                frame = create_document_frame(
+                    session,
+                    title=f"{agent.name} strategic document",
+                    metadata_json={"seed_workflow_mode": workflow_mode},
+                )
+                frame_id = frame.id
             conversation = create_conversation(
                 session,
                 agent_id=agent.id,
                 message=body.message,
                 corpora=corpora,
                 api_mode=body.api_mode,
+                conversation_mode=conversation_mode,
+                workflow_mode=workflow_mode,
+                document_frame_id=frame_id,
             )
             session.commit()
             session.refresh(conversation)
         chat_uploads = load_chat_uploads(session, conversation_id=conversation.id)
         chat_upload_context = build_chat_upload_prompt_context(chat_uploads)
+        document_frame = (
+            session.get(DocumentFrameRecord, conversation.document_frame_id) if conversation.document_frame_id else None
+        )
+        document_frame_context = build_document_frame_prompt_context(document_frame)
+        combined_upload_context = "\n\n".join(
+            part for part in (chat_upload_context, document_frame_context) if part.strip()
+        )
         chat_upload_cache_context = build_chat_upload_cache_context(chat_uploads)
         history = list_messages(session, conversation.id, limit=max(settings.app_agent_memory_window_messages * 2, 20))
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
@@ -1799,7 +3670,6 @@ def create_app() -> FastAPI:
         plan_query_message = body.message if use_openai_responses_chain else build_query_message(
             message=body.message, history_context=history_context
         )
-        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
         tool_policy_config = dict(runtime_profile.tool_policy_config_json or {})
         web_tool = get_tool_config(tool_policy_config, "web") or {}
         allowed_urls = normalize_allowed_urls(web_tool.get("allowed_urls"))
@@ -1821,10 +3691,16 @@ def create_app() -> FastAPI:
             tool_overrides=body.tool_overrides,
         )
         tool_summary = [item.model_dump() for item in tool_summary_models]
+        kb_tool = get_tool_config(tool_policy_config, "kb") or {}
+        kb_enabled = bool(kb_tool.get("enabled", True))
+        odoo_ready = any(item.id == "odoo_primary" and item.status == "ready" for item in tool_summary_models)
+        web_enabled = bool(web_tool.get("enabled", False))
         effective_snapshot_id = build_effective_snapshot_id(
             agent_id=agent.id,
             runtime_profile_id=runtime_profile.id,
             corpora=corpora,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
         )
@@ -1832,6 +3708,8 @@ def create_app() -> FastAPI:
             agent_name=agent.name,
             runtime_profile_name=str(runtime_profile.name),
             corpora=corpora,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
             history_context=history_for_prompt,
             allowed_urls=allowed_urls,
             used_approved_web=use_approved_web,
@@ -1844,13 +3722,39 @@ def create_app() -> FastAPI:
             top_k,
             request.state.trace_id,
             current_message=body.message,
+            workflow_mode=workflow_mode,
+            embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
+            kb_enabled=kb_enabled,
+            odoo_ready=odoo_ready,
         )
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
             tool_overrides=body.tool_overrides,
             tool_plan=plan.get("tool_plan"),
+            request_message=body.message,
         )
+        if body.docx_mode.enabled:
+            tool_evidence.tool_events.append(
+                ChatToolEvent(
+                    tool_id="apryse_docs",
+                    status="planned",
+                    operation=f"apryse_{body.docx_mode.operation}",
+                    summary=(
+                        f"Apryse doc mode active ({body.docx_mode.operation})"
+                        + (
+                            f" for template {body.docx_mode.template_id}"
+                            if str(body.docx_mode.template_id or "").strip()
+                            else ""
+                        )
+                    ),
+                    payload={
+                        "template_id": body.docx_mode.template_id,
+                        "operation": body.docx_mode.operation,
+                        "binding_override_keys": sorted(list((body.docx_mode.binding_overrides or {}).keys())),
+                    },
+                )
+            )
         plan_query_prompt = str(plan.get("prompt") or "")
         if tool_evidence.prompt_prefix:
             plan_query_prompt = (
@@ -1858,9 +3762,40 @@ def create_app() -> FastAPI:
                 if plan_query_prompt
                 else tool_evidence.prompt_prefix
             )
-        staged_directives = build_staged_answer_directives(tool_plan=tool_evidence.plan)
+        staged_directives = build_staged_answer_directives(
+            tool_plan=tool_evidence.plan,
+            conversation_mode=conversation_mode,
+        )
         if staged_directives:
             plan_query_prompt = f"{plan_query_prompt}\n\n{staged_directives}".strip() if plan_query_prompt else staged_directives
+        tool_truth_directives = build_tool_truthfulness_directives(
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_evidence.tool_events,
+        )
+        if tool_truth_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{tool_truth_directives}".strip() if plan_query_prompt else tool_truth_directives
+            )
+        closeout_directives = build_business_closeout_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_evidence.tool_events,
+        )
+        if closeout_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{closeout_directives}".strip() if plan_query_prompt else closeout_directives
+            )
+        owner_contract_directives = build_owner_operator_contract_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_evidence.tool_events,
+        )
+        if owner_contract_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{owner_contract_directives}".strip()
+                if plan_query_prompt
+                else owner_contract_directives
+            )
         cache_key = None
         if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
             cached = None
@@ -1869,31 +3804,49 @@ def create_app() -> FastAPI:
                 agent=agent,
                 runtime_profile=runtime_profile,
                 history_context=history_context,
-                message=body.message + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else ""),
+                message=body.message
+                + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else "")
+                + ("\n\n[document_frame]\n" + document_frame_context if document_frame_context else ""),
                 corpora=corpora,
                 api_mode=body.api_mode,
                 llm_model_id_override=body.llm_model_id,
-                tool_state={"tool_summary": tool_summary, "tool_plan_mode": tool_evidence.plan.get("mode", "none")},
+                tool_state={
+                    "tool_summary": tool_summary,
+                    "tool_plan_mode": tool_evidence.plan.get("mode", "none"),
+                    "conversation_mode": conversation_mode,
+                    "workflow_mode": workflow_mode,
+                },
             )
             cached = lookup_cached_response(session, agent_id=agent.id, request_hash=cache_key)
         resolved_model_id = _effective_chat_model_id(body, llm_config)
+        route_decision = build_route_decision(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            tool_plan=plan.get("tool_plan"),
+            kb_enabled=kb_enabled,
+            web_enabled=web_enabled,
+            odoo_ready=odoo_ready,
+        )
+        route_decision["llm_execution"] = []
         prev_openai_rid = (conversation.openai_last_response_id or "").strip() or None
         openai_rid_out: list[str | None] = [None]
-        configured_max_tokens = int(llm_config.get("max_tokens", 2000))
+        raw_max_tokens = llm_config.get("max_tokens")
+        configured_max_tokens = int(raw_max_tokens) if raw_max_tokens not in (None, "") else None
+        llm_orchestration = _resolved_llm_orchestration(llm_config)
         prompt_variants: list[PreparedAnswerPrompt] = []
-        if cached is None and not (plan.get("direct_answer") and not chat_upload_context):
-            primary_prompt, retry_prompt = prepare_answer_prompt_variants(
+        if cached is None and not (plan.get("direct_answer") and not combined_upload_context):
+            primary_prompt, retry_prompt, tertiary_prompt = prepare_answer_prompt_variants(
                 api_mode=body.api_mode,
                 agent_name=agent.name,
-                system_prompt=str(guardrails_config.get("system_prompt", "")),
+                system_prompt=effective_system_prompt,
                 query_prompt=plan_query_prompt,
                 history_context=history_for_prompt,
                 runtime_context=runtime_context,
                 approved_web_context=approved_web_context,
-                upload_context=chat_upload_context,
+                upload_context=combined_upload_context,
             )
             log_answer_prompt_compaction(trace_id=request.state.trace_id, package=primary_prompt)
-            prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt)
+            prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt, tertiary_prompt)
 
         def _encode(payload: dict) -> str:
             return f"data: {json.dumps(payload)}\n\n"
@@ -1901,13 +3854,37 @@ def create_app() -> FastAPI:
         def _stream():
             answer_parts: list[str] = []
             successful_user_prompt: str | None = None
+            successful_provider_usage: dict[str, int | bool] | None = None
+            llm_execution_steps: list[dict[str, Any]] = []
+            worker_outputs: list[dict[str, str]] = []
+            first_prompt_for_llm_io: str = ""
+            last_prompt_for_llm_io: str = ""
+            assistant_message_id: str | None = None
+            stream_docx_artifacts: list[dict[str, Any]] = list(docx_artifacts)
+            stream_docx_diagnostics: list[dict[str, Any]] = list(docx_diagnostics)
             citations = cached.citations_json if cached is not None else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
             query_mode = cached.query_mode if cached is not None else plan["query_mode"]
             cache_response = tool_evidence.can_cache_response
+            tool_events_payload = [
+                {
+                    "tool_id": tool_event.tool_id,
+                    "status": tool_event.status,
+                    "operation": tool_event.operation,
+                    "summary": tool_event.summary,
+                    "blocked_reason": tool_event.blocked_reason,
+                    "payload": tool_event.payload,
+                    "latency_ms": tool_event.latency_ms,
+                }
+                for tool_event in tool_evidence.tool_events
+            ]
+            route_decision_payload = dict(route_decision)
+            route_decision_payload["llm_execution"] = []
             yield _encode(
                 {
                     "type": "start",
                     "api_mode": body.api_mode,
+                    "conversation_mode": conversation_mode,
+                    "workflow_mode": workflow_mode,
                     "query_mode": query_mode,
                     "citations": citations,
                     "conversation_id": conversation.id,
@@ -1915,7 +3892,10 @@ def create_app() -> FastAPI:
                     "cached": cached is not None,
                     "effective_snapshot_id": effective_snapshot_id,
                     "tool_summary": tool_summary,
+                    "route_decision": route_decision_payload,
                     "tool_events": [],
+                    "docx_artifacts": stream_docx_artifacts,
+                    "docx_diagnostics": stream_docx_diagnostics,
                 }
             )
             if cached is not None:
@@ -1945,26 +3925,112 @@ def create_app() -> FastAPI:
                             },
                         }
                     )
-            if cached is None and plan.get("direct_answer") and not chat_upload_context:
+                if _should_emit_multi_agent_handoff_trace(
+                    workflow_mode=workflow_mode,
+                    route_decision=route_decision,
+                    tool_plan=plan.get("tool_plan"),
+                ):
+                    if str(agent.agent_role or "lead").strip().lower() != "lead":
+                        invalid_orchestrator_event = ChatToolEvent(
+                            tool_id="agent.orchestrator",
+                            status="failed",
+                            operation="agent.orchestrator.resolve_workers",
+                            summary="Selected orchestrator must be a lead agent.",
+                            blocked_reason="invalid_orchestrator_role",
+                            payload={"agent_id": agent.id, "agent_role": agent.agent_role},
+                        )
+                        tool_evidence.tool_events.append(invalid_orchestrator_event)
+                        yield _encode({"type": "tool_result", "tool_event": invalid_orchestrator_event.model_dump()})
+                    else:
+                        worker_agents = _resolve_orchestration_sub_agents(session, agent)
+                        if not worker_agents:
+                            no_worker_event = ChatToolEvent(
+                                tool_id="agent.orchestrator",
+                                status="failed",
+                                operation="agent.orchestrator.resolve_workers",
+                                summary="Lead orchestrator could not resolve sub-agents under this lead.",
+                                blocked_reason="no_sub_agents_configured",
+                                payload={"lead_agent_id": agent.id},
+                            )
+                            tool_evidence.tool_events.append(no_worker_event)
+                            yield _encode({"type": "tool_result", "tool_event": no_worker_event.model_dump()})
+                        for worker in worker_agents:
+                            worker_role = _classify_sub_agent_role(worker.name) or "sub_agent"
+                            planned_event = ChatToolEvent(
+                                tool_id=f"agent.{worker_role}",
+                                status="planned",
+                                operation=f"agent.{worker_role}.execute",
+                                summary=f"Calling {worker.name} and waiting for response.",
+                                payload={"worker_agent_id": worker.id, "worker_name": worker.name, "stage": "dispatch"},
+                            )
+                            tool_evidence.tool_events.append(planned_event)
+                            yield _encode({"type": "tool_result", "tool_event": planned_event.model_dump()})
+                            try:
+                                worker_result, attempts_used = _execute_sub_agent_with_retries(
+                                    session=session,
+                                    worker=worker,
+                                    user_message=body.message,
+                                    tool_grounding_prompt=plan_query_prompt,
+                                    prior_worker_outputs=worker_outputs,
+                                    fallback_api_mode=body.api_mode,
+                                    trace_id=request.state.trace_id,
+                                )
+                                worker_text = str(worker_result.text or "").strip()
+                                worker_outputs.append({"worker_name": worker.name, "content": worker_text})
+                                completed_event = ChatToolEvent(
+                                    tool_id=f"agent.{worker_role}",
+                                    status="executed",
+                                    operation=f"agent.{worker_role}.execute",
+                                    summary=f"{worker.name} completed and returned specialist output.",
+                                    payload={
+                                        "worker_agent_id": worker.id,
+                                        "worker_name": worker.name,
+                                        "stage": "completed",
+                                        "attempts_used": attempts_used,
+                                        "output_excerpt": _normalize_prompt_excerpt(worker_text, max_chars=320, mode="head"),
+                                    },
+                                )
+                                tool_evidence.tool_events.append(completed_event)
+                                yield _encode({"type": "tool_result", "tool_event": completed_event.model_dump()})
+                            except Exception as worker_exc:
+                                failed_event = ChatToolEvent(
+                                    tool_id=f"agent.{worker_role}",
+                                    status="failed",
+                                    operation=f"agent.{worker_role}.execute",
+                                    summary=f"{worker.name} failed during delegated execution.",
+                                    blocked_reason="sub_agent_execution_failed",
+                                    payload={
+                                        "worker_agent_id": worker.id,
+                                        "worker_name": worker.name,
+                                        "attempts_used": SUB_AGENT_MAX_RETRIES + 1,
+                                        "error": repr(worker_exc),
+                                    },
+                                )
+                                tool_evidence.tool_events.append(failed_event)
+                                yield _encode({"type": "tool_result", "tool_event": failed_event.model_dump()})
+            if cached is None and plan.get("direct_answer") and not combined_upload_context:
                 yield _encode({"type": "delta", "delta": plan["direct_answer"]})
                 answer_parts.append(plan["direct_answer"])
             elif cached is None:
                 stream_error: Exception | None = None
+                primary_prompt_used = ""
                 for attempt_index, prompt_variant in enumerate(prompt_variants, start=1):
                     try:
                         if use_openai_responses_chain and openai_rid_out is not None:
                             openai_rid_out[0] = None
+                        active_prompt = _augment_prompt_with_worker_outputs(prompt_variant.prompt, worker_outputs)
+                        usage_out: list[dict[str, int | bool] | None] = [None]
                         for delta in stream_answer(
-                            prompt_variant.prompt,
+                            active_prompt,
                             connection,
                             api_mode=body.api_mode,
-                            system_prompt=str(guardrails_config.get("system_prompt", "")),
+                            system_prompt=effective_system_prompt,
                             model_id=resolved_model_id,
                             temperature=float(llm_config.get("temperature", 0)),
                             max_tokens=resolve_answer_max_tokens(
                                 api_mode=body.api_mode,
                                 configured_max_tokens=configured_max_tokens,
-                                prompt=prompt_variant.prompt,
+                                prompt=active_prompt,
                                 trace_id=request.state.trace_id,
                                 openai_responses_chain=use_openai_responses_chain,
                             ),
@@ -1973,10 +4039,26 @@ def create_app() -> FastAPI:
                             previous_response_id=prev_openai_rid,
                             use_openai_responses_http=use_openai_responses_chain,
                             openai_response_id_out=openai_rid_out if use_openai_responses_chain else None,
+                            usage_out=usage_out,
                         ):
                             answer_parts.append(delta)
                             yield _encode({"type": "delta", "delta": delta})
-                        successful_user_prompt = prompt_variant.prompt
+                        successful_user_prompt = active_prompt
+                        primary_prompt_used = active_prompt
+                        if not first_prompt_for_llm_io:
+                            first_prompt_for_llm_io = active_prompt
+                        successful_provider_usage = usage_out[0]
+                        llm_execution_steps.append(
+                            _build_execution_step(
+                                stage="primary",
+                                reason="primary_generation",
+                                connection=connection,
+                                model_id=resolved_model_id,
+                                api_mode=body.api_mode,
+                                usage=usage_out[0],
+                                prompt=active_prompt,
+                            )
+                        )
                         stream_error = None
                         break
                     except Exception as exc:
@@ -1997,6 +4079,85 @@ def create_app() -> FastAPI:
                                 "to_chars": next_variant.total_chars,
                             },
                         )
+                should_second_pass, second_pass_reason = _llm_orchestration_should_second_pass(
+                    llm_orchestration,
+                    primary_prompt=primary_prompt_used or (prompt_variants[0].prompt if prompt_variants else ""),
+                    primary_error=stream_error,
+                )
+                if should_second_pass:
+                    try:
+                        fallback_connection = resolve_llm_connection(
+                            session,
+                            connection_id=llm_orchestration.get("fallback_connection_id"),
+                            provider=str(llm_orchestration.get("fallback_provider") or "openai"),
+                        )
+                        fallback_model_id = _resolve_fallback_model_id(
+                            llm_orchestration,
+                            primary_model_id=resolved_model_id,
+                        )
+                        second_prompt = primary_prompt_used or (prompt_variants[0].prompt if prompt_variants else "")
+                        if llm_orchestration.get("include_primary_answer_context", True) and answer_parts:
+                            second_prompt = _with_primary_answer_context(second_prompt, "".join(answer_parts))
+                        if not first_prompt_for_llm_io:
+                            first_prompt_for_llm_io = second_prompt
+                        fallback_use_openai_responses_chain = should_use_openai_responses_chain(
+                            fallback_connection, body.api_mode
+                        )
+                        fallback_prev_rid = prev_openai_rid if fallback_connection.id == connection.id else None
+                        second_result = stream_answer_to_result(
+                            second_prompt,
+                            fallback_connection,
+                            api_mode=body.api_mode,
+                            system_prompt=effective_system_prompt,
+                            model_id=fallback_model_id,
+                            temperature=float(llm_config.get("temperature", 0)),
+                            max_tokens=resolve_answer_max_tokens(
+                                api_mode=body.api_mode,
+                                configured_max_tokens=configured_max_tokens,
+                                prompt=second_prompt,
+                                trace_id=request.state.trace_id,
+                                openai_responses_chain=fallback_use_openai_responses_chain,
+                            ),
+                            trace_id=request.state.trace_id,
+                            service="agent-ingress",
+                            previous_response_id=fallback_prev_rid,
+                            use_openai_responses_http=fallback_use_openai_responses_chain,
+                        )
+                        llm_execution_steps.append(
+                            _build_execution_step(
+                                stage="secondary",
+                                reason=second_pass_reason,
+                                connection=fallback_connection,
+                                model_id=fallback_model_id,
+                                api_mode=body.api_mode,
+                                usage=second_result.usage,
+                                prompt=second_prompt,
+                            )
+                        )
+                        if second_result.text.strip():
+                            answer_parts = [second_result.text.strip()]
+                            successful_user_prompt = second_prompt
+                            successful_provider_usage = second_result.usage
+                            last_prompt_for_llm_io = second_prompt
+                            if fallback_connection.id == connection.id and openai_rid_out and len(openai_rid_out) > 0:
+                                openai_rid_out[0] = second_result.openai_response_id
+                    except Exception as orchestration_exc:
+                        cache_response = False
+                        log_instant_event(
+                            trace_id=request.state.trace_id,
+                            service="agent-ingress",
+                            route="chat_stream.second_pass.failed",
+                            status="error",
+                            error=repr(orchestration_exc),
+                            details={
+                                "reason": second_pass_reason,
+                                "fallback_provider": llm_orchestration.get("fallback_provider"),
+                            },
+                        )
+                if primary_prompt_used and not first_prompt_for_llm_io:
+                    first_prompt_for_llm_io = primary_prompt_used
+                if primary_prompt_used and not last_prompt_for_llm_io:
+                    last_prompt_for_llm_io = primary_prompt_used
                 if stream_error is not None:
                     cache_response = False
                 if stream_error is not None and not answer_parts:
@@ -2026,7 +4187,29 @@ def create_app() -> FastAPI:
                         fallback = build_blank_answer_fallback(citations=citations)
                     answer_parts.append(fallback)
                     yield _encode({"type": "delta", "delta": fallback})
-            answer_text = dedupe_answer_text("".join(answer_parts))
+            answer_text = normalize_finance_closeout_answer(
+                answer_text="".join(answer_parts),
+                request_message=body.message,
+                tool_plan=tool_evidence.plan,
+                tool_events=tool_evidence.tool_events,
+            )
+            answer_text = dedupe_answer_text(answer_text)
+            route_decision_with_execution = dict(route_decision)
+            route_decision_with_execution["llm_execution"] = llm_execution_steps
+            if body.docx_mode.enabled:
+                operation = str(body.docx_mode.operation or "preview")
+                finalize_diagnostics = validate_docx_finalize_output(operation=operation, answer_text=answer_text)
+                if finalize_diagnostics:
+                    stream_docx_artifacts = []
+                    stream_docx_diagnostics = list(finalize_diagnostics)
+                else:
+                    stream_docx_artifacts, stream_docx_diagnostics = render_docx_with_sidecar_sync(
+                        docx_mode=body.docx_mode,
+                        trace_id=request.state.trace_id,
+                        agent_id=agent.id,
+                        conversation_id=conversation.id,
+                        answer_text=answer_text,
+                    )
             with SessionLocal() as stream_session:
                 append_message(
                     stream_session,
@@ -2034,8 +4217,10 @@ def create_app() -> FastAPI:
                     agent_id=agent.id,
                     role="user",
                     content=body.message,
+                    conversation_mode=conversation_mode,
+                    workflow_mode=workflow_mode,
                 )
-                append_message(
+                assistant_message = append_message(
                     stream_session,
                     conversation_id=conversation.id,
                     agent_id=agent.id,
@@ -2043,14 +4228,35 @@ def create_app() -> FastAPI:
                     content=answer_text,
                     query_mode=query_mode,
                     citations=citations,
+                    tool_events=tool_events_payload,
+                    usage=None,
+                    route_decision=route_decision_with_execution,
                     api_mode=body.api_mode,
+                    conversation_mode=conversation_mode,
+                    workflow_mode=workflow_mode,
                 )
+                stream_session.flush()
+                assistant_message_id = assistant_message.id
                 stream_conversation = stream_session.get(AgentConversationRecord, conversation.id)
                 if stream_conversation is not None:
                     stream_conversation.corpora_json = list(corpora)
                     stream_conversation.api_mode = body.api_mode
+                    stream_conversation.conversation_mode = conversation_mode
+                    stream_conversation.workflow_mode = workflow_mode
                     if use_openai_responses_chain and openai_rid_out and openai_rid_out[0]:
                         stream_conversation.openai_last_response_id = openai_rid_out[0]
+                if body.docx_mode.enabled:
+                    upsert_docx_session(
+                        stream_session,
+                        conversation_id=conversation.id,
+                        agent_id=agent.id,
+                        template_id=body.docx_mode.template_id,
+                        operation=body.docx_mode.operation,
+                        status="rendered",
+                        binding_json=body.docx_mode.binding_overrides or {},
+                        artifacts_json=stream_docx_artifacts,
+                        diagnostics_json=stream_docx_diagnostics,
+                    )
                 stream_session.commit()
                 if (
                     cached is None
@@ -2066,39 +4272,49 @@ def create_app() -> FastAPI:
                         query_mode=query_mode,
                         citations=citations,
                     )
-            system_sp_stream = str(guardrails_config.get("system_prompt", ""))
+            system_sp_stream = effective_system_prompt
             fb_prompt_stream = prompt_variants[0].prompt if prompt_variants else ""
             skip_llm_stream = cached is not None or (
-                plan is not None and bool(plan.get("direct_answer")) and not chat_upload_context
+                plan is not None and bool(plan.get("direct_answer")) and not combined_upload_context
             )
-            usage_stream = estimate_llm_turn_usage_dict(
+            aggregated_provider_usage = _aggregate_usage(llm_execution_steps)
+            usage_stream = resolve_chat_usage_dict(
+                provider_usage=aggregated_provider_usage or successful_provider_usage,
                 system_prompt=system_sp_stream,
                 user_prompt=successful_user_prompt,
                 completion=answer_text,
                 fallback_user_prompt=fb_prompt_stream,
                 skip_llm=skip_llm_stream,
             )
+            first_prompt_for_llm_io = first_prompt_for_llm_io or successful_user_prompt or fb_prompt_stream
+            last_prompt_for_llm_io = last_prompt_for_llm_io or successful_user_prompt or fb_prompt_stream
+            llm_io_payload = _build_llm_io_payload(
+                usage_stream,
+                first_prompt_text=first_prompt_for_llm_io,
+                last_prompt_text=last_prompt_for_llm_io,
+            )
+            if assistant_message_id is not None:
+                with SessionLocal() as usage_session:
+                    assistant_message = usage_session.get(AgentMessageRecord, assistant_message_id)
+                    if assistant_message is not None:
+                        assistant_message.usage_json = dict(usage_stream)
+                        usage_session.commit()
             yield _encode(
                 {
                     "type": "done",
                     "citations": citations,
+                    "conversation_mode": conversation_mode,
+                    "workflow_mode": workflow_mode,
                     "conversation_id": conversation.id,
                     "cached": cached is not None,
                     "usage": usage_stream,
+                    "llm_io": llm_io_payload,
                     "effective_snapshot_id": effective_snapshot_id,
                     "tool_summary": tool_summary,
-                    "tool_events": [
-                        {
-                            "tool_id": tool_event.tool_id,
-                            "status": tool_event.status,
-                            "operation": tool_event.operation,
-                            "summary": tool_event.summary,
-                            "blocked_reason": tool_event.blocked_reason,
-                            "payload": tool_event.payload,
-                            "latency_ms": tool_event.latency_ms,
-                        }
-                        for tool_event in tool_evidence.tool_events
-                    ],
+                    "tool_events": tool_events_payload,
+                    "route_decision": route_decision_with_execution,
+                    "docx_artifacts": stream_docx_artifacts,
+                    "docx_diagnostics": stream_docx_diagnostics,
                 }
             )
 

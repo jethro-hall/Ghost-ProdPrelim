@@ -12,7 +12,7 @@ from uuid import uuid4
 import httpx
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import PlainTextResponse
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
 from .agent_memory import (
@@ -42,14 +42,19 @@ from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
     AgentProfileRecord,
+    ChatResponseCacheRecord,
     ChatUploadRecord,
     CollectionRecord,
     ConnectionRecord,
+    DocxSessionRecord,
     DocumentFrameRecord,
     DocumentRecord,
     IngestionRunRecord,
     RetrievalArtifactRecord,
+    RuntimeProfileRecord,
+    WorkflowRunEventRecord,
     RuntimeProfileCollectionRecord,
+    WorkflowTaskRecord,
     WorkflowRunRecord,
     WorkflowStepRunRecord,
     WorkbookArtifactRecord,
@@ -57,10 +62,30 @@ from .models import (
     WorkbookSheetRecord,
     WorkbookTableRecord,
 )
-from .runtime import get_active_connection, list_connections, save_connection, seed_default_connections, test_provider_connection
+from .runtime import (
+    delete_connection,
+    get_active_connection,
+    list_connections,
+    save_connection,
+    seed_default_connections,
+    test_provider_connection,
+)
 from .runtime_defaults import get_runtime_defaults, save_runtime_defaults
-from .runtime_profiles import get_default_runtime_profile, resolve_agent_runtime_profile, seed_default_runtime_profile
+from .runtime_profiles import (
+    get_default_runtime_profile,
+    list_policy_change_audits,
+    resolve_agent_runtime_profile,
+    seed_default_runtime_profile,
+)
 from .schemas import (
+    AgentDeletePayload,
+    AgentDeleteResponse,
+    AgentHierarchyView,
+    ConnectionDeletePayload,
+    ConnectionDeleteResponse,
+    ConnectionDeletionPreviewView,
+    AgentDeletionPreviewPayload,
+    AgentDeletionPreviewView,
     AgentProfilePayload,
     AgentProfileView,
     CapabilityStatus,
@@ -87,6 +112,7 @@ from .schemas import (
     RuntimeCapabilities,
     RuntimeDefaultsPayload,
     RuntimeDefaultsView,
+    PolicyChangeAuditView,
     RuntimeProfileView,
     RunSummaryView,
     RequestedParseLane,
@@ -112,6 +138,8 @@ from .schemas import (
     WorkflowRunSummaryView,
     WorkflowRunUpdatePayload,
     WorkflowRunView,
+    WorkflowRunEventView,
+    WorkflowTaskView,
     WorkflowStepRunUpdatePayload,
     WorkflowStepRunView,
 )
@@ -139,8 +167,10 @@ from .workflow_runs import (
     get_workflow_run,
     get_workflow_definition,
     list_workflow_definitions,
+    list_workflow_run_events,
     list_workflow_runs,
     list_workflow_steps,
+    list_workflow_tasks,
     seed_workflow_definitions,
     upsert_workflow_definition,
     update_workflow_run,
@@ -148,6 +178,8 @@ from .workflow_runs import (
 )
 
 settings = get_settings()
+ACTIVE_WORKFLOW_RUN_STATUSES = {"queued", "running"}
+ACTIVE_WORKFLOW_STEP_STATUSES = {"pending", "running"}
 
 
 def initialize_control_runtime_state() -> None:
@@ -199,6 +231,41 @@ def _runtime_capabilities() -> RuntimeCapabilities:
     )
 
 ORDERED_SYNC_STEPS = ("queued", "parse_structure", "index_retrieval", "finalize")
+
+
+def _map_connection_test_exception(exc: Exception) -> tuple[int, str]:
+    if isinstance(exc, ValueError):
+        return 400, str(exc)
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return 503, "Connection test failed: provider is unreachable or timed out."
+
+    response = getattr(exc, "response", None)
+    status_code = getattr(exc, "status_code", None)
+    if status_code is None and response is not None:
+        status_code = getattr(response, "status_code", None)
+
+    if status_code in (401, 403):
+        return 401, "Connection test failed: authentication with provider was rejected."
+    if status_code == 404:
+        response_json = None
+        if response is not None and hasattr(response, "json"):
+            try:
+                response_json = response.json()
+            except ValueError:
+                response_json = None
+        error_payload = response_json.get("error") if isinstance(response_json, dict) else None
+        error_code = error_payload.get("code") if isinstance(error_payload, dict) else None
+        if error_code == "model_not_found":
+            return 400, "Connection test failed: configured model is not available."
+        return 502, "Connection test failed: provider endpoint was not found."
+    if status_code == 400:
+        return 400, "Connection test failed: provider rejected the request."
+    if status_code == 429:
+        return 503, "Connection test failed: provider rate limit exceeded. Retry shortly."
+    if isinstance(status_code, int) and status_code >= 500:
+        return 503, "Connection test failed: provider service is unavailable."
+
+    return 502, "Connection test failed due to an unexpected upstream provider error."
 
 
 def _run_documents(run: IngestionRunRecord, session: Session) -> tuple[list[TaskDocumentView], int, int, str | None, str | None]:
@@ -399,6 +466,39 @@ def _workflow_definition_to_view(definition) -> WorkflowDefinitionView:
     )
 
 
+def _workflow_task_to_view(task: WorkflowTaskRecord) -> WorkflowTaskView:
+    return WorkflowTaskView(
+        id=task.id,
+        task_key=task.task_key,
+        title=task.title,
+        task_kind=task.task_kind,
+        status=task.status,
+        sequence=task.sequence,
+        depends_on_task_keys=task.depends_on_task_keys_json or [],
+        assigned_agent_id=task.assigned_agent_id,
+        assigned_agent_name=task.assigned_agent_name,
+        step_run_id=task.step_run_id,
+        metadata_json=task.metadata_json or {},
+        started_at=task.started_at,
+        completed_at=task.completed_at,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+    )
+
+
+def _workflow_run_event_to_view(event: WorkflowRunEventRecord) -> WorkflowRunEventView:
+    return WorkflowRunEventView(
+        id=event.id,
+        sequence=event.sequence,
+        event_type=event.event_type,
+        task_key=event.task_key,
+        actor_id=event.actor_id,
+        metadata_json=event.metadata_json or {},
+        created_at=event.created_at,
+        updated_at=event.updated_at,
+    )
+
+
 def _workflow_run_summary_to_view(run: WorkflowRunRecord) -> WorkflowRunSummaryView:
     workflow_metadata = dict((run.result_json or {}).get("workflow", {}))
     return WorkflowRunSummaryView(
@@ -428,16 +528,21 @@ def _workflow_run_to_view(run: WorkflowRunRecord, session: Session) -> WorkflowR
         started_at=run.started_at,
         completed_at=run.completed_at,
         steps=[_workflow_step_to_view(step) for step in list_workflow_steps(session, run.id)],
+        tasks=[_workflow_task_to_view(task) for task in list_workflow_tasks(session, run.id)],
+        events=[_workflow_run_event_to_view(event) for event in list_workflow_run_events(session, run.id)],
     )
 
 
 def _runtime_profile_to_view(runtime_profile) -> RuntimeProfileView:
+    guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+    if not str(guardrails_config.get("policy_mode") or "").strip():
+        guardrails_config["policy_mode"] = "admin_approval_required"
     return RuntimeProfileView(
         id=runtime_profile.id,
         name=runtime_profile.name,
         description=runtime_profile.description,
         llm_config=runtime_profile.llm_config_json or {},
-        guardrails_config=runtime_profile.guardrails_config_json or {},
+        guardrails_config=guardrails_config,
         kb_config=runtime_profile.kb_config_json or {},
         retrieval_config=runtime_profile.retrieval_config_json or {},
         tool_policy_config=runtime_profile.tool_policy_config_json or {},
@@ -445,6 +550,25 @@ def _runtime_profile_to_view(runtime_profile) -> RuntimeProfileView:
         enabled=runtime_profile.enabled,
         created_at=runtime_profile.created_at,
         updated_at=runtime_profile.updated_at,
+    )
+
+
+def _policy_change_audit_to_view(record) -> PolicyChangeAuditView:
+    payload = dict(record.payload_json or {})
+    response = dict(record.response_json or {})
+    return PolicyChangeAuditView(
+        id=record.id,
+        runtime_profile_id=str(record.policy_decision_id or payload.get("runtime_profile_id") or ""),
+        actor=record.actor_agent_id or "unknown",
+        action=record.operation,
+        status=record.status,
+        policy_mode=str(payload.get("policy_mode") or "admin_approval_required"),
+        reason=payload.get("reason"),
+        approval_token=record.approval_token,
+        before_json=dict(payload.get("before") or {}),
+        after_json=dict(response.get("after") or {}),
+        created_at=record.created_at,
+        updated_at=record.updated_at,
     )
 
 
@@ -508,6 +632,9 @@ def _agent_to_view(agent: AgentProfileRecord, runtime_profile) -> AgentProfileVi
         voice_id=agent.voice_id,
         runtime_profile_id=runtime_profile.id,
         runtime_profile=_runtime_profile_to_view(runtime_profile),
+        agent_role=cast(str, agent.agent_role or "lead"),
+        parent_agent_id=agent.parent_agent_id,
+        position=int(agent.position or 0),
         is_default=agent.is_default,
         enabled=agent.enabled,
         created_at=agent.created_at,
@@ -560,6 +687,447 @@ def _conversation_to_view(conversation: AgentConversationRecord, message_count: 
     )
 
 
+def _workflow_run_requests_agent(run: WorkflowRunRecord, agent_id: str) -> bool:
+    requested = list(run.requested_agent_ids_json or [])
+    for value in requested:
+        if str(value) == agent_id:
+            return True
+    return False
+
+
+def _build_agent_deletion_preview(
+    session: Session,
+    *,
+    agent: AgentProfileRecord,
+    scope: str,
+) -> AgentDeletionPreviewView:
+    conversation_ids = list(
+        session.scalars(
+            select(AgentConversationRecord.id).where(AgentConversationRecord.agent_id == agent.id)
+        )
+    )
+    frame_ids = list(
+        {
+            frame_id
+            for frame_id in session.scalars(
+                select(AgentConversationRecord.document_frame_id).where(
+                    AgentConversationRecord.agent_id == agent.id,
+                    AgentConversationRecord.document_frame_id.is_not(None),
+                )
+            )
+            if frame_id
+        }
+    )
+    orphanable_frames = 0
+    for frame_id in frame_ids:
+        linked_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(AgentConversationRecord)
+                .where(AgentConversationRecord.document_frame_id == frame_id)
+            )
+            or 0
+        )
+        if linked_count <= 1:
+            orphanable_frames += 1
+
+    if conversation_ids:
+        messages_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(AgentMessageRecord)
+                .where(AgentMessageRecord.conversation_id.in_(conversation_ids))
+            )
+            or 0
+        )
+        uploads_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(ChatUploadRecord)
+                .where(ChatUploadRecord.conversation_id.in_(conversation_ids))
+            )
+            or 0
+        )
+        docx_sessions_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(DocxSessionRecord)
+                .where(DocxSessionRecord.conversation_id.in_(conversation_ids))
+            )
+            or 0
+        )
+        workflow_step_runs_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(WorkflowStepRunRecord)
+                .where(
+                    or_(
+                        WorkflowStepRunRecord.conversation_id.in_(conversation_ids),
+                        WorkflowStepRunRecord.agent_id == agent.id,
+                    )
+                )
+            )
+            or 0
+        )
+        active_workflow_steps_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(WorkflowStepRunRecord)
+                .join(WorkflowRunRecord, WorkflowRunRecord.id == WorkflowStepRunRecord.run_id)
+                .where(
+                    or_(
+                        WorkflowStepRunRecord.conversation_id.in_(conversation_ids),
+                        WorkflowStepRunRecord.agent_id == agent.id,
+                    ),
+                    WorkflowRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_RUN_STATUSES)),
+                    WorkflowStepRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_STEP_STATUSES)),
+                )
+            )
+            or 0
+        )
+    else:
+        messages_count = 0
+        uploads_count = 0
+        docx_sessions_count = 0
+        workflow_step_runs_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(WorkflowStepRunRecord)
+                .where(WorkflowStepRunRecord.agent_id == agent.id)
+            )
+            or 0
+        )
+        active_workflow_steps_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(WorkflowStepRunRecord)
+                .join(WorkflowRunRecord, WorkflowRunRecord.id == WorkflowStepRunRecord.run_id)
+                .where(
+                    WorkflowStepRunRecord.agent_id == agent.id,
+                    WorkflowRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_RUN_STATUSES)),
+                    WorkflowStepRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_STEP_STATUSES)),
+                )
+            )
+            or 0
+        )
+
+    cache_entries_count = int(
+        session.scalar(
+            select(func.count())
+            .select_from(ChatResponseCacheRecord)
+            .where(ChatResponseCacheRecord.agent_id == agent.id)
+        )
+        or 0
+    )
+    active_runs = list(
+        session.scalars(
+            select(WorkflowRunRecord).where(WorkflowRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_RUN_STATUSES)))
+        )
+    )
+    active_workflow_runs_count = 0
+    for run in active_runs:
+        if _workflow_run_requests_agent(run, agent.id) or (
+            run.parent_conversation_id is not None and run.parent_conversation_id in conversation_ids
+        ):
+            active_workflow_runs_count += 1
+
+    runtime_profile_peer_agents = 0
+    if scope == "agent" and agent.runtime_profile_id:
+        runtime_profile_peer_agents = int(
+            session.scalar(
+                select(func.count())
+                .select_from(AgentProfileRecord)
+                .where(
+                    AgentProfileRecord.runtime_profile_id == agent.runtime_profile_id,
+                    AgentProfileRecord.id != agent.id,
+                )
+            )
+            or 0
+        )
+
+    blocking_reasons: list[str] = []
+    if scope == "agent" and agent.is_default:
+        blocking_reasons.append("default_agent_protected")
+    if active_workflow_runs_count > 0:
+        blocking_reasons.append("active_workflow_runs")
+    if active_workflow_steps_count > 0:
+        blocking_reasons.append("active_workflow_steps")
+
+    confirmation_payload = {
+        "agent_id": agent.id,
+        "scope": scope,
+        "conversations": len(conversation_ids),
+        "messages": messages_count,
+        "uploads": uploads_count,
+        "docx_sessions": docx_sessions_count,
+        "cache_entries": cache_entries_count,
+        "workflow_step_runs": workflow_step_runs_count,
+        "active_workflow_runs": active_workflow_runs_count,
+        "active_workflow_steps": active_workflow_steps_count,
+        "runtime_profile_peer_agents": runtime_profile_peer_agents,
+    }
+    confirmation_token = hashlib.sha256(str(confirmation_payload).encode("utf-8")).hexdigest()[:24]
+
+    return AgentDeletionPreviewView(
+        agent_id=agent.id,
+        scope=cast(str, scope),
+        can_execute=not blocking_reasons,
+        is_default_agent=agent.is_default,
+        blocking_reasons=blocking_reasons,
+        impact={
+            "conversations": len(conversation_ids),
+            "messages": messages_count,
+            "uploads": uploads_count,
+            "docx_sessions": docx_sessions_count,
+            "cache_entries": cache_entries_count,
+            "workflow_step_runs": workflow_step_runs_count,
+            "document_frames_linked": len(frame_ids),
+            "orphanable_document_frames": orphanable_frames,
+            "active_workflow_runs": active_workflow_runs_count,
+            "active_workflow_steps": active_workflow_steps_count,
+            "runtime_profile_peer_agents": runtime_profile_peer_agents,
+        },
+        confirmation_token=confirmation_token,
+    )
+
+
+def _delete_agent_conversations(session: Session, *, agent_id: str) -> dict[str, int]:
+    conversation_ids = list(
+        session.scalars(
+            select(AgentConversationRecord.id).where(AgentConversationRecord.agent_id == agent_id)
+        )
+    )
+    frame_ids = list(
+        {
+            frame_id
+            for frame_id in session.scalars(
+                select(AgentConversationRecord.document_frame_id).where(
+                    AgentConversationRecord.agent_id == agent_id,
+                    AgentConversationRecord.document_frame_id.is_not(None),
+                )
+            )
+            if frame_id
+        }
+    )
+    orphanable_frame_ids: list[str] = []
+    for frame_id in frame_ids:
+        linked_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(AgentConversationRecord)
+                .where(AgentConversationRecord.document_frame_id == frame_id)
+            )
+            or 0
+        )
+        if linked_count <= 1:
+            orphanable_frame_ids.append(frame_id)
+
+    deleted_messages = 0
+    deleted_uploads = 0
+    deleted_docx_sessions = 0
+    deleted_conversations = 0
+    deleted_workflow_step_runs = 0
+    deleted_document_frames = 0
+    if conversation_ids:
+        deleted_messages = int(
+            session.execute(
+                delete(AgentMessageRecord).where(AgentMessageRecord.conversation_id.in_(conversation_ids))
+            ).rowcount
+            or 0
+        )
+        deleted_uploads = int(
+            session.execute(
+                delete(ChatUploadRecord).where(ChatUploadRecord.conversation_id.in_(conversation_ids))
+            ).rowcount
+            or 0
+        )
+        deleted_docx_sessions = int(
+            session.execute(
+                delete(DocxSessionRecord).where(DocxSessionRecord.conversation_id.in_(conversation_ids))
+            ).rowcount
+            or 0
+        )
+        deleted_workflow_step_runs = int(
+            session.execute(
+                delete(WorkflowStepRunRecord).where(
+                    or_(
+                        WorkflowStepRunRecord.conversation_id.in_(conversation_ids),
+                        WorkflowStepRunRecord.agent_id == agent_id,
+                    )
+                )
+            ).rowcount
+            or 0
+        )
+        deleted_conversations = int(
+            session.execute(
+                delete(AgentConversationRecord).where(AgentConversationRecord.id.in_(conversation_ids))
+            ).rowcount
+            or 0
+        )
+    else:
+        deleted_workflow_step_runs = int(
+            session.execute(
+                delete(WorkflowStepRunRecord).where(WorkflowStepRunRecord.agent_id == agent_id)
+            ).rowcount
+            or 0
+        )
+
+    deleted_cache_entries = int(
+        session.execute(
+            delete(ChatResponseCacheRecord).where(ChatResponseCacheRecord.agent_id == agent_id)
+        ).rowcount
+        or 0
+    )
+    if orphanable_frame_ids:
+        deleted_document_frames = int(
+            session.execute(
+                delete(DocumentFrameRecord).where(DocumentFrameRecord.id.in_(orphanable_frame_ids))
+            ).rowcount
+            or 0
+        )
+
+    session.commit()
+    return {
+        "deleted_conversations": deleted_conversations,
+        "deleted_messages": deleted_messages,
+        "deleted_uploads": deleted_uploads,
+        "deleted_docx_sessions": deleted_docx_sessions,
+        "deleted_cache_entries": deleted_cache_entries,
+        "deleted_workflow_step_runs": deleted_workflow_step_runs,
+        "deleted_document_frames": deleted_document_frames,
+    }
+
+
+def _build_connection_deletion_preview(
+    session: Session,
+    *,
+    connection: ConnectionRecord,
+) -> ConnectionDeletionPreviewView:
+    runtime_profiles = list(session.scalars(select(RuntimeProfileRecord)))
+
+    runtime_profile_direct_refs = 0
+    runtime_profile_provider_refs = 0
+    runtime_profile_fallback_refs = 0
+    runtime_profile_fallback_provider_refs = 0
+    impacted_runtime_profile_ids: set[str] = set()
+
+    for profile in runtime_profiles:
+        llm_config = dict(profile.llm_config_json or {})
+        llm_orchestration = dict(llm_config.get("llm_orchestration") or {})
+        connection_id = str(llm_config.get("connection_id") or "").strip() or None
+        provider = str(llm_config.get("provider") or "").strip()
+        fallback_connection_id = str(llm_orchestration.get("fallback_connection_id") or "").strip() or None
+        fallback_provider = str(llm_orchestration.get("fallback_provider") or "").strip()
+
+        profile_impacted = False
+        if connection_id and connection_id == connection.id:
+            runtime_profile_direct_refs += 1
+            profile_impacted = True
+        elif not connection_id and provider and provider == connection.provider:
+            runtime_profile_provider_refs += 1
+            profile_impacted = True
+
+        if fallback_connection_id and fallback_connection_id == connection.id:
+            runtime_profile_fallback_refs += 1
+            profile_impacted = True
+        elif not fallback_connection_id and fallback_provider and fallback_provider == connection.provider:
+            runtime_profile_fallback_provider_refs += 1
+            profile_impacted = True
+
+        if profile_impacted:
+            impacted_runtime_profile_ids.add(profile.id)
+
+    impacted_agent_ids = list(
+        session.scalars(
+            select(AgentProfileRecord.id).where(
+                AgentProfileRecord.runtime_profile_id.in_(list(impacted_runtime_profile_ids) or [""])
+            )
+        )
+    )
+    agents_impacted = len(impacted_agent_ids)
+
+    active_workflow_runs_count = 0
+    active_workflow_steps_count = 0
+    if impacted_agent_ids:
+        active_runs = list(
+            session.scalars(
+                select(WorkflowRunRecord).where(WorkflowRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_RUN_STATUSES)))
+            )
+        )
+        impacted_agent_ids_set = set(impacted_agent_ids)
+        for run in active_runs:
+            requested = {str(value) for value in list(run.requested_agent_ids_json or [])}
+            if requested.intersection(impacted_agent_ids_set):
+                active_workflow_runs_count += 1
+
+        active_workflow_steps_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(WorkflowStepRunRecord)
+                .where(
+                    WorkflowStepRunRecord.agent_id.in_(impacted_agent_ids),
+                    WorkflowStepRunRecord.status.in_(tuple(ACTIVE_WORKFLOW_STEP_STATUSES)),
+                )
+            )
+            or 0
+        )
+
+    runtime_defaults = get_runtime_defaults(session)
+    is_runtime_default_connection = bool(runtime_defaults.get("llm_connection_id") == connection.id)
+    seeded_provider_key = connection.provider in {"openai", "google-gemini"}
+
+    blocking_reasons: list[str] = []
+    if seeded_provider_key:
+        blocking_reasons.append("seeded_provider_protected")
+    if is_runtime_default_connection:
+        blocking_reasons.append("runtime_defaults_reference")
+    if (
+        runtime_profile_direct_refs
+        or runtime_profile_provider_refs
+        or runtime_profile_fallback_refs
+        or runtime_profile_fallback_provider_refs
+    ):
+        blocking_reasons.append("runtime_profile_references")
+    if active_workflow_runs_count > 0:
+        blocking_reasons.append("active_workflow_runs")
+    if active_workflow_steps_count > 0:
+        blocking_reasons.append("active_workflow_steps")
+
+    confirmation_payload = {
+        "connection_id": connection.id,
+        "provider": connection.provider,
+        "runtime_profile_direct_refs": runtime_profile_direct_refs,
+        "runtime_profile_provider_refs": runtime_profile_provider_refs,
+        "runtime_profile_fallback_refs": runtime_profile_fallback_refs,
+        "runtime_profile_fallback_provider_refs": runtime_profile_fallback_provider_refs,
+        "agents_impacted": agents_impacted,
+        "active_workflow_runs": active_workflow_runs_count,
+        "active_workflow_steps": active_workflow_steps_count,
+        "is_runtime_default_connection": is_runtime_default_connection,
+        "seeded_provider_key": seeded_provider_key,
+    }
+    confirmation_token = hashlib.sha256(str(confirmation_payload).encode("utf-8")).hexdigest()[:24]
+
+    return ConnectionDeletionPreviewView(
+        connection_id=connection.id,
+        provider=connection.provider,
+        can_execute=not blocking_reasons,
+        blocking_reasons=blocking_reasons,
+        impact={
+            "runtime_profile_direct_refs": runtime_profile_direct_refs,
+            "runtime_profile_provider_refs": runtime_profile_provider_refs,
+            "runtime_profile_fallback_refs": runtime_profile_fallback_refs,
+            "runtime_profile_fallback_provider_refs": runtime_profile_fallback_provider_refs,
+            "agents_impacted": agents_impacted,
+            "active_workflow_runs": active_workflow_runs_count,
+            "active_workflow_steps": active_workflow_steps_count,
+            "is_runtime_default_connection": is_runtime_default_connection,
+            "seeded_provider_key": seeded_provider_key,
+        },
+        confirmation_token=confirmation_token,
+    )
+
+
 def _message_to_view(message: AgentMessageRecord) -> ConversationMessageView:
     return ConversationMessageView(
         id=message.id,
@@ -569,6 +1137,9 @@ def _message_to_view(message: AgentMessageRecord) -> ConversationMessageView:
         content=message.content,
         query_mode=message.query_mode,
         citations=message.citations_json or [],
+        tool_events=message.tool_events_json or [],
+        usage=message.usage_json,
+        route_decision=message.route_decision_json,
         api_mode=message.api_mode,
         conversation_mode=message.conversation_mode,
         workflow_mode=cast(str | None, message.workflow_mode),
@@ -824,6 +1395,7 @@ def create_app() -> FastAPI:
                 auth_header_name=row.auth_header_name,
                 base_url=row.base_url,
                 enabled=row.enabled,
+                default_model_id=row.default_model_id,
                 api_key_hint=row.masked_api_key,
                 has_api_key=bool(row.api_key),
             )
@@ -845,6 +1417,7 @@ def create_app() -> FastAPI:
             api_key=body.api_key,
             base_url=body.base_url,
             enabled=body.enabled,
+            default_model_id=body.default_model_id,
         )
         return ConnectionView(
             id=record.id,
@@ -855,9 +1428,42 @@ def create_app() -> FastAPI:
             auth_header_name=record.auth_header_name,
             base_url=record.base_url,
             enabled=record.enabled,
+            default_model_id=record.default_model_id,
             api_key_hint=record.masked_api_key,
             has_api_key=bool(record.api_key),
         )
+
+    @app.post("/api/connections/{connection_id}/deletion-preview", response_model=ConnectionDeletionPreviewView)
+    def api_connection_deletion_preview(
+        connection_id: str,
+        session: Session = Depends(get_session),
+    ) -> ConnectionDeletionPreviewView:
+        connection = session.get(ConnectionRecord, connection_id)
+        if connection is None:
+            raise HTTPException(404, "connection not found")
+        return _build_connection_deletion_preview(session, connection=connection)
+
+    @app.delete("/api/connections/{connection_id}", response_model=ConnectionDeleteResponse)
+    def api_delete_connection(
+        connection_id: str,
+        body: ConnectionDeletePayload,
+        confirm: bool = Query(default=False),
+        session: Session = Depends(get_session),
+    ) -> ConnectionDeleteResponse:
+        if not confirm:
+            raise HTTPException(400, "confirm=true is required for destructive connection deletion")
+        connection = session.get(ConnectionRecord, connection_id)
+        if connection is None:
+            raise HTTPException(404, "connection not found")
+
+        preview = _build_connection_deletion_preview(session, connection=connection)
+        if body.confirmation_token != preview.confirmation_token:
+            raise HTTPException(409, "confirmation token mismatch; refresh deletion preview")
+        if not preview.can_execute:
+            raise HTTPException(409, f"connection deletion blocked: {', '.join(preview.blocking_reasons)}")
+
+        deleted = delete_connection(session, connection_id)
+        return ConnectionDeleteResponse(id=deleted.id, provider=deleted.provider, deleted=True)
 
     @app.post("/api/connections/test", response_model=ConnectionTestResponse)
     def api_test_connection(
@@ -879,7 +1485,6 @@ def create_app() -> FastAPI:
                 base_url=body.base_url,
                 enabled=True,
             )
-        runtime_profile = get_default_runtime_profile(session)
         try:
             result = test_provider_connection(
                 record,
@@ -889,10 +1494,11 @@ def create_app() -> FastAPI:
                 service="control-api",
                 api_key=body.api_key,
                 base_url=body.base_url,
-                model_id=body.model_id or (runtime_profile.llm_config_json or {}).get("model_id"),
+                model_id=body.model_id,
             )
-        except ValueError as exc:
-            raise HTTPException(400, str(exc)) from exc
+        except Exception as exc:
+            status_code, detail = _map_connection_test_exception(exc)
+            raise HTTPException(status_code, detail) from exc
         return ConnectionTestResponse(ok=True, **result)
 
     @app.get("/api/tools/catalog", response_model=list[ToolCatalogEntryView])
@@ -949,7 +1555,14 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> ToolExecuteResponse:
         try:
-            return execute_tool_operation(session, tool_id, operation=body.operation, payload=body.payload)
+            return execute_tool_operation(
+                session,
+                tool_id,
+                operation=body.operation,
+                payload=body.payload,
+                dry_run=body.dry_run,
+                approval_token=body.approval_token,
+            )
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
 
@@ -992,6 +1605,49 @@ def create_app() -> FastAPI:
     def api_list_agents(session: Session = Depends(get_session)) -> list[AgentProfileView]:
         return [_agent_to_view(agent, resolve_agent_runtime_profile(session, agent)) for agent in list_agents(session)]
 
+    @app.get("/api/agents/hierarchy", response_model=list[AgentHierarchyView])
+    def api_list_agent_hierarchy(session: Session = Depends(get_session)) -> list[AgentHierarchyView]:
+        agents = list_agents(session)
+        runtime_profiles = {agent.id: resolve_agent_runtime_profile(session, agent) for agent in agents}
+        leads: list[AgentProfileRecord] = []
+        sub_agents_by_parent: dict[str, list[AgentProfileRecord]] = {}
+        known_ids = {agent.id for agent in agents}
+
+        for agent in agents:
+            role = str(agent.agent_role or "lead")
+            if role == "sub" and agent.parent_agent_id and agent.parent_agent_id in known_ids:
+                sub_agents_by_parent.setdefault(agent.parent_agent_id, []).append(agent)
+                continue
+            leads.append(agent)
+
+        for sub_agents in sub_agents_by_parent.values():
+            sub_agents.sort(key=lambda row: (int(row.position or 0), row.updated_at), reverse=False)
+        leads.sort(key=lambda row: (not bool(row.is_default), row.updated_at), reverse=False)
+
+        return [
+            AgentHierarchyView(
+                lead_agent=_agent_to_view(lead, runtime_profiles[lead.id]),
+                sub_agents=[_agent_to_view(sub_agent, runtime_profiles[sub_agent.id]) for sub_agent in sub_agents_by_parent.get(lead.id, [])],
+            )
+            for lead in leads
+        ]
+
+    @app.get("/api/agents/{agent_id}/policy-audits", response_model=list[PolicyChangeAuditView])
+    def api_agent_policy_audits(
+        agent_id: str,
+        limit: int = Query(default=50, ge=1, le=200),
+        session: Session = Depends(get_session),
+    ) -> list[PolicyChangeAuditView]:
+        try:
+            agent = get_agent(session, agent_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        runtime_profile = resolve_agent_runtime_profile(session, agent)
+        return [
+            _policy_change_audit_to_view(row)
+            for row in list_policy_change_audits(session, runtime_profile.id, limit=limit)
+        ]
+
     @app.post("/api/agents", response_model=AgentProfileView)
     def api_save_agent(
         body: AgentProfilePayload,
@@ -1002,6 +1658,69 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         return _agent_to_view(agent, resolve_agent_runtime_profile(session, agent))
+
+    @app.post("/api/agents/{agent_id}/deletion-preview", response_model=AgentDeletionPreviewView)
+    def api_agent_deletion_preview(
+        agent_id: str,
+        body: AgentDeletionPreviewPayload,
+        session: Session = Depends(get_session),
+    ) -> AgentDeletionPreviewView:
+        try:
+            agent = get_agent(session, agent_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _build_agent_deletion_preview(session, agent=agent, scope=body.scope)
+
+    @app.delete("/api/agents/{agent_id}/conversations", response_model=AgentDeleteResponse)
+    def api_delete_agent_conversations(
+        agent_id: str,
+        body: AgentDeletePayload,
+        confirm: bool = Query(default=False),
+        session: Session = Depends(get_session),
+    ) -> AgentDeleteResponse:
+        if not confirm:
+            raise HTTPException(400, "confirm=true is required for destructive conversation deletion")
+        try:
+            agent = get_agent(session, agent_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+        preview = _build_agent_deletion_preview(session, agent=agent, scope="chats")
+        if body.confirmation_token != preview.confirmation_token:
+            raise HTTPException(409, "confirmation token mismatch; refresh deletion preview")
+        if not preview.can_execute:
+            raise HTTPException(409, f"agent conversation deletion blocked: {', '.join(preview.blocking_reasons)}")
+
+        deletion_stats = _delete_agent_conversations(session, agent_id=agent_id)
+        return AgentDeleteResponse(id=agent_id, deleted=True, **deletion_stats)
+
+    @app.delete("/api/agents/{agent_id}", response_model=AgentDeleteResponse)
+    def api_delete_agent(
+        agent_id: str,
+        body: AgentDeletePayload,
+        confirm: bool = Query(default=False),
+        session: Session = Depends(get_session),
+    ) -> AgentDeleteResponse:
+        if not confirm:
+            raise HTTPException(400, "confirm=true is required for destructive agent deletion")
+        try:
+            agent = get_agent(session, agent_id)
+        except ValueError as exc:
+            raise HTTPException(404, str(exc)) from exc
+
+        preview = _build_agent_deletion_preview(session, agent=agent, scope="agent")
+        if body.confirmation_token != preview.confirmation_token:
+            raise HTTPException(409, "confirmation token mismatch; refresh deletion preview")
+        if not preview.can_execute:
+            raise HTTPException(409, f"agent deletion blocked: {', '.join(preview.blocking_reasons)}")
+
+        deletion_stats = _delete_agent_conversations(session, agent_id=agent_id)
+        agent_record = session.get(AgentProfileRecord, agent_id)
+        if agent_record is None:
+            raise HTTPException(404, "agent no longer exists")
+        session.delete(agent_record)
+        session.commit()
+        return AgentDeleteResponse(id=agent_id, deleted=True, **deletion_stats)
 
     @app.get("/api/collections", response_model=list[CollectionView])
     def api_list_collections(
@@ -1523,6 +2242,7 @@ def create_app() -> FastAPI:
                     "request": {
                         "api_mode": body.api_mode,
                         "conversation_mode": body.conversation_mode,
+                        "workflow_mode": body.workflow_mode,
                         "use_approved_web": body.use_approved_web,
                     }
                 },
@@ -1549,6 +2269,7 @@ def create_app() -> FastAPI:
                     "request": {
                         "api_mode": body.api_mode,
                         "conversation_mode": body.conversation_mode,
+                        "workflow_mode": body.workflow_mode,
                         "use_approved_web": body.use_approved_web,
                     }
                 },

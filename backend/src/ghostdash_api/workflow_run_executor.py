@@ -8,11 +8,13 @@ import httpx
 from sqlalchemy import select
 
 from .database import SessionLocal
+from .memory_service import memory_service
 from .models import WorkflowRunRecord
 from .settings import get_settings
 from .workflow_runs import (
     STEP_TERMINAL_STATUSES,
     RUN_TERMINAL_STATUSES,
+    append_workflow_run_event,
     get_workflow_run,
     list_workflow_steps,
     update_workflow_run,
@@ -176,6 +178,29 @@ async def execute_workflow_run(
                     metadata_json={
                         **(current_step.metadata_json or {}),
                         "executor": "control-api",
+                        "lease_id": f"{run_id}:{step.id}",
+                    },
+                )
+                memory_service.set_working_memory(
+                    f"run:{run_id}:active_task",
+                    {
+                        "step_id": current_step.id,
+                        "task_key": f"{current_step.node_id}:{current_step.sequence}",
+                        "agent_id": current_step.agent_id,
+                        "status": "running",
+                    },
+                    ttl_seconds=int(settings.app_working_memory_ttl_seconds),
+                )
+                append_workflow_run_event(
+                    session,
+                    run_id=run_id,
+                    event_type="TASK_DISPATCHED",
+                    task_key=f"{current_step.node_id}:{current_step.sequence}",
+                    actor_id=current_step.agent_id,
+                    metadata_json={
+                        "step_id": current_step.id,
+                        "worker_type": "agent_ingress_consult_runner",
+                        "retry_budget": int((request_config.get("retry_budget") or 1)),
                     },
                 )
                 step_conversation_id = current_step.conversation_id
@@ -226,6 +251,17 @@ async def execute_workflow_run(
             except Exception as exc:
                 failed_agents += 1
                 with session_factory() as session:
+                    append_workflow_run_event(
+                        session,
+                        run_id=run_id,
+                        event_type="TASK_FAILED",
+                        task_key=f"{step.node_id}:{step.sequence}",
+                        actor_id=step.agent_id,
+                        metadata_json={
+                            "step_id": step.id,
+                            "error": str(exc)[:500],
+                        },
+                    )
                     update_workflow_step_run(
                         session,
                         run_id=run_id,
@@ -248,6 +284,24 @@ async def execute_workflow_run(
                     result_json={
                         "completed_agents": completed_agents,
                         "failed_agents": failed_agents,
+                    },
+                )
+                snapshot = memory_service.build_episodic_snapshot(session, run_id)
+                memory_service.set_working_memory(
+                    f"run:{run_id}:episodic_snapshot",
+                    {"events": snapshot[-30:]},
+                    ttl_seconds=int(settings.app_working_memory_ttl_seconds),
+                )
+                memory_service.promote_semantic_memory(
+                    run_id=run_id,
+                    content="\n".join(
+                        f"[{item['sequence']}] {item['event_type']}: {item['metadata']}"
+                        for item in snapshot[-20:]
+                    ),
+                    metadata={
+                        "workflow_id": run.workflow_id,
+                        "status": run.status,
+                        "surface": run.surface,
                     },
                 )
     finally:
