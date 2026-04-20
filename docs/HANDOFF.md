@@ -1,6 +1,6 @@
 # Handoff Status
 
-Last updated: 2026-04-06
+Last updated: 2026-04-20
 
 ## Current live stack
 
@@ -45,6 +45,20 @@ Running containers at handoff:
   - exact structured lookups work without reparsing the file
 - Structured JSON observability remains in place across all three backend services.
 - Alembic scaffolding is present under `backend/alembic/` for the Postgres-backed schema.
+- Odoo dynamic retrieval hardening is now live in app code:
+  - deterministic weekend/day-range period parsing in planner
+  - single-name branch scope handling via `company_name_terms` + connector resolution
+  - `odoo.finance.cash.runway_summary` operation with explicit insufficiency semantics
+  - `odoo.rpc.query_spec` validated dynamic query path (read-only compiled execution)
+  - `odoo_evidence_mirror` persistence + API endpoints for evidence capture/review
+- MAS hierarchy seeding now includes:
+  - lead `Llama Architect`
+  - sub-agents `[SA] Programming Agent 1`, `[SA] Programming Agent 2`, `[SA] Testing Agent`
+- Chat execution trace now surfaces operation truth in tool-event payloads:
+  - executed/blocked state
+  - date window
+  - company scope
+  - evidence source mode
 
 ## End-to-end verification
 
@@ -62,6 +76,7 @@ Verified against the live HTTPS stack:
 - `GET /api/documents?corpus=<xlsx-corpus>`: passed
 - `POST /agent/chat`: passed
 - `POST /agent/chat/stream`: passed
+- Odoo planner/connector/hierarchy regression slices: passed
 
 Live XLSX smoke result:
 
@@ -111,6 +126,14 @@ cd /var/llamaindex/ghoststack-rag
 docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
 ```
 
+Live edge + control-plane logs (canonical container names):
+
+```bash
+cd /var/llamaindex/ghoststack-rag
+docker logs --tail=120 ghoststack-rag-caddy-1
+docker logs --tail=120 ghoststack-rag-control-api-1
+```
+
 Compose validation:
 
 ```bash
@@ -130,6 +153,15 @@ UI validation:
 ```bash
 cd /var/llamaindex/ghoststack-rag
 docker run --rm -v "/var/llamaindex/ghoststack-rag/ui:/workspace" -w /workspace node:22-bookworm-slim bash -lc "corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile || pnpm install && pnpm run lint && pnpm run build"
+```
+
+Odoo dynamic retrieval + MAS hierarchy validation:
+
+```bash
+cd /var/llamaindex/ghoststack-rag
+pytest -q backend/tests/test_workflows_odoo_planning.py -k "weekend or burleigh or runway or dynamic"
+pytest -q backend/tests/test_tools_api.py -k "query_spec_operation or cash_runway_summary or company_name_terms or odoo_tool_settings_test_and_execute_round_trip"
+pytest -q backend/tests/test_agent_hierarchy_phase1.py backend/tests/test_agent_seed_persistence.py
 ```
 
 Capabilities and defaults:

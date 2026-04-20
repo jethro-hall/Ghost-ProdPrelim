@@ -59,6 +59,11 @@ from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event
 from .tool_registry import build_tool_readiness_summary, execute_tool_operation_for_agent
+from .odoo_agentic import (
+    external_citations_for_tool_events,
+    run_odoo_agentic_tool_loop,
+    should_use_odoo_agentic,
+)
 
 settings = get_settings()
 
@@ -1207,12 +1212,29 @@ def prepare_tool_evidence(
             if supplemental_detail:
                 detail_blocks.append(supplemental_detail)
         summary = _summarize_tool_payload(tool_response.data)
+        event_payload = {
+            "request": payload,
+            "response": dict(tool_response.data or {}),
+            "execution_truth": {
+                "status": "executed",
+                "operation": operation,
+                "evidence_source_mode": (tool_response.data or {}).get("evidence_source_mode", "live_odoo"),
+                "date_from": (tool_response.data or {}).get("date_from"),
+                "date_to": (tool_response.data or {}).get("date_to"),
+                "company_id": (tool_response.data or {}).get("company_id"),
+                "company_ids": (tool_response.data or {}).get("company_ids"),
+                "company_name_terms": (tool_response.data or {}).get("company_name_terms"),
+                "company_scope_lock": (tool_response.data or {}).get("company_scope_lock"),
+                "company_scope_lock_canonical": (tool_response.data or {}).get("company_scope_lock_canonical"),
+                "scope_enforced": (tool_response.data or {}).get("scope_enforced"),
+            },
+        }
         event = ChatToolEvent(
             tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
             status="executed",
             operation=operation,
             summary=summary,
-            payload=payload,
+            payload=event_payload,
             latency_ms=tool_response.latency_ms,
         )
         tool_events.append(event)
@@ -1256,7 +1278,22 @@ def prepare_tool_evidence(
             operation=operation,
             summary=tool_response.message,
             blocked_reason=blocked_reason or (blocked_reasons[0] if blocked_reasons else None),
-            payload=payload,
+            payload={
+                "request": payload,
+                "response": dict(tool_response.data or {}),
+                "execution_truth": {
+                    "status": "blocked" if "blocked_reasons" in (tool_response.data or {}) else "failed",
+                    "operation": operation,
+                    "date_from": payload.get("date_from"),
+                    "date_to": payload.get("date_to"),
+                    "company_id": payload.get("company_id"),
+                    "company_ids": payload.get("company_ids"),
+                    "company_name_terms": payload.get("company_name_terms"),
+                    "company_scope_lock": payload.get("company_scope_lock"),
+                    "company_scope_lock_canonical": payload.get("company_scope_lock_canonical"),
+                    "scope_enforced": payload.get("scope_enforced"),
+                },
+            },
             latency_ms=tool_response.latency_ms,
         )
         tool_events.append(event)
@@ -2330,6 +2367,43 @@ def _requests_shopify_order_metrics(message: str) -> bool:
     return "shopify" in lowered and any(term in lowered for term in ("orders", "order count", "aov"))
 
 
+def _is_group_overview_request(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    if "group overview" not in lowered:
+        return False
+    return any(term in lowered for term in ("complete", "show all", "full overview"))
+
+
+def build_group_overview_directives(
+    *,
+    message: str,
+    tool_plan: dict[str, Any] | None,
+    tool_events: list[ChatToolEvent],
+) -> str:
+    if not _is_group_overview_request(message):
+        return ""
+    executed = any(event.tool_id == "odoo_primary" and event.status == "executed" for event in tool_events)
+    plan = dict(tool_plan or {})
+    payload = dict(plan.get("payload") or {})
+    date_from = str(payload.get("date_from") or "").strip() or "unknown"
+    date_to = str(payload.get("date_to") or "").strip() or "unknown"
+    return (
+        "Ian group overview contract (strict format):\n"
+        "- Apply this contract only when the user explicitly requests `Group Overview` with `complete`/`show all` semantics.\n"
+        "- Use one markdown table with these exact headers (spelling preserved):\n"
+        "  `Metric | Wrorkshopp | Staff | COGS | Mararketing | Waarrnty | ROAS | MAARRGING SWINGG ON PRIOORR MONTH | FORECASST`\n"
+        "- Render exactly these rows in this order:\n"
+        "  1) `Buurleigh`\n"
+        "  2) `Brisbaane`\n"
+        "  3) `Retail`\n"
+        "  4) `Shopify`\n"
+        "- Always include `Shopify` row visibility even though Shopify is not a unique business_id; treat Shopify as ledgered evidence scope.\n"
+        "- If Shopify metrics are unavailable from current execution, keep the row and mark missing fields as `PROVISIONAL` or `UNAVAILABLE_FROM_CURRENT_OPERATION`.\n"
+        f"- Keep the evidence window explicit: `{date_from} -> {date_to}` and executed status: `{'yes' if executed else 'no'}`.\n"
+        "- Outside direct group-overview requests, do not force this format."
+    )
+
+
 def build_business_closeout_directives(
     *,
     message: str,
@@ -3240,11 +3314,18 @@ def create_app() -> FastAPI:
             kb_enabled=kb_enabled,
             odoo_ready=odoo_ready,
         )
+        use_odoo_agentic = should_use_odoo_agentic(
+            body=body,
+            workflow_mode=workflow_mode,
+            odoo_ready=odoo_ready,
+            connection=connection,
+            use_openai_responses_chain=use_openai_responses_chain,
+        )
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
             tool_overrides=body.tool_overrides,
-            tool_plan=plan.get("tool_plan"),
+            tool_plan={"mode": "none"} if use_odoo_agentic else plan.get("tool_plan"),
             request_message=body.message,
         )
         tool_events = tool_evidence.tool_events
@@ -3269,7 +3350,11 @@ def create_app() -> FastAPI:
                     },
                 )
             )
-        citations = [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+        citations = (
+            [*plan.get("citations", []), *web_citations]
+            if use_odoo_agentic
+            else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+        )
         route_decision = build_route_decision(
             message=body.message,
             workflow_mode=workflow_mode,
@@ -3320,8 +3405,24 @@ def create_app() -> FastAPI:
                 if plan_query_prompt
                 else owner_contract_directives
             )
+        group_overview_directives = build_group_overview_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_events,
+        )
+        if group_overview_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{group_overview_directives}".strip()
+                if plan_query_prompt
+                else group_overview_directives
+            )
         cache_key = None
-        if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
+        if (
+            use_approved_web
+            or use_openai_responses_chain
+            or str(tool_evidence.plan.get("mode") or "none") != "none"
+            or use_odoo_agentic
+        ):
             cached = None
         else:
             cache_key = build_response_cache_key(
@@ -3463,6 +3564,7 @@ def create_app() -> FastAPI:
         if not answer:
             generate_error: Exception | None = None
             stream_error: Exception | None = None
+            ran_odoo_agentic = False
             primary_prompt, retry_prompt, tertiary_prompt = prepare_answer_prompt_variants(
                 api_mode=body.api_mode,
                 agent_name=agent.name,
@@ -3476,37 +3578,60 @@ def create_app() -> FastAPI:
             log_answer_prompt_compaction(trace_id=request.state.trace_id, package=primary_prompt)
             prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt, tertiary_prompt)
             prev_rid = (conversation.openai_last_response_id or "").strip() or None
-            completion_result, generate_error, used_prompt = run_answer_with_prompt_variants(
-                prompt_variants,
-                runner=lambda prompt: generate_answer(
-                    prompt,
-                    connection,
-                    api_mode=body.api_mode,
+            if use_odoo_agentic and not plan.get("direct_answer"):
+                ran_odoo_agentic = True
+                max_it = max(1, int(getattr(settings, "app_odoo_agentic_max_iterations", 8)))
+                docx_only = [e for e in tool_events if e.tool_id == "apryse_docs"]
+                completion_result, agentic_tool_events = run_odoo_agentic_tool_loop(
+                    session,
+                    agent_id=agent.id,
+                    connection=connection,
                     system_prompt=effective_system_prompt,
+                    user_prompt=primary_prompt.prompt,
                     model_id=resolved_model_id,
                     temperature=float(llm_config.get("temperature", 0)),
                     max_tokens=resolve_answer_max_tokens(
                         api_mode=body.api_mode,
                         configured_max_tokens=configured_max_tokens,
-                        prompt=prompt,
+                        prompt=primary_prompt.prompt,
                         trace_id=request.state.trace_id,
                         openai_responses_chain=use_openai_responses_chain,
                     ),
+                    tool_overrides=body.tool_overrides,
                     trace_id=request.state.trace_id,
-                    service="agent-ingress",
-                    previous_response_id=prev_rid,
-                    use_openai_responses_http=use_openai_responses_chain,
-                ),
-                trace_id=request.state.trace_id,
-                retry_route="chat_answer.length_retry",
-            )
-            answer = completion_result.text if completion_result is not None else ""
-            if completion_result is not None:
-                new_openai_rid = completion_result.openai_response_id
-            if not answer.strip():
-                completion_result, stream_error, used_prompt = run_answer_with_prompt_variants(
+                    max_iterations=max_it,
+                )
+                tool_events = [*agentic_tool_events, *docx_only]
+                citations = [
+                    *external_citations_for_tool_events(agentic_tool_events),
+                    *plan.get("citations", []),
+                    *web_citations,
+                ]
+                answer = completion_result.text if completion_result is not None else ""
+                can_cache_response = False
+                if completion_result is not None:
+                    new_openai_rid = completion_result.openai_response_id
+                used_prompt = primary_prompt.prompt
+                generate_error = None
+                stream_error = None
+                primary_prompt_used = used_prompt
+                primary_last_error = None
+                if completion_result is not None and primary_prompt_used:
+                    llm_execution_steps.append(
+                        _build_execution_step(
+                            stage="primary",
+                            reason="odoo_agentic_tool_loop",
+                            connection=connection,
+                            model_id=resolved_model_id,
+                            api_mode=body.api_mode,
+                            usage=completion_result.usage,
+                            prompt=primary_prompt_used,
+                        )
+                    )
+            else:
+                completion_result, generate_error, used_prompt = run_answer_with_prompt_variants(
                     prompt_variants,
-                    runner=lambda prompt: stream_answer_to_result(
+                    runner=lambda prompt: generate_answer(
                         prompt,
                         connection,
                         api_mode=body.api_mode,
@@ -3526,30 +3651,62 @@ def create_app() -> FastAPI:
                         use_openai_responses_http=use_openai_responses_chain,
                     ),
                     trace_id=request.state.trace_id,
-                    retry_route="chat_answer.length_retry_stream",
+                    retry_route="chat_answer.length_retry",
                 )
                 answer = completion_result.text if completion_result is not None else ""
                 if completion_result is not None:
                     new_openai_rid = completion_result.openai_response_id
-            primary_prompt_used = used_prompt or (prompt_variants[0].prompt if prompt_variants else "")
-            primary_last_error = stream_error or generate_error
-            if completion_result is not None and primary_prompt_used:
-                llm_execution_steps.append(
-                    _build_execution_step(
-                        stage="primary",
-                        reason="primary_generation",
-                        connection=connection,
-                        model_id=resolved_model_id,
-                        api_mode=body.api_mode,
-                        usage=completion_result.usage,
-                        prompt=primary_prompt_used,
+                if not answer.strip():
+                    completion_result, stream_error, used_prompt = run_answer_with_prompt_variants(
+                        prompt_variants,
+                        runner=lambda prompt: stream_answer_to_result(
+                            prompt,
+                            connection,
+                            api_mode=body.api_mode,
+                            system_prompt=effective_system_prompt,
+                            model_id=resolved_model_id,
+                            temperature=float(llm_config.get("temperature", 0)),
+                            max_tokens=resolve_answer_max_tokens(
+                                api_mode=body.api_mode,
+                                configured_max_tokens=configured_max_tokens,
+                                prompt=prompt,
+                                trace_id=request.state.trace_id,
+                                openai_responses_chain=use_openai_responses_chain,
+                            ),
+                            trace_id=request.state.trace_id,
+                            service="agent-ingress",
+                            previous_response_id=prev_rid,
+                            use_openai_responses_http=use_openai_responses_chain,
+                        ),
+                        trace_id=request.state.trace_id,
+                        retry_route="chat_answer.length_retry_stream",
                     )
-                )
+                    answer = completion_result.text if completion_result is not None else ""
+                    if completion_result is not None:
+                        new_openai_rid = completion_result.openai_response_id
+                primary_prompt_used = used_prompt or (prompt_variants[0].prompt if prompt_variants else "")
+                primary_last_error = stream_error or generate_error
+                if completion_result is not None and primary_prompt_used:
+                    llm_execution_steps.append(
+                        _build_execution_step(
+                            stage="primary",
+                            reason="primary_generation",
+                            connection=connection,
+                            model_id=resolved_model_id,
+                            api_mode=body.api_mode,
+                            usage=completion_result.usage,
+                            prompt=primary_prompt_used,
+                        )
+                    )
 
-            should_second_pass, second_pass_reason = _llm_orchestration_should_second_pass(
-                llm_orchestration,
-                primary_prompt=primary_prompt_used or "",
-                primary_error=primary_last_error,
+            should_second_pass, second_pass_reason = (
+                (False, None)
+                if ran_odoo_agentic
+                else _llm_orchestration_should_second_pass(
+                    llm_orchestration,
+                    primary_prompt=primary_prompt_used or "",
+                    primary_error=primary_last_error,
+                )
             )
             if should_second_pass:
                 try:
@@ -3921,11 +4078,18 @@ def create_app() -> FastAPI:
             kb_enabled=kb_enabled,
             odoo_ready=odoo_ready,
         )
+        use_odoo_agentic = should_use_odoo_agentic(
+            body=body,
+            workflow_mode=workflow_mode,
+            odoo_ready=odoo_ready,
+            connection=connection,
+            use_openai_responses_chain=use_openai_responses_chain,
+        )
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
             tool_overrides=body.tool_overrides,
-            tool_plan=plan.get("tool_plan"),
+            tool_plan={"mode": "none"} if use_odoo_agentic else plan.get("tool_plan"),
             request_message=body.message,
         )
         if body.docx_mode.enabled:
@@ -3990,8 +4154,24 @@ def create_app() -> FastAPI:
                 if plan_query_prompt
                 else owner_contract_directives
             )
+        group_overview_directives = build_group_overview_directives(
+            message=body.message,
+            tool_plan=tool_evidence.plan,
+            tool_events=tool_evidence.tool_events,
+        )
+        if group_overview_directives:
+            plan_query_prompt = (
+                f"{plan_query_prompt}\n\n{group_overview_directives}".strip()
+                if plan_query_prompt
+                else group_overview_directives
+            )
         cache_key = None
-        if use_approved_web or use_openai_responses_chain or str(tool_evidence.plan.get("mode") or "none") != "none":
+        if (
+            use_approved_web
+            or use_openai_responses_chain
+            or str(tool_evidence.plan.get("mode") or "none") != "none"
+            or use_odoo_agentic
+        ):
             cached = None
         else:
             cache_key = build_response_cache_key(
@@ -4046,6 +4226,7 @@ def create_app() -> FastAPI:
             return f"data: {json.dumps(payload)}\n\n"
 
         def _stream():
+            ran_stream_odoo_agentic = False
             answer_parts: list[str] = []
             successful_user_prompt: str | None = None
             successful_provider_usage: dict[str, int | bool] | None = None
@@ -4056,9 +4237,17 @@ def create_app() -> FastAPI:
             assistant_message_id: str | None = None
             stream_docx_artifacts: list[dict[str, Any]] = list(docx_artifacts)
             stream_docx_diagnostics: list[dict[str, Any]] = list(docx_diagnostics)
-            citations = cached.citations_json if cached is not None else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+            citations = (
+                cached.citations_json
+                if cached is not None
+                else (
+                    [*plan.get("citations", []), *web_citations]
+                    if use_odoo_agentic
+                    else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
+                )
+            )
             query_mode = cached.query_mode if cached is not None else plan["query_mode"]
-            cache_response = tool_evidence.can_cache_response
+            cache_response = tool_evidence.can_cache_response and not use_odoo_agentic
             tool_events_payload = [
                 {
                     "tool_id": tool_event.tool_id,
@@ -4104,22 +4293,79 @@ def create_app() -> FastAPI:
                 yield _encode({"type": "delta", "delta": cached.answer_text})
                 answer_parts.append(cached.answer_text)
             else:
-                for tool_event in tool_evidence.tool_events:
-                    yield _encode(
-                        {
-                            "type": "tool_result",
-                            "tool_event": {
-                                "tool_id": tool_event.tool_id,
-                                "status": tool_event.status,
-                                "operation": tool_event.operation,
-                                "summary": tool_event.summary,
-                                "blocked_reason": tool_event.blocked_reason,
-                                "payload": tool_event.payload,
-                                "latency_ms": tool_event.latency_ms,
-                            },
-                        }
+                stream_agentic_condition = (
+                    use_odoo_agentic
+                    and not (plan.get("direct_answer") and not combined_upload_context)
+                    and bool(prompt_variants)
+                )
+                if stream_agentic_condition:
+                    ran_stream_odoo_agentic = True
+                    cache_response = False
+                    max_it = max(1, int(getattr(settings, "app_odoo_agentic_max_iterations", 8)))
+                    docx_only = [e for e in tool_evidence.tool_events if e.tool_id == "apryse_docs"]
+                    agentic_result, agentic_tool_events = run_odoo_agentic_tool_loop(
+                        session,
+                        agent_id=agent.id,
+                        connection=connection,
+                        system_prompt=effective_system_prompt,
+                        user_prompt=prompt_variants[0].prompt,
+                        model_id=resolved_model_id,
+                        temperature=float(llm_config.get("temperature", 0)),
+                        max_tokens=resolve_answer_max_tokens(
+                            api_mode=body.api_mode,
+                            configured_max_tokens=configured_max_tokens,
+                            prompt=prompt_variants[0].prompt,
+                            trace_id=request.state.trace_id,
+                            openai_responses_chain=use_openai_responses_chain,
+                        ),
+                        tool_overrides=body.tool_overrides,
+                        trace_id=request.state.trace_id,
+                        max_iterations=max_it,
                     )
-                if _should_emit_multi_agent_handoff_trace(
+                    for ev in agentic_tool_events:
+                        yield _encode({"type": "tool_result", "tool_event": ev.model_dump()})
+                    answer_text_agentic = (agentic_result.text or "").strip()
+                    chunk_size = 240
+                    for i in range(0, len(answer_text_agentic), chunk_size):
+                        chunk = answer_text_agentic[i : i + chunk_size]
+                        yield _encode({"type": "delta", "delta": chunk})
+                        answer_parts.append(chunk)
+                    tool_evidence.tool_events[:] = [*agentic_tool_events, *docx_only]
+                    citations = [
+                        *external_citations_for_tool_events(agentic_tool_events),
+                        *plan.get("citations", []),
+                        *web_citations,
+                    ]
+                    successful_user_prompt = prompt_variants[0].prompt
+                    successful_provider_usage = agentic_result.usage
+                    llm_execution_steps.append(
+                        _build_execution_step(
+                            stage="primary",
+                            reason="odoo_agentic_tool_loop",
+                            connection=connection,
+                            model_id=resolved_model_id,
+                            api_mode=body.api_mode,
+                            usage=agentic_result.usage,
+                            prompt=prompt_variants[0].prompt,
+                        )
+                    )
+                else:
+                    for tool_event in tool_evidence.tool_events:
+                        yield _encode(
+                            {
+                                "type": "tool_result",
+                                "tool_event": {
+                                    "tool_id": tool_event.tool_id,
+                                    "status": tool_event.status,
+                                    "operation": tool_event.operation,
+                                    "summary": tool_event.summary,
+                                    "blocked_reason": tool_event.blocked_reason,
+                                    "payload": tool_event.payload,
+                                    "latency_ms": tool_event.latency_ms,
+                                },
+                            }
+                        )
+                if not ran_stream_odoo_agentic and _should_emit_multi_agent_handoff_trace(
                     workflow_mode=workflow_mode,
                     route_decision=route_decision,
                     tool_plan=plan.get("tool_plan"),
@@ -4205,7 +4451,7 @@ def create_app() -> FastAPI:
             if cached is None and plan.get("direct_answer") and not combined_upload_context:
                 yield _encode({"type": "delta", "delta": plan["direct_answer"]})
                 answer_parts.append(plan["direct_answer"])
-            elif cached is None:
+            elif cached is None and not ran_stream_odoo_agentic:
                 stream_error: Exception | None = None
                 primary_prompt_used = ""
                 for attempt_index, prompt_variant in enumerate(prompt_variants, start=1):
@@ -4414,6 +4660,18 @@ def create_app() -> FastAPI:
                         conversation_id=conversation.id,
                         answer_text=docx_answer_text,
                     )
+            tool_events_payload = [
+                {
+                    "tool_id": tool_event.tool_id,
+                    "status": tool_event.status,
+                    "operation": tool_event.operation,
+                    "summary": tool_event.summary,
+                    "blocked_reason": tool_event.blocked_reason,
+                    "payload": tool_event.payload,
+                    "latency_ms": tool_event.latency_ms,
+                }
+                for tool_event in tool_evidence.tool_events
+            ]
             with SessionLocal() as stream_session:
                 append_message(
                     stream_session,

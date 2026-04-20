@@ -769,6 +769,37 @@ def test_build_owner_operator_contract_directives_includes_sections_and_freshnes
     assert "Evidence window: 2026-04-01 -> 2026-04-19" in directives
 
 
+def test_build_group_overview_directives_requires_explicit_group_overview_request() -> None:
+    directives = agent_ingress.build_group_overview_directives(
+        message="show me financials for Brisbane this month",
+        tool_plan={"operation": "odoo.finance.margin.period_summary", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[],
+    )
+    assert directives == ""
+
+
+def test_build_group_overview_directives_enforces_ian_table_contract() -> None:
+    directives = agent_ingress.build_group_overview_directives(
+        message="Ian requested Group Overview complete show all for this month.",
+        tool_plan={"operation": "odoo.finance.margin.monthly_comparison", "payload": {"date_from": "2026-04-01", "date_to": "2026-04-19"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.margin.monthly_comparison",
+                summary="rows=3",
+                payload={},
+            )
+        ],
+    )
+    assert "Wrorkshopp" in directives
+    assert "Buurleigh" in directives
+    assert "Brisbaane" in directives
+    assert "Retail" in directives
+    assert "Shopify" in directives
+    assert "not a unique business_id" in directives
+
+
 def test_normalize_finance_closeout_answer_rewrites_blocking_response() -> None:
     normalized = agent_ingress.normalize_finance_closeout_answer(
         answer_text="I can't produce this yet. What I need from you is one more confirmation.",

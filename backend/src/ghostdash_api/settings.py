@@ -65,6 +65,8 @@ class Settings(BaseSettings):
     app_qdrant_upsert_max_payload_bytes: int = 24 * 1024 * 1024
     app_qdrant_upsert_max_points: int = 128
     app_llm_request_timeout_seconds: float = 300.0
+    app_odoo_agentic_enabled: bool = True
+    app_odoo_agentic_max_iterations: int = 8
 
     @property
     def db_path(self) -> Path:

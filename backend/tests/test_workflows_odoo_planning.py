@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from ghostdash_api.workflows import _plan_odoo_tool_usage
 
 
@@ -178,3 +180,90 @@ def test_plan_odoo_tool_usage_routes_branch_underperformer_to_monthly_comparison
     assert plan["payload"]["company_name_terms"] == ["retail", "burleigh", "brisbane"]
     assert plan["payload"]["date_from"] is not None
     assert plan["payload"]["date_to"] is not None
+
+
+def test_plan_odoo_tool_usage_routes_product_branch_exploration_to_multi_step_operation() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Show total sales for the group then compare Brisbane and Burleigh for all products sold relating to fatfish for FY25."
+    )
+
+    assert plan["operation"] == "odoo.exploration.product_branch_sales"
+    assert plan["payload"]["product_name_substring"] == "fatfish"
+    assert "brisbane" in plan["payload"]["company_name_terms"]
+    assert "burleigh" in plan["payload"]["company_name_terms"]
+    assert plan["payload"].get("date_from")
+
+
+def test_plan_odoo_tool_usage_brisbane_only_forces_single_company_for_dynamic_odoo() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo only, run a dynamic custom query deep dive for Brisbane ONLY for Jan, Feb, March, April 2026 revenue and cogs anomalies.",
+        fallback_message=(
+            "Recent conversation memory:\n"
+            "Resolved company names: retail->Ride Electric Retail (3), burleigh->Ride Electric Burleigh (5), "
+            "brisbane->Ride Electric Brisbane (4)\n"
+            "company_id list: 3, 4, 5\n"
+        ),
+    )
+
+    assert plan["operation"] == "odoo.rpc.query_spec"
+    assert plan["payload"]["company_name_terms"] == ["brisbane"]
+    assert plan["payload"]["company_scope_lock"] == "single_exact"
+    assert plan["payload"]["company_scope_lock_canonical"] == "brisbane"
+    assert plan["payload"].get("company_ids") in (None, [])
+
+
+def test_plan_odoo_tool_usage_parses_weekend_day_range_and_single_branch_name() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo only, retrieve Burleigh weekend 18th/19th April 2026 revenue, COGS and gross margin."
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan["payload"]["date_from"] == "2026-04-18"
+    assert plan["payload"]["date_to"] == "2026-04-20"
+    assert plan["payload"]["company_name_terms"] == ["burleigh"]
+    assert plan["blocked_reason"] is None
+
+
+def test_plan_odoo_tool_usage_routes_single_named_branch_period_request_to_name_terms() -> None:
+    plan = _plan_odoo_tool_usage(
+        "For Burleigh for last month, show revenue and gross margin."
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan["payload"]["relative_period"] == "last_month"
+    assert plan["payload"]["company_name_terms"] == ["burleigh"]
+
+
+def test_plan_odoo_tool_usage_routes_cash_runway_questions_to_runway_summary() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo only, Burleigh 18th/19th April 2026 revenue, COGS, gross margin and cash runway."
+    )
+
+    assert plan["operation"] == "odoo.finance.cash.runway_summary"
+    assert plan["payload"]["date_from"] == "2026-04-18"
+    assert plan["payload"]["date_to"] == "2026-04-20"
+    assert plan["payload"]["company_name_terms"] == ["burleigh"]
+
+
+def test_plan_odoo_tool_usage_routes_dynamic_finance_deep_dive_to_query_spec() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo only, run a dynamic deep dive custom query for Burleigh last month revenue/cogs anomalies."
+    )
+
+    assert plan["operation"] == "odoo.rpc.query_spec"
+    query_spec = plan["payload"]["query_spec"]
+    assert query_spec["model"] == "account.move.line"
+    assert query_spec["method"] == "read_group"
+    assert query_spec["fields"] == ["balance:sum"]
+
+
+def test_plan_odoo_tool_usage_prioritizes_explicit_from_date_to_now_over_fy_token() -> None:
+    today = datetime.now(UTC).date()
+    plan = _plan_odoo_tool_usage(
+        "GPP margin for Brisbane Ride Electric FY25 from 1st July 2025 till now."
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan["payload"]["date_from"] == "2025-07-01"
+    assert plan["payload"]["date_to"] == (today + timedelta(days=1)).isoformat()
+    assert plan["payload"]["company_name_terms"] == ["brisbane"]

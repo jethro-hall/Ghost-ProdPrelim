@@ -1732,6 +1732,30 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
     lowered = _normalize_planning_text(message)
     today = datetime.now(UTC).date()
     current_month_start = today.replace(day=1)
+    explicit_from_to_now_match = re.search(
+        r"\b(?:from\s+)?(\d{1,2})(?:st|nd|rd|th)?\s+"
+        r"(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|"
+        r"sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+"
+        r"(20\d{2}|19\d{2})\s+(?:to|til|till|until|through)\s+"
+        r"(?:now|today|date|current)\b",
+        lowered,
+    )
+    if explicit_from_to_now_match:
+        start_day = int(explicit_from_to_now_match.group(1))
+        start_month = ODOO_MONTH_NAME_ALIASES[explicit_from_to_now_match.group(2)]
+        start_year = int(explicit_from_to_now_match.group(3))
+        try:
+            period_start = date(start_year, start_month, start_day)
+        except ValueError:
+            period_start = None
+        if period_start is not None:
+            return {
+                "relative_period": f"from_{period_start.isoformat()}_to_today",
+                "date_from": period_start.isoformat(),
+                "date_to": (today + timedelta(days=1)).isoformat(),
+                "label": f"{period_start.strftime('%d %b %Y')} to today",
+                "month_count": max(1, ((today.year - period_start.year) * 12) + (today.month - period_start.month) + 1),
+            }
     fiscal_year_ranges = _extract_fiscal_year_ranges(lowered)
     if fiscal_year_ranges:
         start_date = fiscal_year_ranges[0][0]
@@ -1745,6 +1769,32 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
             "label": " to ".join(labels),
             "month_count": month_count,
         }
+    day_range_match = re.search(
+        r"\b(\d{1,2})(?:st|nd|rd|th)?\s*(?:/|-|and)\s*(\d{1,2})(?:st|nd|rd|th)?\s+"
+        r"(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|"
+        r"sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(20\d{2}|19\d{2})\b",
+        lowered,
+    )
+    if day_range_match:
+        start_day = int(day_range_match.group(1))
+        end_day = int(day_range_match.group(2))
+        month_number = ODOO_MONTH_NAME_ALIASES[day_range_match.group(3)]
+        year_number = int(day_range_match.group(4))
+        start_day, end_day = sorted((start_day, end_day))
+        try:
+            period_start = date(year_number, month_number, start_day)
+            period_end = date(year_number, month_number, end_day) + timedelta(days=1)
+        except ValueError:
+            period_start = None
+            period_end = None
+        if period_start is not None and period_end is not None:
+            return {
+                "relative_period": f"{year_number}-{month_number:02d}-{start_day:02d}_to_{year_number}-{month_number:02d}-{end_day:02d}",
+                "date_from": period_start.isoformat(),
+                "date_to": period_end.isoformat(),
+                "label": f"{start_day}-{end_day} {date(year_number, month_number, 1).strftime('%b')} {year_number}",
+                "month_count": 1,
+            }
     if "year so far" in lowered or "ytd" in lowered or "year-to-date" in lowered:
         period_start = date(today.year, 1, 1)
         return {
@@ -1861,14 +1911,51 @@ def _extract_month_span(message: str) -> int | None:
     return None
 
 
+def _infer_company_scope_lock_canonical(message: str, fallback_message: str | None = None) -> str | None:
+    """When the user says 'Brisbane only' / 'only Brisbane', force a single named outlet scope."""
+    for text in (message, fallback_message or ""):
+        if not str(text or "").strip():
+            continue
+        t = _normalize_planning_text(str(text))
+        for pattern in (
+            r"\b(brisbane|burleigh|retail)\s+(?:only|alone|exclusively)\b",
+            r"\b(?:only|just|strictly)\s+(?:for\s+)?(?:the\s+)?(brisbane|burleigh|retail)\b",
+            r"\b(?:only|just)\s+for\s+(?:the\s+)?(brisbane|burleigh|retail)\b",
+            r"\bfor\s+(?:the\s+)?(brisbane|burleigh|retail)\s+(?:only|alone|exclusively)\b",
+        ):
+            match = re.search(pattern, t)
+            if match:
+                return match.group(1)
+    return None
+
+
 def _extract_company_name_terms(message: str, *, fallback_message: str | None = None) -> list[str]:
     haystacks = [message]
     if fallback_message:
         haystacks.append(fallback_message)
     matches: list[str] = []
     for canonical_name, aliases in ODOO_COMPANY_NAME_HINTS.items():
-        if any(alias in haystack.casefold() for haystack in haystacks for alias in aliases):
+        found = False
+        for haystack in haystacks:
+            if not haystack:
+                continue
+            hay = haystack.casefold()
+            for alias in aliases:
+                if alias == "retail":
+                    ok = re.search(r"\bretail\b", hay) is not None
+                else:
+                    ok = re.search(rf"\b{re.escape(alias)}\b", hay) is not None
+                if ok:
+                    found = True
+                    break
+            if found:
+                break
+        if found:
             matches.append(canonical_name)
+    combined = _normalize_planning_text(f"{message} {fallback_message or ''}")
+    if "brisbane" in matches and "retail" in matches:
+        if re.search(r"\bbrisbane\b\s+\bretail\b\s+(?:outlet|store|branch|location|shop)\b", combined):
+            matches = [term for term in matches if term != "retail"]
     return matches
 
 
@@ -1909,12 +1996,65 @@ def _looks_like_branch_ranking_request(lowered: str) -> bool:
     return any(term in lowered for term in ranking_terms) and any(term in lowered for term in branch_terms)
 
 
+def _looks_like_product_branch_exploration(lowered: str) -> bool:
+    return any(
+        term in lowered
+        for term in (
+            "compare",
+            "versus",
+            " vs ",
+            "contrast",
+            "between",
+        )
+    )
+
+
+def _extract_product_focus_token(message: str) -> str | None:
+    t = _normalize_planning_text(message)
+    match = re.search(
+        r"relating to\s+([a-z0-9][a-z0-9\-\s]{0,48}?)(?=\s*[,\.]|\s+and|\s+then|\s+compare|\s+for|\s*$)",
+        t,
+    )
+    if match:
+        return match.group(1).strip()
+    match = re.search(r"products?\s+(?:sold\s+)?(?:for|about|like|named)\s+([a-z0-9][a-z0-9\-]{2,40})", t)
+    if match:
+        return match.group(1).strip()
+    match = re.search(r"\b(?:sku|brand|line)\s+([a-z0-9][a-z0-9\-]{2,40})\b", t)
+    if match:
+        return match.group(1).strip()
+    return None
+
+
 def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
     lowered = _normalize_planning_text(message)
     preview_only = _is_operation_preview_request(message)
     scope = _extract_company_scope(message, fallback_message=fallback_message)
     company_ids = _extract_company_ids(message, fallback_message=fallback_message)
     company_name_terms = _extract_company_name_terms(message, fallback_message=fallback_message)
+    scope_lock_fields: dict[str, str] = {}
+    lock_canonical = _infer_company_scope_lock_canonical(message, fallback_message)
+    if lock_canonical:
+        company_name_terms = [lock_canonical]
+        scope_lock_fields = {"company_scope_lock": "single_exact", "company_scope_lock_canonical": lock_canonical}
+
+    def _scoped_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        if not scope_lock_fields:
+            return payload
+        merged = dict(payload)
+        merged.update(scope_lock_fields)
+        return merged
+
+    # Chat history sometimes contains prior "company_id=3,4,5" lists; a strict "Brisbane only" lock must not inherit those.
+    if scope_lock_fields and len(company_ids) > 1:
+        company_ids = []
+    if scope_lock_fields:
+        primary_company_ids = _extract_company_ids(message, fallback_message=None)
+        if len(primary_company_ids) == 1:
+            company_ids = primary_company_ids
+        elif not primary_company_ids:
+            company_ids = []
+
     if company_ids:
         scope["company_ids"] = company_ids
         if len(company_ids) == 1:
@@ -1987,6 +2127,27 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "margin",
         )
     )
+    asks_for_runway = any(
+        term in lowered
+        for term in (
+            "cash runway",
+            "runway",
+            "cash position",
+            "burn rate",
+            "cash burn",
+        )
+    )
+    asks_for_dynamic_odoo_query = any(
+        term in lowered
+        for term in (
+            "dynamic",
+            "custom query",
+            "ad hoc query",
+            "query spec",
+            "large request",
+            "deep dive",
+        )
+    )
     asks_for_cogs_code_breakdown = any(
         term in lowered
         for term in (
@@ -2007,6 +2168,53 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
     )
     has_comparative_intent = any(term in lowered for term in ("compare", "across", "versus", "vs", "anomal", "outlier"))
     asks_for_branch_ranking = _looks_like_branch_ranking_request(lowered)
+    product_explore_token = _extract_product_focus_token(message)
+    if (
+        product_explore_token
+        and _looks_like_product_branch_exploration(lowered)
+        and len(company_name_terms) >= 2
+    ):
+        explore_payload: dict[str, Any] = {
+            "product_name_substring": product_explore_token,
+            "company_name_terms": company_name_terms,
+        }
+        if has_period:
+            explore_payload["date_from"] = period_scope["date_from"]
+            explore_payload["date_to"] = period_scope["date_to"]
+            explore_payload["relative_period"] = period_scope.get("relative_period")
+        else:
+            today = date.today()
+            explore_payload["date_from"] = date(today.year, 1, 1).isoformat()
+            explore_payload["date_to"] = (today + timedelta(days=1)).isoformat()
+            explore_payload["relative_period"] = "exploration_default_ytd"
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.exploration.product_branch_sales",
+            "payload": _scoped_payload(explore_payload),
+            "reason": (
+                "Product + multi-branch comparison prompts should run the governed multi-step exploration operation "
+                "(catalog match, then sale.order.line aggregation by company) instead of a single static finance script."
+            ),
+            "blocked_reason": None,
+            "source_labels": ["odoo", "exploration"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.exploration.product_branch_sales",
+                    payload=_scoped_payload(explore_payload),
+                    why_correct=(
+                        "This is correct because the question requires discovery over product master data and "
+                        "order lines before any branch comparison can be grounded."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot search products or aggregate sales lines across branches."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
     if asks_for_shopify_roi and has_period:
         payload: dict[str, Any] = {
             "date_from": period_scope["date_from"],
@@ -2031,7 +2239,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.shopify.monthly_roi",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "Shopify revenue, discounts, refunds, shipping, merchant fees, and marketing-spend ROI questions "
                 "should use the named Shopify monthly ROI helper for the requested company scope and period."
@@ -2042,7 +2250,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.shopify.monthly_roi",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because Shopify ROI requires one governed Odoo result that combines Shopify-linked "
                         "revenue and fee accounts with marketing expense accounts and vendor-ledger evidence."
@@ -2074,7 +2282,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.cogs.monthly_code_breakdown",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "COGS code questions should use a governed monthly code breakdown over direct-cost move lines for the exact requested period "
                 f"({period_scope['label']})."
@@ -2085,7 +2293,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.cogs.monthly_code_breakdown",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because COGS-code analysis needs grouped direct-cost balances from "
                         "`account.move.line`, broken out by month and account code for the requested period."
@@ -2109,7 +2317,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.margin.monthly_comparison",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "Multi-company monthly GP questions should use the named monthly comparison helper "
                 f"across companies {', '.join(str(company_id) for company_id in company_ids)}."
@@ -2119,7 +2327,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.margin.monthly_comparison",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because a multi-company GP comparison needs monthly revenue and COGS by company, "
                         "plus company-name resolution, in one governed Odoo-backed result."
@@ -2144,7 +2352,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.margin.monthly_comparison",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "Named multi-business YTD and performance questions should resolve company names first, then run the "
                 "governed monthly margin comparison helper across the matched companies."
@@ -2154,7 +2362,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.margin.monthly_comparison",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because the question asks for a grounded cross-business performance comparison, "
                         "which requires resolving the named companies and then comparing monthly revenue, COGS, GP, and GP%."
@@ -2183,7 +2391,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.margin.monthly_comparison",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "Branch ranking/comparison questions across multiple named businesses should execute the governed "
                 "monthly margin comparison helper over the resolved company scope."
@@ -2193,7 +2401,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.margin.monthly_comparison",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because branch/entity ranking requires side-by-side monthly revenue, COGS, GP, and GP% "
                         "across the named businesses in the requested period."
@@ -2220,13 +2428,13 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.rpc.search_read",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": "List company identifiers and canonical company names directly from `res.company`.",
             "source_labels": ["odoo"],
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.rpc.search_read",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because `res.company` is the authoritative Odoo model for companies, "
                         "and `search_read` returns exactly the company IDs and names needed with explicit fields."
@@ -2250,20 +2458,97 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
         }
         if scope.get("company_id") is not None:
             payload["company_id"] = scope["company_id"]
+        elif len(company_name_terms) == 1:
+            payload["company_name_terms"] = company_name_terms
         blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        if asks_for_dynamic_odoo_query:
+            query_spec_domain: list[list[Any]] = [
+                ["parent_state", "=", "posted"],
+                ["date", ">=", period_scope["date_from"]],
+                ["date", "<", period_scope["date_to"]],
+            ]
+            if payload.get("company_id") is not None:
+                query_spec_domain.append(["company_id", "=", payload["company_id"]])
+            query_spec = {
+                "model": "account.move.line",
+                "method": "read_group",
+                "domain": query_spec_domain,
+                "fields": ["balance:sum"],
+                "groupby": ["company_id", "date:month", "account_id"],
+                "orderby": "date:month asc",
+                "lazy": False,
+            }
+            dynamic_payload = dict(payload)
+            dynamic_payload["query_spec"] = query_spec
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.rpc.query_spec",
+                "payload": _scoped_payload(dynamic_payload),
+                "reason": (
+                    "Dynamic large-scope finance requests should compile to a governed Odoo query spec so the model can "
+                    "adapt grouping without using raw SQL."
+                ),
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "suppress_retrieval": True,
+                "direct_answer": (
+                    _build_odoo_preview_answer(
+                        operation="odoo.rpc.query_spec",
+                        payload=_scoped_payload(dynamic_payload),
+                        why_correct=(
+                            "This is correct because the request needs dynamic grouping over a broad period and should "
+                            "execute via a validated Odoo query spec contract."
+                        ),
+                        why_meta_current_user_is_insufficient=(
+                            "`odoo.meta.current_user` cannot execute grouped financial data retrieval."
+                        ),
+                    )
+                    if preview_only
+                    else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+                ),
+            }
+        if asks_for_runway:
+            return {
+                **default_plan,
+                "mode": "preview" if preview_only else "required",
+                "operation": "odoo.finance.cash.runway_summary",
+                "payload": _scoped_payload(payload),
+                "reason": (
+                    "Cash runway prompts should execute the cash runway summary helper so revenue/COGS/GP and runway "
+                    "math are derived from the same governed Odoo period scope."
+                ),
+                "blocked_reason": blocked_reason,
+                "source_labels": ["odoo"],
+                "direct_answer": (
+                    _build_odoo_preview_answer(
+                        operation="odoo.finance.cash.runway_summary",
+                        payload=_scoped_payload(payload),
+                        why_correct=(
+                            "This is correct because runway questions need period financial actuals plus a governed "
+                            "cash-position and burn-rate calculation."
+                        ),
+                        why_meta_current_user_is_insufficient=(
+                            "`odoo.meta.current_user` cannot produce revenue, COGS, GP, cash balance, burn rate, or runway."
+                        ),
+                    )
+                    if preview_only
+                    else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+                ),
+            }
         if any(term in lowered for term in ("gross profit", " gp ", "gross margin")):
             return {
                 **default_plan,
                 "mode": "preview" if preview_only else "required",
                 "operation": "odoo.finance.margin.period_summary",
-                "payload": payload,
+                "payload": _scoped_payload(payload),
                 "reason": f"Period GP questions should use the named period summary helper for {period_scope['label']}.",
                 "blocked_reason": blocked_reason,
                 "source_labels": ["odoo"],
                 "direct_answer": (
                     _build_odoo_preview_answer(
                         operation="odoo.finance.margin.period_summary",
-                        payload=payload,
+                        payload=_scoped_payload(payload),
                         why_correct=(
                             "This is correct because period GP should be derived from Odoo-backed revenue and COGS for the "
                             f"exact requested date window ({period_scope['label']}) and company scope."
@@ -2282,7 +2567,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 **default_plan,
                 "mode": "preview" if preview_only else "required",
                 "operation": "odoo.finance.margin.period_summary",
-                "payload": payload,
+                "payload": _scoped_payload(payload),
                 "reason": (
                     "Mixed period-finance prompts mentioning revenue with margin/COGS should use period summary so "
                     "the owner gets revenue, COGS, and GP in one governed response."
@@ -2292,7 +2577,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 "direct_answer": (
                     _build_odoo_preview_answer(
                         operation="odoo.finance.margin.period_summary",
-                        payload=payload,
+                        payload=_scoped_payload(payload),
                         why_correct=(
                             "This is correct because mixed finance reality questions require the combined period totals "
                             "for revenue, COGS, gross profit, and gross margin."
@@ -2311,7 +2596,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 **default_plan,
                 "mode": "preview" if preview_only else "required",
                 "operation": "odoo.finance.revenue.period",
-                "payload": payload,
+                "payload": _scoped_payload(payload),
                 "reason": f"Period revenue questions should use the named period revenue helper for {period_scope['label']}.",
                 "blocked_reason": blocked_reason,
                 "source_labels": ["odoo"],
@@ -2322,7 +2607,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 **default_plan,
                 "mode": "preview" if preview_only else "required",
                 "operation": "odoo.finance.cogs.period",
-                "payload": payload,
+                "payload": _scoped_payload(payload),
                 "reason": f"Period COGS questions should use the named period COGS helper for {period_scope['label']}.",
                 "blocked_reason": blocked_reason,
                 "source_labels": ["odoo"],
@@ -2332,7 +2617,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.margin.period_summary",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": (
                 "General finance reality and real-time BI prompts should default to the governed period margin summary "
                 "when no narrower metric-specific operation is explicitly requested."
@@ -2342,7 +2627,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.margin.period_summary",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is correct because owner-operator finance reality requires the core period totals "
                         "(revenue, COGS, GP, GP%) from a governed Odoo-backed summary."
@@ -2368,14 +2653,14 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "preview" if preview_only else "required",
             "operation": "odoo.finance.margin.quarterly_summary",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": "Quarterly board-style revenue, COGS, GP, and GP% summary is best served by the named margin helper.",
             "blocked_reason": blocked_reason,
             "source_labels": ["odoo"],
             "direct_answer": (
                 _build_odoo_preview_answer(
                     operation="odoo.finance.margin.quarterly_summary",
-                    payload=payload,
+                    payload=_scoped_payload(payload),
                     why_correct=(
                         "This is the best first operation because it returns the board-level quarterly revenue, "
                         "COGS, gross profit, and gross margin outputs directly in grouped summary form."
@@ -2399,7 +2684,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "required",
             "operation": "odoo.finance.receivables.open",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": "Use the named receivables helper for open AR exposure rather than broad invoice listing.",
             "blocked_reason": blocked_reason,
             "source_labels": ["odoo"],
@@ -2415,7 +2700,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "required",
             "operation": "odoo.finance.invoices.search_read",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": "Use the named invoice helper for customer invoice retrieval.",
             "blocked_reason": blocked_reason,
             "source_labels": ["odoo"],
@@ -2431,7 +2716,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "required",
             "operation": "odoo.sales.orders.search_read",
-            "payload": payload,
+            "payload": _scoped_payload(payload),
             "reason": "Use the named sales-order helper for operational order-book questions.",
             "blocked_reason": blocked_reason,
             "source_labels": ["odoo"],
@@ -2443,7 +2728,7 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
             **default_plan,
             "mode": "required",
             "operation": "odoo.meta.current_user",
-            "payload": {},
+            "payload": _scoped_payload({}),
             "reason": "Use the current-user helper for auth and current company context checks.",
             "source_labels": ["odoo"],
         }

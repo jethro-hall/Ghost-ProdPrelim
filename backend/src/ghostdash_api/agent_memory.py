@@ -12,10 +12,12 @@ from .models import (
     AgentMessageRecord,
     AgentProfileRecord,
     ChatResponseCacheRecord,
+    DocxSessionRecord,
     DocumentFrameRecord,
     RuntimeProfileRecord,
 )
 from .runtime_profiles import (
+    APRYSE_DOCX_SYSTEM_PROMPT,
     BUSINESS_DOCUMENTER_SYSTEM_PROMPT,
     BUSINESS_STRATEGIST_SYSTEM_PROMPT,
     ODOO_SPECIALIST_SYSTEM_PROMPT,
@@ -27,6 +29,33 @@ from .runtime_profiles import (
 from .settings import get_settings
 
 settings = get_settings()
+
+# Upstream catalogs rejected staged GPT-5 IDs; repair to the configured app default model.
+_GPT5_AGENT_NAMES = frozenset({"GPT-5 Data Collector", "GPT-5 Documenter"})
+_DEPRECATED_GPT5_MODEL_IDS = frozenset({"gpt-5.2-pro", "openai/gpt-5.2-pro"})
+_GPT5_MODEL_REPLACEMENT_ID = settings.app_default_chat_model
+SUB_AGENT_PREFIX = "[SA] "
+
+
+def _repair_gpt5_agent_deprecated_models(session: Session) -> bool:
+    """One-time-style repair for agents created with a non-existent staging model id."""
+    changed = False
+    agents = list(
+        session.scalars(select(AgentProfileRecord).where(AgentProfileRecord.name.in_(_GPT5_AGENT_NAMES)))
+    )
+    for agent in agents:
+        if not agent.runtime_profile_id:
+            continue
+        profile = session.get(RuntimeProfileRecord, agent.runtime_profile_id)
+        if profile is None:
+            continue
+        llm = dict(profile.llm_config_json or {})
+        mid = str(llm.get("model_id") or "").strip()
+        if mid in _DEPRECATED_GPT5_MODEL_IDS:
+            llm["model_id"] = _GPT5_MODEL_REPLACEMENT_ID
+            profile.llm_config_json = llm
+            changed = True
+    return changed
 
 
 def default_agent_payload(runtime_profile_id: str) -> dict:
@@ -42,7 +71,7 @@ def default_agent_payload(runtime_profile_id: str) -> dict:
 
 
 def special_agent_payloads() -> list[dict]:
-    return [
+    payloads = [
         {
             "name": "Business Strategist",
             "first_message": "Load me with the facts, constraints, and questions that matter. I will pressure-test them and build only grounded strategic outputs.",
@@ -80,6 +109,24 @@ def special_agent_payloads() -> list[dict]:
             "enabled": True,
         },
         {
+            "name": "Apryse Docs Specialist",
+            "first_message": "I can run Apryse doc mode for template preview/finalize cycles. Provide the template context and required fields.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Apryse Docs Specialist Runtime",
+            "runtime_profile_description": "Structured Apryse-driven template workflow runtime.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Apryse Docs Specialist Runtime",
+                description="Structured Apryse-driven template workflow runtime.",
+                system_prompt=APRYSE_DOCX_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=False,
+            ),
+            "is_default": False,
+            "enabled": True,
+        },
+        {
             "name": "Odoo Specialist",
             "first_message": "Give me the business question, company scope, and period scope. I will tell you what Odoo can actually prove.",
             "language": "en-AU",
@@ -94,6 +141,102 @@ def special_agent_payloads() -> list[dict]:
                 enable_web=False,
                 enable_odoo=True,
             ),
+            "is_default": False,
+            "enabled": True,
+        },
+    ]
+    payloads.extend(_mas_agent_payloads())
+    return payloads
+
+
+def _mas_agent_payloads() -> list[dict]:
+    return [
+        {
+            "name": "Llama Architect",
+            "first_message": "Share the target outcome and constraints. I will route work to programming and testing sub-agents and return an implementation-grade synthesis.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Llama Architect Runtime",
+            "runtime_profile_description": "Head MAS orchestration runtime for architecting and delegating implementation safely.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Llama Architect Runtime",
+                description="Head MAS orchestration runtime for architecting and delegating implementation safely.",
+                system_prompt=(
+                    "You are the Llama Architect lead agent. Decompose work, assign implementation and test tasks to "
+                    "sub-agents, and synthesize final answers grounded in executed evidence."
+                ),
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=True,
+            ),
+            "agent_role": "lead",
+            "position": 0,
+            "is_default": True,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Programming Agent 1",
+            "first_message": "I implement backend and integration changes assigned by the Llama Architect.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Programming Agent 1 Runtime",
+            "runtime_profile_description": "Implementation-focused runtime for MAS coding tasks.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Programming Agent 1 Runtime",
+                description="Implementation-focused runtime for MAS coding tasks.",
+                system_prompt="You are a programming sub-agent. Implement assigned backend and integration tasks with tests.",
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=True,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Llama Architect",
+            "position": 1,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Programming Agent 2",
+            "first_message": "I implement UI and API contract changes assigned by the Llama Architect.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Programming Agent 2 Runtime",
+            "runtime_profile_description": "Implementation-focused runtime for MAS coding tasks.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Programming Agent 2 Runtime",
+                description="Implementation-focused runtime for MAS coding tasks.",
+                system_prompt="You are a programming sub-agent. Implement assigned UI and API contract tasks with tests.",
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=True,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Llama Architect",
+            "position": 2,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Testing Agent",
+            "first_message": "I validate completed work with automated checks and human-style walkthrough scenarios.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Testing Agent Runtime",
+            "runtime_profile_description": "Verification-focused runtime for MAS test execution and QA signoff.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Testing Agent Runtime",
+                description="Verification-focused runtime for MAS test execution and QA signoff.",
+                system_prompt=(
+                    "You are a testing sub-agent. Validate implementation with tests, human-flow checks, and explicit "
+                    "acceptance outcomes."
+                ),
+                conversation_mode="working_session",
+                enable_web=False,
+                enable_odoo=True,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Llama Architect",
+            "position": 3,
             "is_default": False,
             "enabled": True,
         },
@@ -119,18 +262,32 @@ def seed_default_agent_profiles(session: Session) -> None:
         profile.name: profile for profile in session.scalars(select(RuntimeProfileRecord))
     }
     for payload in special_agent_payloads():
-        existing_runtime_profile = existing_runtime_profiles_by_name.get(payload["runtime_profile_name"])
-        runtime_profile_payload = {
-            **payload["runtime_profile_payload"],
-            "id": existing_runtime_profile.id if existing_runtime_profile is not None else None,
-        }
-        runtime_profile = save_runtime_profile(
-            session,
-            runtime_profile_payload,
-            existing_record=existing_runtime_profile,
-        )
+        # IMPORTANT: seeding should ensure these agents exist, but must not overwrite operator edits
+        # (e.g., model_id changes) on subsequent API calls.
+        # Prefer the runtime profile already attached to the agent (if any), even if it was renamed.
         existing_agent = existing_by_name.get(payload["name"])
+        existing_runtime_profile = None
+        created_runtime_profile = False
+        if existing_agent is not None and existing_agent.runtime_profile_id:
+            existing_runtime_profile = session.get(RuntimeProfileRecord, existing_agent.runtime_profile_id)
+        if existing_runtime_profile is None:
+            existing_runtime_profile = existing_runtime_profiles_by_name.get(payload["runtime_profile_name"])
+
+        if existing_runtime_profile is None:
+            runtime_profile = save_runtime_profile(
+                session,
+                payload["runtime_profile_payload"],
+            )
+            existing_runtime_profiles_by_name[runtime_profile.name] = runtime_profile
+            created_runtime_profile = True
+            changed = True
+        else:
+            runtime_profile = existing_runtime_profile
         if existing_agent is None:
+            # Do not resurrect intentionally deleted special agents on restart.
+            # If the runtime profile already exists, treat that as prior operator-managed state.
+            if not created_runtime_profile:
+                continue
             session.add(
                 AgentProfileRecord(
                     name=payload["name"],
@@ -138,7 +295,9 @@ def seed_default_agent_profiles(session: Session) -> None:
                     language=payload["language"],
                     voice_id=payload["voice_id"],
                     runtime_profile_id=runtime_profile.id,
-                    is_default=False,
+                    agent_role=str(payload.get("agent_role") or "lead"),
+                    position=int(payload.get("position") or 0),
+                    is_default=bool(payload.get("is_default", False)),
                     enabled=payload["enabled"],
                 )
             )
@@ -147,21 +306,64 @@ def seed_default_agent_profiles(session: Session) -> None:
         if existing_agent.runtime_profile_id != runtime_profile.id:
             existing_agent.runtime_profile_id = runtime_profile.id
             changed = True
+        desired_role = str(payload.get("agent_role") or existing_agent.agent_role or "lead")
+        desired_position = int(payload.get("position") or existing_agent.position or 0)
+        if existing_agent.agent_role != desired_role:
+            existing_agent.agent_role = desired_role
+            changed = True
+        if int(existing_agent.position or 0) != desired_position:
+            existing_agent.position = desired_position
+            changed = True
+        if bool(payload.get("is_default", False)) and not existing_agent.is_default:
+            existing_agent.is_default = True
+            for other in session.scalars(
+                select(AgentProfileRecord).where(
+                    AgentProfileRecord.id != existing_agent.id,
+                    AgentProfileRecord.is_default.is_(True),
+                )
+            ):
+                other.is_default = False
+            changed = True
+
+    # Resolve parent relationships after all required agents exist.
+    session.flush()
+    agent_rows = {agent.name: agent for agent in session.scalars(select(AgentProfileRecord))}
+    for payload in special_agent_payloads():
+        parent_name = str(payload.get("parent_agent_name") or "").strip()
+        if not parent_name:
+            continue
+        agent = agent_rows.get(payload["name"])
+        parent = agent_rows.get(parent_name)
+        if agent is None or parent is None:
+            continue
+        if (agent.parent_agent_id or None) != parent.id:
+            agent.parent_agent_id = parent.id
+            changed = True
+        if agent.agent_role != "sub":
+            agent.agent_role = "sub"
+            changed = True
+
+    if _repair_gpt5_agent_deprecated_models(session):
+        changed = True
     if changed:
         session.commit()
 
 
 def list_agents(session: Session) -> list[AgentProfileRecord]:
-    seed_default_agent_profiles(session)
     return list(
         session.scalars(
-            select(AgentProfileRecord).order_by(AgentProfileRecord.is_default.desc(), AgentProfileRecord.updated_at.desc())
+            select(AgentProfileRecord).order_by(
+                AgentProfileRecord.is_default.desc(),
+                AgentProfileRecord.agent_role.asc(),
+                AgentProfileRecord.parent_agent_id.asc(),
+                AgentProfileRecord.position.asc(),
+                AgentProfileRecord.updated_at.desc(),
+            )
         )
     )
 
 
 def get_agent(session: Session, agent_id: str | None = None) -> AgentProfileRecord:
-    seed_default_agent_profiles(session)
     if agent_id:
         agent = session.get(AgentProfileRecord, agent_id)
         if agent is None:
@@ -182,6 +384,29 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
     if not normalized_first_message:
         raise ValueError("first message is required")
 
+    normalized_role = str(payload.get("agent_role") or "lead").strip().lower() or "lead"
+    if normalized_role not in {"lead", "sub"}:
+        raise ValueError("agent_role must be lead or sub")
+    parent_agent_id = str(payload.get("parent_agent_id") or "").strip() or None
+    if normalized_role == "sub":
+        if not parent_agent_id:
+            raise ValueError("sub agents must provide parent_agent_id")
+        if not normalized_name.startswith(SUB_AGENT_PREFIX):
+            normalized_name = f"{SUB_AGENT_PREFIX}{normalized_name}"
+        while normalized_name.startswith(f"{SUB_AGENT_PREFIX}{SUB_AGENT_PREFIX}"):
+            normalized_name = normalized_name[len(SUB_AGENT_PREFIX):]
+    else:
+        parent_agent_id = None
+        if normalized_name.startswith(SUB_AGENT_PREFIX):
+            raise ValueError("lead agent names cannot start with [SA]")
+
+    try:
+        normalized_position = int(payload.get("position", 0))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("position must be an integer >= 0") from exc
+    if normalized_position < 0:
+        raise ValueError("position must be an integer >= 0")
+
     record = session.get(AgentProfileRecord, payload.get("id")) if payload.get("id") else None
     existing_by_name = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.name == normalized_name))
     is_new_record = record is None
@@ -191,14 +416,27 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
     if record is not None and existing_by_name is not None and existing_by_name.id != record.id:
         raise ValueError(f"agent '{normalized_name}' already exists")
 
-    default_runtime_profile = seed_default_runtime_profile(session)
     pending_insert = False
     if record is None:
-        record = AgentProfileRecord(**default_agent_payload(default_runtime_profile.id))
+        record = AgentProfileRecord(
+            name=normalized_name,
+            first_message=normalized_first_message,
+            language=str(payload.get("language") or "en-US").strip() or "en-US",
+            voice_id=str(payload.get("voice_id") or "alloy").strip() or "alloy",
+            agent_role=normalized_role,
+            parent_agent_id=parent_agent_id,
+            position=normalized_position,
+            is_default=bool(payload.get("is_default", False)),
+            enabled=bool(payload.get("enabled", True)),
+        )
         pending_insert = True
 
     runtime_profile_payload = payload.get("runtime_profile")
     runtime_profile_id = payload.get("runtime_profile_id") or (None if is_new_record else record.runtime_profile_id)
+    if is_new_record and runtime_profile_payload is None and not runtime_profile_id:
+        raise ValueError(
+            "new agents must provide an explicit runtime profile or runtime_profile_id; GhostDASH will not attach a hidden default runtime profile"
+        )
     if runtime_profile_payload is not None:
         runtime_profile_record = save_runtime_profile(
             session,
@@ -212,7 +450,7 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
     elif runtime_profile_id:
         record.runtime_profile_id = runtime_profile_id
     elif not record.runtime_profile_id:
-        record.runtime_profile_id = default_runtime_profile.id
+        raise ValueError("agent runtime profile is required")
 
     payload = {
         **payload,
@@ -220,15 +458,29 @@ def save_agent(session: Session, payload: dict) -> AgentProfileRecord:
         "first_message": normalized_first_message,
         "language": str(payload.get("language") or record.language or "en-US").strip() or "en-US",
         "voice_id": str(payload.get("voice_id") or record.voice_id or "alloy").strip() or "alloy",
+        "agent_role": normalized_role,
+        "parent_agent_id": parent_agent_id,
+        "position": normalized_position,
     }
 
-    for key in ("name", "first_message", "language", "voice_id", "is_default", "enabled"):
+    for key in ("name", "first_message", "language", "voice_id", "agent_role", "parent_agent_id", "position", "is_default", "enabled"):
         if key in payload:
             setattr(record, key, payload[key])
 
     if pending_insert:
         session.add(record)
         session.flush()
+
+    if record.parent_agent_id:
+        if record.parent_agent_id == record.id:
+            raise ValueError("agent cannot be its own parent")
+        parent = session.get(AgentProfileRecord, record.parent_agent_id)
+        if parent is None:
+            raise ValueError(f"parent agent {record.parent_agent_id} not found")
+        if (parent.agent_role or "lead") != "lead":
+            raise ValueError("sub agents can only attach to lead agents")
+    if record.agent_role == "sub" and record.is_default:
+        raise ValueError("default agent cannot be a sub agent")
 
     if record.is_default:
         for other in session.scalars(
@@ -333,6 +585,9 @@ def append_message(
     content: str,
     query_mode: str | None = None,
     citations: list[dict] | None = None,
+    tool_events: list[dict] | None = None,
+    usage: dict | None = None,
+    route_decision: dict | None = None,
     api_mode: str | None = None,
     conversation_mode: str | None = None,
     workflow_mode: str | None = None,
@@ -344,6 +599,9 @@ def append_message(
         content=content,
         query_mode=query_mode,
         citations_json=list(citations or []),
+        tool_events_json=list(tool_events or []),
+        usage_json=dict(usage) if usage is not None else None,
+        route_decision_json=dict(route_decision) if route_decision is not None else None,
         api_mode=api_mode,
         conversation_mode=conversation_mode,
         workflow_mode=workflow_mode,
@@ -384,6 +642,48 @@ def append_document_frame_fragment(
     )
     frame.fragments_json = fragments
     return frame
+
+
+def upsert_docx_session(
+    session: Session,
+    *,
+    conversation_id: str,
+    agent_id: str,
+    template_id: str | None,
+    operation: str,
+    status: str,
+    binding_json: dict | None = None,
+    artifacts_json: list[dict] | None = None,
+    diagnostics_json: list[dict] | None = None,
+) -> DocxSessionRecord:
+    record = session.scalar(
+        select(DocxSessionRecord).where(
+            DocxSessionRecord.conversation_id == conversation_id,
+            DocxSessionRecord.agent_id == agent_id,
+        )
+    )
+    if record is None:
+        record = DocxSessionRecord(
+            conversation_id=conversation_id,
+            agent_id=agent_id,
+            template_id=template_id,
+            operation=operation,
+            status=status,
+            binding_json=dict(binding_json or {}),
+            artifacts_json=list(artifacts_json or []),
+            diagnostics_json=list(diagnostics_json or []),
+        )
+        session.add(record)
+        session.flush()
+        return record
+    record.template_id = template_id
+    record.operation = operation
+    record.status = status
+    record.binding_json = dict(binding_json or {})
+    record.artifacts_json = list(artifacts_json or [])
+    record.diagnostics_json = list(diagnostics_json or [])
+    session.flush()
+    return record
 
 
 def build_history_context(messages: list[AgentMessageRecord], *, window_messages: int) -> str:

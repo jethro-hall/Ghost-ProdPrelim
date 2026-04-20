@@ -142,6 +142,37 @@ Additional runtime behavior resolved at `agent-ingress`:
 - approved-web allowlist fetches when explicitly requested or when the user names an allowlisted domain
 - runtime-profile-owned model, guardrail, retrieval, and tool policy settings
 
+## Odoo Dynamic Retrieval + MAS Hierarchy (2026-04-20)
+
+### Deterministic Odoo planning contract
+
+- `workflow-runtime` planner now parses explicit day ranges (for example `18th/19th April 2026`) into canonical `date_from`/`date_to`.
+- Single named-branch finance prompts now carry `company_name_terms` as explicit scope instead of falling back to company-wide totals.
+- Cash runway prompts route to a dedicated governed operation: `odoo.finance.cash.runway_summary`.
+
+### Governed dynamic query-spec path
+
+- Dynamic Odoo requests compile into `odoo.rpc.query_spec` payloads (typed contract), not raw SQL.
+- Query-spec execution only permits read-only compiled methods (`search_read`, `read_group`).
+- Runtime responses now expose execution-truth metadata (`window`, `company scope`, `source mode`) for UI trace visibility.
+
+### GhostDASH evidence mirror
+
+- Successful Odoo executions are persisted into `odoo_evidence_mirror` with request/response payload, operation, scope metadata, and trace id.
+- `control-api` exposes mirror endpoints:
+  - `POST /api/odoo/evidence/mirror`
+  - `GET /api/odoo/evidence/mirror`
+- Mirror records are explicitly marked as `source_mode` (`live_odoo`/`cached_mirror`) so operator UI can distinguish cache evidence from live execution.
+
+### MAS role model
+
+- Seeded hierarchy now includes one lead head agent plus fixed sub-agent workers:
+  - `Llama Architect` (lead)
+  - `[SA] Programming Agent 1` (sub)
+  - `[SA] Programming Agent 2` (sub)
+  - `[SA] Testing Agent` (sub)
+- Parent-child links are persisted via `agent_role` + `parent_agent_id`, and surfaced in `/api/agents/hierarchy`.
+
 ## Verification Goals
 
 - stack starts cleanly in Docker with `postgres`, `control-api`, `agent-ingress`, `workflow-runtime`, `qdrant`, `ui`, and `caddy`
