@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .collections import ensure_collection_record
 from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
@@ -16,11 +17,17 @@ from .models import (
     DocumentFrameRecord,
     RuntimeProfileRecord,
 )
+from .magic_mike import magic_mike_agent_payload
 from .runtime_profiles import (
     APRYSE_DOCX_SYSTEM_PROMPT,
+    BP_AUDITOR_SYSTEM_PROMPT,
+    BP_CASE_FRAMING_SYSTEM_PROMPT,
+    BP_LEAD_ARCHITECT_SYSTEM_PROMPT,
     BUSINESS_DOCUMENTER_SYSTEM_PROMPT,
     BUSINESS_STRATEGIST_SYSTEM_PROMPT,
-    ODOO_SPECIALIST_SYSTEM_PROMPT,
+    CASE_FRAMING_AGENT_SYSTEM_PROMPT,
+    EVIDENCE_RETRIEVAL_AGENT_SYSTEM_PROMPT,
+    REASONING_SYNTHESIS_AGENT_SYSTEM_PROMPT,
     resolve_agent_runtime_profile,
     save_runtime_profile,
     seed_default_runtime_profile,
@@ -34,7 +41,34 @@ settings = get_settings()
 _GPT5_AGENT_NAMES = frozenset({"GPT-5 Data Collector", "GPT-5 Documenter"})
 _DEPRECATED_GPT5_MODEL_IDS = frozenset({"gpt-5.2-pro", "openai/gpt-5.2-pro"})
 _GPT5_MODEL_REPLACEMENT_ID = settings.app_default_chat_model
+_BP_RUNTIME_MODEL_REPLACEMENT_ID = settings.app_default_chat_model
+_BP_RUNTIME_UNSUPPORTED_MODEL_IDS = frozenset(
+    {
+        "gpt-5.2-pro",
+        "openai/gpt-5.2-pro",
+        "gpt-5.4",
+        "openai/gpt-5.4",
+        "gpt-5.4-nano",
+        "openai/gpt-5.4-nano",
+    }
+)
+_BP_RUNTIME_AGENT_NAMES = frozenset(
+    {
+        "Lead Enterprise Technical Business Architect",
+        "[SA] Finance Case Framing Agent",
+        "[SA] Evidence Retrieval Agent",
+        "[SA] Reasoning / Synthesis Agent",
+        "[SA] Odoo Specialist",
+        "[SA] Documentation / Apryse Document Generator Agent",
+    }
+)
 SUB_AGENT_PREFIX = "[SA] "
+RETIRED_LEGACY_ODOO_AGENT_NAMES = frozenset(
+    {
+        "Odoo Specialist",
+        "[SA] Odoo Specialist",
+    }
+)
 
 
 def _repair_gpt5_agent_deprecated_models(session: Session) -> bool:
@@ -58,6 +92,58 @@ def _repair_gpt5_agent_deprecated_models(session: Session) -> bool:
     return changed
 
 
+def _bp_runtime_primary_needs_repair(canonical: str) -> bool:
+    if not canonical:
+        return False
+    if canonical in _BP_RUNTIME_UNSUPPORTED_MODEL_IDS:
+        return True
+    return "llama31" in canonical or "llama-3.1" in canonical
+
+
+def _bp_fallback_needs_clear(fallback_cf: str) -> bool:
+    if not fallback_cf:
+        return False
+    if fallback_cf in _BP_RUNTIME_UNSUPPORTED_MODEL_IDS:
+        return True
+    return "llama31" in fallback_cf or "llama-3.1" in fallback_cf
+
+
+def _repair_bp_chain_llama_model_ids(session: Session) -> bool:
+    """Rewrite invalid primary model ids and clear bad orchestration fallbacks for BP MAS sub-agents."""
+    changed = False
+    agents = list(
+        session.scalars(select(AgentProfileRecord).where(AgentProfileRecord.name.in_(_BP_RUNTIME_AGENT_NAMES)))
+    )
+    for agent in agents:
+        if not agent.runtime_profile_id:
+            continue
+        profile = session.get(RuntimeProfileRecord, agent.runtime_profile_id)
+        if profile is None:
+            continue
+        touched = False
+        llm = dict(profile.llm_config_json or {})
+        llm_orchestration = dict(llm.get("llm_orchestration") or {})
+        fallback_cf = str(llm_orchestration.get("fallback_model_id") or "").strip().casefold()
+        if _bp_fallback_needs_clear(fallback_cf):
+            llm_orchestration["fallback_model_id"] = None
+            llm["llm_orchestration"] = llm_orchestration
+            touched = True
+
+        model_id = str(llm.get("model_id") or "").strip()
+        canonical = model_id.casefold()
+        if model_id and _bp_runtime_primary_needs_repair(canonical):
+            llm["model_id"] = _BP_RUNTIME_MODEL_REPLACEMENT_ID
+            llm_orchestration = dict(llm.get("llm_orchestration") or {})
+            if _bp_fallback_needs_clear(str(llm_orchestration.get("fallback_model_id") or "").strip().casefold()):
+                llm_orchestration["fallback_model_id"] = None
+            llm["llm_orchestration"] = llm_orchestration
+            touched = True
+        if touched:
+            profile.llm_config_json = llm
+            changed = True
+    return changed
+
+
 def default_agent_payload(runtime_profile_id: str) -> dict:
     return {
         "name": "GhostDASH Assistant",
@@ -72,21 +158,61 @@ def default_agent_payload(runtime_profile_id: str) -> dict:
 
 def special_agent_payloads() -> list[dict]:
     payloads = [
+        magic_mike_agent_payload(),
         {
             "name": "Business Strategist",
-            "first_message": "Load me with the facts, constraints, and questions that matter. I will pressure-test them and build only grounded strategic outputs.",
+            "first_message": "I am your Group CFO Architect. Give me the decision, scope, and period and I will coordinate framing, evidence, ERP truth, synthesis, and board-ready outputs.",
             "language": "en-AU",
             "voice_id": "alloy",
             "runtime_profile_name": "Business Strategist Runtime",
-            "runtime_profile_description": "Truth-first strategic analysis runtime for controlled document development.",
+            "runtime_profile_description": "Group CFO architect runtime for finance truth, forecasting, orchestration, and system integrity.",
             "runtime_profile_payload": specialized_runtime_profile_payload(
                 name="Business Strategist Runtime",
-                description="Truth-first strategic analysis runtime for controlled document development.",
+                description="Group CFO architect runtime for finance truth, forecasting, orchestration, and system integrity.",
                 system_prompt=BUSINESS_STRATEGIST_SYSTEM_PROMPT,
                 conversation_mode="working_session",
                 enable_web=True,
-                enable_odoo=True,
             ),
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Finance Case Framing Agent",
+            "first_message": "I will convert your request into a precise case frame with objective, scope, period, KPI set, and required evidence.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Finance Case Framing Agent Runtime",
+            "runtime_profile_description": "Sub-agent runtime for deterministic case framing.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Finance Case Framing Agent Runtime",
+                description="Sub-agent runtime for deterministic case framing.",
+                system_prompt=CASE_FRAMING_AGENT_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Lead Enterprise Technical Business Architect",
+            "position": 11,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Evidence Retrieval Agent",
+            "first_message": "I gather normalized evidence with attribution, freshness, and contradiction flags.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Evidence Retrieval Agent Runtime",
+            "runtime_profile_description": "Sub-agent runtime for factual evidence extraction and normalization.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Evidence Retrieval Agent Runtime",
+                description="Sub-agent runtime for factual evidence extraction and normalization.",
+                system_prompt=EVIDENCE_RETRIEVAL_AGENT_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=True,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Lead Enterprise Technical Business Architect",
+            "position": 12,
             "is_default": False,
             "enabled": True,
         },
@@ -103,7 +229,6 @@ def special_agent_payloads() -> list[dict]:
                 system_prompt=BUSINESS_DOCUMENTER_SYSTEM_PROMPT,
                 conversation_mode="board",
                 enable_web=True,
-                enable_odoo=False,
             ),
             "is_default": False,
             "enabled": True,
@@ -121,26 +246,106 @@ def special_agent_payloads() -> list[dict]:
                 system_prompt=APRYSE_DOCX_SYSTEM_PROMPT,
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=False,
             ),
             "is_default": False,
             "enabled": True,
         },
         {
-            "name": "Odoo Specialist",
-            "first_message": "Give me the business question, company scope, and period scope. I will tell you what Odoo can actually prove.",
+            "name": "[SA] Reasoning / Synthesis Agent",
+            "first_message": "I reconcile evidence, run scenarios, and produce decision-grade synthesis with explicit assumptions.",
             "language": "en-AU",
             "voice_id": "alloy",
-            "runtime_profile_name": "Odoo Specialist Runtime",
-            "runtime_profile_description": "ERP-first governed retrieval runtime for exact Odoo evidence.",
+            "runtime_profile_name": "Reasoning Synthesis Agent Runtime",
+            "runtime_profile_description": "Sub-agent runtime for evidence reconciliation, scenario analysis, and synthesis.",
             "runtime_profile_payload": specialized_runtime_profile_payload(
-                name="Odoo Specialist Runtime",
-                description="ERP-first governed retrieval runtime for exact Odoo evidence.",
-                system_prompt=ODOO_SPECIALIST_SYSTEM_PROMPT,
+                name="Reasoning Synthesis Agent Runtime",
+                description="Sub-agent runtime for evidence reconciliation, scenario analysis, and synthesis.",
+                system_prompt=REASONING_SYNTHESIS_AGENT_SYSTEM_PROMPT,
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=True,
             ),
+            "agent_role": "sub",
+            "parent_agent_name": "Lead Enterprise Technical Business Architect",
+            "position": 13,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Documentation / Apryse Document Generator Agent",
+            "first_message": "I convert approved synthesis into deterministic board-ready documents and finalize-ready outputs.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "Documentation Apryse Agent Runtime",
+            "runtime_profile_description": "Sub-agent runtime for Apryse-backed board-ready document generation.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="Documentation Apryse Agent Runtime",
+                description="Sub-agent runtime for Apryse-backed board-ready document generation.",
+                system_prompt=APRYSE_DOCX_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Lead Enterprise Technical Business Architect",
+            "position": 15,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "Lead Enterprise Technical Business Architect",
+            "first_message": "State the objective and constraints; I will coordinate case framing, evidence, and audit to a board-ready outcome.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "BP Lead Architect Runtime",
+            "runtime_profile_description": "BP mode lead orchestration runtime.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="BP Lead Architect Runtime",
+                description="BP mode lead orchestration runtime.",
+                system_prompt=BP_LEAD_ARCHITECT_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+            ),
+            "agent_role": "lead",
+            "position": 10,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Case Framing Agent",
+            "first_message": "I convert the request into a precise case frame.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "BP Case Framing Runtime",
+            "runtime_profile_description": "BP mode case framing runtime.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="BP Case Framing Runtime",
+                description="BP mode case framing runtime.",
+                system_prompt=BP_CASE_FRAMING_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Business Strategist",
+            "position": 111,
+            "is_default": False,
+            "enabled": True,
+        },
+        {
+            "name": "[SA] Auditor Agent",
+            "first_message": "I audit whether the plan and output are fit-for-purpose and enterprise quality.",
+            "language": "en-AU",
+            "voice_id": "alloy",
+            "runtime_profile_name": "BP Auditor Runtime",
+            "runtime_profile_description": "BP mode auditor runtime.",
+            "runtime_profile_payload": specialized_runtime_profile_payload(
+                name="BP Auditor Runtime",
+                description="BP mode auditor runtime.",
+                system_prompt=BP_AUDITOR_SYSTEM_PROMPT,
+                conversation_mode="working_session",
+                enable_web=False,
+            ),
+            "agent_role": "sub",
+            "parent_agent_name": "Business Strategist",
+            "position": 112,
             "is_default": False,
             "enabled": True,
         },
@@ -167,7 +372,6 @@ def _mas_agent_payloads() -> list[dict]:
                 ),
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=True,
             ),
             "agent_role": "lead",
             "position": 0,
@@ -187,7 +391,6 @@ def _mas_agent_payloads() -> list[dict]:
                 system_prompt="You are a programming sub-agent. Implement assigned backend and integration tasks with tests.",
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=True,
             ),
             "agent_role": "sub",
             "parent_agent_name": "Llama Architect",
@@ -208,7 +411,6 @@ def _mas_agent_payloads() -> list[dict]:
                 system_prompt="You are a programming sub-agent. Implement assigned UI and API contract tasks with tests.",
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=True,
             ),
             "agent_role": "sub",
             "parent_agent_name": "Llama Architect",
@@ -232,7 +434,6 @@ def _mas_agent_payloads() -> list[dict]:
                 ),
                 conversation_mode="working_session",
                 enable_web=False,
-                enable_odoo=True,
             ),
             "agent_role": "sub",
             "parent_agent_name": "Llama Architect",
@@ -265,6 +466,8 @@ def seed_default_agent_profiles(session: Session) -> None:
         # IMPORTANT: seeding should ensure these agents exist, but must not overwrite operator edits
         # (e.g., model_id changes) on subsequent API calls.
         # Prefer the runtime profile already attached to the agent (if any), even if it was renamed.
+        for collection_slug in payload.get("ensure_collections") or []:
+            ensure_collection_record(session, slug=str(collection_slug), name=str(collection_slug))
         existing_agent = existing_by_name.get(payload["name"])
         existing_runtime_profile = None
         created_runtime_profile = False
@@ -286,7 +489,7 @@ def seed_default_agent_profiles(session: Session) -> None:
         if existing_agent is None:
             # Do not resurrect intentionally deleted special agents on restart.
             # If the runtime profile already exists, treat that as prior operator-managed state.
-            if not created_runtime_profile:
+            if not created_runtime_profile and not bool(payload.get("recreate_if_missing", False)):
                 continue
             session.add(
                 AgentProfileRecord(
@@ -345,6 +548,13 @@ def seed_default_agent_profiles(session: Session) -> None:
 
     if _repair_gpt5_agent_deprecated_models(session):
         changed = True
+    if _repair_bp_chain_llama_model_ids(session):
+        changed = True
+    for retired_name in RETIRED_LEGACY_ODOO_AGENT_NAMES:
+        retired_agent = session.scalar(select(AgentProfileRecord).where(AgentProfileRecord.name == retired_name))
+        if retired_agent is not None and retired_agent.enabled:
+            retired_agent.enabled = False
+            changed = True
     if changed:
         session.commit()
 
@@ -708,6 +918,7 @@ def build_response_cache_key(
     *,
     agent: AgentProfileRecord,
     runtime_profile,
+    conversation_id: str,
     history_context: str,
     message: str,
     corpora: list[str],
@@ -724,6 +935,7 @@ def build_response_cache_key(
         "agent_id": agent.id,
         "agent_name": agent.name,
         "runtime_profile_id": runtime_profile.id,
+        "conversation_id": conversation_id,
         "llm_config": llm_config,
         "guardrails_config": guardrails_config,
         "kb_config": kb_config,

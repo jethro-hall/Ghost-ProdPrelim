@@ -103,6 +103,131 @@ def _ensure_agent_runtime_profile_column(engine: Engine) -> None:
                 raise
 
 
+def _ensure_agent_role_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_profiles" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_profiles")}
+    if "agent_role" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS agent_role VARCHAR(16) DEFAULT 'lead'"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_profiles ADD COLUMN agent_role VARCHAR(16) DEFAULT 'lead'"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_parent_agent_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_profiles" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_profiles")}
+    if "parent_agent_id" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS parent_agent_id VARCHAR(64)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_profiles ADD COLUMN parent_agent_id VARCHAR(64)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_position_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_profiles" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_profiles")}
+    if "position" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_profiles ADD COLUMN position INTEGER DEFAULT 0"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _backfill_agent_hierarchy_defaults(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_profiles" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_profiles")}
+    if "agent_role" not in columns or "position" not in columns:
+        return
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "UPDATE agent_profiles "
+                "SET agent_role = 'lead' "
+                "WHERE agent_role IS NULL OR TRIM(agent_role) = ''"
+            )
+        )
+        connection.execute(
+            text(
+                "UPDATE agent_profiles "
+                "SET position = 0 "
+                "WHERE position IS NULL OR position < 0"
+            )
+        )
+        if "parent_agent_id" in columns:
+            # Defensive backfill: invalid parent refs should not create dangling hierarchy state.
+            connection.execute(
+                text(
+                    "UPDATE agent_profiles "
+                    "SET parent_agent_id = NULL "
+                    "WHERE parent_agent_id IS NOT NULL "
+                    "AND parent_agent_id NOT IN (SELECT id FROM agent_profiles)"
+                )
+            )
+            connection.execute(
+                text(
+                    "UPDATE agent_profiles "
+                    "SET agent_role = 'lead', parent_agent_id = NULL "
+                    "WHERE agent_role = 'sub' AND (parent_agent_id IS NULL OR parent_agent_id = id)"
+                )
+            )
+
+
+def _ensure_connection_default_model_id_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "connections" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("connections")}
+    if "default_model_id" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE connections ADD COLUMN IF NOT EXISTS default_model_id VARCHAR(256)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE connections ADD COLUMN default_model_id VARCHAR(256)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
 def _ensure_connection_metadata_columns(engine: Engine) -> None:
     inspector = inspect(engine)
     if "connections" not in inspector.get_table_names():
@@ -418,6 +543,107 @@ def _ensure_agent_message_workflow_mode_column(engine: Engine) -> None:
                 raise
 
 
+def _ensure_agent_message_tool_events_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_messages" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_messages")}
+    if "tool_events_json" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_messages ADD COLUMN IF NOT EXISTS tool_events_json JSON"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_messages ADD COLUMN tool_events_json JSON"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_message_usage_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_messages" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_messages")}
+    if "usage_json" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_messages ADD COLUMN IF NOT EXISTS usage_json JSON"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_messages ADD COLUMN usage_json JSON"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_agent_message_route_decision_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "agent_messages" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("agent_messages")}
+    if "route_decision_json" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE agent_messages ADD COLUMN IF NOT EXISTS route_decision_json JSON"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE agent_messages ADD COLUMN route_decision_json JSON"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
+def _ensure_voice_turns_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "voice_turns" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS voice_turns (
+                        id VARCHAR(64) PRIMARY KEY,
+                        provider VARCHAR(64) NOT NULL DEFAULT 'elevenlabs',
+                        provider_session_id VARCHAR(128) NOT NULL,
+                        turn_id VARCHAR(128) NOT NULL,
+                        conversation_id VARCHAR(64) NOT NULL,
+                        agent_id VARCHAR(64) NOT NULL,
+                        trace_id VARCHAR(64),
+                        status VARCHAR(32) NOT NULL DEFAULT 'received',
+                        request_json JSON NOT NULL DEFAULT '{}',
+                        response_json JSON NOT NULL DEFAULT '{}',
+                        audit_json JSON NOT NULL DEFAULT '{}',
+                        error_message TEXT,
+                        started_at TIMESTAMPTZ,
+                        completed_at TIMESTAMPTZ,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CONSTRAINT uq_voice_turn_provider_session_turn UNIQUE (provider, provider_session_id, turn_id)
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_provider", "provider")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_provider_session_id", "provider_session_id")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_turn_id", "turn_id")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_conversation_id", "conversation_id")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_agent_id", "agent_id")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_trace_id", "trace_id")
+    _create_index_if_missing(engine, "voice_turns", "ix_voice_turns_status", "status")
+
+
 def _ensure_tool_registry_table(engine: Engine) -> None:
     inspector = inspect(engine)
     if "tool_registry" in inspector.get_table_names():
@@ -445,19 +671,182 @@ def _ensure_tool_registry_table(engine: Engine) -> None:
     _create_index_if_missing(engine, "tool_registry", "ix_tool_registry_provider", "provider")
 
 
+def _ensure_tool_execution_audits_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "tool_execution_audits" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS tool_execution_audits (
+                        id VARCHAR(64) PRIMARY KEY,
+                        tool_id VARCHAR(64) NOT NULL,
+                        operation VARCHAR(128) NOT NULL,
+                        risk_class VARCHAR(32) NOT NULL DEFAULT 'read',
+                        requires_approval BOOLEAN NOT NULL DEFAULT false,
+                        approved BOOLEAN NOT NULL DEFAULT false,
+                        approval_token VARCHAR(256),
+                        actor_agent_id VARCHAR(64),
+                        surface VARCHAR(64) NOT NULL DEFAULT 'control_api',
+                        status VARCHAR(32) NOT NULL DEFAULT 'blocked',
+                        policy_decision_id VARCHAR(64),
+                        payload_json JSON NOT NULL DEFAULT '{}',
+                        response_json JSON NOT NULL DEFAULT '{}',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "tool_execution_audits", "ix_tool_execution_audits_tool_id", "tool_id")
+    _create_index_if_missing(engine, "tool_execution_audits", "ix_tool_execution_audits_operation", "operation")
+    _create_index_if_missing(engine, "tool_execution_audits", "ix_tool_execution_audits_actor_agent_id", "actor_agent_id")
+    _create_index_if_missing(engine, "tool_execution_audits", "ix_tool_execution_audits_policy_decision_id", "policy_decision_id")
+
+
+def _ensure_odoo_evidence_mirror_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "odoo_evidence_mirror" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS odoo_evidence_mirror (
+                        id VARCHAR(64) PRIMARY KEY,
+                        tool_audit_id VARCHAR(64),
+                        trace_id VARCHAR(64),
+                        operation VARCHAR(128) NOT NULL,
+                        status VARCHAR(32) NOT NULL DEFAULT 'captured',
+                        source_mode VARCHAR(32) NOT NULL DEFAULT 'live_odoo',
+                        scope_json JSON NOT NULL DEFAULT '{}',
+                        request_json JSON NOT NULL DEFAULT '{}',
+                        response_json JSON NOT NULL DEFAULT '{}',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "odoo_evidence_mirror", "ix_odoo_evidence_mirror_tool_audit_id", "tool_audit_id")
+    _create_index_if_missing(engine, "odoo_evidence_mirror", "ix_odoo_evidence_mirror_trace_id", "trace_id")
+    _create_index_if_missing(engine, "odoo_evidence_mirror", "ix_odoo_evidence_mirror_operation", "operation")
+
+
+def _ensure_workflow_tasks_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "workflow_tasks" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflow_tasks (
+                        id VARCHAR(64) PRIMARY KEY,
+                        run_id VARCHAR(64) NOT NULL,
+                        task_key VARCHAR(128) NOT NULL,
+                        title VARCHAR(256) NOT NULL,
+                        task_kind VARCHAR(64) NOT NULL DEFAULT 'child_agent',
+                        status VARCHAR(32) NOT NULL DEFAULT 'pending',
+                        sequence INTEGER NOT NULL DEFAULT 1,
+                        depends_on_task_keys_json JSON NOT NULL DEFAULT '[]',
+                        assigned_agent_id VARCHAR(64),
+                        assigned_agent_name VARCHAR(128),
+                        step_run_id VARCHAR(64),
+                        metadata_json JSON NOT NULL DEFAULT '{}',
+                        started_at TIMESTAMPTZ,
+                        completed_at TIMESTAMPTZ,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CONSTRAINT uq_workflow_task_key UNIQUE (run_id, task_key)
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "workflow_tasks", "ix_workflow_tasks_run_id", "run_id")
+    _create_index_if_missing(engine, "workflow_tasks", "ix_workflow_tasks_assigned_agent_id", "assigned_agent_id")
+    _create_index_if_missing(engine, "workflow_tasks", "ix_workflow_tasks_step_run_id", "step_run_id")
+
+
+def _ensure_workflow_run_events_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "workflow_run_events" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflow_run_events (
+                        id VARCHAR(64) PRIMARY KEY,
+                        run_id VARCHAR(64) NOT NULL,
+                        sequence INTEGER NOT NULL DEFAULT 1,
+                        event_type VARCHAR(64) NOT NULL,
+                        task_key VARCHAR(128),
+                        actor_id VARCHAR(64),
+                        metadata_json JSON NOT NULL DEFAULT '{}',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CONSTRAINT uq_workflow_run_event_sequence UNIQUE (run_id, sequence)
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "workflow_run_events", "ix_workflow_run_events_run_id", "run_id")
+    _create_index_if_missing(engine, "workflow_run_events", "ix_workflow_run_events_event_type", "event_type")
+
+
+def _ensure_docx_sessions_table(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "docx_sessions" not in inspector.get_table_names():
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS docx_sessions (
+                        id VARCHAR(64) PRIMARY KEY,
+                        conversation_id VARCHAR(64) NOT NULL,
+                        agent_id VARCHAR(64) NOT NULL,
+                        template_id VARCHAR(256),
+                        operation VARCHAR(32) NOT NULL DEFAULT 'preview',
+                        status VARCHAR(32) NOT NULL DEFAULT 'draft',
+                        binding_json JSON NOT NULL DEFAULT '{}',
+                        artifacts_json JSON NOT NULL DEFAULT '[]',
+                        diagnostics_json JSON NOT NULL DEFAULT '[]',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+            )
+    _create_index_if_missing(engine, "docx_sessions", "ix_docx_sessions_conversation_id", "conversation_id")
+    _create_index_if_missing(engine, "docx_sessions", "ix_docx_sessions_agent_id", "agent_id")
+
+
 def run_startup_migrations(engine: Engine) -> None:
     _ensure_document_frames_table(engine)
     _ensure_tool_registry_table(engine)
+    _ensure_tool_execution_audits_table(engine)
+    _ensure_odoo_evidence_mirror_table(engine)
     _ensure_agent_runtime_profile_column(engine)
+    _ensure_agent_role_column(engine)
+    _ensure_agent_parent_agent_column(engine)
+    _ensure_agent_position_column(engine)
     _ensure_agent_conversation_openai_response_column(engine)
     _ensure_agent_conversation_mode_column(engine)
     _ensure_agent_conversation_workflow_mode_column(engine)
     _ensure_agent_conversation_document_frame_column(engine)
     _ensure_agent_message_conversation_mode_column(engine)
     _ensure_agent_message_workflow_mode_column(engine)
+    _ensure_agent_message_tool_events_column(engine)
+    _ensure_agent_message_usage_column(engine)
+    _ensure_agent_message_route_decision_column(engine)
+    _ensure_voice_turns_table(engine)
     _ensure_connection_metadata_columns(engine)
+    _ensure_connection_default_model_id_column(engine)
+    _ensure_workflow_tasks_table(engine)
+    _ensure_workflow_run_events_table(engine)
+    _ensure_docx_sessions_table(engine)
     _create_index_if_missing(engine, "agent_profiles", "ix_agent_profiles_runtime_profile_id", "runtime_profile_id")
+    _create_index_if_missing(engine, "agent_profiles", "ix_agent_profiles_parent_agent_id", "parent_agent_id")
     _backfill_connection_metadata(engine)
+    _backfill_agent_hierarchy_defaults(engine)
     _backfill_runtime_profiles(engine)
     _drop_legacy_runtime_sources(engine)
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)

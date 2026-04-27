@@ -33,6 +33,14 @@ from .agent_memory import (
     store_cached_response,
     upsert_docx_session,
 )
+from .agent_builds import (
+    bp_mode_auditor_prompt,
+    bp_mode_case_framing_prompt,
+    build_odoo_action_tool_plan,
+    case_framing_prompt,
+    evidence_retrieval_prompt,
+    parse_odoo_operation_action_request,
+)
 from .database import SessionLocal, get_session
 from .models import (
     AgentConversationRecord,
@@ -59,13 +67,30 @@ from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event
 from .tool_registry import build_tool_readiness_summary, execute_tool_operation_for_agent
+from .voice_ingress import (
+    VoiceChatCompletionsRequest,
+    VoicePreviewRequest,
+    handle_voice_chat_completions,
+    handle_voice_stream_websocket,
+    list_elevenlabs_voices,
+    preview_elevenlabs_voice,
+)
 from .odoo_agentic import (
     external_citations_for_tool_events,
     run_odoo_agentic_tool_loop,
     should_use_odoo_agentic,
 )
+from .odoo_mas.pipeline import run_odoo_mas_pipeline
 
 settings = get_settings()
+DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK = (
+    "Business structure question bank (answer once, reused until changed):\n"
+    "1) What is the legal entity and operating brand map for this business?\n"
+    "2) What business units/branches/stores/sites should be treated as distinct reporting entities?\n"
+    "3) Which channels are channel scopes only (for example Shopify, marketplace, wholesale), not legal entities?\n"
+    "4) Which entities roll up into group-level reporting, and how should group totals be interpreted?\n"
+    "5) Any non-negotiable accounting or scope rules (for example include/exclude tax, refunds, intercompany, or specific journals)?"
+)
 
 
 def _effective_chat_model_id(body: ChatRequest, llm_config: dict) -> str:
@@ -168,16 +193,31 @@ def build_route_decision(
     if suggest_specialist and not uses_tool:
         route_type = "suggest_specialist"
         rationale = "Suggested specialist: request implies new capability; approve creation or choose an existing agent."
-    elif uses_tool or workflow_mode in ("data_collector", "odoo_specialist"):
+    elif uses_tool or workflow_mode in (
+        "data_collector",
+        "odoo_specialist",
+        "documenter",
+        "case_framing",
+        "evidence_retrieval",
+        "odoo_operations",
+        "bp_mode",
+    ):
         route_type = "workers"
         if tool_op:
             rationale = f"Escalated to evidence-backed work: tool plan {tool_mode} for {tool_op}."
         else:
             rationale = "Escalated to worker/evidence-backed work for higher certainty."
-        recommended_workers = [
-            {"id": "finance_analyst", "name": "GhostDASH Finance Analyst", "role": "financial_extraction_and_interpretation"},
-            {"id": "business_documenter", "name": "GhostDASH Business Documenter", "role": "board_ready_document_formatting"},
-        ]
+        if workflow_mode == "bp_mode":
+            recommended_workers = [
+                {"id": "case_framing_agent", "name": "Case Framing Agent", "role": "case_definition"},
+                {"id": "lead_enterprise_architect", "name": "Lead Enterprise Technical Business Architect", "role": "orchestration"},
+                {"id": "auditor_agent", "name": "KPMG/EY Style Auditor Agent", "role": "quality_gate"},
+            ]
+        else:
+            recommended_workers = [
+                {"id": "finance_analyst", "name": "GhostDASH Finance Analyst", "role": "financial_extraction_and_interpretation"},
+                {"id": "business_documenter", "name": "GhostDASH Business Documenter", "role": "board_ready_document_formatting"},
+            ]
     else:
         route_type = "direct"
         rationale = "Direct answer: no tool-backed or multi-agent escalation required for this turn."
@@ -290,6 +330,43 @@ def _safe_json(value: Any, *, max_chars: int = 2400) -> str:
     return text[: max_chars - len(PROMPT_TRIM_MARKER)] + PROMPT_TRIM_MARKER
 
 
+def _should_route_finance_plan_to_odoo_mas(*, agent_name: str | None, operation: str | None) -> bool:
+    if str(agent_name or "").strip().casefold() != "finance agent":
+        return False
+    normalized_operation = str(operation or "").strip().casefold()
+    return normalized_operation.startswith("odoo.finance.") or normalized_operation in {
+        "odoo.rpc.query_spec",
+        "odoo.rpc.read_group",
+        "odoo.mas.intent.auto_route",
+    }
+
+
+def _should_force_finance_message_to_odoo_mas(*, agent_name: str | None, message: str | None) -> bool:
+    if str(agent_name or "").strip().casefold() != "finance agent":
+        return False
+    text = str(message or "").strip().casefold()
+    if not text or "odoo" not in text:
+        return False
+    finance_terms = (
+        "revenue",
+        "cogs",
+        "gp",
+        "gross profit",
+        "margin",
+        "net",
+        "roas",
+        "cash",
+        "receivable",
+        "payable",
+        "opex",
+        "ledger",
+        "marketing",
+        "p&l",
+        "profit and loss",
+    )
+    return any(term in text for term in finance_terms)
+
+
 def _tool_citation_from_event(event: ChatToolEvent) -> dict[str, Any]:
     artifact_type = {
         "preview": "tool_preview",
@@ -332,6 +409,10 @@ def _summarize_tool_payload(tool_response_data: dict[str, Any]) -> str:
         parts.append(f"cogs={tool_response_data['cogs']}")
     if tool_response_data.get("gp") is not None:
         parts.append(f"gp={tool_response_data['gp']}")
+    if tool_response_data.get("net_profit") is not None:
+        parts.append(f"net_profit={tool_response_data['net_profit']}")
+    if tool_response_data.get("roas") is not None:
+        parts.append(f"roas={tool_response_data['roas']}")
     model = str(tool_response_data.get("model") or "").strip()
     if model:
         parts.append(f"model={model}")
@@ -540,6 +621,56 @@ def _format_tool_result_for_prompt(*, operation: str, payload: dict[str, Any], m
                         ]
                     )
                 )
+        return "\n".join(lines).strip()
+
+    if operation == "odoo.finance.pnl.period_summary":
+        lines = [
+            "Executed Odoo P&L period summary:",
+            f"- date_from: {data.get('date_from')}",
+            f"- date_to: {data.get('date_to')}",
+            f"- requested_company_ids: {payload.get('company_ids') or payload.get('company_id')}",
+            "- company summaries:",
+        ]
+        companies = list(data.get("companies") or data.get("rows") or [])
+        for company in companies[:8]:
+            if not isinstance(company, dict):
+                continue
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        str(company.get("company_name") or company.get("company_id") or "company"),
+                        f"operating_income={company.get('operating_income')}",
+                        f"other_income={company.get('other_income')}",
+                        f"cost_of_revenue={company.get('cost_of_revenue')}",
+                        f"total_gross_profit={company.get('total_gross_profit')}",
+                        f"expenses={company.get('expenses')}",
+                        f"depreciation={company.get('depreciation')}",
+                        f"total_expenses={company.get('total_expenses')}",
+                        f"net_profit={company.get('net_profit')}",
+                        f"roas={company.get('roas')}",
+                    ]
+                )
+            )
+        if isinstance(data.get("group_totals"), dict):
+            group_totals = dict(data.get("group_totals") or {})
+            lines.append("- group totals:")
+            lines.append(
+                "  - "
+                + " | ".join(
+                    [
+                        f"operating_income={group_totals.get('operating_income')}",
+                        f"other_income={group_totals.get('other_income')}",
+                        f"cost_of_revenue={group_totals.get('cost_of_revenue')}",
+                        f"total_gross_profit={group_totals.get('total_gross_profit')}",
+                        f"expenses={group_totals.get('expenses')}",
+                        f"depreciation={group_totals.get('depreciation')}",
+                        f"total_expenses={group_totals.get('total_expenses')}",
+                        f"net_profit={group_totals.get('net_profit')}",
+                        f"roas={group_totals.get('roas')}",
+                    ]
+                )
+            )
         return "\n".join(lines).strip()
 
     if operation == "odoo.finance.cogs.monthly_code_breakdown":
@@ -1100,31 +1231,137 @@ def prepare_tool_evidence(
     session: Session,
     *,
     agent_id: str,
+    agent_name: str | None = None,
     tool_overrides: dict[str, bool] | None,
     tool_plan: dict[str, Any] | None,
+    workflow_mode: str | None = None,
     request_message: str | None = None,
 ) -> PreparedToolEvidence:
+    is_bp_mode = str(workflow_mode or "").strip().casefold() == "bp_mode"
     normalized_plan = _normalize_tool_plan(tool_plan)
     mode = str(normalized_plan.get("mode") or "none")
     operation = str(normalized_plan.get("operation") or "").strip() or None
     payload = dict(normalized_plan.get("payload") or {})
     blocked_reason = str(normalized_plan.get("blocked_reason") or "").strip() or None
     reason = str(normalized_plan.get("reason") or "").strip()
+    force_mas_autoroute = _should_force_finance_message_to_odoo_mas(agent_name=agent_name, message=request_message)
 
-    if mode == "none" or not operation:
+    if (mode == "none" or not operation) and not force_mas_autoroute:
         return PreparedToolEvidence(
             plan=normalized_plan,
             prompt_prefix="",
             citations=[],
             tool_events=[],
-            can_cache_response=True,
+            can_cache_response=not is_bp_mode,
         )
 
     tool_events: list[ChatToolEvent] = []
     citations: list[dict[str, Any]] = []
     detail_blocks: list[str] = []
+    if force_mas_autoroute and not operation:
+        operation = "odoo.mas.intent.auto_route"
+        mode = "required"
+        normalized_plan["mode"] = mode
+        normalized_plan["operation"] = operation
 
-    if operation in {"odoo.finance.margin.monthly_comparison", "odoo.finance.shopify.monthly_roi"} and payload.get("company_name_terms"):
+    if _should_route_finance_plan_to_odoo_mas(agent_name=agent_name, operation=operation):
+        source_operation = operation
+        mas_message = str(request_message or "").strip()
+        if not mas_message:
+            event = ChatToolEvent(
+                tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+                status="blocked",
+                operation=source_operation,
+                summary="MAS v2 routing requires the request message.",
+                blocked_reason="missing_request_message",
+                payload={"request": payload},
+            )
+            tool_events.append(event)
+            citations.append(_tool_citation_from_event(event))
+            return PreparedToolEvidence(
+                plan=normalized_plan,
+                prompt_prefix=_build_tool_prompt_prefix(tool_events, []),
+                citations=citations,
+                tool_events=tool_events,
+                can_cache_response=False,
+            )
+
+        mas_result = run_odoo_mas_pipeline(session, message=mas_message)
+        if bool(mas_result.get("success")):
+            markdown = str(mas_result.get("markdown") or "").strip()
+            exec_truth: dict[str, object] = {
+                "status": "executed",
+                "operation": source_operation,
+                "evidence_source_mode": "odoo_mas_v2",
+            }
+            if bool(mas_result.get("phase2")):
+                exec_truth["phase2"] = True
+            event = ChatToolEvent(
+                tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+                status="executed",
+                operation=source_operation,
+                summary="Executed via Odoo MAS v2 pipeline.",
+                payload={
+                    "request": payload,
+                    "response": dict(mas_result),
+                    "execution_truth": exec_truth,
+                },
+            )
+            tool_events.append(event)
+            citations.append(_tool_citation_from_event(event))
+            detail_blocks.append(
+                "Executed Odoo MAS v2 pipeline:\n"
+                + (
+                    markdown
+                    if markdown
+                    else _safe_json(
+                        {
+                            "intent": mas_result.get("intent"),
+                            "metric_pack": mas_result.get("metric_pack"),
+                            "reasoning": mas_result.get("reasoning"),
+                        },
+                        max_chars=1800,
+                    )
+                )
+            )
+            return PreparedToolEvidence(
+                plan=normalized_plan,
+                prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+                citations=citations,
+                tool_events=tool_events,
+                can_cache_response=False,
+            )
+
+        blocked_reason_mas = str(mas_result.get("blocked_reason") or "odoo_mas_failed")
+        summary = str(mas_result.get("message") or "Odoo MAS v2 pipeline blocked this request.")
+        event = ChatToolEvent(
+            tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
+            status="blocked",
+            operation=source_operation,
+            summary=summary,
+            blocked_reason=blocked_reason_mas,
+            payload={
+                "request": payload,
+                "response": dict(mas_result),
+                "execution_truth": {
+                    "status": "blocked",
+                    "operation": source_operation,
+                    "evidence_source_mode": "odoo_mas_v2",
+                },
+            },
+        )
+        tool_events.append(event)
+        citations.append(_tool_citation_from_event(event))
+        detail_blocks.append("Odoo MAS v2 blocked:\n" + _safe_json(mas_result, max_chars=1800))
+        return PreparedToolEvidence(
+            plan=normalized_plan,
+            prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
+            citations=citations,
+            tool_events=tool_events,
+            can_cache_response=False,
+        )
+
+    if operation in {"odoo.finance.margin.monthly_comparison", "odoo.finance.shopify.monthly_roi", "odoo.finance.pnl.period_summary"} and payload.get("company_name_terms"):
         payload, resolution_event, resolution_detail, resolution_data = _resolve_company_terms_for_payload(
             session,
             agent_id=agent_id,
@@ -1229,6 +1466,16 @@ def prepare_tool_evidence(
                 "scope_enforced": (tool_response.data or {}).get("scope_enforced"),
             },
         }
+        if is_bp_mode:
+            event_payload["bp_data_quality"] = {
+                "fresh_data_requested": True,
+                "data_accuracy_probability": (
+                    0.9
+                    if bool((tool_response.data or {}).get("evidence_source_mode") == "live_odoo")
+                    else 0.6
+                ),
+                "confidence_weighting_note": "Weighted by execution status and live Odoo evidence source.",
+            }
         event = ChatToolEvent(
             tool_id=str(normalized_plan.get("tool_id") or "odoo_primary"),
             status="executed",
@@ -1314,7 +1561,7 @@ def prepare_tool_evidence(
         prompt_prefix=_build_tool_prompt_prefix(tool_events, detail_blocks),
         citations=citations,
         tool_events=tool_events,
-        can_cache_response=False,
+        can_cache_response=False if is_bp_mode else False,
     )
 
 
@@ -1495,9 +1742,27 @@ def resolve_conversation_mode(*, requested_mode: str | None, guardrails_config: 
 
 def resolve_workflow_mode(*, requested_mode: str | None, conversation: AgentConversationRecord | None = None) -> str:
     candidate = str(requested_mode or getattr(conversation, "workflow_mode", None) or "standard").strip().casefold()
-    if candidate in {"standard", "data_collector", "documenter", "odoo_specialist"}:
+    if candidate in {
+        "standard",
+        "data_collector",
+        "documenter",
+        "odoo_specialist",
+        "case_framing",
+        "evidence_retrieval",
+        "odoo_operations",
+        "bp_mode",
+    }:
         return candidate
     return "standard"
+
+
+def _sanitize_owner_operator_template(raw: str) -> str:
+    text = " ".join(str(raw or "").split())
+    if not text:
+        return ""
+    # Strip long hashable tails so malformed questionnaire text does not leak into answers.
+    text = re.sub(r"Source template hashable text:\s*.*$", "", text, flags=re.IGNORECASE).strip()
+    return text[:420].strip()
 
 
 def build_owner_operator_questionnaire_directives(*, guardrails_config: dict[str, Any]) -> str:
@@ -1505,15 +1770,177 @@ def build_owner_operator_questionnaire_directives(*, guardrails_config: dict[str
     compact = str(guardrails_config.get("owner_operator_questionnaire_compact") or "").strip()
     if not questionnaire and not compact:
         return ""
+    preferred_template = compact or questionnaire
+    sanitized_template = _sanitize_owner_operator_template(preferred_template)
+    template_line = f"- Apply this owner-operator intent: {sanitized_template}\n" if sanitized_template else ""
     return (
         "Owner-operator guidance template (high priority):\n"
-        f"{questionnaire or compact}\n\n"
+        f"{template_line}"
         "Enforcement notes:\n"
         "- Treat branch/location/store/site/shop as equivalent scope words.\n"
         "- If Retail, Burleigh, Brisbane, or Online are present, avoid redundant branch-mapping blockers.\n"
         "- Lead with a decisive answer and recommended actions; ask permission before destructive changes.\n"
-        "- Expand key abbreviations once, for example return on ad spend (ROAS)."
+        "- Expand key abbreviations once, for example return on ad spend (ROAS).\n"
+        "- Never quote, paraphrase, or echo the owner-operator template text in the final answer."
     ).strip()
+
+
+def _sanitize_business_structure_context(raw: str) -> str:
+    lines = [line.strip() for line in str(raw or "").splitlines() if line.strip()]
+    if not lines:
+        return ""
+    return "\n".join(lines)[:6000].strip()
+
+
+def _compact_business_structure_context(raw: str) -> str:
+    normalized = " ".join(str(raw or "").split())
+    if not normalized:
+        return ""
+    return f"Business structure memory: {normalized[:900]}".strip()
+
+
+def _resolve_business_structure_question_bank(guardrails_config: dict[str, Any]) -> str:
+    configured = str(guardrails_config.get("business_structure_question_bank") or "").strip()
+    return configured or DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK
+
+
+def _looks_like_business_structure_capture_message(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    return (
+        lowered.startswith("business structure:")
+        or lowered.startswith("business context:")
+        or lowered.startswith("entity map:")
+        or lowered.startswith("company structure:")
+        or lowered.startswith("foundation:")
+    )
+
+
+def _extract_business_structure_payload(message: str) -> str | None:
+    text = str(message or "").strip()
+    if not text:
+        return None
+    normalized = text.casefold()
+    for prefix in (
+        "business structure:",
+        "business context:",
+        "entity map:",
+        "company structure:",
+        "foundation:",
+    ):
+        if normalized.startswith(prefix):
+            payload = text[len(prefix):].strip()
+            return payload or None
+    return None
+
+
+def maybe_bank_business_structure_context(
+    session: Session,
+    *,
+    runtime_profile,
+    guardrails_config: dict[str, Any],
+    message: str,
+) -> tuple[dict[str, Any], bool]:
+    if not _looks_like_business_structure_capture_message(message):
+        return guardrails_config, False
+    captured = _sanitize_business_structure_context(_extract_business_structure_payload(message) or "")
+    if not captured:
+        return guardrails_config, False
+    next_guardrails = dict(guardrails_config)
+    if str(next_guardrails.get("business_structure_context") or "").strip() == captured:
+        return next_guardrails, False
+    next_guardrails["business_structure_context"] = captured
+    next_guardrails["business_structure_context_compact"] = _compact_business_structure_context(captured)
+    runtime_profile.guardrails_config_json = next_guardrails
+    session.commit()
+    session.refresh(runtime_profile)
+    return next_guardrails, True
+
+
+def build_business_structure_directives(*, guardrails_config: dict[str, Any]) -> str:
+    if not bool(guardrails_config.get("business_structure_required", True)):
+        return ""
+    context = _sanitize_business_structure_context(str(guardrails_config.get("business_structure_context") or ""))
+    if not context:
+        return ""
+    return (
+        "Business structure memory (high priority):\n"
+        f"{context}\n\n"
+        "Use this as the authoritative entity/channel foundation for this runtime profile. "
+        "If the user provides a newer structure, ask to update and replace this memory."
+    ).strip()
+
+
+def _requires_business_structure_for_message(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    finance_terms = (
+        "revenue",
+        "cogs",
+        "gross margin",
+        "gross profit",
+        "p&l",
+        "profit and loss",
+        "net profit",
+        "finance",
+        "forecast",
+    )
+    framing_terms = (
+        "business",
+        "board",
+        "strategy",
+        "performance",
+        "performer",
+        "underperform",
+        "assessment",
+        "commentary",
+        "what matters",
+        "recommend",
+        "advice",
+    )
+    return any(term in lowered for term in finance_terms) and any(term in lowered for term in framing_terms)
+
+
+def _has_explicit_branch_or_entity_scope(message: str) -> bool:
+    lowered = str(message or "").casefold()
+    explicit_tokens = (
+        "burleigh",
+        "brisbane",
+        "retail",
+        "ride electric",
+        "company_id",
+        "company ids",
+        "branch",
+        "branches",
+    )
+    return any(token in lowered for token in explicit_tokens)
+
+
+def build_missing_business_structure_answer(
+    *,
+    message: str,
+    workflow_mode: str,
+    guardrails_config: dict[str, Any],
+) -> str | None:
+    if not bool(guardrails_config.get("business_structure_required", True)):
+        return None
+    if not _requires_business_structure_for_message(message):
+        return None
+    if _looks_like_business_structure_capture_message(message):
+        return None
+    existing = _sanitize_business_structure_context(str(guardrails_config.get("business_structure_context") or ""))
+    if existing:
+        return None
+    # If the user already provides explicit branch/entity scope, let Odoo execution proceed.
+    if _has_explicit_branch_or_entity_scope(message):
+        return None
+    if workflow_mode in {"case_framing", "evidence_retrieval", "odoo_operations"}:
+        return None
+    question_bank = _resolve_business_structure_question_bank(guardrails_config)
+    return (
+        "I can not give a meaningful business-performance answer yet because this runtime profile has no business structure memory.\n\n"
+        "Please answer this question bank (you can paste it in one response; start with `Business structure:`):\n"
+        f"{question_bank}\n\n"
+        "Once you provide it, GhostDASH will store it in runtime memory and reuse it for future answers until you change it."
+    )
 
 
 def _looks_like_strategy_document_request(message: str) -> bool:
@@ -1630,7 +2057,48 @@ def build_effective_system_prompt(
             "Workflow mode: odoo_specialist.\n"
             "- Be retrieval-first, not prose-first.\n"
             "- Prefer exact governed Odoo evidence over generic strategy language.\n"
-            "- State clearly whether Odoo ran, was blocked, or was unavailable."
+            "- State clearly whether Odoo ran, was blocked, or was unavailable.\n"
+            "- Behave like an interactive agent (multi-step): one message may require several governed Odoo calls — "
+            "e.g. company/period-scoped ledger GP or P&L first, and Shopify-channel ROI only when that channel was "
+            "asked for. Treat Odoo (ERP) and Shopify (channel sub-ledger) as composable, not mutually exclusive.\n"
+            "- Choose operations deliberately: product catalog pulls -> `odoo.products.search_read`; period sales-order checks -> "
+            "`odoo.sales.orders.search_read`; ranked product GP requests -> `odoo.sales.products_gp.period_top`.\n"
+            "- When the user describes a repeatable check they want at workflow design time, state the implied tool "
+            "sequence (entities, date rules, operations) before answering."
+        )
+    elif workflow_mode == "case_framing":
+        workflow_directives = (
+            "Workflow mode: case_framing.\n"
+            "- You are a case-framing agent only.\n"
+            "- No tool access and no writes.\n"
+            "- Frame the work only with this output contract: objective, sub_questions, required_evidence, "
+            "recommended_workflow, risk_level, write_access_required.\n"
+            "- Do not produce recommendations that require evidence collection or execution."
+        )
+    elif workflow_mode == "evidence_retrieval":
+        workflow_directives = (
+            "Workflow mode: evidence_retrieval.\n"
+            "- Read-only evidence collection and normalization only.\n"
+            "- No recommendations, no prescriptions, and no actions.\n"
+            "- Return only factual findings, source attribution, freshness, contradictions, and missing-data flags."
+        )
+    elif workflow_mode == "odoo_operations":
+        workflow_directives = (
+            "Workflow mode: odoo_operations.\n"
+            "- Execute only structured Odoo action requests.\n"
+            "- Never execute from free text.\n"
+            "- Required fields: target_model, operation, field_whitelist, reason, approval_state.\n"
+            "- If the structure or approval state is invalid, explain the blocker and stop."
+        )
+    elif workflow_mode == "bp_mode":
+        workflow_directives = (
+            "Workflow mode: bp_mode.\n"
+            "- Run as an enterprise closeout workflow: Case Framing -> Lead Architect -> Auditor.\n"
+            "- Be proactive and outcome-focused: never stop at a blocker-only response.\n"
+            "- If data is incomplete, return the strongest provisional answer plus exact next retrieval steps.\n"
+            "- Prefer fresh governed Odoo evidence over cached assumptions.\n"
+            "- Include confidence and freshness notes for financial claims.\n"
+            "- Board output must include COGS, GP, Revenue, Net, and ROAS when requested."
         )
     if conversation_mode == "board":
         prompt = (
@@ -1658,6 +2126,11 @@ def build_effective_system_prompt(
     )
     if owner_operator_directives:
         prompt = f"{prompt}\n\n{owner_operator_directives}".strip()
+    business_structure_directives = build_business_structure_directives(
+        guardrails_config=dict(guardrails_config or {})
+    )
+    if business_structure_directives:
+        prompt = f"{prompt}\n\n{business_structure_directives}".strip()
     reporting_format_directives = build_reporting_format_directives(
         message=message,
         guardrails_config=dict(guardrails_config or {}),
@@ -1665,6 +2138,14 @@ def build_effective_system_prompt(
     if reporting_format_directives:
         prompt = f"{prompt}\n\n{reporting_format_directives}".strip()
     return prompt
+
+
+def append_tool_plan_system_hint(system_prompt: str, tool_plan: dict[str, Any] | None) -> str:
+    """Attach optional planner hints (e.g. Odoo + Shopify dual intent) to the system prompt."""
+    hint = (tool_plan or {}).get("multi_step_odoo_hint") if tool_plan else None
+    if not hint:
+        return system_prompt
+    return f"{system_prompt}\n\nPlanner note:\n{hint}".strip()
 
 
 DOCX_FIXED_AGENT_CANDIDATES = (
@@ -1752,7 +2233,10 @@ def build_runtime_context_block(
     tool_summary: list[dict] | None = None,
     openai_responses_chain: bool = False,
     owner_operator_template_compact: str = "",
+    business_structure_context_compact: str = "",
 ) -> str:
+    sanitized_owner_operator = _sanitize_owner_operator_template(owner_operator_template_compact)
+    sanitized_business_structure = _sanitize_business_structure_context(business_structure_context_compact)
     memory_line = (
         "Conversation state is carried by OpenAI Responses API; no transcript is pasted here."
         if openai_responses_chain
@@ -1779,9 +2263,14 @@ def build_runtime_context_block(
                 )
             ),
             (
-                f"Owner-operator compact guidance: {owner_operator_template_compact}"
-                if owner_operator_template_compact.strip()
+                f"Owner-operator compact guidance: {sanitized_owner_operator}"
+                if sanitized_owner_operator
                 else "Owner-operator compact guidance: default"
+            ),
+            (
+                f"Business structure memory: {sanitized_business_structure}"
+                if sanitized_business_structure
+                else "Business structure memory: missing"
             ),
         ]
     )
@@ -1797,6 +2286,7 @@ def build_effective_snapshot_id(
     tool_summary: list[dict],
     use_approved_web: bool,
     owner_operator_template_compact: str = "",
+    business_structure_context_compact: str = "",
 ) -> str:
     snapshot_payload = {
         "agent_id": agent_id,
@@ -1807,6 +2297,7 @@ def build_effective_snapshot_id(
         "tool_summary": tool_summary,
         "use_approved_web": use_approved_web,
         "owner_operator_template_compact": owner_operator_template_compact,
+        "business_structure_context_compact": business_structure_context_compact,
     }
     return hashlib.sha256(json.dumps(snapshot_payload, sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
@@ -2276,6 +2767,14 @@ def build_staged_answer_directives(*, tool_plan: dict[str, Any] | None, conversa
             "- Do not collapse a multi-company Odoo result into a Retail-only summary.\n"
             "- If marketing or full overhead lines are not present in the returned Odoo operation, say that clearly and ask for the next Odoo drill-down needed."
         ).strip()
+    if operation == "odoo.finance.pnl.period_summary" and len(requested_company_ids) > 1:
+        return (
+            "Answer constraints (multi-company P&L comparison):\n"
+            "- Split the answer by each requested business and keep totals distinct.\n"
+            "- Include a compact scorecard with revenue, COGS/cost of revenue, gross profit, total expenses, net profit, and ROAS.\n"
+            "- State that these numbers come from Odoo posted P&L ledger lines for the selected period.\n"
+            "- If ROAS is derived via ad-spend account inference, label that assumption clearly."
+        ).strip()
     return (
         "Answer constraints (staged finance output):\n"
         "- First pass only: executive summary + what changed month-to-month + top drivers.\n"
@@ -2498,23 +2997,282 @@ def normalize_business_abbreviations(answer_text: str) -> str:
     return text
 
 
+def _remove_low_quality_response_artifacts(answer_text: str) -> str:
+    text = str(answer_text or "").strip()
+    if not text:
+        return text
+    patterns = (
+        r"^\s*need use odoo tool likely\.\s*",
+        r"^\s*need\s+to\s+use\s+odoo\s+tool\s+likely\.\s*",
+        r"^\s*based on the provided context,\s*i will attempt to answer the user'?s question\.\s*",
+    )
+    for pattern in patterns:
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+    return text.strip()
+
+
+def _coerce_number(value: Any) -> float | None:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed
+
+
+def _extract_bp_branch_metric_grounding(tool_events: list[ChatToolEvent]) -> dict[str, dict[str, float | None]]:
+    branch_metrics: dict[str, dict[str, float | None]] = {}
+    metric_candidates = {
+        "revenue": ("revenue", "revenue_total", "operating_income", "total_income"),
+        "cogs": ("cogs", "cost_of_goods", "cost_of_revenue", "cost_of_sales"),
+        "gp": ("gp", "gross_profit", "total_gross_profit"),
+        "net": ("net", "net_profit", "net_income"),
+        "roas": ("roas", "roi"),
+        "ad_spend": ("ad_spend", "advertising_spend", "marketing_spend"),
+    }
+    for event in tool_events:
+        if event.tool_id != "odoo_primary" or event.status != "executed":
+            continue
+        payload = dict(event.payload or {})
+        response = dict(payload.get("response") or {})
+        candidate_rows: list[dict[str, Any]] = []
+        rows = response.get("rows")
+        companies = response.get("companies")
+        if isinstance(rows, list):
+            candidate_rows.extend([row for row in rows if isinstance(row, dict)])
+        if isinstance(companies, list):
+            candidate_rows.extend([row for row in companies if isinstance(row, dict)])
+        for row in candidate_rows:
+            company_name = str(row.get("company_name") or row.get("company") or "").strip().casefold()
+            if "burleigh" in company_name:
+                branch_key = "burleigh"
+            elif "brisbane" in company_name:
+                branch_key = "brisbane"
+            else:
+                continue
+            branch_metrics.setdefault(branch_key, {})
+            for metric, keys in metric_candidates.items():
+                for key in keys:
+                    value = _coerce_number(row.get(key))
+                    if value is None:
+                        continue
+                    branch_metrics[branch_key][metric] = value
+                    break
+            revenue_value = _coerce_number(branch_metrics[branch_key].get("revenue"))
+            ad_spend_value = _coerce_number(branch_metrics[branch_key].get("ad_spend"))
+            if (
+                branch_metrics[branch_key].get("roas") is None
+                and revenue_value is not None
+                and ad_spend_value not in (None, 0)
+            ):
+                branch_metrics[branch_key]["roas"] = revenue_value / float(ad_spend_value)
+    return branch_metrics
+
+
+def _build_bp_missing_grounding_response(
+    *,
+    request_message: str,
+    tool_events: list[ChatToolEvent],
+) -> str | None:
+    metrics = _bp_required_metrics_from_message(request_message)
+    if not metrics:
+        return None
+    branch_metrics = _extract_bp_branch_metric_grounding(tool_events)
+    required_metric_keys = {"COGS": "cogs", "GP": "gp", "Revenue": "revenue", "Net": "net", "ROAS": "roas"}
+    requested_metric_keys = [required_metric_keys[m] for m in metrics if m in required_metric_keys]
+    has_complete_branch_grounding = all(
+        branch_metrics.get("burleigh", {}).get(metric_key) is not None
+        and branch_metrics.get("brisbane", {}).get(metric_key) is not None
+        for metric_key in requested_metric_keys
+    )
+    if has_complete_branch_grounding:
+        return None
+
+    period_label = "requested period"
+    lowered = request_message.casefold()
+    if "march" in lowered:
+        period_label = "March"
+    missing_dimensions = [
+        f"{period_label} date-bounded totals",
+        "branch tagging for Burleigh vs Brisbane",
+        "total revenue",
+        "total net profit",
+        "advertising spend",
+    ]
+    def _fmt(metric_key: str, value: float | None) -> str:
+        if value is None:
+            return "Not grounded"
+        if metric_key == "roas":
+            return f"{value:.2f}x"
+        return f"${value:,.2f}"
+
+    metric_labels = [
+        ("revenue", "Revenue (REV)"),
+        ("cogs", "Cost of Goods Sold (COGS)"),
+        ("gp", "Gross Profit (GP)"),
+        ("net", "Net Profit (NET)"),
+        ("roas", "Return on ad spend (ROAS)"),
+    ]
+    burleigh_metrics = branch_metrics.get("burleigh", {})
+    brisbane_metrics = branch_metrics.get("brisbane", {})
+    table_rows: list[str] = []
+    missing_requested_metrics: list[str] = []
+    comparison_signals: list[str] = []
+    for metric_key, label in metric_labels:
+        burleigh_value = _coerce_number(burleigh_metrics.get(metric_key))
+        brisbane_value = _coerce_number(brisbane_metrics.get(metric_key))
+        status = "Grounded" if burleigh_value is not None and brisbane_value is not None else "Missing"
+        if metric_key in requested_metric_keys and status != "Grounded":
+            missing_requested_metrics.append(label)
+        if burleigh_value is not None and brisbane_value is not None:
+            if metric_key in {"revenue", "gp", "net", "roas"}:
+                if burleigh_value > brisbane_value:
+                    comparison_signals.append(f"{label}: Burleigh higher")
+                elif brisbane_value > burleigh_value:
+                    comparison_signals.append(f"{label}: Brisbane higher")
+            elif metric_key == "cogs":
+                if burleigh_value < brisbane_value:
+                    comparison_signals.append(f"{label}: Burleigh lower (better)")
+                elif brisbane_value < burleigh_value:
+                    comparison_signals.append(f"{label}: Brisbane lower (better)")
+        table_rows.append(
+            f"| {label} | {_fmt(metric_key, burleigh_value)} | {_fmt(metric_key, brisbane_value)} | Not grounded | Not grounded | {status} |"
+        )
+
+    comparison_line = (
+        "- Available comparison signal: " + "; ".join(comparison_signals[:4]) + "."
+        if comparison_signals
+        else "- Available comparison signal: insufficient complete KPI pairs to rank a winner confidently."
+    )
+    missing_line = (
+        "_Missing grounded metrics this turn: " + ", ".join(missing_requested_metrics) + "._"
+        if missing_requested_metrics
+        else "_All requested KPI pairs were grounded in tool evidence this turn._"
+    )
+
+    return "\n".join(
+        [
+            "1) Headline Performance Summary",
+            (
+                f"For {period_label}, I cannot yet state which of Burleigh or Brisbane performed better on "
+                "COGS, GP, Revenue, Net Profit, or Return on Ad Spend (ROAS) with high confidence because the grounded data in hand is incomplete."
+            ),
+            "",
+            "What I can say now",
+            "- The available evidence is transaction-fragment level, not branch-month summary level.",
+            "- The retrieved evidence does not currently provide a full branch-level month scorecard for all requested KPIs.",
+            "- So any board-style ranking right now would be provisional to the point of being misleading.",
+            comparison_line,
+            "",
+            "2) KPI Scorecard (current, prior, variance)",
+            f"{period_label} KPI scorecard - provisional status",
+            "| KPI | Burleigh | Brisbane | Prior | Variance | Status |",
+            "| --- | --- | --- | --- | --- | --- |",
+            *table_rows,
+            "",
+            "_Notes (provisional):_",
+            "_Current evidence is insufficient to give reliable branch-level COGS/GP/REV/NET/ROAS for the requested period._",
+            missing_line,
+            "_Missing grounded data includes: " + ", ".join(missing_dimensions) + "._",
+            "_Next action: run Odoo P&L and channel spend pulls with explicit March + Burleigh/Brisbane scope before ranking performance._",
+        ]
+    ).strip()
+
+
+def _looks_like_unexecuted_placeholder_answer(answer_text: str) -> bool:
+    lowered = str(answer_text or "").casefold()
+    if not lowered:
+        return False
+    placeholder_tokens = (
+        "awaiting odoo evidence",
+        "awaiting shopify evidence",
+        "next tool call",
+        "select * from account_move_line",
+        "$x",
+        "$y",
+        "$z",
+        "$w",
+        "the language model returned no usable text for this turn",
+        "what we know",
+        "what to try",
+    )
+    return any(token in lowered for token in placeholder_tokens)
+
+
+def _extract_latest_odoo_mas_markdown(tool_events: list[ChatToolEvent]) -> tuple[str | None, str | None]:
+    for event in reversed(tool_events):
+        if event.tool_id != "odoo_primary" or event.status != "executed":
+            continue
+        payload = dict(event.payload or {})
+        execution_truth = dict(payload.get("execution_truth") or {})
+        if str(execution_truth.get("evidence_source_mode") or "").strip().casefold() != "odoo_mas_v2":
+            continue
+        response = dict(payload.get("response") or {})
+        markdown = str(response.get("markdown") or "").strip()
+        if markdown:
+            return markdown, str(event.operation or "odoo_mas_v2")
+    return None, None
+
+
+def _render_mas_truth_locked_answer(markdown: str, operation: str | None) -> str:
+    op = operation or "odoo_mas_v2"
+    return (
+        f"{markdown.strip()}\n\n"
+        "## Execution Truth\n"
+        f"- Source mode: `odoo_mas_v2`\n"
+        f"- Operation: `{op}`\n"
+        "- This response is rendered directly from executed Odoo MAS evidence to prevent narrative drift."
+    ).strip()
+
+
+def _filter_citations_for_mas_truth(citations: list[dict], tool_events: list[ChatToolEvent]) -> list[dict]:
+    mas_markdown, _mas_operation = _extract_latest_odoo_mas_markdown(tool_events)
+    if not mas_markdown:
+        return citations
+    return [
+        citation
+        for citation in citations
+        if str(citation.get("source_type") or "").strip().casefold() == "tool"
+        and str(citation.get("tool_id") or "").strip() == "odoo_primary"
+    ]
+
+
 def normalize_finance_closeout_answer(
     *,
     answer_text: str,
     request_message: str,
     tool_plan: dict[str, Any] | None,
     tool_events: list[ChatToolEvent],
+    workflow_mode: str | None = None,
 ) -> str:
+    cleaned_answer = _remove_low_quality_response_artifacts(answer_text)
+    mas_markdown, mas_operation = _extract_latest_odoo_mas_markdown(tool_events)
+    if mas_markdown:
+        return normalize_business_abbreviations(_render_mas_truth_locked_answer(mas_markdown, mas_operation))
+    synthetic_placeholder_answer = _looks_like_unexecuted_placeholder_answer(cleaned_answer)
+    if str(workflow_mode or "").strip().casefold() == "bp_mode":
+        bp_missing_grounding_answer = _build_bp_missing_grounding_response(
+            request_message=request_message,
+            tool_events=tool_events,
+        )
+        if bp_missing_grounding_answer:
+            return normalize_business_abbreviations(bp_missing_grounding_answer)
+    if synthetic_placeholder_answer and _bp_required_metrics_from_message(request_message):
+        bp_missing_grounding_answer = _build_bp_missing_grounding_response(
+            request_message=request_message,
+            tool_events=tool_events,
+        )
+        if bp_missing_grounding_answer:
+            return normalize_business_abbreviations(bp_missing_grounding_answer)
     if not _is_business_finance_closeout_request(request_message):
-        return normalize_business_abbreviations(answer_text)
+        return normalize_business_abbreviations(cleaned_answer)
     executed_events = [event for event in tool_events if event.tool_id == "odoo_primary" and event.status == "executed"]
     if not executed_events:
-        return normalize_business_abbreviations(answer_text)
+        return normalize_business_abbreviations(cleaned_answer)
     plan = dict(tool_plan or {})
     payload = dict(plan.get("payload") or {})
     date_from = str(payload.get("date_from") or "unknown")
     date_to = str(payload.get("date_to") or "unknown")
-    normalized = answer_text
+    normalized = cleaned_answer
     lowered = normalized.casefold()
     if "facts" not in lowered or "inferences" not in lowered or "assumptions" not in lowered:
         normalized = (
@@ -2529,7 +3287,7 @@ def normalize_finance_closeout_answer(
             "- Provide 3-5 owner actions with urgency and impact.\n\n"
             + normalized.strip()
         ).strip()
-    if not _looks_like_blocking_finance_answer(answer_text):
+    if not _looks_like_blocking_finance_answer(cleaned_answer):
         return normalize_business_abbreviations(normalized)
     evidence_lines = [
         f"- `{event.operation or event.tool_id}`: {event.summary or 'executed'}"
@@ -2552,6 +3310,61 @@ def normalize_finance_closeout_answer(
         normalized.strip(),
     ]
     return normalize_business_abbreviations("\n".join(rewritten).strip())
+
+
+def _bp_required_metrics_from_message(message: str) -> list[str]:
+    lowered = str(message or "").casefold()
+    metric_map = (
+        ("cogs", "COGS"),
+        ("cost of goods", "COGS"),
+        ("gp", "GP"),
+        ("gross profit", "GP"),
+        ("revenue", "Revenue"),
+        ("net", "Net"),
+        ("roas", "ROAS"),
+        ("roi", "ROAS"),
+    )
+    metrics: list[str] = []
+    for token, label in metric_map:
+        if token in lowered and label not in metrics:
+            metrics.append(label)
+    return metrics
+
+
+def evaluate_bp_audit(*, answer_text: str, tool_events: list[ChatToolEvent], request_message: str) -> dict[str, Any]:
+    metrics = _bp_required_metrics_from_message(request_message)
+    lowered_answer = str(answer_text or "").casefold()
+    executed = any(event.tool_id == "odoo_primary" and event.status == "executed" for event in tool_events)
+    missing_metrics = [metric for metric in metrics if metric.casefold() not in lowered_answer]
+    fit_for_purpose = "pass" if executed else "fail"
+    best_practice = "pass" if ("facts" in lowered_answer and "assumptions" in lowered_answer) else "fail"
+    efficiency = "pass" if len(tool_events) <= 12 else "fail"
+    business_value = "pass" if any(token in lowered_answer for token in ("what to do next", "action", "decision")) else "fail"
+    hard_fail = fit_for_purpose == "fail"
+    findings: list[str] = []
+    if not executed:
+        findings.append("No executed Odoo evidence was captured for BP mode.")
+    if missing_metrics:
+        findings.append(f"Missing requested metrics in final narrative: {', '.join(missing_metrics)}")
+    if best_practice == "fail":
+        findings.append("Final answer did not clearly separate facts and assumptions.")
+    remediation_actions = [
+        "Re-run required Odoo operations with explicit entity/date scope.",
+        "Regenerate board output with required metrics and confidence notes.",
+    ]
+    if not missing_metrics:
+        remediation_actions = remediation_actions[:1]
+    confidence_score = 0.35 if hard_fail else 0.78 if not missing_metrics else 0.62
+    return {
+        "fit_for_purpose": fit_for_purpose,
+        "best_practice": best_practice,
+        "efficiency": efficiency,
+        "business_value": business_value,
+        "hard_fail": hard_fail,
+        "findings": findings,
+        "remediation_actions": remediation_actions,
+        "confidence_score": confidence_score,
+    }
 
 
 def log_answer_prompt_compaction(*, trace_id: str, package: PreparedAnswerPrompt) -> None:
@@ -2833,7 +3646,15 @@ def _should_emit_multi_agent_handoff_trace(
     normalized_plan = _normalize_tool_plan(tool_plan)
     tool_mode = str(normalized_plan.get("mode") or "none").strip().lower()
     operation = str(normalized_plan.get("operation") or "").strip().lower()
-    if workflow_mode in {"data_collector", "odoo_specialist", "documenter"}:
+    if workflow_mode in {
+        "data_collector",
+        "odoo_specialist",
+        "documenter",
+        "case_framing",
+        "evidence_retrieval",
+        "odoo_operations",
+        "bp_mode",
+    }:
         return True
     return tool_mode in {"required", "preview"} and operation.startswith("odoo.finance.")
 
@@ -2844,6 +3665,12 @@ def _classify_sub_agent_role(name: str) -> str | None:
         return None
     if any(token in lowered for token in ("finance", "financial", "cfo")):
         return "finance_analyst"
+    if any(token in lowered for token in ("case framing", "case_framing", "framing")):
+        return "case_framing_agent"
+    if any(token in lowered for token in ("lead enterprise", "architect", "orchestrator")):
+        return "lead_enterprise_architect"
+    if any(token in lowered for token in ("auditor", "kpmg", "ey", "ernst", "young")):
+        return "auditor_agent"
     if any(token in lowered for token in ("documenter", "documentor", "writer", "board")):
         return "business_documenter"
     return None
@@ -2887,6 +3714,13 @@ def _build_worker_prompt(
 ) -> str:
     role_hint = _classify_sub_agent_role(worker.name)
     role_instruction = (
+        "Frame the business case precisely: objective, metrics, entities, date-window, assumptions, and blockers."
+        if role_hint == "case_framing_agent"
+        else "Orchestrate end-to-end business architecture, challenge weak assumptions, and drive to a board-ready outcome."
+        if role_hint == "lead_enterprise_architect"
+        else "Audit fit-for-purpose, best-practice, efficiency, and business value; include remediation actions for each failing point."
+        if role_hint == "auditor_agent"
+        else
         "Return normalized financial facts, metrics, drivers, risks, assumptions, missing data, and a strategist-ready interpretation."
         if role_hint == "finance_analyst"
         else "Produce a board-ready structured document draft using only grounded facts and explicit assumptions."
@@ -2942,6 +3776,12 @@ def _run_sub_agent_completion(
         tool_grounding_prompt=tool_grounding_prompt,
         prior_worker_outputs=prior_worker_outputs,
     )
+    if worker_llm_config.get("max_tokens") not in (None, ""):
+        sub_max = int(worker_llm_config["max_tokens"])
+    else:
+        sub_max = int(
+            max(1, int(getattr(settings, "app_sub_agent_max_output_tokens_default", 4096) or 4096))
+        )
     return generate_answer(
         worker_prompt,
         worker_connection,
@@ -2949,7 +3789,7 @@ def _run_sub_agent_completion(
         system_prompt=str((worker_runtime_profile.guardrails_config_json or {}).get("system_prompt") or ""),
         model_id=str(worker_llm_config.get("model_id") or ""),
         temperature=float(worker_llm_config.get("temperature", 0)),
-        max_tokens=int(worker_llm_config["max_tokens"]) if worker_llm_config.get("max_tokens") not in (None, "") else None,
+        max_tokens=sub_max,
         trace_id=trace_id,
         service="agent-ingress",
     )
@@ -3167,6 +4007,26 @@ def create_app() -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.post("/agent/v1/chat/completions")
+    async def voice_chat_completions(
+        body: VoiceChatCompletionsRequest,
+        request: Request,
+        session: Session = Depends(get_session),
+    ) -> StreamingResponse:
+        return await handle_voice_chat_completions(body=body, request=request, session=session)
+
+    @app.get("/agent/voice/voices")
+    async def voice_voices(request: Request) -> dict:
+        return await list_elevenlabs_voices(trace_id=request.state.trace_id)
+
+    @app.post("/agent/voice/preview")
+    async def voice_preview(body: VoicePreviewRequest, request: Request) -> dict:
+        return await preview_elevenlabs_voice(body=body, trace_id=request.state.trace_id)
+
+    @app.websocket("/agent/voice/stream")
+    async def voice_stream(websocket):
+        await handle_voice_stream_websocket(websocket)
+
     @app.post("/agent/chat", response_model=ChatResponse)
     async def agent_chat(
         body: ChatRequest,
@@ -3182,6 +4042,12 @@ def create_app() -> FastAPI:
         docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
         guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        guardrails_config, _captured_business_context = maybe_bank_business_structure_context(
+            session,
+            runtime_profile=runtime_profile,
+            guardrails_config=guardrails_config,
+            message=body.message,
+        )
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
@@ -3192,6 +4058,11 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        missing_business_structure_answer = build_missing_business_structure_answer(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            guardrails_config=guardrails_config,
+        )
         effective_system_prompt = build_effective_system_prompt(
             base_system_prompt=str(guardrails_config.get("system_prompt", "")),
             conversation_mode=conversation_mode,
@@ -3287,6 +4158,9 @@ def create_app() -> FastAPI:
             owner_operator_template_compact=str(
                 guardrails_config.get("owner_operator_questionnaire_compact") or ""
             ),
+            business_structure_context_compact=str(
+                guardrails_config.get("business_structure_context_compact") or ""
+            ),
         )
         runtime_context = build_runtime_context_block(
             agent_name=agent.name,
@@ -3302,18 +4176,112 @@ def create_app() -> FastAPI:
             owner_operator_template_compact=str(
                 guardrails_config.get("owner_operator_questionnaire_compact") or ""
             ),
+            business_structure_context_compact=str(
+                guardrails_config.get("business_structure_context_compact") or ""
+            ),
         )
-        plan = await fetch_query_plan(
-            plan_query_message,
-            corpora,
-            top_k,
-            request.state.trace_id,
-            current_message=body.message,
-            workflow_mode=workflow_mode,
-            embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
-            kb_enabled=kb_enabled,
-            odoo_ready=odoo_ready,
-        )
+        if missing_business_structure_answer:
+            plan = {
+                "query_mode": "structured",
+                "direct_answer": missing_business_structure_answer,
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": "odoo_primary",
+                    "mode": "none",
+                    "reason": "business_structure_context_missing",
+                },
+            }
+        elif workflow_mode == "case_framing":
+            plan = {
+                "query_mode": "structured",
+                "direct_answer": None,
+                "prompt": case_framing_prompt(body.message),
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": "odoo_primary",
+                    "mode": "none",
+                    "reason": "Case framing mode forbids tool access.",
+                },
+            }
+        elif workflow_mode == "bp_mode":
+            plan = await fetch_query_plan(
+                plan_query_message,
+                corpora,
+                top_k,
+                request.state.trace_id,
+                current_message=body.message,
+                workflow_mode=workflow_mode,
+                embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
+                kb_enabled=kb_enabled,
+                odoo_ready=odoo_ready,
+            )
+            existing_prompt = str(plan.get("prompt") or "").strip()
+            bp_prompt_parts = [
+                bp_mode_case_framing_prompt(body.message),
+                (
+                    "Lead architect execution contract:\n"
+                    "- Retrieve fresh Odoo evidence for required financial metrics.\n"
+                    "- Never terminate with blocker-only output.\n"
+                    "- If evidence is partial, return provisional values plus remediation steps.\n"
+                    "- Include an explicit confidence note per key metric."
+                ),
+                existing_prompt,
+                "Auditor quality gate contract:\n" + bp_mode_auditor_prompt(body.message),
+            ]
+            plan["prompt"] = "\n\n".join(part for part in bp_prompt_parts if part).strip()
+        elif workflow_mode == "odoo_operations":
+            action_request, action_error = parse_odoo_operation_action_request(body.message)
+            if action_request is None:
+                plan = {
+                    "query_mode": "structured",
+                    "direct_answer": None,
+                    "prompt": (
+                        "Odoo Operations Agent blocked execution.\n"
+                        "Reason: "
+                        f"{action_error}\n\n"
+                        "Provide only JSON with fields: target_model, operation, field_whitelist, reason, "
+                        "approval_state, payload."
+                    ),
+                    "citations": [],
+                    "tool_plan": {
+                        "tool_id": "odoo_primary",
+                        "mode": "none",
+                        "blocked_reason": "invalid_structured_action_request",
+                        "reason": action_error or "invalid_structured_action_request",
+                    },
+                }
+            else:
+                plan = {
+                    "query_mode": "structured",
+                    "direct_answer": None,
+                    "prompt": (
+                        "Structured Odoo action executed under governance. "
+                        "Report execution outcome and returned data only."
+                    ),
+                    "citations": [],
+                    "tool_plan": build_odoo_action_tool_plan(action_request),
+                }
+        else:
+            plan = await fetch_query_plan(
+                plan_query_message,
+                corpora,
+                top_k,
+                request.state.trace_id,
+                current_message=body.message,
+                workflow_mode=workflow_mode,
+                embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
+                kb_enabled=kb_enabled,
+                odoo_ready=odoo_ready,
+            )
+            if workflow_mode == "evidence_retrieval":
+                existing_prompt = str(plan.get("prompt") or "").strip()
+                plan["prompt"] = (
+                    f"{evidence_retrieval_prompt(body.message)}\n\n{existing_prompt}".strip()
+                    if existing_prompt
+                    else evidence_retrieval_prompt(body.message)
+                )
+        effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
         use_odoo_agentic = should_use_odoo_agentic(
             body=body,
             workflow_mode=workflow_mode,
@@ -3324,11 +4292,19 @@ def create_app() -> FastAPI:
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
+            agent_name=agent.name,
             tool_overrides=body.tool_overrides,
-            tool_plan={"mode": "none"} if use_odoo_agentic else plan.get("tool_plan"),
+            tool_plan={"mode": "none"} if (use_odoo_agentic or workflow_mode == "case_framing") else plan.get("tool_plan"),
+            workflow_mode=workflow_mode,
             request_message=body.message,
         )
         tool_events = tool_evidence.tool_events
+        mas_markdown, mas_operation = _extract_latest_odoo_mas_markdown(tool_events)
+        if mas_markdown and not plan.get("direct_answer") and not combined_upload_context:
+            # Truth-lock MAS answers to executed deterministic markdown and bypass narrative rewrite.
+            plan["direct_answer"] = normalize_business_abbreviations(
+                _render_mas_truth_locked_answer(mas_markdown, mas_operation)
+            )
         if body.docx_mode.enabled:
             tool_events.append(
                 ChatToolEvent(
@@ -3355,6 +4331,7 @@ def create_app() -> FastAPI:
             if use_odoo_agentic
             else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
         )
+        citations = _filter_citations_for_mas_truth(citations, tool_evidence.tool_events)
         route_decision = build_route_decision(
             message=body.message,
             workflow_mode=workflow_mode,
@@ -3422,12 +4399,14 @@ def create_app() -> FastAPI:
             or use_openai_responses_chain
             or str(tool_evidence.plan.get("mode") or "none") != "none"
             or use_odoo_agentic
+            or workflow_mode == "bp_mode"
         ):
             cached = None
         else:
             cache_key = build_response_cache_key(
                 agent=agent,
                 runtime_profile=runtime_profile,
+                conversation_id=conversation.id,
                 history_context=history_context,
                 message=body.message
                 + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else "")
@@ -3557,6 +4536,8 @@ def create_app() -> FastAPI:
         raw_max_tokens = llm_config.get("max_tokens")
         configured_max_tokens = int(raw_max_tokens) if raw_max_tokens not in (None, "") else None
         can_cache_response = tool_evidence.can_cache_response
+        if workflow_mode == "bp_mode":
+            can_cache_response = False
         llm_orchestration = _resolved_llm_orchestration(llm_config)
         llm_execution_steps: list[dict[str, Any]] = []
         prompt_variants: list[PreparedAnswerPrompt] = []
@@ -3807,8 +4788,31 @@ def create_app() -> FastAPI:
             request_message=body.message,
             tool_plan=tool_evidence.plan,
             tool_events=tool_events,
+            workflow_mode=workflow_mode,
         )
         answer = dedupe_answer_text(answer)
+        if workflow_mode == "bp_mode":
+            bp_audit = evaluate_bp_audit(
+                answer_text=answer,
+                tool_events=tool_events,
+                request_message=body.message,
+            )
+            route_decision.setdefault("tool_expectations", {})
+            route_decision["tool_expectations"]["bp_audit"] = bp_audit
+            tool_events.append(
+                ChatToolEvent(
+                    tool_id="agent.bp_auditor",
+                    status="executed" if not bool(bp_audit.get("hard_fail")) else "failed",
+                    operation="agent.bp_auditor.evaluate",
+                    summary=(
+                        "BP audit passed"
+                        if not bool(bp_audit.get("hard_fail"))
+                        else "BP audit failed - remediation required"
+                    ),
+                    blocked_reason="bp_audit_hard_fail" if bool(bp_audit.get("hard_fail")) else None,
+                    payload={"bp_audit": bp_audit},
+                )
+            )
         system_sp = effective_system_prompt
         fallback_user = prompt_variants[0].prompt if prompt_variants else ""
         skip_llm_turn = bool(plan.get("direct_answer") and not combined_upload_context)
@@ -3946,6 +4950,12 @@ def create_app() -> FastAPI:
         docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
         guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        guardrails_config, _captured_business_context = maybe_bank_business_structure_context(
+            session,
+            runtime_profile=runtime_profile,
+            guardrails_config=guardrails_config,
+            message=body.message,
+        )
         conversation = session.get(AgentConversationRecord, body.conversation_id) if body.conversation_id else None
         if body.conversation_id and conversation is None:
             raise HTTPException(404, "conversation not found")
@@ -3956,6 +4966,11 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        missing_business_structure_answer = build_missing_business_structure_answer(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            guardrails_config=guardrails_config,
+        )
         effective_system_prompt = build_effective_system_prompt(
             base_system_prompt=str(guardrails_config.get("system_prompt", "")),
             conversation_mode=conversation_mode,
@@ -4051,6 +5066,9 @@ def create_app() -> FastAPI:
             owner_operator_template_compact=str(
                 guardrails_config.get("owner_operator_questionnaire_compact") or ""
             ),
+            business_structure_context_compact=str(
+                guardrails_config.get("business_structure_context_compact") or ""
+            ),
         )
         runtime_context = build_runtime_context_block(
             agent_name=agent.name,
@@ -4066,18 +5084,50 @@ def create_app() -> FastAPI:
             owner_operator_template_compact=str(
                 guardrails_config.get("owner_operator_questionnaire_compact") or ""
             ),
+            business_structure_context_compact=str(
+                guardrails_config.get("business_structure_context_compact") or ""
+            ),
         )
-        plan = await fetch_query_plan(
-            plan_query_message,
-            corpora,
-            top_k,
-            request.state.trace_id,
-            current_message=body.message,
-            workflow_mode=workflow_mode,
-            embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
-            kb_enabled=kb_enabled,
-            odoo_ready=odoo_ready,
-        )
+        if missing_business_structure_answer:
+            plan = {
+                "query_mode": "structured",
+                "direct_answer": missing_business_structure_answer,
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": "odoo_primary",
+                    "mode": "none",
+                    "reason": "business_structure_context_missing",
+                },
+            }
+        else:
+            plan = await fetch_query_plan(
+                plan_query_message,
+                corpora,
+                top_k,
+                request.state.trace_id,
+                current_message=body.message,
+                workflow_mode=workflow_mode,
+                embedding_model_id=dict(runtime_profile.kb_config_json or {}).get("embedding_model_id"),
+                kb_enabled=kb_enabled,
+                odoo_ready=odoo_ready,
+            )
+        if workflow_mode == "bp_mode" and not missing_business_structure_answer:
+            existing_prompt = str(plan.get("prompt") or "").strip()
+            bp_prompt_parts = [
+                bp_mode_case_framing_prompt(body.message),
+                (
+                    "Lead architect execution contract:\n"
+                    "- Retrieve fresh Odoo evidence for required financial metrics.\n"
+                    "- Never terminate with blocker-only output.\n"
+                    "- If evidence is partial, return provisional values plus remediation steps.\n"
+                    "- Include an explicit confidence note per key metric."
+                ),
+                existing_prompt,
+                "Auditor quality gate contract:\n" + bp_mode_auditor_prompt(body.message),
+            ]
+            plan["prompt"] = "\n\n".join(part for part in bp_prompt_parts if part).strip()
+        effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
         use_odoo_agentic = should_use_odoo_agentic(
             body=body,
             workflow_mode=workflow_mode,
@@ -4088,10 +5138,18 @@ def create_app() -> FastAPI:
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
+            agent_name=agent.name,
             tool_overrides=body.tool_overrides,
             tool_plan={"mode": "none"} if use_odoo_agentic else plan.get("tool_plan"),
+            workflow_mode=workflow_mode,
             request_message=body.message,
         )
+        mas_markdown, mas_operation = _extract_latest_odoo_mas_markdown(tool_evidence.tool_events)
+        if mas_markdown and not plan.get("direct_answer") and not combined_upload_context:
+            # Truth-lock MAS answers to executed deterministic markdown and bypass narrative rewrite.
+            plan["direct_answer"] = normalize_business_abbreviations(
+                _render_mas_truth_locked_answer(mas_markdown, mas_operation)
+            )
         if body.docx_mode.enabled:
             tool_evidence.tool_events.append(
                 ChatToolEvent(
@@ -4171,12 +5229,14 @@ def create_app() -> FastAPI:
             or use_openai_responses_chain
             or str(tool_evidence.plan.get("mode") or "none") != "none"
             or use_odoo_agentic
+            or workflow_mode == "bp_mode"
         ):
             cached = None
         else:
             cache_key = build_response_cache_key(
                 agent=agent,
                 runtime_profile=runtime_profile,
+                conversation_id=conversation.id,
                 history_context=history_context,
                 message=body.message
                 + ("\n\n[chat_uploads]\n" + chat_upload_cache_context if chat_upload_cache_context else "")
@@ -4246,8 +5306,11 @@ def create_app() -> FastAPI:
                     else [*tool_evidence.citations, *plan.get("citations", []), *web_citations]
                 )
             )
+            citations = _filter_citations_for_mas_truth(citations, tool_evidence.tool_events)
             query_mode = cached.query_mode if cached is not None else plan["query_mode"]
             cache_response = tool_evidence.can_cache_response and not use_odoo_agentic
+            if workflow_mode == "bp_mode":
+                cache_response = False
             tool_events_payload = [
                 {
                     "tool_id": tool_event.tool_id,
@@ -4632,10 +5695,33 @@ def create_app() -> FastAPI:
                 request_message=body.message,
                 tool_plan=tool_evidence.plan,
                 tool_events=tool_evidence.tool_events,
+                workflow_mode=workflow_mode,
             )
             answer_text = dedupe_answer_text(answer_text)
             route_decision_with_execution = dict(route_decision)
             route_decision_with_execution["llm_execution"] = llm_execution_steps
+            if workflow_mode == "bp_mode":
+                bp_audit = evaluate_bp_audit(
+                    answer_text=answer_text,
+                    tool_events=tool_evidence.tool_events,
+                    request_message=body.message,
+                )
+                route_decision_with_execution.setdefault("tool_expectations", {})
+                route_decision_with_execution["tool_expectations"]["bp_audit"] = bp_audit
+                auditor_event = ChatToolEvent(
+                    tool_id="agent.bp_auditor",
+                    status="executed" if not bool(bp_audit.get("hard_fail")) else "failed",
+                    operation="agent.bp_auditor.evaluate",
+                    summary=(
+                        "BP audit passed"
+                        if not bool(bp_audit.get("hard_fail"))
+                        else "BP audit failed - remediation required"
+                    ),
+                    blocked_reason="bp_audit_hard_fail" if bool(bp_audit.get("hard_fail")) else None,
+                    payload={"bp_audit": bp_audit},
+                )
+                tool_evidence.tool_events.append(auditor_event)
+                yield _encode({"type": "tool_result", "tool_event": auditor_event.model_dump()})
             if body.docx_mode.enabled:
                 operation = resolve_docx_operation(body.docx_mode)
                 required_sections = resolve_docx_finalize_required_sections(guardrails_config=guardrails_config)

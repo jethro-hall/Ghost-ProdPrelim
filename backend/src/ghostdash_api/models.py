@@ -31,6 +31,38 @@ class ToolRegistryRecord(TimestampMixin, Base):
     config_json: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
+class ToolExecutionAuditRecord(TimestampMixin, Base):
+    __tablename__ = "tool_execution_audits"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    tool_id: Mapped[str] = mapped_column(String(64), index=True)
+    operation: Mapped[str] = mapped_column(String(128), index=True)
+    risk_class: Mapped[str] = mapped_column(String(32), default="read")
+    requires_approval: Mapped[bool] = mapped_column(Boolean, default=False)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    approval_token: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    actor_agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    surface: Mapped[str] = mapped_column(String(64), default="control_api")
+    status: Mapped[str] = mapped_column(String(32), default="blocked")
+    policy_decision_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    response_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class OdooEvidenceMirrorRecord(TimestampMixin, Base):
+    __tablename__ = "odoo_evidence_mirror"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    tool_audit_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    operation: Mapped[str] = mapped_column(String(128), index=True)
+    status: Mapped[str] = mapped_column(String(32), default="captured")
+    source_mode: Mapped[str] = mapped_column(String(32), default="live_odoo")
+    scope_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    request_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    response_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class ConnectionRecord(TimestampMixin, Base):
     __tablename__ = "connections"
 
@@ -43,6 +75,7 @@ class ConnectionRecord(TimestampMixin, Base):
     api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     base_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    default_model_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
     @property
     def masked_api_key(self) -> str | None:
@@ -114,8 +147,21 @@ class AgentProfileRecord(TimestampMixin, Base):
     language: Mapped[str] = mapped_column(String(32), default="en-US")
     voice_id: Mapped[str] = mapped_column(String(64), default="alloy")
     runtime_profile_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    agent_role: Mapped[str] = mapped_column(String(16), default="lead")
+    parent_agent_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    position: Mapped[int] = mapped_column(Integer, default=0)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class DocumentFrameRecord(TimestampMixin, Base):
+    __tablename__ = "document_frames"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    title: Mapped[str] = mapped_column(String(256), default="Strategic document")
+    status: Mapped[str] = mapped_column(String(32), default="draft")
+    fragments_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class AgentConversationRecord(TimestampMixin, Base):
@@ -126,6 +172,9 @@ class AgentConversationRecord(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(256), default="New conversation")
     corpora_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     api_mode: Mapped[str] = mapped_column(String(32), default="responses")
+    conversation_mode: Mapped[str] = mapped_column(String(32), default="quick")
+    workflow_mode: Mapped[str] = mapped_column(String(32), default="standard")
+    document_frame_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
     # Last OpenAI Responses API response id for this thread (previous_response_id); not used for chat_completions path.
     openai_last_response_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
@@ -140,7 +189,48 @@ class AgentMessageRecord(TimestampMixin, Base):
     content: Mapped[str] = mapped_column(Text)
     query_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     citations_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    tool_events_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    usage_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    route_decision_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     api_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    conversation_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    workflow_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+class VoiceTurnRecord(TimestampMixin, Base):
+    __tablename__ = "voice_turns"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_session_id", "turn_id", name="uq_voice_turn_provider_session_turn"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    provider: Mapped[str] = mapped_column(String(64), default="elevenlabs", index=True)
+    provider_session_id: Mapped[str] = mapped_column(String(128), index=True)
+    turn_id: Mapped[str] = mapped_column(String(128), index=True)
+    conversation_id: Mapped[str] = mapped_column(String(64), index=True)
+    agent_id: Mapped[str] = mapped_column(String(64), index=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(32), default="received", index=True)
+    request_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    response_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    audit_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class DocxSessionRecord(TimestampMixin, Base):
+    __tablename__ = "docx_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    conversation_id: Mapped[str] = mapped_column(String(64), index=True)
+    agent_id: Mapped[str] = mapped_column(String(64), index=True)
+    template_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    operation: Mapped[str] = mapped_column(String(32), default="preview")
+    status: Mapped[str] = mapped_column(String(32), default="draft")
+    binding_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    artifacts_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    diagnostics_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
 
 
 class ChatResponseCacheRecord(TimestampMixin, Base):
@@ -233,6 +323,43 @@ class WorkflowStepRunRecord(TimestampMixin, Base):
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class WorkflowTaskRecord(TimestampMixin, Base):
+    __tablename__ = "workflow_tasks"
+    __table_args__ = (
+        UniqueConstraint("run_id", "task_key", name="uq_workflow_task_key"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    run_id: Mapped[str] = mapped_column(String(64), index=True)
+    task_key: Mapped[str] = mapped_column(String(128))
+    title: Mapped[str] = mapped_column(String(256))
+    task_kind: Mapped[str] = mapped_column(String(64), default="child_agent")
+    status: Mapped[str] = mapped_column(String(32), default="pending")
+    sequence: Mapped[int] = mapped_column(Integer, default=1)
+    depends_on_task_keys_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    assigned_agent_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    assigned_agent_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    step_run_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class WorkflowRunEventRecord(TimestampMixin, Base):
+    __tablename__ = "workflow_run_events"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence", name="uq_workflow_run_event_sequence"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: str(uuid4()))
+    run_id: Mapped[str] = mapped_column(String(64), index=True)
+    sequence: Mapped[int] = mapped_column(Integer, default=1)
+    event_type: Mapped[str] = mapped_column(String(64), index=True)
+    task_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    actor_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class DocumentRecord(TimestampMixin, Base):
