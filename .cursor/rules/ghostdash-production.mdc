@@ -1,0 +1,127 @@
+---
+description: GhostDash production rebuild rules for Magic Mike, phone-call mode, runtime safety, and tool policy.
+alwaysApply: true
+---
+
+# GhostDash Production Rules
+
+## Scope
+
+These rules apply to GhostDash, Magic Mike, production chat, phone-call preview, voice mode, tool policy, guardrails, and admin configuration.
+
+## Product truth
+
+Magic Mike is a Ride Electric consumer customer voice agent.
+
+Magic Mike is not:
+
+```text
+a finance agent
+a board documenter
+a generic RAG/document bot
+an Odoo/ERP assistant
+a debugging surface
+```
+
+## Production chat rule
+
+`/prod_chatui/` must always be clean production mode.
+
+Required runtime facts:
+
+```text
+agent_id = magic_mike
+agent_category = consumer_customer
+route_mode = production_chat
+public_presenter_required = true
+retail_output_guard_required = true
+diagnostics_visible = false
+```
+
+## Forbidden production leakage
+
+Magic Mike production output must not contain:
+
+```text
+Odoo
+tool blocked
+backend
+orchestrator
+citations
+scorecard
+Execution Truth
+Source mode
+semantic
+structured
+provided documents
+grounded information
+database
+raw payload
+trace_id
+```
+
+If any appears, block and rewrite before display and before speech.
+
+## Odoo rule
+
+Odoo is forbidden for Magic Mike in consumer customer production mode.
+
+Do not hide Odoo only in the prompt. Remove it from backend tool policy and runtime capability.
+
+## Phone-call mode rule
+
+Open Streaming / Preview must behave like a phone call.
+
+```text
+one click starts call
+mic stays open
+interim transcript displays only
+final transcript auto-submits once
+Magic Mike replies while streaming
+ElevenLabs audio plays selected voice
+user can interrupt by speaking
+End Call stops all resources
+```
+
+## Voice rule
+
+Do not use browser speechSynthesis in production phone-call mode.
+Do not use repeated MP3 preview calls in phone-call mode.
+Use backend ElevenLabs websocket with Flash v2.5 and PCM playback.
+
+## Guardrail rule
+
+Pipeline:
+
+```text
+STT transcript
+-> input guardrail
+-> runtime/tool routing
+-> output guard
+-> PublicResponsePresenter
+-> display
+-> speech
+```
+
+Never send raw RAG/tool output directly to ElevenLabs.
+
+## Code quality rule
+
+Do not add static one-off patches where a runtime boundary is broken.
+Fix the path at the correct layer.
+
+Do not create duplicate state systems.
+Do not create duplicate database tables without proving no existing schema fits.
+Do not use global agent/tool state for production agents.
+
+## Proof rule
+
+Every completed change must include:
+
+```text
+files changed
+tests run
+before/after behaviour
+runtime proof
+network/audio proof for voice changes
+```
