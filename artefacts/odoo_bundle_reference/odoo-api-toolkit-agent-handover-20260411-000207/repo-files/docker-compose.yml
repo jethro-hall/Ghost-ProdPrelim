@@ -1,0 +1,512 @@
+services:
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: ghost-phoenix
+    restart: unless-stopped
+    environment:
+      - PHOENIX_PORT=6006
+      - PHOENIX_GRPC_PORT=4317
+      - PHOENIX_WORKING_DIR=/phoenix-data
+      - PHOENIX_ENABLE_AUTH=false
+    ports:
+      - "6006:6006"
+    volumes:
+      - phoenix_data:/phoenix-data
+
+  embedder:
+    image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.9
+    container_name: ghost-embedder
+    restart: unless-stopped
+    command: >
+      --model-id BAAI/bge-large-en-v1.5
+      --served-model-name bge-large-en-v1.5
+      --dtype float16
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    gpus: all
+    volumes:
+      - embedder_cache:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/health >/dev/null 2>&1 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  edge-gateway:
+    image: caddy:2-alpine
+    container_name: ghost-edge-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+      - "7070:7070"
+      - "6333:6333"
+      - "8092:8092"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web-ui:
+        condition: service_started
+      control-plane-api:
+        condition: service_healthy
+      control-plane-api-canary:
+        condition: service_healthy
+      open-webui:
+        condition: service_started
+      n8n:
+        condition: service_started
+
+  web-ui:
+    container_name: ghost-web-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  # Primary control-plane API instance.
+  control-plane-api:
+    container_name: ghost-control-plane
+    build:
+      context: .
+      dockerfile: Dockerfile.control-plane
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CONTROL_PLANE_PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - HUBTIGER_PROXY_URL=http://hubtiger-proxy:8095
+      - HUBTIGER_MCP_URL=http://hubtiger-mcp:8096
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - REDIS_URL=redis://redis:6379
+      - LLAMAINDEX_URL=${LLAMAINDEX_URL:-}
+      - LLAMAINDEX_INTERNAL_KEY=${LLAMAINDEX_INTERNAL_KEY:-}
+      - SHOPIFY_MCP_URL=${SHOPIFY_MCP_URL:-http://shopify-mcp:3012}
+      - SHOPIFY_MCP_INTERNAL_KEY=${SHOPIFY_MCP_INTERNAL_KEY:-}
+      - SHOPIFY_MCP_API_TOKEN=${SHOPIFY_MCP_API_TOKEN:-}
+      - ODOO_RPC_URL=${ODOO_RPC_URL:-http://odoo-rpc:8097}
+      - ODOO_RPC_INTERNAL_KEY=${ODOO_RPC_INTERNAL_KEY:-}
+      - ODOO_RPC_API_TOKEN=${ODOO_RPC_API_TOKEN:-}
+      - VLLM_OPENAI_BASE_URL=${VLLM_OPENAI_BASE_URL}
+      - VLLM_INTERNAL_BASE_URL=${VLLM_INTERNAL_BASE_URL}
+      - VLLM_PUBLIC_BASE_URL=${VLLM_PUBLIC_BASE_URL}
+      - VLLM_OPENAI_API_KEY=${VLLM_OPENAI_API_KEY}
+      - VLLM_MODEL=${VLLM_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VLLM_EMBEDDINGS_BASE_URL=http://embedder
+      - VLLM_EMBEDDINGS_MODEL=bge-large-en-v1.5
+      - DOCLING_PROCESSOR_URL=${DOCLING_PROCESSOR_URL:-http://docling-processor:8088}
+      - DOCLING_PROCESSOR_INTERNAL_KEY=${DOCLING_PROCESSOR_INTERNAL_KEY:-}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=ghost-control-plane
+      - PHOENIX_URL=${PHOENIX_URL:-http://ghost-phoenix:6006}
+    depends_on:
+      postgres:
+        condition: service_started
+      hubtiger-proxy:
+        condition: service_started
+      hubtiger-mcp:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+      shopify-mcp:
+        condition: service_started
+      odoo-rpc:
+        condition: service_healthy
+      docling-processor:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+      embedder:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  # Canary control-plane instance to avoid edge 50x during primary recycle.
+  control-plane-api-canary:
+    container_name: ghost-control-plane-canary
+    build:
+      context: .
+      dockerfile: Dockerfile.control-plane
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CONTROL_PLANE_PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - HUBTIGER_PROXY_URL=http://hubtiger-proxy:8095
+      - HUBTIGER_MCP_URL=http://hubtiger-mcp:8096
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - REDIS_URL=redis://redis:6379
+      - LLAMAINDEX_URL=${LLAMAINDEX_URL:-}
+      - LLAMAINDEX_INTERNAL_KEY=${LLAMAINDEX_INTERNAL_KEY:-}
+      - SHOPIFY_MCP_URL=${SHOPIFY_MCP_URL:-http://shopify-mcp:3012}
+      - SHOPIFY_MCP_INTERNAL_KEY=${SHOPIFY_MCP_INTERNAL_KEY:-}
+      - SHOPIFY_MCP_API_TOKEN=${SHOPIFY_MCP_API_TOKEN:-}
+      - ODOO_RPC_URL=${ODOO_RPC_URL:-http://odoo-rpc:8097}
+      - ODOO_RPC_INTERNAL_KEY=${ODOO_RPC_INTERNAL_KEY:-}
+      - ODOO_RPC_API_TOKEN=${ODOO_RPC_API_TOKEN:-}
+      - VLLM_OPENAI_BASE_URL=${VLLM_OPENAI_BASE_URL}
+      - VLLM_INTERNAL_BASE_URL=${VLLM_INTERNAL_BASE_URL}
+      - VLLM_PUBLIC_BASE_URL=${VLLM_PUBLIC_BASE_URL}
+      - VLLM_OPENAI_API_KEY=${VLLM_OPENAI_API_KEY}
+      - VLLM_MODEL=${VLLM_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VLLM_EMBEDDINGS_BASE_URL=http://embedder
+      - VLLM_EMBEDDINGS_MODEL=bge-large-en-v1.5
+      - DOCLING_PROCESSOR_URL=${DOCLING_PROCESSOR_URL:-http://docling-processor:8088}
+      - DOCLING_PROCESSOR_INTERNAL_KEY=${DOCLING_PROCESSOR_INTERNAL_KEY:-}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=ghost-control-plane
+      - PHOENIX_URL=${PHOENIX_URL:-http://ghost-phoenix:6006}
+    depends_on:
+      postgres:
+        condition: service_started
+      hubtiger-proxy:
+        condition: service_started
+      hubtiger-mcp:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+      shopify-mcp:
+        condition: service_started
+      odoo-rpc:
+        condition: service_healthy
+      docling-processor:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+      embedder:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  # OTel Collector sidecar — receives spans from control-plane, exports to Phoenix
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: ghost-otel-collector
+    restart: unless-stopped
+    command: ["--config", "/etc/otel-collector-config.yaml"]
+    environment:
+      - PHOENIX_OTLP_ENDPOINT=${PHOENIX_OTLP_ENDPOINT:-http://ghost-phoenix:6006/v1/traces}
+    ports:
+      - "4318:4318"
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: ghost-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: ghost-promtail
+    restart: unless-stopped
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: ghost-grafana
+    restart: unless-stopped
+    ports:
+      - "3005:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Editor
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/ghostdash-control-plane-logs.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - loki
+
+  docling-processor:
+    container_name: ghost-docling-processor
+    build:
+      context: ./services/docling-processor
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:8088"
+    env_file:
+      - .env
+    environment:
+      - DOCLING_PROCESSOR_INTERNAL_KEY=${DOCLING_PROCESSOR_INTERNAL_KEY:-}
+      - DOCLING_ACCELERATOR=CUDA
+      - DOCLING_GPU_REQUIRED=true
+      - DOCLING_NUM_THREADS=4
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    gpus: all
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8088/health >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.8.6
+    container_name: ghost-open-webui
+    restart: unless-stopped
+    env_file:
+      - ./services/openwebui/.env
+    volumes:
+      - ./services/openwebui/data:/app/backend/data
+
+  agent-ingress:
+    container_name: ghost-agent-ingress
+    image: node:20-alpine
+    command: sh -c "echo 'Agent Ingress Stub' && sleep infinity"
+    restart: unless-stopped
+    depends_on:
+      - control-plane-api
+
+  tool-proxy:
+    container_name: ghost-tool-proxy
+    image: node:20-alpine
+    command: sh -c "echo 'Tool Proxy Stub' && sleep infinity"
+    restart: unless-stopped
+
+  # Hubtiger proxy: internal only (port 8095). Control-plane calls this; proxy calls HUBTIGER_BASE_URL.
+  hubtiger-proxy:
+    container_name: ghost-hubtiger-proxy
+    build:
+      context: ./services/hubtiger-proxy
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HUBTIGER_PROXY_PORT=8095
+      - HUBTIGER_BASE_URL=http://hubtiger:3001
+      - HUBTIGER_API_KEY=${HUBTIGER_API_KEY:-}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - TZ=Australia/Brisbane
+      - HUBTIGER_BOOKING_TIMEZONE=Australia/Brisbane
+    depends_on:
+      - postgres
+      - hubtiger
+
+  hubtiger-mcp:
+    container_name: ghost-hubtiger-mcp
+    build:
+      context: ./services/hubtiger-mcp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HUBTIGER_MCP_PORT=8096
+      - HUBTIGER_PROXY_URL=http://hubtiger-proxy:8095
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - HUBTIGER_MCP_CACHE_TTL_SECONDS=${HUBTIGER_MCP_CACHE_TTL_SECONDS:-20}
+      - HUBTIGER_MCP_READ_TIMEOUT_MS=${HUBTIGER_MCP_READ_TIMEOUT_MS:-8000}
+      - HUBTIGER_MCP_MUTATION_TIMEOUT_MS=${HUBTIGER_MCP_MUTATION_TIMEOUT_MS:-12000}
+      - HUBTIGER_MCP_CIRCUIT_FAILS=${HUBTIGER_MCP_CIRCUIT_FAILS:-3}
+      - HUBTIGER_MCP_CIRCUIT_OPEN_MS=${HUBTIGER_MCP_CIRCUIT_OPEN_MS:-60000}
+    depends_on:
+      - hubtiger-proxy
+      - redis
+      - postgres
+
+  hubtiger:
+    container_name: ghost-hubtiger
+    build:
+      context: .
+      dockerfile: Dockerfile.hubtiger
+    restart: unless-stopped
+    environment:
+      - PORT=3001
+    ports:
+      - "3001:3001"
+
+  # Production Dockerized Shopify MCP service (HTTP transport).
+  shopify-mcp:
+    container_name: ghost-shopify-mcp
+    build:
+      context: ./services/shopify-mcp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SHOPIFY_CLIENT_ID=${SHOPIFY_CLIENT_ID:-}
+      - SHOPIFY_CLIENT_SECRET=${SHOPIFY_CLIENT_SECRET:-}
+      - SHOPIFY_STORE_DOMAIN=${SHOPIFY_STORE_DOMAIN:-}
+      - SHOPIFY_ACCESS_TOKEN=${SHOPIFY_ACCESS_TOKEN:-}
+      - SHOPIFY_API_VERSION=${SHOPIFY_API_VERSION:-}
+      - COB_SHOPIFY_READ_ONLY=${COB_SHOPIFY_READ_ONLY:-false}
+      - COB_SHOPIFY_LOG_LEVEL=${COB_SHOPIFY_LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3012/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+      start_period: 30s
+
+  odoo-rpc:
+    container_name: ghost-odoo-rpc
+    build:
+      context: ./services/odoo-rpc
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ODOO_RPC_PORT=8097
+      - ODOO_URL=${ODOO_URL:-}
+      - ODOO_DB=${ODOO_DB:-}
+      - ODOO_USERNAME=${ODOO_USERNAME:-}
+      - ODOO_API_KEY=${ODOO_API_KEY:-}
+      - ODOO_PASSWORD=${ODOO_PASSWORD:-}
+      - ODOO_RPC_INTERNAL_KEY=${ODOO_RPC_INTERNAL_KEY:-}
+      - ODOO_RPC_API_TOKEN=${ODOO_RPC_API_TOKEN:-}
+      - ODOO_RPC_ALLOW_MUTATIONS=${ODOO_RPC_ALLOW_MUTATIONS:-false}
+      - ODOO_RPC_TIMEOUT_MS=${ODOO_RPC_TIMEOUT_MS:-20000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "if [ -n \"$ODOO_RPC_INTERNAL_KEY\" ]; then wget -q -O - --header=\"x-internal-key: $ODOO_RPC_INTERNAL_KEY\" http://127.0.0.1:8097/health >/dev/null 2>&1; elif [ -n \"$ODOO_RPC_API_TOKEN\" ]; then wget -q -O - --header=\"Authorization: Bearer $ODOO_RPC_API_TOKEN\" http://127.0.0.1:8097/health >/dev/null 2>&1; else wget -q -O - http://127.0.0.1:8097/health >/dev/null 2>&1; fi || exit 1"
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+      start_period: 20s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ghost-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.17.1
+    container_name: ghost-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -lc 'exec 3<>/dev/tcp/127.0.0.1/6333'"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: ghost-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  glances:
+    image: nicolargo/glances:latest-full
+    container_name: ghost-glances
+    restart: unless-stopped
+    pid: host
+    network_mode: host
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ghost-n8n
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=Australia/Brisbane
+      - N8N_HOST=${DASHBOARD_DOMAIN}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - N8N_PROXY_HOPS=1
+      - N8N_EDITOR_BASE_URL=https://${DASHBOARD_DOMAIN}:7070/
+      - WEBHOOK_URL=https://${DASHBOARD_DOMAIN}:7070/
+      - DB_TYPE=postgresdb
+      - DB_TABLE_PREFIX=n8n_
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:5678/healthz >/dev/null 2>&1 || wget -q -O - http://127.0.0.1:5678/ >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    depends_on:
+      - postgres
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  phoenix_data:
+  embedder_cache:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+  n8n_data:
+  loki_data:
+  grafana_data:

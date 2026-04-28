@@ -1,0 +1,32 @@
+{
+  "concise": {
+    "label": "Concise",
+    "template": "concise",
+    "supports_table": false
+  },
+  "analyst": {
+    "label": "Analyst",
+    "template": "analyst",
+    "supports_table": true
+  },
+  "board_ready": {
+    "label": "Board Ready",
+    "template": "board_ready",
+    "supports_table": true
+  },
+  "table_only": {
+    "label": "Table Only",
+    "template": "table_only",
+    "supports_table": true
+  },
+  "chart_pack": {
+    "label": "Chart Pack",
+    "template": "chart_pack",
+    "supports_table": true
+  },
+  "downloadable_report": {
+    "label": "Downloadable Report",
+    "template": "downloadable_report",
+    "supports_table": true
+  }
+}

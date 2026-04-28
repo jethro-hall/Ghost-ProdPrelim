@@ -1,0 +1,53 @@
+---
+description: Frontend rules for GhostDASH UI (React+Vite+Tailwind). Enforce glass UI, SPA navigation, and component boundaries.
+globs:
+  - ui/src/**/*.ts
+  - ui/src/**/*.tsx
+  - ui/src/**/*.css
+alwaysApply: true
+---
+
+# Frontend GhostDASH UI rules
+
+## Stack reality
+
+- Use Vite + React + TypeScript.
+- Keep SPA routing with React Router.
+- Use Tailwind and central CSS primitives from `ui/src/index.css`.
+
+## Visual rules
+
+Prefer these shared classes:
+
+- `.glass-panel`
+- `.glass-input`
+- `.glass-button`
+- `.glass-button-primary`
+- `.bg-orb`
+
+Add theme tokens centrally, not inline across components.
+
+## Required UI building blocks
+
+Maintain these as separate components:
+
+- `Sidebar`
+- `Header`
+- `RightPanel`
+- `GhostChat`
+- `FullScreenLoader`
+
+## Motion and performance
+
+- Use transform/opacity-based animations.
+- Avoid layout-thrashing animations.
+
+## API boundary
+
+- UI calls only `/api/*`.
+- Use the shared client in `ui/src/api.ts` rather than ad-hoc fetch calls.
+
+## Responsiveness
+
+- Sidebar must collapse.
+- RightPanel and GhostChat must behave as overlays on small screens.

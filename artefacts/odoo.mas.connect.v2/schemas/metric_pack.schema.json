@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MetricPack",
+  "type": "object",
+  "required": ["period", "rows", "confidence", "gaps"],
+  "properties": {
+    "period": {"type": "string"},
+    "dimension": {"type": "string"},
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "business_unit": {"type": "string"},
+          "revenue": {"type": ["number", "null"]},
+          "cogs": {"type": ["number", "null"]},
+          "gross_profit": {"type": ["number", "null"]},
+          "net_profit": {"type": ["number", "null"]},
+          "ad_spend": {"type": ["number", "null"]},
+          "roas": {"type": ["number", "null"]}
+        }
+      }
+    },
+    "confidence": {"type": "object"},
+    "gaps": {"type": "array", "items": {"type": "string"}}
+  }
+}

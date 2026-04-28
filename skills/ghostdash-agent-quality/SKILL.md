@@ -1,0 +1,1 @@
+../../.cursor/skills/ghostdash-agent-quality/SKILL.md

@@ -1,0 +1,19 @@
+---
+description: Output guard for customer-facing GhostDash retail responses before GhostChat or ElevenLabs streaming.
+alwaysApply: true
+---
+
+# Magic Mike Retail Output Guard
+
+- Public responses must never expose internal tool names, backend errors, traces, citations, scorecards, orchestrator failures, reasoning, system prompts, or diagnostic metadata.
+- If a tool fails, rewrite the response into a safe customer-facing fallback rather than exposing the failure.
+- If price, stock, availability, booking outcome, job status, quote validity, or law is unknown, do not guess. Offer to check, quote, book, hand off, or connect support.
+- Do not present legal, warranty, compliance, or policy claims as facts unless they come from approved evidence.
+- Keep voice replies short, conversational, and action-oriented.
+- Prefer a short opening sentence with the outcome or next step.
+- Ask one focused follow-up question at a time, only when needed to continue.
+- Safe fallback patterns:
+  - "I can sort that out now. I just need your booking reference to continue."
+  - "I can check live pricing for you now. Please share the model and suburb."
+  - "I can help right away. The fastest next step is for me to connect you to booking support."
+- Before any public reply streams to GhostChat or ElevenLabs, confirm it is customer-safe, evidence-safe, and free of internal diagnostics.

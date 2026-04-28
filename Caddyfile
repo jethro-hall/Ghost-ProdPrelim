@@ -1,0 +1,101 @@
+:80 {
+	encode gzip
+	@legacy_chat path /chat*
+	redir @legacy_chat https://ghoststack.rideai.com.au/ghost_chatui/ 308
+	@ghost_chatui_root path /ghost_chatui
+	redir @ghost_chatui_root https://ghoststack.rideai.com.au/ghost_chatui/ 308
+	@prod_chatui_root path /prod_chatui
+	redir @prod_chatui_root https://ghoststack.rideai.com.au/prod_chatui/ 308
+	handle /ghost_chatui/* {
+		redir https://ghoststack.rideai.com.au{uri} 308
+	}
+	handle /prod_chatui/* {
+		redir https://ghoststack.rideai.com.au{uri} 308
+	}
+	handle /docx-artifacts/* {
+		reverse_proxy docx-templater:8080 {
+			flush_interval -1
+		}
+	}
+	handle /api/voice/elevenlabs/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
+	}
+	handle /api/* {
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle /agent/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
+	}
+	handle /health {
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy ui:4173
+	}
+}
+
+ghoststack.rideai.com.au {
+	encode gzip
+	@legacy_chat path /chat*
+	redir @legacy_chat /ghost_chatui/ 308
+	@ghost_chatui_entry path /ghost_chatui/
+	header @ghost_chatui_entry Cache-Control "no-store, no-cache, must-revalidate"
+	@ghost_chatui_root path /ghost_chatui
+	redir @ghost_chatui_root /ghost_chatui/ 308
+	@prod_chatui_entry path /prod_chatui/
+	header @prod_chatui_entry Cache-Control "no-store, no-cache, must-revalidate"
+	@prod_chatui_root path /prod_chatui
+	redir @prod_chatui_root /prod_chatui/ 308
+	handle_path /prod_chatui/* {
+		reverse_proxy ghost-chatui:3000
+	}
+	handle_path /ghost_chatui/* {
+		reverse_proxy ghost-chatui:3000
+	}
+	handle /docx-artifacts/* {
+		reverse_proxy docx-templater:8080 {
+			flush_interval -1
+		}
+	}
+	handle /api/voice/elevenlabs/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
+	}
+	handle /api/* {
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle /agent/* {
+		reverse_proxy agent-ingress:8001 {
+			flush_interval -1
+		}
+	}
+	handle /health {
+		reverse_proxy control-api:8000 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy ui:4173
+	}
+}
+
+workflow.rideai.com.au {
+	encode gzip
+	reverse_proxy n8n:5678
+}
+
+https://ghoststack.rideai.com.au:6333 {
+	encode gzip
+	reverse_proxy qdrant:6333
+}

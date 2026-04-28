@@ -1,0 +1,45 @@
+---
+description: Backend rules for GhostDASH Python API/worker (API contract, Llama Stack boundary, structured JSON observability).
+globs:
+  - backend/src/**/*.py
+alwaysApply: true
+---
+
+# Backend API + Observability rules
+
+## Routing and boundaries
+
+- Public UI traffic goes through Caddy and reaches `/api/*`.
+- Keep application endpoints under `/api`.
+- Health endpoints may remain outside `/api` when used for Docker health checks.
+
+## Runtime boundary
+
+- Stay aligned with the current `ghoststack-rag` runtime shape: `control-api`, `agent-ingress`, and `workflow-runtime`.
+- Model calls must go through the repo-defined runtime helpers and service boundaries; do not invent alternate direct browser paths.
+
+## Structured logs
+
+Every inbound request and outbound call must emit structured JSON with:
+
+- `trace_id`
+- `span_id`
+- `service`
+- `route`
+- `start_ts`
+- `end_ts`
+- `latency_ms`
+- `status`
+- `error`
+
+## Trace propagation
+
+- Accept `traceparent` when present.
+- Return `X-Trace-Id` on API responses.
+- Reuse or propagate trace IDs to downstream calls.
+
+## Error handling
+
+- No silent failures.
+- Return consistent error JSON or HTTP errors.
+- Include error detail in structured logs.

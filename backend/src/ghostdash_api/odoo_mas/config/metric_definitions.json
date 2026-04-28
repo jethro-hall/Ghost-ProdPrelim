@@ -1,0 +1,67 @@
+{
+  "metrics": {
+    "revenue": {
+      "source": "pnl_revenue",
+      "output_sign": "absolute",
+      "derived": false
+    },
+    "cogs": {
+      "source": "pnl_cogs",
+      "output_sign": "absolute",
+      "derived": false
+    },
+    "gross_profit": {
+      "derived": true,
+      "formula": "revenue - cogs",
+      "dependencies": [
+        "revenue",
+        "cogs"
+      ]
+    },
+    "gross_margin_pct": {
+      "derived": true,
+      "formula": "gross_profit / revenue",
+      "dependencies": [
+        "gross_profit",
+        "revenue"
+      ],
+      "zero_division": "null_with_caveat"
+    },
+    "marketing_cost": {
+      "source": "semantic_marketing_cost",
+      "included_classes": [
+        "marketing_direct"
+      ],
+      "excluded_classes": [
+        "merchant_fees",
+        "marketing_wages",
+        "business_advisory",
+        "software_general",
+        "workshop_cost"
+      ],
+      "derived": false
+    },
+    "contribution_margin": {
+      "derived": true,
+      "formula": "gross_profit - marketing_cost",
+      "dependencies": [
+        "gross_profit",
+        "marketing_cost"
+      ]
+    },
+    "roas": {
+      "derived": true,
+      "formula": "revenue / marketing_cost",
+      "dependencies": [
+        "revenue",
+        "marketing_cost"
+      ],
+      "zero_division": "null_with_caveat",
+      "mode": "central_marketing_vs_entity_revenue"
+    },
+    "net_profit": {
+      "status": "blocked_until_defined",
+      "derived": false
+    }
+  }
+}

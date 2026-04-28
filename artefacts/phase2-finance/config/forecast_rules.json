@@ -1,0 +1,21 @@
+{
+  "default_method": "trailing_average_3m",
+  "methods": {
+    "trailing_average_3m": {
+      "min_periods": 3
+    },
+    "trailing_average_6m": {
+      "min_periods": 6
+    },
+    "linear_trend": {
+      "min_periods": 6
+    },
+    "flat_last_actual": {
+      "min_periods": 1
+    },
+    "manual_assumption_override": {
+      "requires_assumptions": true
+    }
+  },
+  "insufficient_history_behavior": "return_null_with_caveat"
+}

@@ -1,0 +1,91 @@
+## main...origin/main [ahead 2]
+ M Caddyfile
+ M docker-compose.yml
+ M docs/RUNBOOK.md
+ M observability/promtail-config.yml
+ M server/control-plane/index.js
+ M services/docling-processor/Dockerfile
+ M services/docling-processor/app.py
+ M src/App.tsx
+ M src/components/Layout.tsx
+ M src/pages/AgentKnowledgeBase.tsx
+ M src/pages/Agents.tsx
+ M src/pages/ElevenLabs.tsx
+ M src/pages/Ghost.tsx
+ M src/pages/IntegrationLab.tsx
+ M src/pages/KnowledgeBase.tsx
+ M src/pages/LlamaIndexChatUI.tsx
+ M src/pages/LlmSettings.tsx
+ M src/pages/Settings.tsx
+ M src/pages/Tools.tsx
+?? .cursor/agents/apiarchitect.md
+?? DOCLING_PLAN.md
+?? artifacts/integration-pack-hubtiger-odoo-shopify-20260410-055741.zip
+?? artifacts/integration-pack-hubtiger-odoo-shopify-20260410-055741/
+?? artifacts/integration-pack-hubtiger-odoo-shopify-20260410-213654.tar.gz
+?? artifacts/integration-pack-hubtiger-odoo-shopify-20260410-213654/
+?? artifacts/integration-pack-hubtiger-odoo-shopify-live-ready-20260410-213837.tar.gz
+?? artifacts/integration-pack-hubtiger-odoo-shopify-live-ready-20260410-213837/
+?? artifacts/knowledge-business-value-1774918138149.json
+?? artifacts/knowledge-business-value-1774918787237.json
+?? artifacts/knowledge-business-value-1774918969389.json
+?? artifacts/knowledge-business-value-1774918991993.json
+?? artifacts/knowledge-business-value-1774919030911.json
+?? artifacts/knowledge-business-value-1774919087239.json
+?? artifacts/knowledge-business-value-1774919231794.json
+?? artifacts/knowledge-business-value-1774919461373.json
+?? artifacts/knowledge-business-value-1774920050264.json
+?? artifacts/knowledge-ingestion-e2e-1774918102651.json
+?? artifacts/knowledge-ingestion-e2e-1774918750140.json
+?? artifacts/knowledge-ingestion-e2e-1774918975839.json
+?? artifacts/knowledge-ingestion-e2e-1774918997043.json
+?? artifacts/knowledge-ingestion-e2e-1774919036264.json
+?? artifacts/knowledge-ingestion-e2e-1774919066925.json
+?? artifacts/knowledge-ingestion-e2e-1774919162888.json
+?? artifacts/knowledge-ingestion-e2e-1774919423755.json
+?? artifacts/knowledge-ingestion-e2e-1774919481543.json
+?? artifacts/knowledge-ingestion-e2e-1774920017303.json
+?? artifacts/odoo-api-toolkit-agent-handover-20260411-000207/
+?? artifacts/odoo-lift-shift-snapshot-2026-04-10.json
+?? docs/ODOO_API_TOOLKIT_AGENT_HANDOVER.md
+?? docs/ODOO_API_TOOLKIT_BUILD.md
+?? docs/ODOO_LIFT_SHIFT_READY.md
+?? docs/ODOO_OPENAI_CHAT_E2E.md
+?? docs/RUNBOOK_KNOWLEDGE_INGESTION.md
+?? docs/TEST_STRATEGY_DOG_HANDOVER_PLAN.md
+?? docs/TEST_STRATEGY_GHOSTDASH.md
+?? docs/faults/2026-03-30_23-32_LLM_Settings_Provider_Check_And_Unified_Save.md
+?? docs/faults/2026-03-31_01-10_Edge_Gateway_TLS_Agent_Host_NXDOMAIN_Staging_ACME.md
+?? docs/faults/2026-03-31_01-10_Knowledge_Business_Value_Verify_Ignores_Readiness.md
+?? docs/faults/2026-03-31_01-10_Release_Rollback_Resilience_Gates_Not_Executed.md
+?? docs/faults/2026-03-31_11-20_Docling_Processor_CPU_Bound_Synchronous_Extraction.md
+?? docs/faults/2026-04-01_04-26_OpenAI_Tool_Loop_Uses_Max_Tokens_For_GPT5_Chat_Completions.md
+?? docs/faults/2026-04-01_10-05_Guardrails_Blocklist_Citations_Not_Enforced_Live_Traffic.md
+?? docs/faults/2026-04-01_10-05_Guardrails_Dual_Storage_UI_Contract_And_Form_Clearing.md
+?? docs/faults/2026-04-01_10-05_Guardrails_Test_Blocklist_Injected_Into_LLM_System_Prompt.md
+?? docs/faults/2026-04-01_10-05_Guardrails_Test_Endpoint_Observability_And_Abuse_Surface.md
+?? docs/faults/2026-04-01_10-15_Agents_Empty_String_Numeric_Fields_Coerce_To_Number_Zero.md
+?? docs/faults/2026-04-01_10-15_Agents_Guardrail_Autosave_Clobbers_Wrong_Agent_On_Switch.md
+?? docs/faults/2026-04-01_10-15_Agents_Guardrail_Autosave_Label_Mismatches_Dependencies.md
+?? docs/faults/2026-04-01_10-15_Agents_Invalid_Controls_JSON_Silent_Data_Loss.md
+?? docs/faults/2026-04-01_10-15_Agents_LoadAgentDetails_Stale_Response_Overwrites_UI.md
+?? docs/faults/2026-04-01_10-15_Agents_Strategy_SSE_And_WS_Not_Closed_On_Dismiss.md
+?? docs/faults/2026-04-01_10-15_ControlPlane_Guardrail_Test_LLM_Failure_No_Request_Log.md
+?? docs/faults/2026-04-01_12-20_Knowledge_Ingest_UI_Missing_Batch_Precheck_Classification_Verdict.md
+?? docs/faults/2026-04-01_12-35_Ingestion_Upload_Precheck_Encrypted_Taxonomy_And_Batch_Response.md
+?? docs/faults/2026-04-01_12-45_Knowledge_Test_Repair_And_Transparency_Bypass_Manual_Ingest_Gate.md
+?? docs/faults/2026-04-01_13-55_Docling_XLSX_Grouping_Misclassified_During_TODO5_Verify.md
+?? docs/faults/2026-04-02_15-57_PDF_Precheck_Bypass_Hex_False_Negative.md
+?? enqueue_all.mjs
+?? enqueue_one.mjs
+?? fix_app.py
+?? fix_surrogate.py
+?? hubtiger-api.tar.gz
+?? request_detail.json
+?? scripts/import-openwebui-spencer.sh
+?? services/docling-processor/__pycache__/
+?? services/odoo-rpc/
+?? test-docx.py
+?? test-docx2.py
+?? test-gpu2.py
+?? test_char.py

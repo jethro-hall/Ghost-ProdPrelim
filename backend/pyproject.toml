@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ghostdash-api"
+version = "0.1.0"
+description = "Control API and ingestion worker for the GhostDASH RAG platform."
+requires-python = ">=3.12"
+readme = "README.md"
+dependencies = [
+  "alembic",
+  "beautifulsoup4>=4.12.3,<5.0.0",
+  "cryptography",
+  "fastapi>=0.115.0,<1.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "llama-index-embeddings-openai",
+  "llama-index-llms-openai",
+  "llama-parse>=0.6.0,<1.0.0",
+  "openai>=2.0.0,<3.0.0",
+  "openpyxl>=3.1.5,<4.0.0",
+  "psycopg[binary]",
+  "pydantic-settings>=2.6.0,<3.0.0",
+  "pypdf>=6.0.0,<7.0.0",
+  "pypdfium2",
+  "python-docx>=1.1.2,<2.0.0",
+  "python-multipart>=0.0.9,<1.0.0",
+  "python-pptx>=1.0.2,<2.0.0",
+  "PyYAML>=6.0.2,<7.0.0",
+  "qdrant-client>=1.9.0,<2.0.0",
+  "rapidocr-onnxruntime",
+  "sqlalchemy>=2.0.36,<3.0.0",
+  "tiktoken>=0.9.0,<1.0.0",
+  "uvicorn[standard]>=0.30.0,<1.0.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.2",
+  "ruff>=0.13.2",
+]
+
+[project.scripts]
+ghostdash-api = "ghostdash_api.main:run"
+ghostdash-agent-ingress = "ghostdash_api.agent_ingress:run"
+ghostdash-control-api = "ghostdash_api.control_api:run"
+ghostdash-worker = "ghostdash_api.worker:run"
+ghostdash-workflow-runtime = "ghostdash_api.workflow_runtime:run"
+
+[tool.hatch.envs.default.scripts]
+format = "ruff format ."
+format-check = "ruff format --check ."
+lint = "ruff check --fix ."
+lint-check = ["ruff check ."]
+test = "pytest"
+all-check = ["format-check", "lint-check", "test"]

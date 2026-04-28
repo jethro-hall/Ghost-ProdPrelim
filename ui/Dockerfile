@@ -1,0 +1,30 @@
+FROM node:22-bookworm-slim AS build
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+COPY package.json ./
+COPY scripts ./scripts
+
+RUN pnpm install
+
+COPY . .
+
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_AGENT_BASE_URL=/agent
+ENV VITE_AGENT_BASE_URL=$VITE_AGENT_BASE_URL
+ARG VITE_APRYSE_LICENSE_KEY=
+ENV VITE_APRYSE_LICENSE_KEY=$VITE_APRYSE_LICENSE_KEY
+
+RUN pnpm run build
+
+FROM nginx:1.27-alpine
+
+COPY nginx.default.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 4173
+
+CMD ["nginx", "-g", "daemon off;"]

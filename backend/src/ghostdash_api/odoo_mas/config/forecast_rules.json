@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "default_method": "trailing_average_3m",
+  "min_periods_for_trailing_3m": 3,
+  "min_periods_for_trailing_6m": 6,
+  "min_periods_for_linear_trend": 6,
+  "allow_short_history_override": false,
+  "description": "Deterministic forecast entry points. linear_trend requires at least 6 valid numeric points."
+}

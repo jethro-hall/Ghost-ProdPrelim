@@ -1,0 +1,18 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+dist/
+.pnpm-store/
+data/
+*.pem
+.DS_Store
+
+# local parallel worktrees
+.worktrees/

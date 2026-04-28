@@ -1,0 +1,91 @@
+{
+  "profit_and_loss": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": ["revenue", "cogs", "gross_profit", "net_profit", "gross_margin_pct", "ad_spend", "roas"],
+    "supported_dimensions": ["date_range", "business_unit", "posted_only", "comparison"],
+    "required_params": ["date_from", "date_to"],
+    "extractor_key": "odoo.finance.pnl.period_summary",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "profit_and_loss_monthly_margin_comparison": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": ["revenue", "cogs", "gross_profit", "gross_margin_pct"],
+    "supported_dimensions": ["date_range", "business_unit", "monthly"],
+    "required_params": ["date_from", "date_to"],
+    "extractor_key": "odoo.finance.margin.monthly_comparison",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "cash_flow": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": ["cash_balance"],
+    "supported_dimensions": ["date_range", "business_unit"],
+    "required_params": ["date_from", "date_to"],
+    "extractor_key": "odoo.finance.cash.runway_summary",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "opex_ledger_search": {
+    "system": "odoo",
+    "kind": "query_spec_read_group",
+    "supported_metrics": ["opex_total", "marketing_costs", "ad_spend"],
+    "supported_dimensions": ["date_range", "business_unit", "ledger_terms"],
+    "required_params": ["date_from", "date_to"],
+    "extractor_key": "odoo.rpc.query_spec",
+    "default_account_types": ["expense", "expense_depreciation", "expense_direct_cost"],
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "aged_receivables": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": ["ar_balance"],
+    "supported_dimensions": ["date_range", "business_unit"],
+    "required_params": [],
+    "extractor_key": "odoo.finance.receivables.open",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "aged_payables": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": ["ap_balance"],
+    "supported_dimensions": ["date_range", "business_unit"],
+    "required_params": [],
+    "extractor_key": "odoo.finance.payables.open",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "balance_sheet_fallback": {
+    "system": "odoo",
+    "kind": "fallback_query",
+    "supported_metrics": ["cash_balance", "ar_balance", "ap_balance"],
+    "supported_dimensions": ["date_range", "business_unit"],
+    "required_params": ["date_to", "company_id"],
+    "extractor_key": "odoo.rpc.search_read",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "marketing_spend_by_business_unit": {
+    "system": "external",
+    "kind": "marketing_spend",
+    "supported_metrics": ["ad_spend", "roas"],
+    "supported_dimensions": ["date_range", "business_unit"],
+    "required_params": ["date_from", "date_to", "business_unit"],
+    "extractor_key": "external-marketing-spend",
+    "output_contract": "SpendRows",
+    "fallback": null,
+    "freshness": "daily"
+  }
+}

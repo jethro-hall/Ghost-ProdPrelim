@@ -1,0 +1,125 @@
+{
+  "revenue": {
+    "label": "Revenue",
+    "source_family": "accounting",
+    "primary_source_key": "profit_and_loss",
+    "source_semantic": "operating_income",
+    "derived": false,
+    "formula": null,
+    "dependencies": [],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "report_line_missing",
+    "notes": "Use business-unit scoped P&L where supported."
+  },
+  "cogs": {
+    "label": "Cost of Goods Sold",
+    "source_family": "accounting",
+    "primary_source_key": "profit_and_loss",
+    "source_semantic": "cost_of_revenue",
+    "derived": false,
+    "formula": null,
+    "dependencies": [],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "report_line_missing",
+    "notes": "Use total COGS or summed cost-of-revenue children."
+  },
+  "gross_profit": {
+    "label": "Gross Profit",
+    "source_family": "derived_accounting",
+    "primary_source_key": "profit_and_loss",
+    "source_semantic": "gross_profit",
+    "derived": true,
+    "formula": "revenue - cogs",
+    "dependencies": [
+      "revenue",
+      "cogs"
+    ],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "missing_dependency",
+    "notes": "Prefer explicit Odoo gross profit line if available and validated; otherwise derive."
+  },
+  "gross_margin_pct": {
+    "label": "Gross Margin %",
+    "source_family": "derived_accounting",
+    "primary_source_key": "profit_and_loss",
+    "source_semantic": "gross_margin_pct",
+    "derived": true,
+    "formula": "gross_profit / revenue",
+    "dependencies": [
+      "gross_profit",
+      "revenue"
+    ],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "division_by_zero",
+    "notes": "Express as decimal internally; format as percent at presentation."
+  },
+  "net_profit": {
+    "label": "Net Profit",
+    "source_family": "accounting",
+    "primary_source_key": "profit_and_loss",
+    "source_semantic": "net_profit",
+    "derived": false,
+    "formula": null,
+    "dependencies": [],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "requires_business_definition",
+    "notes": "Must be configured explicitly as before-tax, after-tax, or operating net."
+  },
+  "ad_spend": {
+    "label": "Ad Spend",
+    "source_family": "marketing",
+    "primary_source_key": "marketing_spend_by_business_unit",
+    "source_semantic": "ad_spend",
+    "derived": false,
+    "formula": null,
+    "dependencies": [],
+    "required_dimensions": [
+      "date_range",
+      "business_unit"
+    ],
+    "failure_mode": "source_missing",
+    "notes": "Only use Odoo if spend is posted and attributable cleanly by business unit."
+  },
+  "roas": {
+    "label": "ROAS",
+    "source_family": "hybrid_marketing_finance",
+    "primary_source_key": "marketing_spend_by_business_unit",
+    "source_semantic": "roas",
+    "derived": true,
+    "formula": "revenue / ad_spend",
+    "dependencies": [
+      "revenue",
+      "ad_spend"
+    ],
+    "required_dimensions": [
+      "date_range",
+      "business_unit"
+    ],
+    "failure_mode": "missing_dependency",
+    "notes": "Unavailable if spend source is missing or attribution is incomplete."
+  },
+  "cash_balance": {
+    "label": "Cash Balance",
+    "source_family": "accounting",
+    "primary_source_key": "cash_flow_or_balance_sheet",
+    "source_semantic": "cash_balance",
+    "derived": false,
+    "formula": null,
+    "dependencies": [],
+    "required_dimensions": [
+      "date_range"
+    ],
+    "failure_mode": "report_line_missing",
+    "notes": "Use configured source according to live Odoo capability."
+  }
+}

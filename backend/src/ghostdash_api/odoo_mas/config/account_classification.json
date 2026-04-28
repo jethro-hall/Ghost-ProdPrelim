@@ -1,0 +1,22 @@
+{
+  "classes": {
+    "marketing_direct": {
+      "accounts": ["402", "518", "522", "524", "527", "528", "536"]
+    },
+    "merchant_fees": {
+      "accounts": ["445", "445.1", "445.2", "445.4", "445.5", "445.6", "519", "523", "526"]
+    },
+    "marketing_wages": {
+      "accounts": ["510"]
+    },
+    "cogs": {
+      "ranges": [["300", "399"]]
+    },
+    "workshop_cost": {
+      "accounts": ["332", "333", "520"]
+    },
+    "software_general": {
+      "accounts": ["448", "454", "516"]
+    }
+  }
+}

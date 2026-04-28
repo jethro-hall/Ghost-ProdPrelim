@@ -1,0 +1,44 @@
+---
+description: GhostDash database discipline — Postgres as truth, migrations, no duplicate domain tables, Redis cache-only.
+alwaysApply: true
+---
+
+# GhostDash Database Discipline
+
+Postgres is the source of truth.
+
+## Before adding or changing database tables
+
+1. Search existing migrations, schema, and models.
+2. Confirm no existing table can be extended instead.
+3. Check naming conventions.
+4. Check indexes, foreign keys, uniqueness, and lifecycle.
+5. Provide migration and rollback.
+6. Provide a cleanup plan for obsolete data or columns if replacing something.
+
+## Never create duplicate tables for
+
+- agents
+- runtime profiles
+- conversations
+- messages
+- tool calls
+- traces
+- transcripts
+- audit results
+- settings or config
+- customers or sessions
+
+## Caching and truth
+
+- Do not store the same truth in both Redis and Postgres.
+- Redis may cache derived or session data only.
+
+## Every schema change must include
+
+- reason
+- source-of-truth statement
+- migration file
+- rollback or safe forward-only migration
+- indexes needed for runtime performance
+- test or query proving it works

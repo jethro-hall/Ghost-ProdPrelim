@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MetricPack",
+  "type": "object",
+  "required": ["scope", "metrics", "quality_flags"],
+  "properties": {
+    "scope": {"type": "object"},
+    "metrics": {"type": "object"},
+    "breakdowns": {"type": "array", "items": {"type": "object"}},
+    "quality_flags": {"type": "array", "items": {"type": "string"}},
+    "effective_policy": {"type": "object"}
+  }
+}

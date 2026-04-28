@@ -1,0 +1,41 @@
+{
+  "sample_id": "aged_receivables_open_2026_04_23",
+  "request": {
+    "operation": "odoo.finance.receivables.open",
+    "payload": {
+      "limit": 20
+    }
+  },
+  "response": {
+    "success": true,
+    "operation": "odoo.finance.receivables.open",
+    "trace_id": "82b8cd09247e4c72a45449baeeaf6480",
+    "data": {
+      "count": 20,
+      "total_residual": 74065.70999999999,
+      "records_preview": [
+        {
+          "id": 7742,
+          "name": "10656",
+          "invoice_date": "2022-05-04",
+          "invoice_date_due": "2022-05-11",
+          "state": "posted",
+          "payment_state": "partial",
+          "amount_total": 1563.66,
+          "amount_residual": 1427.08
+        },
+        {
+          "id": 2582543,
+          "name": "WSINV-07162",
+          "invoice_date": "2023-07-01",
+          "invoice_date_due": "2023-07-01",
+          "state": "posted",
+          "payment_state": "not_paid",
+          "amount_total": 43949.04,
+          "amount_residual": 43949.04
+        }
+      ],
+      "evidence_source_mode": "live_odoo"
+    }
+  }
+}
