@@ -45,6 +45,7 @@ from .agent_builds import (
 )
 from .database import SessionLocal, get_session
 from .elevenlabs_flash25_realtime import router as elevenlabs_flash25_realtime_router
+from integrations.elevenlabs_hubtiger.router import router as elevenlabs_hubtiger_router
 from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
@@ -4140,6 +4141,7 @@ def create_app() -> FastAPI:
         startup_hooks=[initialize_agent_runtime_state],
     )
     app.include_router(elevenlabs_flash25_realtime_router)
+    app.include_router(elevenlabs_hubtiger_router)
     app.add_api_websocket_route(ELEVENLABS_STREAM_ROUTE, handle_voice_stream_websocket)
     app.add_api_websocket_route(ELEVENLABS_TTS_STREAM_ROUTE, handle_tts_stream_websocket)
 

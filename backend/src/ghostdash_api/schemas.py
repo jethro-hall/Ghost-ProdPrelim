@@ -307,6 +307,16 @@ class HubTigerTestResponse(BaseModel):
     data: dict = Field(default_factory=dict)
 
 
+class PublicToolResult(BaseModel):
+    """Safe tool payload for external surfaces (e.g. ElevenLabs). Omits internal trace ids and redacts `data` server-side."""
+
+    success: bool
+    message: str
+    operation: str
+    blocked: bool = False
+    data: dict = Field(default_factory=dict)
+
+
 class HubTigerRecentTraceView(BaseModel):
     trace_id: str
     operation: str

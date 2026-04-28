@@ -42,6 +42,7 @@ from .database import get_session
 from .database import SessionLocal
 from .finance_report_renderer import finance_report_file, load_finance_report
 from .ingest import extract_text_local
+from .hubtiger_mcp import call_hubtiger_mcp, to_hubtiger_test_response
 from .magic_mike import MAGIC_MIKE_AGENT_NAME
 from .models import (
     AgentConversationRecord,
@@ -200,7 +201,6 @@ from .workflow_runs import (
 settings = get_settings()
 ACTIVE_WORKFLOW_RUN_STATUSES = {"queued", "running"}
 ACTIVE_WORKFLOW_STEP_STATUSES = {"pending", "running"}
-HUBTIGER_WRITE_OPERATIONS = {"booking_create", "quote_add_line_item"}
 HUBTIGER_BINDINGS = (
     ("hubtiger_booking_availability", "HubTiger Availability", "availability", False),
     ("hubtiger_job_lookup", "HubTiger Job Lookup", "jobs", False),
@@ -1797,105 +1797,20 @@ def create_app() -> FastAPI:
         request: Request,
     ) -> HubTigerTestResponse:
         trace_id = str(getattr(request.state, "trace_id", "") or "") or uuid4().hex
-        mode = _hubtiger_mode()
         operation = str(body.operation)
-        if mode == "read_only" and operation in HUBTIGER_WRITE_OPERATIONS:
-            blocked = HubTigerTestResponse(
-                success=False,
-                blocked=True,
-                mode="read_only",
-                operation=operation,
-                trace_id=trace_id,
-                message="Write tests are disabled while HubTiger runs in read-only mode.",
-                data={"blocked_reason": "read_only_mode"},
-            )
-            HUBTIGER_RECENT_TRACES.append(
-                HubTigerRecentTraceView(
-                    trace_id=trace_id,
-                    operation=operation,
-                    success=False,
-                    blocked=True,
-                    mode="read_only",
-                    created_at=datetime.now(timezone.utc),
-                    summary=blocked.message,
-                )
-            )
-            return blocked
-
-        base_url = str(settings.hubtiger_mcp_url or "").strip().rstrip("/")
-        if not base_url:
-            unavailable = HubTigerTestResponse(
-                success=False,
-                blocked=False,
-                mode=cast(Any, mode),
-                operation=operation,
-                trace_id=trace_id,
-                message="HubTiger MCP URL is not configured.",
-                data={"configured": False},
-            )
-            HUBTIGER_RECENT_TRACES.append(
-                HubTigerRecentTraceView(
-                    trace_id=trace_id,
-                    operation=operation,
-                    success=False,
-                    blocked=False,
-                    mode=cast(Any, mode),
-                    created_at=datetime.now(timezone.utc),
-                    summary=unavailable.message,
-                )
-            )
-            return unavailable
-
-        timeout_s = (
-            int(settings.hubtiger_mutation_timeout_ms if operation in HUBTIGER_WRITE_OPERATIONS else settings.hubtiger_read_timeout_ms)
-            / 1000.0
+        raw = await call_hubtiger_mcp(
+            operation=operation,
+            payload=body.payload,
+            trace_id=trace_id,
         )
-        try:
-            async with httpx.AsyncClient(timeout=timeout_s) as client:
-                upstream = await client.post(
-                    f"{base_url}/test",
-                    json={"operation": operation, "payload": body.payload, "mode": mode, "trace_id": trace_id},
-                )
-            if upstream.status_code >= 400:
-                safe_message = "HubTiger test endpoint returned an unavailable response."
-                result = HubTigerTestResponse(
-                    success=False,
-                    blocked=False,
-                    mode=cast(Any, mode),
-                    operation=operation,
-                    trace_id=trace_id,
-                    message=safe_message,
-                    data={"status_code": upstream.status_code},
-                )
-            else:
-                payload = upstream.json() if upstream.content else {}
-                result = HubTigerTestResponse(
-                    success=bool(payload.get("success", True)),
-                    blocked=bool(payload.get("blocked", False)),
-                    mode=cast(Any, mode),
-                    operation=operation,
-                    trace_id=trace_id,
-                    message=str(payload.get("message") or "HubTiger test completed."),
-                    data=dict(payload.get("data") or {}),
-                )
-        except Exception:
-            result = HubTigerTestResponse(
-                success=False,
-                blocked=False,
-                mode=cast(Any, mode),
-                operation=operation,
-                trace_id=trace_id,
-                message="HubTiger test is unavailable right now.",
-                data={},
-            )
-
+        result = to_hubtiger_test_response(raw)
         HUBTIGER_RECENT_TRACES.append(
             HubTigerRecentTraceView(
                 trace_id=trace_id,
                 operation=operation,
-                success=result.success,
-                blocked=result.blocked,
-                mode=cast(Any, mode),
+                success=raw.success,
+                blocked=raw.blocked,
+                mode=cast(Any, raw.mode),
                 created_at=datetime.now(timezone.utc),
                 summary=result.message,
             )
