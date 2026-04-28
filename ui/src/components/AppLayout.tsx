@@ -4,10 +4,12 @@ import type { ChatApiMode, Connection, RequestedLane, RuntimeDefaults, Task } fr
 import * as ghostApi from "../api";
 import BackgroundOrbs from "./BackgroundOrbs";
 import FullScreenLoader from "./FullScreenLoader";
-import GhostChat from "./GhostChat";
+import GhostChatMirror from "./GhostChatMirror";
 import Header from "./Header";
 import RightPanel from "./RightPanel";
 import Sidebar from "./Sidebar";
+
+export const CONNECTIONS_UPDATED_EVENT = "ghostdash:connections-updated";
 
 const pendingTask: Task = {
   id: "pending",
@@ -61,6 +63,7 @@ export default function AppLayout() {
     location.pathname === "/" ||
     location.pathname === "/vectors" ||
     location.pathname === "/knowledge-lab" ||
+    location.pathname === "/config-explorer" ||
     location.pathname === "/settings";
 
   useEffect(() => {
@@ -148,13 +151,18 @@ export default function AppLayout() {
         onSave={async (body) => {
           await ghostApi.saveConnection(body);
           await refreshConnections();
+          window.dispatchEvent(new CustomEvent(CONNECTIONS_UPDATED_EVENT));
+          setRightOpen(false);
+        }}
+        onDelete={async (connectionId, confirmationToken) => {
+          await ghostApi.deleteConnection(connectionId, confirmationToken);
+          await refreshConnections();
+          window.dispatchEvent(new CustomEvent(CONNECTIONS_UPDATED_EVENT));
           setRightOpen(false);
         }}
       />
-      <GhostChat
+      <GhostChatMirror
         open={chatOpen}
-        apiMode={apiMode}
-        startSync={handleFullSync}
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
       />

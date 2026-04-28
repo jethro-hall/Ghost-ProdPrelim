@@ -6,6 +6,7 @@ Last updated: 2026-04-20
 
 - Repo root: `/var/llamaindex/ghoststack-rag`
 - Public HTTPS URL: `https://ghoststack.rideai.com.au`
+- Canonical operator chat (Ghost ChatUI): `https://ghoststack.rideai.com.au/ghost_chatui/` — do not use `/chat` in runbooks; Caddy redirects it to `/ghost_chatui/`.
 - Public health URL: `https://ghoststack.rideai.com.au/health`
 - Control API docs: `https://ghoststack.rideai.com.au/api/docs`
 - Agent ingress docs: `https://ghoststack.rideai.com.au/agent/docs`
@@ -109,6 +110,23 @@ Live XLSX smoke result:
 1. Set `LLAMA_CLOUD_API_KEY` in the live `.env` to activate cloud parse enrichment.
 2. Add a real Alembic revision history now that the baseline Postgres schema is stable.
 3. Expand structured lookup beyond the current heuristic router if you need richer filter expressions or multi-table joins.
+
+## BP Mode Build Notes (2026-04-22)
+
+- New workflow mode: `bp_mode` (isolated from existing hardened modes).
+- BP chain behavior added to chat orchestration:
+  - Case Framing -> Lead Architect -> Auditor contracts in prompt assembly.
+  - Auditor gate metadata stored in `route_decision.tool_expectations.bp_audit`.
+  - BP-specific audit tool event emitted (`agent.bp_auditor`).
+- BP no-cache policy:
+  - cache bypass in both `/agent/chat` and `/agent/chat/stream`.
+- Odoo deterministic planner route added for Burleigh/Brisbane COGS/GP/Revenue/Net/ROAS prompts.
+- Odoo model catalog operation added:
+  - `odoo.meta.model_catalog` (safe + consumer-chat allowed).
+- UI:
+  - workflow launcher now includes BP mode.
+  - expandable BP running-list panel added in chat area.
+  - board-pack render helpers added (metric table + compact charts).
 
 ## Exact verify commands
 

@@ -1,0 +1,14 @@
+{
+  "name": "ghostdash-docx-templater",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pizzip": "^3.2.0",
+    "docxtemplater": "^3.67.3"
+  }
+}

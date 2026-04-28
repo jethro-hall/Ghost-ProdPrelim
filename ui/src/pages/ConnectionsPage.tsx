@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { fetchCapabilities, fetchConnections } from "../api";
+import { CONNECTIONS_UPDATED_EVENT } from "../components/AppLayout";
 import type { AppOutletContext } from "../components/AppLayout";
 import type { Connection, RuntimeCapabilities } from "../api";
 
@@ -13,15 +14,20 @@ export default function ConnectionsPage() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [capabilities, setCapabilities] = useState<RuntimeCapabilities | null>(null);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     const [nextConnections, nextCapabilities] = await Promise.all([fetchConnections(), fetchCapabilities()]);
     setConnections(nextConnections);
     setCapabilities(nextCapabilities);
-  }
+  }, []);
 
   useEffect(() => {
     void refresh().catch(() => null);
-  }, []);
+    const handleConnectionsUpdated = () => {
+      void refresh().catch(() => null);
+    };
+    window.addEventListener(CONNECTIONS_UPDATED_EVENT, handleConnectionsUpdated);
+    return () => window.removeEventListener(CONNECTIONS_UPDATED_EVENT, handleConnectionsUpdated);
+  }, [refresh]);
 
   return (
     <div className="connections-page space-y-4">

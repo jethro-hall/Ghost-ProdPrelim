@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnomalyPack",
+  "description": "Rule-based flags from deterministic threshold checks.",
+  "type": "object",
+  "required": ["flags"],
+  "properties": {
+    "source_rules_version": { "type": "integer" },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["anomaly_id", "metric", "severity", "message"],
+        "properties": {
+          "anomaly_id": { "type": "string" },
+          "metric": { "type": "string" },
+          "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+          "message": { "type": "string" },
+          "entity": { "type": "string" },
+          "current": { "type": ["number", "null"] },
+          "reference": { "type": ["number", "null"] },
+          "threshold": { "type": ["string", "number", "object"] }
+        }
+      }
+    },
+    "caveats": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

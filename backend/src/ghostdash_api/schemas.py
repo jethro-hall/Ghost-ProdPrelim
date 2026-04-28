@@ -4,9 +4,22 @@ from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
+from pydantic import field_validator
 
 ChatApiMode = Literal["responses", "chat_completions"]
+ConversationMode = Literal["quick", "board", "working_session"]
+WorkflowMode = Literal[
+    "standard",
+    "data_collector",
+    "documenter",
+    "odoo_specialist",
+    "case_framing",
+    "evidence_retrieval",
+    "odoo_operations",
+    "bp_mode",
+]
 QueryMode = Literal["semantic", "structured", "blended"]
+RouteType = Literal["direct", "workers", "suggest_specialist"]
 RequestedParseLane = Literal["default", "local", "cloud"]
 ParseLanePolicy = Literal["local_default", "cloud_default", "auto"]
 ChatUploadPersistenceMode = Literal["conversation_only", "save_to_knowledge"]
@@ -15,12 +28,42 @@ ConnectionAuthStrategy = Literal["bearer", "x_api_key", "x_goog_api_key", "custo
 WorkflowExecutionMode = Literal["sequential"]
 WorkflowRunStatus = Literal["queued", "running", "completed", "completed_with_errors", "failed", "aborted"]
 WorkflowStepRunStatus = Literal["pending", "running", "completed", "failed", "aborted"]
+WorkflowTaskStatus = Literal["pending", "queued", "running", "completed", "failed", "aborted"]
+WorkflowTaskKind = Literal["child_agent", "head_synthesis", "tool", "approval", "memory"]
+WorkflowRunEventType = Literal[
+    "RUN_CREATED",
+    "PLAN_GRAPH_CREATED",
+    "TASK_CREATED",
+    "TASK_DISPATCHED",
+    "TASK_STARTED",
+    "TASK_COMPLETED",
+    "TASK_FAILED",
+    "TASK_ABORTED",
+    "TOOL_INVOCATION_STARTED",
+    "TOOL_INVOCATION_COMPLETED",
+    "TOOL_INVOCATION_BLOCKED",
+    "APPROVAL_REQUIRED",
+    "APPROVAL_GRANTED",
+    "APPROVAL_REJECTED",
+    "RUN_COMPLETED",
+    "RUN_FAILED",
+    "RUN_ABORTED",
+    "BP_AUDIT_EVALUATED",
+    "BP_AUDIT_PASSED",
+    "BP_AUDIT_FAILED",
+]
 WorkflowDefinitionFormat = Literal["json", "yaml"]
 WorkflowHeadAgentSelectionMode = Literal["active_agent", "fixed_agent"]
 WorkflowNodeType = Literal["child_agent", "head_agent_synthesis", "ui_grouped_results"]
 ToolHealth = Literal["healthy", "unhealthy", "unknown"]
 ToolAuthSource = Literal["direct_credentials"]
 ChatToolEventStatus = Literal["planned", "preview", "executed", "blocked", "failed"]
+DocumentFrameStatus = Literal["draft", "active", "final"]
+DocumentFrameFragmentType = Literal["note", "snippet", "paragraph", "mini_analysis", "scorecard", "graph_idea"]
+DocxOperation = Literal["preview", "finalize"]
+DocxArtifactKind = Literal["docx", "pdf", "html"]
+DeletionPreviewScope = Literal["chats", "agent"]
+AgentRole = Literal["lead", "sub"]
 
 
 class ConnectionPayload(BaseModel):
@@ -32,6 +75,7 @@ class ConnectionPayload(BaseModel):
     api_key: str | None = None
     base_url: str | None = None
     enabled: bool = True
+    default_model_id: str | None = None
 
 
 class ConnectionTestPayload(BaseModel):
@@ -56,8 +100,40 @@ class ConnectionView(BaseModel):
     auth_header_name: str | None
     base_url: str | None
     enabled: bool
+    default_model_id: str | None
     api_key_hint: str | None
     has_api_key: bool
+
+
+class ConnectionDeletionPreviewImpactView(BaseModel):
+    runtime_profile_direct_refs: int = 0
+    runtime_profile_provider_refs: int = 0
+    runtime_profile_fallback_refs: int = 0
+    runtime_profile_fallback_provider_refs: int = 0
+    agents_impacted: int = 0
+    active_workflow_runs: int = 0
+    active_workflow_steps: int = 0
+    is_runtime_default_connection: bool = False
+    seeded_provider_key: bool = False
+
+
+class ConnectionDeletionPreviewView(BaseModel):
+    connection_id: str
+    provider: str
+    can_execute: bool
+    blocking_reasons: list[str] = Field(default_factory=list)
+    impact: ConnectionDeletionPreviewImpactView
+    confirmation_token: str
+
+
+class ConnectionDeletePayload(BaseModel):
+    confirmation_token: str = Field(min_length=8, max_length=128)
+
+
+class ConnectionDeleteResponse(BaseModel):
+    id: str
+    provider: str
+    deleted: bool = True
 
 
 class ConnectionTestResponse(BaseModel):
@@ -87,7 +163,7 @@ class AgentToolConfig(BaseModel):
     name: str
     description: str
     enabled: bool = True
-    allowed_urls: list[str] = Field(default_factory=list, max_length=2)
+    allowed_urls: list[str] = Field(default_factory=list)
     provider: str | None = None
     kind: str | None = None
     session_toggleable: bool = False
@@ -157,9 +233,24 @@ class ToolTestResponse(BaseModel):
     data: dict = Field(default_factory=dict)
 
 
+class OdooQuerySpec(BaseModel):
+    model: str = Field(min_length=1, max_length=128)
+    method: Literal["search_read", "read_group"]
+    domain: list = Field(default_factory=list)
+    fields: list[str] = Field(default_factory=list)
+    groupby: list[str] = Field(default_factory=list)
+    limit: int | None = Field(default=None, ge=1, le=1000)
+    offset: int | None = Field(default=None, ge=0)
+    order: str | None = None
+    orderby: str | None = None
+    lazy: bool = False
+
+
 class ToolExecutePayload(BaseModel):
     operation: str = Field(min_length=1, max_length=128)
     payload: dict = Field(default_factory=dict)
+    dry_run: bool = False
+    approval_token: str | None = Field(default=None, max_length=256)
 
 
 class ToolExecuteResponse(BaseModel):
@@ -169,7 +260,86 @@ class ToolExecuteResponse(BaseModel):
     latency_ms: int | None = None
     operation: str | None = None
     read_only: bool = True
+    risk_class: Literal["read", "write", "destructive"] = "read"
+    requires_approval: bool = False
+    approved: bool = False
+    policy_decision_id: str | None = None
     data: dict = Field(default_factory=dict)
+
+
+class HubTigerStatusView(BaseModel):
+    mode: Literal["read_only", "read_write"] = "read_only"
+    mcp_url_configured: bool = False
+    proxy_url_configured: bool = False
+    read_timeout_ms: int = 8000
+    mutation_timeout_ms: int = 12000
+    health: Literal["healthy", "degraded", "unconfigured"] = "unconfigured"
+    message: str = "HubTiger integration is not configured."
+
+
+class HubTigerToolBindingView(BaseModel):
+    tool_id: str
+    label: str
+    category: Literal["availability", "jobs", "quotes", "booking"]
+    mode: Literal["read_only", "read_write"]
+    write_action: bool = False
+    enabled: bool = True
+
+
+class HubTigerTestRequest(BaseModel):
+    operation: Literal[
+        "availability_lookup",
+        "job_lookup",
+        "quote_preview",
+        "booking_create",
+        "quote_add_line_item",
+    ]
+    payload: dict = Field(default_factory=dict)
+
+
+class HubTigerTestResponse(BaseModel):
+    success: bool
+    blocked: bool = False
+    mode: Literal["read_only", "read_write"] = "read_only"
+    operation: str
+    message: str
+    trace_id: str | None = None
+    data: dict = Field(default_factory=dict)
+
+
+class HubTigerRecentTraceView(BaseModel):
+    trace_id: str
+    operation: str
+    success: bool
+    blocked: bool
+    mode: Literal["read_only", "read_write"]
+    created_at: datetime
+    summary: str
+
+
+class OdooEvidenceMirrorCreatePayload(BaseModel):
+    operation: str = Field(min_length=1, max_length=128)
+    trace_id: str | None = Field(default=None, max_length=64)
+    source_mode: Literal["live_odoo", "cached_mirror"] = "live_odoo"
+    tool_audit_id: str | None = Field(default=None, max_length=64)
+    scope_json: dict = Field(default_factory=dict)
+    request_json: dict = Field(default_factory=dict)
+    response_json: dict = Field(default_factory=dict)
+    status: str = Field(default="captured", max_length=32)
+
+
+class OdooEvidenceMirrorView(BaseModel):
+    id: str
+    tool_audit_id: str | None = None
+    trace_id: str | None = None
+    operation: str
+    status: str
+    source_mode: str
+    scope_json: dict = Field(default_factory=dict)
+    request_json: dict = Field(default_factory=dict)
+    response_json: dict = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: datetime
 
 
 class ToolReadinessSummary(BaseModel):
@@ -187,14 +357,45 @@ class RuntimeProfileLlmConfig(BaseModel):
     provider: str = Field(default="openai", min_length=1, max_length=32)
     model_id: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0, le=2)
-    max_tokens: int = Field(default=2048, ge=1, le=16000)
+    # Optional: when omitted/null, provider defaults apply and we do not force a cap.
+    max_tokens: int | None = Field(default=None)
     api_mode: ChatApiMode = "responses"
+    llm_orchestration: "RuntimeProfileLlmOrchestrationConfig" = Field(
+        default_factory=lambda: RuntimeProfileLlmOrchestrationConfig()
+    )
+
+    @field_validator("max_tokens")
+    @classmethod
+    def _validate_max_tokens(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if int(value) < 1:
+            raise ValueError("max_tokens must be >= 1")
+        return int(value)
 
 
 class RuntimeProfileGuardrailsConfig(BaseModel):
     system_prompt: str = Field(min_length=1)
     grounding_mode: Literal["retrieved_only"] = "retrieved_only"
     insufficient_context_behavior: str = Field(min_length=1)
+    conversation_mode: ConversationMode = "quick"
+    policy_mode: Literal["locked", "admin_approval_required", "open"] = "admin_approval_required"
+    business_structure_required: bool = True
+    business_structure_question_bank: str = ""
+    business_structure_context: str = ""
+    business_structure_context_compact: str = ""
+    owner_operator_questionnaire: str = ""
+    owner_operator_questionnaire_compact: str = ""
+    agent_category: str | None = None
+    route_mode: str | None = None
+    public_presenter_required: bool = False
+    retail_output_guard_required: bool = False
+    diagnostics_visible: bool = True
+    board_document_format_contract: str = ""
+    financial_report_format_contract: str = ""
+    docx_finalize_required_sections: list[str] = Field(
+        default_factory=lambda: ["facts", "inferences", "assumptions", "risks", "actions"]
+    )
 
 
 class RuntimeProfileKnowledgeBaseConfig(BaseModel):
@@ -227,6 +428,9 @@ class RuntimeProfilePayload(BaseModel):
     kb_config: RuntimeProfileKnowledgeBaseConfig
     retrieval_config: RuntimeProfileRetrievalConfig
     tool_policy_config: RuntimeProfileToolPolicyConfig
+    policy_approval_token: str | None = None
+    policy_approval_reason: str | None = None
+    policy_actor: str | None = None
     is_default: bool = False
     enabled: bool = True
 
@@ -246,8 +450,48 @@ class RuntimeProfileView(BaseModel):
     updated_at: datetime
 
 
+class PolicyChangeAuditView(BaseModel):
+    id: str
+    runtime_profile_id: str
+    actor: str
+    action: str
+    status: str
+    policy_mode: str
+    reason: str | None = None
+    approval_token: str | None = None
+    before_json: dict = Field(default_factory=dict)
+    after_json: dict = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConfigExplorerEntryView(BaseModel):
+    key: str
+    namespace: str
+    source_type: Literal["runtime_profile"]
+    source_id: str
+    source_name: str
+    value_json: dict = Field(default_factory=dict)
+    updated_at: datetime
+
+
+class ConfigExplorerEditRequest(BaseModel):
+    expected_updated_at: datetime
+    value_json: dict = Field(default_factory=dict)
+    policy_actor: str = "operator"
+    policy_approval_token: str | None = None
+    policy_approval_reason: str | None = None
+
+
+class ConfigExplorerRollbackRequest(BaseModel):
+    policy_actor: str = "operator"
+    policy_approval_token: str | None = None
+    policy_approval_reason: str | None = None
+
+
 class RuntimeDefaultsPayload(BaseModel):
     chat_api_mode: ChatApiMode = "responses"
+    conversation_mode: ConversationMode = "quick"
     llm_model_id: str = Field(default="openai/llama31-8b", min_length=1)
     embedding_model_id: str = Field(default="openai/intfloat/multilingual-e5-large-instruct", min_length=1)
     default_corpora: list[str] = Field(default_factory=lambda: ["default"])
@@ -279,6 +523,9 @@ class AgentProfilePayload(BaseModel):
     voice_id: str = Field(default="alloy", min_length=1, max_length=64)
     runtime_profile_id: str | None = None
     runtime_profile: RuntimeProfilePayload | None = None
+    agent_role: AgentRole = "lead"
+    parent_agent_id: str | None = None
+    position: int = Field(default=0, ge=0)
     is_default: bool = False
     enabled: bool = True
 
@@ -291,21 +538,32 @@ class AgentProfileView(BaseModel):
     voice_id: str
     runtime_profile_id: str
     runtime_profile: RuntimeProfileView
+    agent_role: AgentRole = "lead"
+    parent_agent_id: str | None = None
+    position: int = 0
     is_default: bool
     enabled: bool
     created_at: datetime
     updated_at: datetime
 
 
+class AgentHierarchyView(BaseModel):
+    lead_agent: AgentProfileView
+    sub_agents: list[AgentProfileView] = Field(default_factory=list)
+
+
 class ChatBootstrapFeatures(BaseModel):
     allow_mock_provider: bool = False
     allow_api_mode_override: bool = False
+    allow_conversation_mode_override: bool = True
     allow_approved_web_toggle: bool = True
+    allow_workflow_launchers: bool = True
 
 
 class ChatBootstrapView(BaseModel):
     surface: str
     default_agent_id: str | None = None
+    default_workflow_mode: WorkflowMode = "standard"
     runtime_defaults: RuntimeDefaultsView
     capabilities: RuntimeCapabilities
     features: ChatBootstrapFeatures
@@ -359,12 +617,59 @@ class CollectionDeleteResponse(BaseModel):
     impact: CollectionImpactView
 
 
+class AgentDeletionPreviewImpactView(BaseModel):
+    conversations: int = 0
+    messages: int = 0
+    uploads: int = 0
+    docx_sessions: int = 0
+    cache_entries: int = 0
+    workflow_step_runs: int = 0
+    document_frames_linked: int = 0
+    orphanable_document_frames: int = 0
+    active_workflow_runs: int = 0
+    active_workflow_steps: int = 0
+    runtime_profile_peer_agents: int = 0
+
+
+class AgentDeletionPreviewPayload(BaseModel):
+    scope: DeletionPreviewScope = "chats"
+
+
+class AgentDeletionPreviewView(BaseModel):
+    agent_id: str
+    scope: DeletionPreviewScope
+    can_execute: bool
+    is_default_agent: bool
+    blocking_reasons: list[str] = Field(default_factory=list)
+    impact: AgentDeletionPreviewImpactView
+    confirmation_token: str
+
+
+class AgentDeletePayload(BaseModel):
+    confirmation_token: str = Field(min_length=8, max_length=128)
+
+
+class AgentDeleteResponse(BaseModel):
+    id: str
+    deleted: bool = True
+    deleted_conversations: int = 0
+    deleted_messages: int = 0
+    deleted_uploads: int = 0
+    deleted_docx_sessions: int = 0
+    deleted_cache_entries: int = 0
+    deleted_workflow_step_runs: int = 0
+    deleted_document_frames: int = 0
+
+
 class ConversationSummaryView(BaseModel):
     id: str
     agent_id: str
     title: str
     corpora: list[str] = Field(default_factory=list)
     api_mode: ChatApiMode = "responses"
+    conversation_mode: ConversationMode = "quick"
+    workflow_mode: WorkflowMode = "standard"
+    document_frame_id: str | None = None
     message_count: int = 0
     created_at: datetime
     updated_at: datetime
@@ -378,8 +683,51 @@ class ConversationMessageView(BaseModel):
     content: str
     query_mode: QueryMode | None = None
     citations: list[dict] = Field(default_factory=list)
+    tool_events: list["ChatToolEvent"] = Field(default_factory=list)
+    usage: "ChatUsage | None" = None
+    route_decision: "RouteDecision | None" = None
     api_mode: ChatApiMode | None = None
+    conversation_mode: ConversationMode | None = None
+    workflow_mode: WorkflowMode | None = None
     created_at: datetime
+
+
+class DocumentFrameFragmentView(BaseModel):
+    id: str
+    source_conversation_id: str
+    source_message_id: str | None = None
+    fragment_type: DocumentFrameFragmentType = "snippet"
+    title: str | None = None
+    content: str
+    approved: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+
+class DocumentFrameView(BaseModel):
+    id: str
+    title: str
+    status: DocumentFrameStatus = "draft"
+    fragments: list[DocumentFrameFragmentView] = Field(default_factory=list)
+    metadata_json: dict = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: datetime
+
+
+class ConversationCreatePayload(BaseModel):
+    workflow_mode: WorkflowMode = "standard"
+    conversation_mode: ConversationMode = "quick"
+    title: str | None = Field(default=None, max_length=256)
+    corpora: list[str] = Field(default_factory=list)
+    document_frame_id: str | None = None
+    source_conversation_id: str | None = None
+
+
+class DocumentFrameFragmentCreatePayload(BaseModel):
+    source_message_id: str | None = None
+    fragment_type: DocumentFrameFragmentType = "snippet"
+    title: str | None = Field(default=None, max_length=256)
+    content: str | None = None
 
 
 class UploadView(BaseModel):
@@ -511,6 +859,8 @@ class WorkflowRunCreatePayload(BaseModel):
     agent_ids: list[str] = Field(min_length=1)
     parent_conversation_id: str | None = None
     api_mode: ChatApiMode = "responses"
+    conversation_mode: ConversationMode = "quick"
+    workflow_mode: WorkflowMode = "standard"
     use_approved_web: bool = False
     head_agent_id: str | None = None
 
@@ -585,6 +935,35 @@ class WorkflowStepRunView(BaseModel):
     updated_at: datetime
 
 
+class WorkflowTaskView(BaseModel):
+    id: str
+    task_key: str
+    title: str
+    task_kind: WorkflowTaskKind
+    status: WorkflowTaskStatus
+    sequence: int
+    depends_on_task_keys: list[str] = Field(default_factory=list)
+    assigned_agent_id: str | None = None
+    assigned_agent_name: str | None = None
+    step_run_id: str | None = None
+    metadata_json: dict = Field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class WorkflowRunEventView(BaseModel):
+    id: str
+    sequence: int
+    event_type: WorkflowRunEventType
+    task_key: str | None = None
+    actor_id: str | None = None
+    metadata_json: dict = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: datetime
+
+
 class WorkflowRunSummaryView(BaseModel):
     id: str
     workflow_id: str
@@ -609,6 +988,47 @@ class WorkflowRunView(WorkflowRunSummaryView):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     steps: list[WorkflowStepRunView] = Field(default_factory=list)
+    tasks: list[WorkflowTaskView] = Field(default_factory=list)
+    events: list[WorkflowRunEventView] = Field(default_factory=list)
+
+
+class ChatDocxMode(BaseModel):
+    enabled: bool = False
+    template_id: str | None = Field(default=None, max_length=256)
+    operation: DocxOperation = "preview"
+    binding_overrides: dict = Field(default_factory=dict)
+
+
+class DocxArtifact(BaseModel):
+    kind: DocxArtifactKind
+    uri: str = Field(min_length=1, max_length=2048)
+    label: str | None = None
+
+
+class DocxDiagnostic(BaseModel):
+    code: str = Field(min_length=1, max_length=128)
+    message: str = Field(min_length=1, max_length=2000)
+    field: str | None = None
+
+
+class ChatCallInitCallerContext(BaseModel):
+    source: str = Field(default="ghostdash_preview", max_length=128)
+    known_customer: bool | None = None
+
+
+class ChatCallInit(BaseModel):
+    enabled: bool = False
+    route_mode: str = Field(default="production_chat", max_length=64)
+    channel: str = Field(default="phone_call", max_length=64)
+    local_time: str = Field(default="", max_length=128)
+    timezone: str = Field(default="Australia/Brisbane", max_length=64)
+    caller_context: ChatCallInitCallerContext | None = None
+
+
+class ChatTurnMeta(BaseModel):
+    turn_id: str = Field(default="", max_length=128)
+    turn_type: str = Field(default="user", max_length=32)
+    utterance_key: str | None = Field(default=None, max_length=256)
 
 
 class ChatRequest(BaseModel):
@@ -616,6 +1036,16 @@ class ChatRequest(BaseModel):
     corpora: list[str] = Field(default_factory=list)
     top_k: int | None = Field(default=None, ge=1, le=20)
     api_mode: ChatApiMode = "responses"
+    surface: str | None = Field(default=None, max_length=64)
+    route_mode: str | None = Field(default=None, max_length=64)
+    agent_category: str | None = Field(default=None, max_length=64)
+    public_presenter_required: bool = False
+    retail_output_guard_required: bool = False
+    diagnostics_visible: bool = True
+    call_init: ChatCallInit = Field(default_factory=ChatCallInit)
+    turn_meta: ChatTurnMeta = Field(default_factory=ChatTurnMeta)
+    conversation_mode: ConversationMode | None = None
+    workflow_mode: WorkflowMode | None = None
     llm_model_id: str | None = Field(
         default=None,
         max_length=256,
@@ -625,6 +1055,12 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None
     use_approved_web: bool = False
     tool_overrides: dict[str, bool] = Field(default_factory=dict)
+    docx_mode: ChatDocxMode = Field(default_factory=ChatDocxMode)
+    odoo_agentic: bool | None = Field(
+        default=None,
+        description="When true, odoo_specialist uses a multi-step chat.completions tool loop (odoo_execute). "
+        "False disables it; None uses server default (app_odoo_agentic_enabled).",
+    )
 
 
 class ChatUsage(BaseModel):
@@ -666,10 +1102,45 @@ class ChatToolEvent(BaseModel):
     latency_ms: int | None = None
 
 
+class RuntimeProfileLlmOrchestrationConfig(BaseModel):
+    enabled: bool = False
+    trigger_mode: Literal["on_prompt_overflow", "always_second_pass"] = "on_prompt_overflow"
+    prompt_token_soft_limit: int | None = Field(default=None, ge=1)
+    fallback_connection_id: str | None = None
+    fallback_provider: str = Field(default="openai", min_length=1, max_length=64)
+    fallback_model_id: str | None = Field(default=None, max_length=256)
+    include_primary_answer_context: bool = True
+
+
+class LlmExecutionStep(BaseModel):
+    stage: str = Field(min_length=1, max_length=64)
+    provider: str = Field(min_length=1, max_length=64)
+    connection_label: str | None = None
+    model_id: str = Field(min_length=1, max_length=256)
+    api_mode: ChatApiMode
+    reason: str | None = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    estimate: bool = True
+
+
+class RouteDecision(BaseModel):
+    route_type: RouteType
+    rationale_summary: str = Field(min_length=1, max_length=800)
+    document_intent: bool = False
+    tool_expectations: dict = Field(default_factory=dict)
+    recommended_workers: list[dict] = Field(default_factory=list)
+    suggested_specialist_template: dict | None = None
+    llm_execution: list[LlmExecutionStep] = Field(default_factory=list)
+
+
 class ChatResponse(BaseModel):
     answer: str
     query_mode: QueryMode
     citations: list[ChatCitation]
+    conversation_mode: ConversationMode = "quick"
+    workflow_mode: WorkflowMode = "standard"
     conversation_id: str | None = None
     agent_id: str | None = None
     cached: bool = False
@@ -677,3 +1148,6 @@ class ChatResponse(BaseModel):
     effective_snapshot_id: str | None = None
     tool_summary: list[ToolReadinessSummary] = Field(default_factory=list)
     tool_events: list[ChatToolEvent] = Field(default_factory=list)
+    route_decision: RouteDecision | None = None
+    docx_artifacts: list[DocxArtifact] = Field(default_factory=list)
+    docx_diagnostics: list[DocxDiagnostic] = Field(default_factory=list)

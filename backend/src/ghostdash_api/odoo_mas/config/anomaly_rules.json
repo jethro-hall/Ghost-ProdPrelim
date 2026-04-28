@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "description": "Rules-based anomaly thresholds. Percentage changes are relative to prior (MoM) unless otherwise noted. Margin rules use absolute percentage-point change.",
+  "momentum_window": "month_over_month",
+  "rules": [
+    {
+      "anomaly_id": "revenue_mom_down",
+      "metric": "revenue",
+      "check": "relative_drop_vs_prior",
+      "min_change_pct": 0.2,
+      "severity": "high"
+    },
+    {
+      "anomaly_id": "cogs_mom_up",
+      "metric": "cogs",
+      "check": "relative_increase_vs_prior",
+      "min_change_pct": 0.2,
+      "severity": "medium"
+    },
+    {
+      "anomaly_id": "gross_margin_pp_drop",
+      "metric": "gross_margin_pct",
+      "check": "absolute_drop_points_vs_prior",
+      "min_change_points": 0.05,
+      "severity": "medium"
+    },
+    {
+      "anomaly_id": "marketing_spend_mom_up",
+      "metric": "marketing_cost",
+      "check": "relative_increase_vs_prior",
+      "min_change_pct": 0.25,
+      "severity": "medium"
+    },
+    {
+      "anomaly_id": "roas_mom_down",
+      "metric": "roas",
+      "check": "relative_drop_vs_prior",
+      "min_change_pct": 0.2,
+      "severity": "high"
+    },
+    {
+      "anomaly_id": "centralized_roas_mom_down",
+      "metric": "centralized_roas",
+      "check": "relative_drop_vs_prior",
+      "min_change_pct": 0.2,
+      "severity": "high"
+    }
+  ],
+  "extra_series_rules": {
+    "workshop_cost_mom_up": { "min_change_pct": 0.2, "check": "relative_increase_vs_prior" },
+    "freight_mom_up": { "min_change_pct": 0.2, "check": "relative_increase_vs_prior" },
+    "warranty_mom_up": { "min_change_pct": 0.2, "check": "relative_increase_vs_prior" }
+  }
+}

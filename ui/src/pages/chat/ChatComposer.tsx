@@ -1,6 +1,13 @@
 import { useRef, useEffect } from "react";
 import { PlusIcon, SendIcon } from "../../components/ReferenceIcons";
-import type { ConversationMode, WorkflowMode } from "../../api";
+import type { ChatDocxMode, ConversationMode, WorkflowMode } from "../../api";
+
+const BUSINESS_STRUCTURE_TEMPLATE = `Business structure:
+- Legal entities and operating brands:
+- Reporting entities (branches/stores/sites):
+- Channel-only scopes (not legal entities):
+- Group roll-up rules:
+- Accounting/scope rules (tax, refunds, intercompany, journal constraints):`;
 
 type Props = {
   message: string;
@@ -17,6 +24,8 @@ type Props = {
   conversationMode: ConversationMode;
   onConversationModeChange: (mode: ConversationMode) => void;
   workflowMode: WorkflowMode;
+  docxMode: ChatDocxMode;
+  onDocxModeChange: (next: ChatDocxMode) => void;
 };
 
 export default function ChatComposer({
@@ -34,6 +43,8 @@ export default function ChatComposer({
   conversationMode,
   onConversationModeChange,
   workflowMode,
+  docxMode,
+  onDocxModeChange,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -49,6 +60,15 @@ export default function ChatComposer({
       e.preventDefault();
       onSend();
     }
+  };
+
+  const handleInsertBusinessStructureTemplate = () => {
+    const trimmed = message.trim();
+    const nextValue = trimmed ? `${trimmed}\n\n${BUSINESS_STRUCTURE_TEMPLATE}` : BUSINESS_STRUCTURE_TEMPLATE;
+    setMessage(nextValue);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
   };
 
   const uploadDisabled = !activeConversationId || !activeAgentId || uploadBusy;
@@ -107,6 +127,53 @@ export default function ChatComposer({
           <span className="text-[0.72rem] text-slate-500">
             {conversationModes.find((modeOption) => modeOption.id === conversationMode)?.hint}
           </span>
+          <button
+            type="button"
+            onClick={() =>
+              onDocxModeChange({
+                ...docxMode,
+                enabled: !docxMode.enabled,
+              })
+            }
+            disabled={busy}
+            className={`ml-auto rounded-full border px-3 py-1.5 text-[0.72rem] font-semibold transition-colors ${
+              docxMode.enabled
+                ? "border-ghost-orange bg-ghost-orange/10 text-ghost-orange"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            } ${busy ? "cursor-not-allowed opacity-70" : ""}`}
+          >
+            Apryse Docs {docxMode.enabled ? "On" : "Off"}
+          </button>
+          {docxMode.enabled && (
+            <>
+              <select
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[0.72rem] text-slate-700"
+                value={docxMode.operation ?? "preview"}
+                onChange={(event) =>
+                  onDocxModeChange({
+                    ...docxMode,
+                    operation: event.target.value as "preview" | "finalize",
+                  })
+                }
+                disabled={busy}
+              >
+                <option value="preview">Preview</option>
+                <option value="finalize">Finalize</option>
+              </select>
+              <input
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[0.72rem] text-slate-700"
+                value={docxMode.template_id ?? ""}
+                onChange={(event) =>
+                  onDocxModeChange({
+                    ...docxMode,
+                    template_id: event.target.value,
+                  })
+                }
+                placeholder="Template ID"
+                disabled={busy}
+              />
+            </>
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-2">
@@ -163,6 +230,19 @@ export default function ChatComposer({
                 <line x1="8" y1="23" x2="16" y2="23"></line>
               </svg>
               <span>VOICE</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleInsertBusinessStructureTemplate}
+              disabled={busy}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                busy
+                  ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+              title="Insert business structure template"
+            >
+              <span>STRUCTURE</span>
             </button>
           </div>
           

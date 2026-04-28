@@ -31,6 +31,9 @@ class QueryTriggerPayload(BaseModel):
     top_k: int = 6
     trace_id: str
     workflow_mode: str | None = None
+    embedding_model_id: str | None = None
+    kb_enabled: bool = True
+    odoo_ready: bool = False
 
 
 def split_recoverable_ingestion_runs(
@@ -244,6 +247,9 @@ def create_app() -> FastAPI:
             top_k=body.top_k,
             trace_id=body.trace_id,
             workflow_mode=body.workflow_mode,
+            embedding_model_id=body.embedding_model_id,
+            kb_enabled=body.kb_enabled,
+            odoo_ready=body.odoo_ready,
         )
         return result
 

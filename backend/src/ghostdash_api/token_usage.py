@@ -34,3 +34,47 @@ def estimate_llm_turn_usage_dict(
         "total_tokens": total,
         "estimate": True,
     }
+
+
+def normalize_provider_usage_dict(
+    *,
+    prompt_tokens: int | None,
+    completion_tokens: int | None,
+    total_tokens: int | None,
+) -> dict[str, int | bool] | None:
+    if prompt_tokens is None and completion_tokens is None and total_tokens is None:
+        return None
+    resolved_prompt = int(prompt_tokens or 0)
+    resolved_completion = int(completion_tokens or 0)
+    resolved_total = int(total_tokens) if total_tokens is not None else resolved_prompt + resolved_completion
+    return {
+        "prompt_tokens": resolved_prompt,
+        "completion_tokens": resolved_completion,
+        "total_tokens": resolved_total,
+        "estimate": False,
+    }
+
+
+def resolve_chat_usage_dict(
+    *,
+    provider_usage: dict[str, int | bool] | None,
+    system_prompt: str,
+    user_prompt: str | None,
+    completion: str,
+    fallback_user_prompt: str = "",
+    skip_llm: bool = False,
+) -> dict[str, int | bool]:
+    if provider_usage is not None:
+        return {
+            "prompt_tokens": int(provider_usage.get("prompt_tokens") or 0),
+            "completion_tokens": int(provider_usage.get("completion_tokens") or 0),
+            "total_tokens": int(provider_usage.get("total_tokens") or 0),
+            "estimate": bool(provider_usage.get("estimate", False)),
+        }
+    return estimate_llm_turn_usage_dict(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        completion=completion,
+        fallback_user_prompt=fallback_user_prompt,
+        skip_llm=skip_llm,
+    )

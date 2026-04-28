@@ -33,6 +33,14 @@ GhostDASH is the operator console and control plane for a LlamaIndex-native work
   `trace_id`, `span_id`, `service`, `route`, `start_ts`, `end_ts`, `latency_ms`, `status`, `error`
 - Async work kicked off by an API request must preserve the originating `trace_id` into worker execution and downstream calls.
 
+6. Canonical operator chat URL (production `ghoststack.rideai.com.au`)
+- The supported operator chat **browser** entry point is **`https://ghoststack.rideai.com.au/ghost_chatui/`** (Ghost ChatUI behind Caddy `handle_path /ghost_chatui/*` → `ghost-chatui`).
+- Do **not** document, link, or recommend **`https://ghoststack.rideai.com.au/chat`** for operators. That path is legacy; Caddy redirects `/chat` and `/chat/*` with **308** to `/ghost_chatui/`.
+- Backend **API** routes such as `POST /agent/chat` and `POST /agent/chat/stream` (agent ingress) are correct in curl examples and code; they are not the human-facing page URL.
+- Source-of-truth mapping for edits:
+  - `ghost_chatui` page implementation is in **`/var/Ghost-chatUI`** (served by `ghost-chatui:3000`).
+  - `ghoststack-rag/ui` is GhostDASH app UI and is not assumed to back `/ghost_chatui/`.
+
 ## Repo-first / no invented names
 
 Before changing infra or app wiring, read:

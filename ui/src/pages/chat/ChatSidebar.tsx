@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { type AgentProfile, type ChatApiMode, type WorkflowMode } from "../../api";
+import { type AgentProfile, type WorkflowMode } from "../../api";
 
 type Props = {
   open: boolean;
@@ -14,12 +14,10 @@ export default function ChatSidebar({ open, onClose, chatEngine }: Props) {
     changeAgent,
     clearChat,
     startWorkflowConversation,
-    sessionApiMode,
-    setSessionApiMode,
-    sessionLlmModelId,
-    setSessionLlmModelId,
     llmTokenTotal,
   } = chatEngine;
+  const activeAgent = agents.find((agent: AgentProfile) => agent.id === activeAgentId) ?? null;
+  const activeRuntime = activeAgent?.runtime_profile ?? null;
 
   return (
     <aside
@@ -51,7 +49,9 @@ export default function ChatSidebar({ open, onClose, chatEngine }: Props) {
             ["standard", "New Standard Chat"],
             ["data_collector", "New Data Collector"],
             ["documenter", "New Documenter"],
-            ["odoo_specialist", "New Odoo Specialist"],
+            ["case_framing", "New Case Framing (hardened)"],
+            ["evidence_retrieval", "New Evidence Retrieval (hardened)"],
+            ["bp_mode", "New BP Mode (full build)"],
           ] as Array<[WorkflowMode, string]>).map(([workflowMode, label]) => (
             <button
               key={workflowMode}
@@ -83,28 +83,17 @@ export default function ChatSidebar({ open, onClose, chatEngine }: Props) {
         </div>
 
         <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">LLM (this session)</div>
-          <label className="mt-2 block text-[0.7rem] font-medium text-slate-600">API mode</label>
-          <select
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900"
-            value={sessionApiMode}
-            onChange={(event) => setSessionApiMode(event.target.value as ChatApiMode)}
-          >
-            <option value="responses">OpenAI Responses (stateful chain)</option>
-            <option value="chat_completions">Chat completions</option>
-          </select>
-          <label className="mt-2 block text-[0.7rem] font-medium text-slate-600">Model id</label>
-          <input
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 font-mono text-[0.65rem] text-slate-900"
-            value={sessionLlmModelId}
-            onChange={(event) => setSessionLlmModelId(event.target.value)}
-            placeholder="openai/gpt-4o-mini"
-          />
+          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">LLM (active agent)</div>
+          <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-[0.68rem] text-slate-700">
+            <div><span className="font-medium text-slate-900">Provider:</span> {activeRuntime?.llm_config.provider ?? "n/a"}</div>
+            <div><span className="font-medium text-slate-900">API mode:</span> {activeRuntime?.llm_config.api_mode ?? "n/a"}</div>
+            <div className="break-all font-mono text-[0.65rem]"><span className="font-medium text-slate-900 font-sans">Model:</span> {activeRuntime?.llm_config.model_id ?? "n/a"}</div>
+          </div>
           <div
             className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-[0.65rem] text-slate-700"
-            title="Approximate LLM tokens (cl100k) for this conversation: prompt + completion, summed across turns. Not identical to provider billing."
+            title="Per-turn tokens are now sourced from the final provider boundary when available, otherwise estimated. This card shows the summed total for the active conversation."
           >
-            <span className="font-medium text-slate-900">LLM tokens (est.)</span>
+            <span className="font-medium text-slate-900">LLM tokens</span>
             <span className="ml-2 font-mono tabular-nums">{llmTokenTotal.toLocaleString()}</span>
           </div>
         </div>

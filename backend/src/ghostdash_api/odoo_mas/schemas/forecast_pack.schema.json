@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ForecastPack",
+  "description": "Deterministic forward estimates from time-series rules.",
+  "type": "object",
+  "required": ["horizon", "forecasts", "caveats"],
+  "properties": {
+    "method": { "type": "string" },
+    "horizon": { "type": "integer" },
+    "forecasts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "value": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "series_by_metric": {
+      "type": "object",
+      "additionalProperties": { "type": "array" }
+    },
+    "caveats": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

@@ -7,7 +7,8 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel     && pip install --no-cache-dir "."
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir "." "pytest>=8.4.2"
 
 ENV PYTHONUNBUFFERED=1
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from ghostdash_api.workflows import _plan_odoo_tool_usage
+from ghostdash_api.workflows import _extract_period_scope, _plan_odoo_tool_usage
 
 
 def test_plan_odoo_tool_usage_carries_forward_company_scope_from_history() -> None:
@@ -194,6 +194,57 @@ def test_plan_odoo_tool_usage_routes_product_branch_exploration_to_multi_step_op
     assert plan["payload"].get("date_from")
 
 
+def test_plan_odoo_tool_usage_routes_sales_drilldown_prompt_to_named_helper() -> None:
+    plan = _plan_odoo_tool_usage(
+        "After receiving the revenue numbers for the previous 7 days from 20/04/2026, please using Odoo show the leading sales agent payment method and product sold for Burleigh."
+    )
+
+    assert plan["operation"] == "odoo.sales.drilldown.period"
+    assert plan["payload"]["date_from"] == "2026-04-13"
+    assert plan["payload"]["date_to"] == "2026-04-20"
+    assert plan["payload"]["company_name_terms"] == ["burleigh"]
+    assert plan["suppress_retrieval"] is True
+
+
+def test_plan_odoo_tool_usage_routes_top_products_gp_prompt_to_named_helper() -> None:
+    plan = _plan_odoo_tool_usage(
+        "out of the 23,074.70 revenue for Brisbane, show me what was the top 5 products sold and each products GP"
+    )
+    assert plan["operation"] == "odoo.sales.products_gp.period_top"
+    assert plan["payload"]["top_n"] == 5
+    assert plan["payload"]["can_be_sold"] is True
+    assert plan["payload"]["company_name_terms"] == ["brisbane"]
+    assert plan["payload"]["revenue_reference_total"] == 23074.70
+    assert plan["payload"]["date_from"] is not None
+    assert plan["payload"]["date_to"] is not None
+
+
+def test_plan_odoo_tool_usage_routes_product_catalog_lookup_to_products_search_read() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo, list products matching fatfish for catalog review."
+    )
+
+    assert plan["operation"] == "odoo.products.search_read"
+    assert plan["payload"]["can_be_sold"] is True
+    assert plan["payload"]["query"] == "fatfish"
+    assert "name" in plan["payload"]["fields"]
+    assert "default_code" in plan["payload"]["fields"]
+
+
+def test_plan_odoo_tool_usage_routes_period_sales_order_lookup_to_sales_orders_search_read() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo, show sales orders for company_id 3 for last month."
+    )
+
+    assert plan["operation"] == "odoo.sales.orders.search_read"
+    assert plan["mode"] == "required"
+    assert plan["payload"]["limit"] == 100
+    assert ["company_id", "=", 3] in plan["payload"]["domain"]
+    assert ["state", "in", ["sale", "done"]] in plan["payload"]["domain"]
+    assert any(item[0] == "date_order" and item[1] == ">=" for item in plan["payload"]["domain"])
+    assert any(item[0] == "date_order" and item[1] == "<" for item in plan["payload"]["domain"])
+
+
 def test_plan_odoo_tool_usage_brisbane_only_forces_single_company_for_dynamic_odoo() -> None:
     plan = _plan_odoo_tool_usage(
         "Using Odoo only, run a dynamic custom query deep dive for Brisbane ONLY for Jan, Feb, March, April 2026 revenue and cogs anomalies.",
@@ -267,3 +318,99 @@ def test_plan_odoo_tool_usage_prioritizes_explicit_from_date_to_now_over_fy_toke
     assert plan["payload"]["date_from"] == "2025-07-01"
     assert plan["payload"]["date_to"] == (today + timedelta(days=1)).isoformat()
     assert plan["payload"]["company_name_terms"] == ["brisbane"]
+
+
+def test_plan_odoo_tool_usage_routes_burleigh_gp_roas_five_day_window_to_period_summary() -> None:
+    """Anchored 'previous N days from DD/MM/YYYY' must resolve so we use ledger GP, not Shopify ROI."""
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo, Show me GP/ROAS/performance and any relevant financial / assessment data "
+        "for the previous 5 days from the 20/04/2026 for the BUSINESS Ride Electric Burleigh ONLY.",
+        intent_message=(
+            "Using Odoo, Show me GP/ROAS/performance and any relevant financial / assessment data "
+            "for the previous 5 days from the 20/04/2026 for the BUSINESS Ride Electric Burleigh ONLY."
+        ),
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan["payload"]["date_from"] == "2026-04-15"
+    assert plan["payload"]["date_to"] == "2026-04-20"
+    assert plan["payload"]["company_name_terms"] == ["burleigh"]
+
+
+def test_plan_odoo_tool_usage_dual_odoo_gp_and_shopify_prefers_margin_with_planner_hint() -> None:
+    plan = _plan_odoo_tool_usage(
+        "In Odoo for Burleigh last month: gross profit plus Shopify ROAS.",
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan.get("multi_step_odoo_hint")
+
+
+def test_plan_odoo_tool_usage_routes_bp_scorecard_prompt_to_branch_comparison() -> None:
+    plan = _plan_odoo_tool_usage(
+        "Please give me COGS GP revenue net and ROAS for Burleigh and Brisbane and package it board-ready."
+    )
+
+    assert plan["operation"] == "odoo.finance.pnl.period_summary"
+    assert plan["payload"]["company_name_terms"] == ["burleigh", "brisbane"]
+    assert plan["payload"]["required_metrics"] == ["cogs", "gp", "revenue", "net", "roas"]
+    assert plan.get("multi_step_odoo_hint")
+    assert "Shopify" in str(plan["multi_step_odoo_hint"])
+
+
+def test_plan_odoo_tool_usage_interprets_named_month_without_year_for_bp_mode() -> None:
+    today = datetime.now(UTC).date()
+    expected_year = today.year if today.month >= 3 else today.year - 1
+    period_scope = _extract_period_scope(
+        "Please give me COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March."
+    )
+
+    assert period_scope["relative_period"] == f"march_{expected_year}"
+    assert period_scope["date_from"] == f"{expected_year}-03-01"
+    assert period_scope["date_to"] == f"{expected_year}-04-01"
+
+
+def test_plan_odoo_tool_usage_routes_pnl_prompt_to_pnl_period_summary() -> None:
+    plan = _plan_odoo_tool_usage(
+        "For Burleigh and Brisbane for last month, return profit and loss including operating income, total expenses, and net profit."
+    )
+
+    assert plan["operation"] == "odoo.finance.pnl.period_summary"
+    assert plan["payload"]["company_name_terms"] == ["burleigh", "brisbane"]
+    assert plan["payload"]["relative_period"] == "last_month"
+
+
+def test_plan_odoo_tool_usage_negates_shopify_when_user_says_not_shopify() -> None:
+    """Mentioning 'not Shopify' must not trigger the Shopify ROI helper."""
+    plan = _plan_odoo_tool_usage(
+        "Using Odoo show GP/ROAS for Burleigh only — ERP ledger actuals, not Shopify.",
+    )
+
+    assert plan["operation"] != "odoo.finance.shopify.monthly_roi"
+
+
+def test_plan_odoo_tool_usage_does_not_route_shopify_from_assistant_history_alone() -> None:
+    """Full-thread replanning must not treat assistant 'Shopify' mentions as user intent."""
+    plan = _plan_odoo_tool_usage(
+        "assistant: we already ran odoo.finance.shopify.monthly_roi for Shopify-linked revenue.\n"
+        "user: Using Odoo, show gross profit for Ride Electric Burleigh for last month",
+        intent_message="Using Odoo, show gross profit for Ride Electric Burleigh for last month",
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.period_summary"
+    assert plan["payload"]["relative_period"] == "last_month"
+
+
+def test_plan_odoo_tool_usage_ignores_execution_legend_company_ids_in_history() -> None:
+    plan = _plan_odoo_tool_usage(
+        "assistant: Execution legend\n"
+        "source:live_odoo | window:2026-03-01->2026-04-01 | companies:98,0\n"
+        "user: Using Odoo, show gross profit for Ride Electric Brisbane and Burleigh for last month",
+        intent_message="Using Odoo, show gross profit for Ride Electric Brisbane and Burleigh for last month",
+    )
+
+    assert plan["operation"] == "odoo.finance.margin.monthly_comparison"
+    assert set(plan["payload"]["company_name_terms"]) == {"brisbane", "burleigh"}
+    assert plan["payload"].get("company_ids") in (None, [], [4, 5])
+    assert 98 not in plan["payload"].get("company_ids", [])
+    assert 0 not in plan["payload"].get("company_ids", [])

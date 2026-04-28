@@ -1,0 +1,21 @@
+{
+  "entity": "burleigh",
+  "accounts": {
+    "583 Marketing - Business Advisor": {
+      "class": "business_advisor",
+      "include_in_metric": false
+    },
+    "520 Contract Mechanic": {
+      "class": "workshop_cost",
+      "include_in_metric": false
+    },
+    "510 Marketing - Wages": {
+      "class": "marketing_wages",
+      "include_in_metric": false
+    },
+    "523 Marketing - Merchant Fees - Bunnings": {
+      "class": "merchant_fees",
+      "include_in_metric": false
+    }
+  }
+}

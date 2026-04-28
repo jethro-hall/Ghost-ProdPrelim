@@ -122,6 +122,8 @@ def test_runtime_defaults_update_default_runtime_profile_view() -> None:
     assert runtime_defaults["conversation_mode"] == "working_session"
     assert default_profile.kb_config_json["default_corpora"] == ["finance", "ops"]
     assert default_profile.guardrails_config_json["conversation_mode"] == "working_session"
+    assert default_profile.guardrails_config_json["business_structure_required"] is True
+    assert str(default_profile.guardrails_config_json.get("business_structure_question_bank", "")).strip()
     assert str(default_profile.guardrails_config_json.get("owner_operator_questionnaire", "")).strip()
     assert str(default_profile.guardrails_config_json.get("owner_operator_questionnaire_compact", "")).strip()
     assert default_profile.retrieval_config_json["pdf_parse_lane_policy"] == "cloud_default"
@@ -402,6 +404,58 @@ def test_save_runtime_profile_derives_compact_questionnaire_from_source_template
     guardrails = dict(profile.guardrails_config_json or {})
     assert "Decision needed first" in str(guardrails.get("owner_operator_questionnaire", ""))
     assert "Owner-operator compact rules" in str(guardrails.get("owner_operator_questionnaire_compact", ""))
+
+
+def test_save_runtime_profile_derives_compact_business_structure_context() -> None:
+    SessionLocal = build_session()
+
+    with SessionLocal() as session:
+        seed_default_runtime_profile(session)
+        ensure_collection_record(session, slug="default", name="Default")
+        session.commit()
+        profile = save_runtime_profile(
+            session,
+            {
+                "name": "Business Structure Runtime",
+                "description": "Runtime with business structure memory",
+                "llm_config": {
+                    "provider": "openai",
+                    "model_id": "openai/llama31-8b",
+                    "temperature": 0.2,
+                    "max_tokens": 2048,
+                    "api_mode": "responses",
+                },
+                "guardrails_config": {
+                    "system_prompt": "Stay grounded.",
+                    "grounding_mode": "retrieved_only",
+                    "insufficient_context_behavior": "Say when context is missing.",
+                    "conversation_mode": "quick",
+                    "business_structure_context": "Legal entities: ACME Retail Pty Ltd; Channel: Shopify only.",
+                },
+                "kb_config": {
+                    "default_corpora": ["default"],
+                    "embedding_model_id": "openai/intfloat/multilingual-e5-large-instruct",
+                },
+                "retrieval_config": {
+                    "default_top_k": 6,
+                    "text_chunk_size": 800,
+                    "text_chunk_overlap": 120,
+                    "text_heading_aware": True,
+                    "pdf_chunk_size": 900,
+                    "pdf_chunk_overlap": 120,
+                    "pdf_sentence_window": 2,
+                    "pdf_parse_lane_policy": "auto",
+                    "pdf_rerank_enabled": False,
+                },
+                "tool_policy_config": {"tools": []},
+                "is_default": False,
+                "enabled": True,
+            },
+        )
+
+    guardrails = dict(profile.guardrails_config_json or {})
+    assert "Legal entities: ACME Retail Pty Ltd" in str(guardrails.get("business_structure_context", ""))
+    assert "Business structure memory:" in str(guardrails.get("business_structure_context_compact", ""))
 
 
 def test_normalize_openai_prefixed_model_for_openai_staging_provider() -> None:

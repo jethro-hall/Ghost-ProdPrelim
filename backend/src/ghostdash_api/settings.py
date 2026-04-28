@@ -76,6 +76,17 @@ class Settings(BaseSettings):
     app_voice_first_token_target_ms: int = 1500
     app_voice_max_output_tokens: int = 160
     app_voice_stream_guard_holdback_chars: int = 32
+    app_voice_stt_provider: str = "deepgram_primary"
+    app_voice_stt_endpointing_ms: int = 650
+    app_voice_stt_max_endpointing_ms: int = 900
+    app_voice_stt_min_utterance_chars: int = 2
+    deepgram_api_key: str | None = None
+    deepgram_model: str = "nova-2"
+    hubtiger_mcp_url: str | None = None
+    hubtiger_proxy_url: str | None = None
+    hubtiger_tool_access: str = "read_only"
+    hubtiger_read_timeout_ms: int = 8000
+    hubtiger_mutation_timeout_ms: int = 12000
     elevenlabs_api_key: str | None = None
     elevenlabs_default_voice_id: str | None = None
     elevenlabs_allowed_voice_ids: str | None = None

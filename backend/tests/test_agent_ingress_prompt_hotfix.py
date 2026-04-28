@@ -19,7 +19,7 @@ from ghostdash_api.models import (
 )
 from ghostdash_api.runtime import LlmCompletionResult
 from ghostdash_api.runtime_profiles import seed_default_runtime_profile
-from ghostdash_api.schemas import ToolExecuteResponse, ToolReadinessSummary
+from ghostdash_api.schemas import ChatToolEvent, ToolExecuteResponse, ToolReadinessSummary
 
 
 def build_client(monkeypatch):
@@ -122,6 +122,17 @@ def build_plan(question: str) -> dict:
             }
         ],
     }
+
+
+def test_resolve_workflow_mode_accepts_hardened_agent_modes() -> None:
+    assert agent_ingress.resolve_workflow_mode(requested_mode="case_framing") == "case_framing"
+    assert agent_ingress.resolve_workflow_mode(requested_mode="evidence_retrieval") == "evidence_retrieval"
+    assert agent_ingress.resolve_workflow_mode(requested_mode="odoo_operations") == "odoo_operations"
+    assert agent_ingress.resolve_workflow_mode(requested_mode="bp_mode") == "bp_mode"
+
+
+def test_dedupe_answer_text_removes_short_exact_duplicate() -> None:
+    assert agent_ingress.dedupe_answer_text("Hello! How can I assist you today?Hello! How can I assist you today?") == "Hello! How can I assist you today?"
 
 
 def test_execute_sub_agent_with_retries_retries_then_succeeds(monkeypatch) -> None:
@@ -430,11 +441,7 @@ def test_agent_chat_stream_start_includes_tool_summary_and_effective_snapshot_id
     assert response.status_code == 200
     assert events[0]["type"] == "start"
     assert events[0]["effective_snapshot_id"]
-    assert events[0]["tool_summary"][0]["id"] == "odoo_primary"
-    assert events[0]["tool_summary"][0]["status"] == "disabled_for_session"
-    assert "Turned off for this session" in events[0]["tool_summary"][0]["blocked_reasons"]
-    assert events[0]["tool_summary"][0]["enabled_for_agent"] is True
-    assert events[0]["tool_summary"][0]["health"] == "healthy"
+    assert events[0]["tool_summary"] == []
     assert events[0]["route_decision"]["route_type"] == "direct"
 
 
@@ -840,6 +847,45 @@ def test_normalize_finance_closeout_answer_injects_contract_sections_when_missin
     assert "### Assumptions" in normalized
 
 
+def test_normalize_finance_closeout_answer_prefers_mas_markdown_to_prevent_truth_drift() -> None:
+    normalized = agent_ingress.normalize_finance_closeout_answer(
+        answer_text="This conflicting free-form narrative should be ignored.",
+        request_message="Show GP for Brisbane by month.",
+        tool_plan={"operation": "odoo.finance.margin.monthly_comparison", "payload": {"date_from": "2025-07-01", "date_to": "2025-10-01"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.margin.monthly_comparison",
+                summary="Executed via Odoo MAS v2 pipeline.",
+                payload={
+                    "response": {"markdown": "## Executive Summary\n\nGrounded markdown only."},
+                    "execution_truth": {"evidence_source_mode": "odoo_mas_v2"},
+                },
+            )
+        ],
+    )
+    assert "Grounded markdown only." in normalized
+    assert "Execution Truth" in normalized
+    assert "prevent narrative drift" in normalized
+
+
+def test_should_route_finance_plan_to_odoo_mas_for_rpc_query_spec() -> None:
+    routed = agent_ingress._should_route_finance_plan_to_odoo_mas(
+        agent_name="Finance Agent",
+        operation="odoo.rpc.query_spec",
+    )
+    assert routed is True
+
+
+def test_should_force_finance_message_to_odoo_mas_when_odoo_intent_present() -> None:
+    forced = agent_ingress._should_force_finance_message_to_odoo_mas(
+        agent_name="Finance Agent",
+        message="Using Odoo only, show GP and marketing ledger costs for Brisbane.",
+    )
+    assert forced is True
+
+
 def test_validate_docx_finalize_output_requires_structured_sections() -> None:
     diagnostics = agent_ingress.validate_docx_finalize_output(
         operation="finalize",
@@ -865,8 +911,86 @@ def test_build_owner_operator_questionnaire_directives_uses_guardrail_template()
         }
     )
     assert "Owner-operator guidance template" in directives
-    assert "Q1: decision needed" in directives
+    assert "decision-first compact" in directives
     assert "branch/location/store/site/shop" in directives
+    assert "Never quote, paraphrase, or echo" in directives
+
+
+def test_build_owner_operator_questionnaire_directives_strips_hashable_tail() -> None:
+    directives = agent_ingress.build_owner_operator_questionnaire_directives(
+        guardrails_config={
+            "owner_operator_questionnaire_compact": (
+                "Owner-operator compact rules. Source template hashable text: "
+                "Request morre information iif it iss nnot possiible to rrersspond accurately."
+            )
+        }
+    )
+    assert "Source template hashable text" not in directives
+    assert "morre information" not in directives
+
+
+def test_build_runtime_context_block_sanitizes_owner_operator_compact_guidance() -> None:
+    context = agent_ingress.build_runtime_context_block(
+        agent_name="Finance Agent",
+        runtime_profile_name="Finance Runtime",
+        corpora=["re-finance26"],
+        conversation_mode="board",
+        workflow_mode="standard",
+        history_context="",
+        allowed_urls=[],
+        used_approved_web=False,
+        tool_summary=[],
+        openai_responses_chain=False,
+        owner_operator_template_compact=(
+            "Owner-operator compact rules. Source template hashable text: "
+            "Request morre information iif it iss nnot possiible."
+        ),
+    )
+    assert "Source template hashable text" not in context
+    assert "morre information" not in context
+    assert "Owner-operator compact guidance:" in context
+
+
+def test_build_business_structure_directives_uses_runtime_memory() -> None:
+    directives = agent_ingress.build_business_structure_directives(
+        guardrails_config={
+            "business_structure_required": True,
+            "business_structure_context": (
+                "Legal entities: ACME Holdings Pty Ltd; Branches: North, South; "
+                "Channels: Shopify is channel-only."
+            ),
+        }
+    )
+    assert "Business structure memory (high priority)" in directives
+    assert "ACME Holdings Pty Ltd" in directives
+
+
+def test_build_missing_business_structure_answer_returns_question_bank_when_required() -> None:
+    answer = agent_ingress.build_missing_business_structure_answer(
+        message="Provide business performance commentary for revenue and gross margin this month.",
+        workflow_mode="standard",
+        guardrails_config={
+            "business_structure_required": True,
+            "business_structure_context": "",
+            "business_structure_question_bank": "Q1) entity map\nQ2) channel scope",
+        },
+    )
+    assert answer is not None
+    assert "no business structure memory" in answer
+    assert "Q1) entity map" in answer
+
+
+def test_build_missing_business_structure_answer_skips_gate_when_branch_scope_explicit() -> None:
+    answer = agent_ingress.build_missing_business_structure_answer(
+        message="Give COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March.",
+        workflow_mode="standard",
+        guardrails_config={
+            "business_structure_required": True,
+            "business_structure_context": "",
+            "business_structure_question_bank": "Q1) entity map\nQ2) channel scope",
+        },
+    )
+    assert answer is None
 
 
 def test_normalize_business_abbreviations_expands_once() -> None:
@@ -874,6 +998,120 @@ def test_normalize_business_abbreviations_expands_once() -> None:
     assert "return on ad spend (ROAS)" in normalized
     assert "average order value (AOV)" in normalized
     assert "cost of goods sold (COGS)" in normalized
+
+
+def test_remove_low_quality_response_artifacts_strips_bad_leadin() -> None:
+    cleaned = agent_ingress._remove_low_quality_response_artifacts(
+        "Need use odoo tool likely.I can produce a board-ready view."
+    )
+    assert cleaned == "I can produce a board-ready view."
+
+
+def test_normalize_finance_closeout_answer_bp_mode_rewrites_when_grounding_missing() -> None:
+    answer = agent_ingress.normalize_finance_closeout_answer(
+        answer_text=(
+            "Need use odoo tool likely.I can produce the board-ready March view, "
+            "but I do not have grounded March totals."
+        ),
+        request_message="Please give me COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March.",
+        tool_plan={"payload": {"date_from": "2026-03-01", "date_to": "2026-04-01"}},
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.pnl.period_summary",
+                summary="partial",
+                payload={"response": {"rows": [{"company_name": "Ride Electric Burleigh", "cogs": 1200.0}]}},
+            )
+        ],
+        workflow_mode="bp_mode",
+    )
+    assert answer.startswith("1) Headline Performance Summary")
+    assert "March KPI scorecard - provisional status" in answer
+    assert "Need use odoo tool likely" not in answer
+    assert "| Revenue (REV) | Not grounded |" in answer
+
+
+def test_normalize_finance_closeout_answer_rewrites_synthetic_placeholder_finance_output() -> None:
+    answer = agent_ingress.normalize_finance_closeout_answer(
+        answer_text=(
+            "Based on the provided context, I will attempt to answer the user's question.\n"
+            "Revenue: $X (awaiting Odoo evidence)\n"
+            "Next tool call: SELECT * FROM account_move_line"
+        ),
+        request_message="Give me COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March.",
+        tool_plan={"payload": {"date_from": "2026-03-01", "date_to": "2026-04-01"}},
+        tool_events=[],
+        workflow_mode="standard",
+    )
+    assert answer.startswith("1) Headline Performance Summary")
+    assert "March KPI scorecard - provisional status" in answer
+    assert "$X" not in answer
+    assert "SELECT * FROM account_move_line" not in answer
+
+
+def test_normalize_finance_closeout_answer_rewrites_empty_model_fallback_for_finance_output() -> None:
+    answer = agent_ingress.normalize_finance_closeout_answer(
+        answer_text=(
+            "The language model returned no usable text for this turn, so this message replaces the assistant reply.\n"
+            "#### What we know\n"
+            "- 2 citation(s) were prepared from retrieved context before generation."
+        ),
+        request_message="Give me COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March.",
+        tool_plan={"payload": {"date_from": "2026-03-01", "date_to": "2026-04-01"}},
+        tool_events=[],
+        workflow_mode="standard",
+    )
+    assert answer.startswith("1) Headline Performance Summary")
+    assert "March KPI scorecard - provisional status" in answer
+    assert "The language model returned no usable text" not in answer
+
+
+def test_build_bp_missing_grounding_response_preserves_grounded_pairs() -> None:
+    answer = agent_ingress._build_bp_missing_grounding_response(
+        request_message="Give me COGS/GP/REV/NET and ROAS for Burleigh and Brisbane for March.",
+        tool_events=[
+            agent_ingress.ChatToolEvent(
+                tool_id="odoo_primary",
+                status="executed",
+                operation="odoo.finance.pnl.period_summary",
+                summary="ok",
+                payload={
+                    "response": {
+                        "companies": [
+                            {
+                                "company_name": "Ride Electric Burleigh",
+                                "revenue": 280841.36,
+                                "gross_profit": 91761.02,
+                                "cost_of_revenue": 189080.31,
+                                "net_profit": 10976.34,
+                            },
+                            {
+                                "company_name": "Ride Electric Brisbane",
+                                "revenue": 240000.0,
+                                "gross_profit": 70000.0,
+                                "cost_of_revenue": 170000.0,
+                                "net_profit": 8000.0,
+                            },
+                        ]
+                    }
+                },
+            )
+        ],
+    )
+    assert answer is not None
+    assert "| Revenue (REV) | $280,841.36 | $240,000.00 |" in answer
+    assert "| Cost of Goods Sold (COGS) | $189,080.31 | $170,000.00 |" in answer
+    assert "| Net Profit (NET) | $10,976.34 | $8,000.00 |" in answer
+    assert "| Return on ad spend (ROAS) | Not grounded | Not grounded |" in answer
+    assert "Available comparison signal" in answer
+
+
+def test_remove_low_quality_response_artifacts_strips_context_preface() -> None:
+    cleaned = agent_ingress._remove_low_quality_response_artifacts(
+        "Based on the provided context, I will attempt to answer the user's question. Revenue increased."
+    )
+    assert cleaned == "Revenue increased."
 
 
 def test_build_reporting_format_directives_for_strategy_and_finance() -> None:
@@ -981,6 +1219,139 @@ def test_prepare_tool_evidence_resolves_named_company_terms_before_finance_compa
     assert evidence.tool_events[0].operation == "odoo.rpc.search_read"
     assert evidence.tool_events[1].operation == "odoo.finance.margin.monthly_comparison"
     assert "Resolved named company scope" in evidence.prompt_prefix
+
+
+def test_prepare_tool_evidence_routes_finance_agent_to_odoo_mas_pipeline(monkeypatch) -> None:
+    _client, SessionLocal = build_client(monkeypatch)
+    with SessionLocal() as session:
+        runtime_profile = seed_default_runtime_profile(session)
+        finance_agent = AgentProfileRecord(
+            name="Finance Agent",
+            first_message="hello",
+            language="en-US",
+            voice_id="alloy",
+            runtime_profile_id=runtime_profile.id,
+            is_default=True,
+            enabled=True,
+        )
+        session.add(finance_agent)
+        session.commit()
+        finance_agent_id = finance_agent.id
+
+    def fake_execute_tool_operation_for_agent(*_args, **_kwargs):
+        raise AssertionError("Legacy Odoo tool execution should not run for Finance Agent MAS routing.")
+
+    def fake_run_odoo_mas_pipeline(_session, *, message: str, trace_id: str | None = None):
+        assert "compare gp" in message.lower()
+        return {
+            "success": True,
+            "intent": {"metric_keys": ["gross_profit"]},
+            "metric_pack": {"gaps": []},
+            "reasoning": {"caveats": []},
+            "markdown": "### 1. Executive Assessment\nMAS v2 result.",
+            "failures": [],
+            "phase2": {"version": 1, "resolved_metrics": [{"revenue": 1.0}]},
+        }
+
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+    monkeypatch.setattr(agent_ingress, "run_odoo_mas_pipeline", fake_run_odoo_mas_pipeline)
+
+    with SessionLocal() as session:
+        evidence = agent_ingress.prepare_tool_evidence(
+            session,
+            agent_id=finance_agent_id,
+            agent_name="Finance Agent",
+            tool_overrides=None,
+            tool_plan={
+                "tool_id": "odoo_primary",
+                "mode": "required",
+                "operation": "odoo.finance.margin.monthly_comparison",
+                "payload": {"company_name_terms": ["brisbane", "burleigh"]},
+            },
+            request_message="Using Odoo only, compare GP for Brisbane vs Burleigh for March 2026.",
+        )
+
+    assert evidence.tool_events
+    assert evidence.tool_events[0].status == "executed"
+    assert evidence.tool_events[0].operation == "odoo.finance.margin.monthly_comparison"
+    assert evidence.tool_events[0].payload["execution_truth"]["evidence_source_mode"] == "odoo_mas_v2"
+    assert evidence.tool_events[0].payload["execution_truth"].get("phase2") is True
+    assert "Executed Odoo MAS v2 pipeline" in evidence.prompt_prefix
+
+
+def test_mas_truth_locked_answer_filters_non_odoo_citations() -> None:
+    event = ChatToolEvent(
+        tool_id="odoo_primary",
+        status="executed",
+        operation="odoo.mas.intent.auto_route",
+        summary="ok",
+        payload={
+            "response": {"markdown": "## Executive Summary\nOdoo result."},
+            "execution_truth": {"evidence_source_mode": "odoo_mas_v2"},
+        },
+    )
+    citations = [
+        {
+            "source_type": "tool",
+            "tool_id": "odoo_primary",
+            "title": "Odoo executed: odoo.mas.intent.auto_route",
+        },
+        {"source_type": "document", "filename": "SriLanka.pdf"},
+        {"source_type": "document", "filename": "Export_2026-03-25_155400.xlsx"},
+    ]
+    filtered = agent_ingress._filter_citations_for_mas_truth(citations, [event])
+    assert filtered == [citations[0]]
+
+
+def test_prepare_tool_evidence_forces_mas_when_plan_is_none_for_finance_odoo_intent(monkeypatch) -> None:
+    _client, SessionLocal = build_client(monkeypatch)
+    with SessionLocal() as session:
+        runtime_profile = seed_default_runtime_profile(session)
+        finance_agent = AgentProfileRecord(
+            name="Finance Agent",
+            first_message="hello",
+            language="en-US",
+            voice_id="alloy",
+            runtime_profile_id=runtime_profile.id,
+            is_default=True,
+            enabled=True,
+        )
+        session.add(finance_agent)
+        session.commit()
+        finance_agent_id = finance_agent.id
+
+    def fake_run_odoo_mas_pipeline(_session, *, message: str, trace_id: str | None = None):
+        assert "odoo" in message.casefold()
+        return {
+            "success": True,
+            "intent": {"metric_keys": ["marketing_costs"]},
+            "metric_pack": {"rows": [{"business_unit": "Ride Electric Retail", "ad_spend": 72147.32}]},
+            "reasoning": {"caveats": []},
+            "markdown": "## Executive Summary\n\nForced MAS routing result.",
+            "failures": [],
+        }
+
+    def fake_execute_tool_operation_for_agent(*_args, **_kwargs):
+        raise AssertionError("Legacy Odoo execution should not run when forced MAS autoroute is active.")
+
+    monkeypatch.setattr(agent_ingress, "run_odoo_mas_pipeline", fake_run_odoo_mas_pipeline)
+    monkeypatch.setattr(agent_ingress, "execute_tool_operation_for_agent", fake_execute_tool_operation_for_agent)
+
+    with SessionLocal() as session:
+        evidence = agent_ingress.prepare_tool_evidence(
+            session,
+            agent_id=finance_agent_id,
+            agent_name="Finance Agent",
+            tool_overrides=None,
+            tool_plan={"tool_id": "odoo_primary", "mode": "none", "operation": None, "payload": {}},
+            request_message="Using Odoo only, show marketing costs for Ride Electric Retail in March 2026.",
+        )
+
+    assert evidence.plan["operation"] == "odoo.mas.intent.auto_route"
+    assert evidence.tool_events
+    assert evidence.tool_events[0].status == "executed"
+    assert evidence.tool_events[0].operation == "odoo.mas.intent.auto_route"
+    assert evidence.tool_events[0].payload["execution_truth"]["evidence_source_mode"] == "odoo_mas_v2"
 
 
 def test_prepare_tool_evidence_replaces_year_like_company_ids_with_named_company_resolution(monkeypatch) -> None:

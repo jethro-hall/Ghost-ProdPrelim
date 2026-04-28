@@ -1604,6 +1604,7 @@ def _extract_company_scope(message: str, *, fallback_message: str | None = None)
 
 def _extract_company_ids(message: str, *, fallback_message: str | None = None) -> list[int]:
     def _parse(value: str) -> list[int]:
+        value = _strip_non_user_scope_history(value)
         output: list[int] = []
         explicit_matches = [int(match) for match in ODOO_COMPANY_ID_PATTERN.findall(value)]
         for parsed in explicit_matches:
@@ -1673,6 +1674,30 @@ def _build_scope_clarification_answer(scope_hint: dict[str, Any], question: str)
     )
 
 
+def _strip_non_user_scope_history(value: str) -> str:
+    """Remove assistant/tool evidence lines before extracting company IDs from history."""
+    noisy_prefixes = (
+        "assistant:",
+        "tool:",
+        "execution legend",
+        "execution_truth",
+        "execution truth",
+        "source:",
+        "window:",
+        "primary:",
+        "companies:",
+    )
+    kept_lines: list[str] = []
+    for line in str(value or "").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.casefold().startswith(noisy_prefixes):
+            continue
+        kept_lines.append(stripped)
+    return "\n".join(kept_lines)
+
+
 def _normalize_fiscal_year(value: str) -> int:
     raw = str(value or "").strip()
     if len(raw) == 4:
@@ -1725,6 +1750,9 @@ def _normalize_planning_text(message: str) -> str:
     normalized = collapsed
     for source, target in replacements.items():
         normalized = normalized.replace(source, target)
+    # Letter-collapse turns legitimate words like "gross"/"loss" into "gros"/"los"; restore finance tokens.
+    normalized = normalized.replace("gros profit", "gross profit")
+    normalized = normalized.replace("gros margin", "gross margin")
     return normalized
 
 
@@ -1846,6 +1874,22 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
             "label": f"{month_name_match.group(1).title()} {year_number}",
             "month_count": 1,
         }
+    month_only_match = re.search(
+        r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b",
+        lowered,
+    )
+    if month_only_match:
+        month_number = ODOO_MONTH_NAME_ALIASES[month_only_match.group(1)]
+        # If the requested month is ahead of the current month, resolve to the most recent closed occurrence.
+        year_number = today.year - 1 if month_number > today.month else today.year
+        period_start = date(year_number, month_number, 1)
+        return {
+            "relative_period": f"{month_only_match.group(1)}_{year_number}",
+            "date_from": period_start.isoformat(),
+            "date_to": _add_months(period_start, 1).isoformat(),
+            "label": f"{month_only_match.group(1).title()} {year_number}",
+            "month_count": 1,
+        }
     if "last month" in lowered:
         period_start = _add_months(current_month_start, -1)
         return {
@@ -1871,7 +1915,31 @@ def _extract_period_scope(message: str) -> dict[str, Any]:
             "label": "month-to-date",
             "month_count": 1,
         }
-    day_span_match = re.search(r"\b(?:last|past)\s+(\d+)\s+days?\b", lowered)
+    # "Previous 5 days from 20/04/2026" — anchored window (N days ending the day *before* anchor date, half-open [from, to)).
+    anchor_prev = re.search(
+        r"\b(?:previous|prior)\s+(\d+)\s+days?\s+from\s+(?:the\s+)?"
+        r"(\d{1,2})[/.](\d{1,2})[/.](20\d{2})\b",
+        lowered,
+    )
+    if anchor_prev:
+        n_days = max(1, min(120, int(anchor_prev.group(1))))
+        day = int(anchor_prev.group(2))
+        month = int(anchor_prev.group(3))
+        year = int(anchor_prev.group(4))
+        try:
+            anchor = date(year, month, day)
+        except ValueError:
+            anchor = None
+        if anchor is not None:
+            period_start = anchor - timedelta(days=n_days)
+            return {
+                "relative_period": f"previous_{n_days}_days_before_{anchor.isoformat()}",
+                "date_from": period_start.isoformat(),
+                "date_to": anchor.isoformat(),
+                "label": f"previous {n_days} days before {anchor.strftime('%d %b %Y')}",
+                "month_count": 1,
+            }
+    day_span_match = re.search(r"\b(?:last|past|previous)\s+(\d+)\s+days?\b", lowered)
     if day_span_match:
         day_span = max(1, min(120, int(day_span_match.group(1))))
         period_start = today - timedelta(days=day_span - 1)
@@ -2009,6 +2077,32 @@ def _looks_like_product_branch_exploration(lowered: str) -> bool:
     )
 
 
+def _looks_like_sales_drilldown_request(lowered: str) -> bool:
+    asks_for_drill = any(term in lowered for term in ("drill down", "drilldown", "leading", "top"))
+    mentions_sales_agent = any(term in lowered for term in ("sales agent", "salesperson", "sales person"))
+    mentions_product = any(term in lowered for term in ("product sold", "top product", "leading product"))
+    mentions_payment = any(term in lowered for term in ("payment method", "payment type", "payment breakdown"))
+    return asks_for_drill and (mentions_sales_agent or mentions_product or mentions_payment)
+
+
+def _looks_like_top_products_gp_request(lowered: str) -> bool:
+    mentions_top_products = bool(re.search(r"\btop\s*\d+\b", lowered)) or "top products" in lowered
+    mentions_products = "product" in lowered
+    mentions_gp = any(term in lowered for term in (" gp", "gross profit", "margin"))
+    return mentions_products and mentions_gp and mentions_top_products
+
+
+def _extract_currency_amount_hint(message: str) -> float | None:
+    match = re.search(r"\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b", message)
+    if not match:
+        return None
+    raw = match.group(0).replace(",", "")
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
 def _extract_product_focus_token(message: str) -> str | None:
     t = _normalize_planning_text(message)
     match = re.search(
@@ -2026,8 +2120,140 @@ def _extract_product_focus_token(message: str) -> str | None:
     return None
 
 
-def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) -> dict[str, Any]:
+def _looks_like_product_catalog_request(lowered: str) -> bool:
+    mentions_products = any(term in lowered for term in ("product", "products", "sku", "skus", "catalog"))
+    asks_for_listing = any(
+        term in lowered
+        for term in (
+            "list",
+            "show",
+            "find",
+            "search",
+            "matching",
+            "match",
+            "lookup",
+            "look up",
+        )
+    )
+    mentions_order_line = any(term in lowered for term in ("top product", "product sold", "products sold"))
+    mentions_finance_math = any(term in lowered for term in ("gross profit", " gp ", "margin", "cogs", "revenue"))
+    return mentions_products and asks_for_listing and not mentions_order_line and not mentions_finance_math
+
+
+def _extract_product_search_query(message: str) -> str | None:
+    token = _extract_product_focus_token(message)
+    if token:
+        return token
+    normalized = _normalize_planning_text(message)
+    match = re.search(
+        r"(?:products?|skus?|catalog)\s+(?:matching|match|named|like|for|about)\s+([a-z0-9][a-z0-9\-\s]{1,48})"
+        r"(?=\s*[,\.]|\s+(?:for|from|in|on|during|last|this|today|ytd)\b|\s*$)",
+        normalized,
+    )
+    if not match:
+        return None
+    captured = match.group(1).strip()
+    trailing = re.split(r"\s+for\s+(?:catalog|review|analysis|report)\b", captured, maxsplit=1)
+    return trailing[0].strip() if trailing else captured
+
+
+def _looks_like_sales_order_lookup_request(lowered: str) -> bool:
+    has_order_term = any(term in lowered for term in ("sales order", "sale order", "order book", "orders", "order count"))
+    has_sales_context = "sales" in lowered or "order" in lowered
+    asks_for_lookup = any(
+        term in lowered
+        for term in (
+            "show",
+            "list",
+            "pull",
+            "fetch",
+            "find",
+            "latest",
+            "recent",
+            "open",
+            "closed",
+            "status",
+        )
+    )
+    return has_order_term and has_sales_context and asks_for_lookup
+
+
+def _dual_odoo_ledger_and_shopify_channel_intent(intent_lowered: str) -> bool:
+    """User asked for both core Odoo/ERP ledger-style metrics and Shopify-channel metrics in one message.
+
+    Boilerplate like \"Using Odoo\" + Shopify ROI alone does *not* count as dual — that stays Shopify-primary.
+    """
+    s = intent_lowered
+    if re.search(r"\b(no|not|without|never|except|excluding)\s+shopify\b", s) or "non-shopify" in s:
+        return False
+    if not _explicit_shopify_channel_finance_intent(intent_lowered):
+        return False
+    wants_ledger_finance = bool(
+        re.search(
+            r"\bgp\b|gross profit|gross margin|p&l|profit and loss|ledger|trial balance|balance sheet"
+            r"|cost of goods|\bcogs\b|net profit|ebitda",
+            s,
+        )
+    )
+    return wants_ledger_finance
+
+
+def _explicit_shopify_channel_finance_intent(intent_lowered: str) -> bool:
+    """True when the user is clearly asking for Shopify-*channel* metrics, not generic Odoo ERP ledger GP."""
+    s = intent_lowered
+    if re.search(r"\b(no|not|without|never|except|excluding)\s+shopify\b", s) or "non-shopify" in s:
+        return False
+    if "shopify" not in s:
+        return False
+    if any(
+        p in s
+        for p in (
+            "shopify roas",
+            "shopify roi",
+            "shopify marketing",
+            "shopify spend",
+            "shopify revenue",
+            "shopify sales",
+            "shopify fees",
+            "shopify discount",
+            "shopify refunds",
+            "shopify channel",
+            "shopify-linked",
+            "shopify linked",
+            "shopify journal",
+            "shopify orders",
+            "shopify aov",
+            "shopify merchant",
+            "shopify performance",
+            "shopify metrics",
+        )
+    ):
+        return True
+    return bool(
+        re.search(
+            r"\bshopify\b.*\b(roas|roi|marketing|merchant|fee|orders?|aov)\b|\b(roas|roi|marketing|orders?|aov)\b.*\bshopify\b",
+            s,
+        )
+    )
+
+
+def _plan_odoo_tool_usage(
+    message: str,
+    *,
+    fallback_message: str | None = None,
+    intent_message: str | None = None,
+) -> dict[str, Any]:
+    """Plan Odoo tool usage.
+
+    `message` is the primary text for period/entity extraction (often the latest user turn; may include
+    conversation when re-planning with history in `fallback_message`).
+
+    `intent_message` must be the **latest user text only** for channel intent (Shopify/ROAS vs ledger GP).
+    Without this, assistant replies that mention \"Shopify\" in the same thread can incorrectly route to
+    `odoo.finance.shopify.monthly_roi` when re-planning over full history.
+    """
     lowered = _normalize_planning_text(message)
+    intent_lowered = _normalize_planning_text(intent_message) if intent_message else lowered
     preview_only = _is_operation_preview_request(message)
     scope = _extract_company_scope(message, fallback_message=fallback_message)
     company_ids = _extract_company_ids(message, fallback_message=fallback_message)
@@ -2080,43 +2306,53 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
         "source_labels": [],
         "suppress_retrieval": False,
         "direct_answer": None,
+        "multi_step_odoo_hint": None,
     }
 
-    finance_actual_terms = ("gross profit", " gp ", "revenue", "cogs", "cost of goods", "gross margin", "financial")
+    if _dual_odoo_ledger_and_shopify_channel_intent(intent_lowered):
+        default_plan["multi_step_odoo_hint"] = (
+            "The user asked for both Odoo/ERP ledger-style performance (GP, P&L, etc.) and Shopify-channel "
+            "metrics in the same question. These are not mutually exclusive: use multiple governed Odoo operations when "
+            "the runtime allows (e.g. ledger margin/revenue/COGS first, then `odoo.finance.shopify.monthly_roi` if they "
+            "asked for Shopify ROAS/marketing/Shopify-tagged sales). Label which numbers come from which surface."
+        )
+
+    finance_actual_terms = (
+        "gross profit",
+        " gp ",
+        "revenue",
+        "cogs",
+        "cost of goods",
+        "gross margin",
+        "financial",
+        "profit and loss",
+        "p&l",
+        "net profit",
+        "operating income",
+        "total income",
+        "total expenses",
+    )
     asks_for_actuals = any(term in f" {lowered} " for term in finance_actual_terms) or _looks_like_finance_performance_question(
         lowered
     )
-    has_period = bool(period_scope.get("date_from") and period_scope.get("date_to"))
-    derived_month_count = int(period_scope.get("month_count") or 0) if period_scope.get("month_count") else None
-    asks_for_shopify_roi = "shopify" in lowered and any(
+    asks_for_pnl = any(
         term in lowered
         for term in (
-            "marketing",
-            "roas",
-            "roi",
-            "refund",
-            "discount",
-            "shipping",
-            "merchant fee",
-            "merchant fees",
-            "fee account",
-            "marketing wages",
-            "commission factory",
-            "google",
-            "meta",
-            "facebook",
-            "tiktok",
-            "website",
-            "vendor",
-            "journal",
-            "sale",
-            "sales",
-            "order",
-            "orders",
-            "aov",
-            "revenue",
+            "profit and loss",
+            "p&l",
+            "net profit",
+            "operating income",
+            "total income",
+            "total expenses",
+            "expenses",
+            "depreciation",
         )
     )
+    has_period = bool(period_scope.get("date_from") and period_scope.get("date_to"))
+    derived_month_count = int(period_scope.get("month_count") or 0) if period_scope.get("month_count") else None
+    # Shopify helper is *narrow*: Shopify-linked journal ROAS/marketing. Do NOT pair the word "shopify" with
+    # loose tokens like "sale" or "revenue" — that routed generic Odoo ERP questions to the wrong op.
+    asks_for_shopify_roi = _explicit_shopify_channel_finance_intent(intent_lowered)
     asks_for_cogs_scope = any(
         term in lowered
         for term in (
@@ -2168,7 +2404,119 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
     )
     has_comparative_intent = any(term in lowered for term in ("compare", "across", "versus", "vs", "anomal", "outlier"))
     asks_for_branch_ranking = _looks_like_branch_ranking_request(lowered)
+    asks_for_sales_drilldown = _looks_like_sales_drilldown_request(lowered)
+    asks_for_top_products_gp = _looks_like_top_products_gp_request(lowered)
+    asks_for_product_catalog = _looks_like_product_catalog_request(lowered)
+    asks_for_sales_order_lookup = _looks_like_sales_order_lookup_request(lowered)
+    asks_for_bp_scorecard = (
+        "burleigh" in lowered
+        and "brisbane" in lowered
+        and "roas" in lowered
+        and any(term in lowered for term in ("cogs", "cost of goods"))
+        and any(term in lowered for term in ("gp", "gross profit"))
+        and "revenue" in lowered
+        and "net" in lowered
+    )
+    revenue_hint = _extract_currency_amount_hint(message)
     product_explore_token = _extract_product_focus_token(message)
+    if asks_for_bp_scorecard:
+        bp_payload: dict[str, Any] = {
+            "company_name_terms": ["burleigh", "brisbane"],
+            "required_metrics": ["cogs", "gp", "revenue", "net", "roas"],
+        }
+        if has_period:
+            bp_payload["date_from"] = period_scope["date_from"]
+            bp_payload["date_to"] = period_scope["date_to"]
+            bp_payload["relative_period"] = period_scope.get("relative_period")
+        else:
+            today = date.today()
+            bp_payload["date_from"] = date(today.year, today.month, 1).isoformat()
+            bp_payload["date_to"] = (today + timedelta(days=1)).isoformat()
+            bp_payload["relative_period"] = "month_to_date"
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.pnl.period_summary",
+            "payload": _scoped_payload(bp_payload),
+            "reason": (
+                "BP scorecard prompt requests branch comparison across Burleigh and Brisbane "
+                "for COGS/GP/Revenue/Net and ROAS. Use the governed Odoo P&L period summary "
+                "so Net Profit and other P&L totals are sourced directly from posted ledger lines."
+            ),
+            "blocked_reason": None,
+            "source_labels": ["odoo", "finance", "bp_mode"],
+            "suppress_retrieval": True,
+            "multi_step_odoo_hint": (
+                "Run odoo.finance.pnl.period_summary first for all P&L-backed metrics, then "
+                "odoo.finance.shopify.monthly_roi if channel-specific Shopify ROAS is required."
+            ),
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.pnl.period_summary",
+                    payload=_scoped_payload(bp_payload),
+                    why_correct=(
+                        "This aligns with branch-level scorecard requests that include Net Profit and "
+                        "requires direct Odoo Profit & Loss grounding rather than margin-only helpers."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot produce branch-level P&L metrics including Net Profit."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
+    if asks_for_pnl and has_period:
+        pnl_payload: dict[str, Any] = {
+            "date_from": period_scope["date_from"],
+            "date_to": period_scope["date_to"],
+            "relative_period": period_scope["relative_period"],
+        }
+        if company_ids:
+            if len(company_ids) == 1:
+                pnl_payload["company_id"] = company_ids[0]
+            else:
+                pnl_payload["company_ids"] = company_ids
+        elif len(company_name_terms) >= 1:
+            pnl_payload["company_name_terms"] = company_name_terms
+        elif scope.get("company_id") is not None:
+            pnl_payload["company_id"] = scope["company_id"]
+        blocked_reason = (
+            "company_scope_ambiguous"
+            if scope.get("ambiguous")
+            and not pnl_payload.get("company_id")
+            and not pnl_payload.get("company_ids")
+            and not pnl_payload.get("company_name_terms")
+            else None
+        )
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.finance.pnl.period_summary",
+            "payload": _scoped_payload(pnl_payload),
+            "reason": (
+                "P&L/Net Profit prompts must use the governed Odoo P&L helper so operating income, "
+                "cost of revenue, total expenses, and net profit are all derived from posted ledger lines."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo", "finance", "pnl"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.finance.pnl.period_summary",
+                    payload=_scoped_payload(pnl_payload),
+                    why_correct=(
+                        "This is correct because P&L questions require a direct Profit & Loss extraction from Odoo, "
+                        "not a gross-margin-only shortcut."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot return Net Profit or any period P&L statement totals."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
     if (
         product_explore_token
         and _looks_like_product_branch_exploration(lowered)
@@ -2215,7 +2563,198 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                 else None
             ),
         }
-    if asks_for_shopify_roi and has_period:
+    if asks_for_top_products_gp:
+        products_payload: dict[str, Any] = {
+            "top_n": 5,
+            "can_be_sold": True,
+        }
+        if has_period:
+            products_payload["date_from"] = period_scope["date_from"]
+            products_payload["date_to"] = period_scope["date_to"]
+            products_payload["relative_period"] = period_scope.get("relative_period")
+        else:
+            today = date.today()
+            products_payload["date_from"] = date(today.year, today.month, 1).isoformat()
+            products_payload["date_to"] = (today + timedelta(days=1)).isoformat()
+            products_payload["relative_period"] = "month_to_date"
+        if company_ids:
+            if len(company_ids) == 1:
+                products_payload["company_id"] = company_ids[0]
+        elif scope.get("company_id") is not None:
+            products_payload["company_id"] = scope["company_id"]
+        elif len(company_name_terms) == 1:
+            products_payload["company_name_terms"] = company_name_terms
+        if revenue_hint is not None:
+            products_payload["revenue_reference_total"] = revenue_hint
+        blocked_reason = (
+            "company_scope_ambiguous"
+            if scope.get("ambiguous")
+            and products_payload.get("company_id") is None
+            and not products_payload.get("company_name_terms")
+            else None
+        )
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.sales.products_gp.period_top",
+            "payload": _scoped_payload(products_payload),
+            "reason": (
+                "Top-products plus GP questions should use the named product GP helper with `can_be_sold` filtering, "
+                "rather than ad hoc ledger summaries."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo", "sales", "products"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.sales.products_gp.period_top",
+                    payload=_scoped_payload(products_payload),
+                    why_correct=(
+                        "This is correct because ranking products and computing per-product GP requires product-level "
+                        "sale line aggregation with explicit filter controls."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot rank sold products or compute product-level GP."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
+    if asks_for_sales_drilldown:
+        if has_period:
+            drill_payload: dict[str, Any] = {
+                "date_from": period_scope["date_from"],
+                "date_to": period_scope["date_to"],
+                "relative_period": period_scope["relative_period"],
+            }
+        else:
+            today = date.today()
+            drill_payload = {
+                "date_from": date(today.year, today.month, 1).isoformat(),
+                "date_to": (today + timedelta(days=1)).isoformat(),
+                "relative_period": "month_to_date",
+            }
+        if company_ids:
+            if len(company_ids) == 1:
+                drill_payload["company_id"] = company_ids[0]
+        elif scope.get("company_id") is not None:
+            drill_payload["company_id"] = scope["company_id"]
+        elif len(company_name_terms) == 1:
+            drill_payload["company_name_terms"] = company_name_terms
+        blocked_reason = (
+            "company_scope_ambiguous"
+            if scope.get("ambiguous")
+            and drill_payload.get("company_id") is None
+            and not drill_payload.get("company_name_terms")
+            else None
+        )
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.sales.drilldown.period",
+            "payload": _scoped_payload(drill_payload),
+            "reason": (
+                "Sales drill-down questions should use the named operation that returns top sales agent, payment method, "
+                "and product for the requested period."
+            ),
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo", "sales"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.sales.drilldown.period",
+                    payload=_scoped_payload(drill_payload),
+                    why_correct=(
+                        "This is correct because drill-downs require multiple governed aggregations over orders, order lines, "
+                        "and payment records to identify leaders within the selected date range."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot aggregate top sales agents, products, or payment methods."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
+    if asks_for_product_catalog:
+        product_payload: dict[str, Any] = {
+            "can_be_sold": True,
+            "limit": 50,
+            "fields": ["id", "name", "default_code", "list_price", "qty_available", "sale_ok"],
+        }
+        product_query = _extract_product_search_query(message)
+        if product_query:
+            product_payload["query"] = product_query
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.products.search_read",
+            "payload": _scoped_payload(product_payload),
+            "reason": "Product discovery/listing requests should use the governed product search helper.",
+            "blocked_reason": None,
+            "source_labels": ["odoo", "products"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.products.search_read",
+                    payload=_scoped_payload(product_payload),
+                    why_correct=(
+                        "This is correct because product catalog lookups require `product.template` reads with controlled fields "
+                        "and optional name/default-code matching."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot return product catalog records or SKU-level search results."
+                    ),
+                )
+                if preview_only
+                else None
+            ),
+        }
+    if asks_for_sales_order_lookup and has_period:
+        domain: list[list[Any]] = [
+            ["date_order", ">=", period_scope["date_from"]],
+            ["date_order", "<", period_scope["date_to"]],
+            ["state", "in", ["sale", "done"]],
+        ]
+        if scope.get("company_id") is not None:
+            domain.append(["company_id", "=", scope["company_id"]])
+        blocked_reason = "company_scope_ambiguous" if scope.get("ambiguous") and scope.get("company_id") is None else None
+        sales_payload: dict[str, Any] = {
+            "domain": domain,
+            "limit": 100,
+            "fields": ["id", "name", "state", "partner_id", "company_id", "date_order", "amount_total", "currency_id"],
+        }
+        return {
+            **default_plan,
+            "mode": "preview" if preview_only else "required",
+            "operation": "odoo.sales.orders.search_read",
+            "payload": _scoped_payload(sales_payload),
+            "reason": "Period order-book requests should use governed sale.order search_read with explicit date scope.",
+            "blocked_reason": blocked_reason,
+            "source_labels": ["odoo", "sales"],
+            "suppress_retrieval": True,
+            "direct_answer": (
+                _build_odoo_preview_answer(
+                    operation="odoo.sales.orders.search_read",
+                    payload=_scoped_payload(sales_payload),
+                    why_correct=(
+                        "This is correct because order-level sales checks need direct `sale.order` retrieval for the requested "
+                        "period and company scope."
+                    ),
+                    why_meta_current_user_is_insufficient=(
+                        "`odoo.meta.current_user` cannot list period-scoped sales orders, totals, and order statuses."
+                    ),
+                )
+                if preview_only
+                else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
+            ),
+        }
+    # Dual Odoo+Shopify: prefer ledger/GP path first (below); Shopify-only shortcut would hide margin/GP.
+    route_shopify_only = asks_for_shopify_roi and has_period and not _dual_odoo_ledger_and_shopify_channel_intent(
+        intent_lowered
+    )
+    if route_shopify_only:
         payload: dict[str, Any] = {
             "date_from": period_scope["date_from"],
             "date_to": period_scope["date_to"],
@@ -2536,7 +3075,9 @@ def _plan_odoo_tool_usage(message: str, *, fallback_message: str | None = None) 
                     else (_build_scope_clarification_answer(scope, message) if blocked_reason else None)
                 ),
             }
-        if any(term in lowered for term in ("gross profit", " gp ", "gross margin")):
+        if any(term in lowered for term in ("gross profit", " gp ", "gross margin")) or re.search(
+            r"\bgp\b", lowered
+        ):
             return {
                 **default_plan,
                 "mode": "preview" if preview_only else "required",
@@ -2789,13 +3330,17 @@ def build_query_plan(
             kb_config = dict(get_default_runtime_profile(session).kb_config_json or {})
             embedding_model_id = kb_config.get("embedding_model_id")
         mode = classify_query_mode(user_message)
-        tool_plan = _plan_odoo_tool_usage(user_message, fallback_message=message)
+        tool_plan = _plan_odoo_tool_usage(user_message, fallback_message=message, intent_message=user_message)
         if (
             str(tool_plan.get("mode") or "none") == "none"
             and message.strip()
             and message.strip() != user_message
         ):
-            history_aware_tool_plan = _plan_odoo_tool_usage(message, fallback_message=user_message)
+            history_aware_tool_plan = _plan_odoo_tool_usage(
+                message,
+                fallback_message=user_message,
+                intent_message=user_message,
+            )
             if str(history_aware_tool_plan.get("mode") or "none") != "none":
                 tool_plan = history_aware_tool_plan
         resolved_workflow_mode = str(workflow_mode or "standard").strip().casefold() or "standard"

@@ -1,0 +1,75 @@
+---
+description: GhostDash project discipline (core) — whole-project reasoning, no duplicate surfaces, right-layer fixes, proof and cleanup.
+alwaysApply: true
+---
+
+# GhostDash Project Discipline
+
+Part of the GhostDash core rules set (`00` through `05` in `.cursor/rules/`). Improves the system, not isolated symptoms.
+
+You are working on GhostDash. Your job is to improve the whole project, not patch isolated symptoms.
+
+## Before coding
+
+1. Inspect the current architecture.
+2. Identify existing services, APIs, tables, components, utilities, and conventions.
+3. Reuse or extend existing project patterns before creating new ones.
+4. Do not create duplicate services, duplicate tables, duplicate config files, duplicate endpoints, or parallel implementations unless explicitly justified.
+5. If the working tree is dirty, stop and ask before modifying unrelated files.
+
+## Before proposing a fix
+
+Before recommending or implementing a fix, present all of the following (brief bullets are fine):
+
+1. **Root cause** — what actually failed and why (not only the symptom).
+2. **Correct layer** — which boundary owns it (UI, API, agent-ingress, workflow-runtime, tool router, guardrail, data/schema, edge, etc.).
+3. **Existing project component to reuse** — file, module, pattern, or table to extend; say “none” only if justified.
+4. **Proposed change** — concrete change at that layer.
+5. **Why this is not a static one-off patch** — how it generalises or prevents recurrence.
+6. **Token or resource impact** — LLM calls, RAG, payload size, latency, or infra cost if relevant.
+7. **Cleanup required** — old paths, dead code, duplicate config, or data to remove or migrate.
+8. **Tests or proof** — automated test, manual step, or query that shows the fix works; say what is blocked if tests cannot run.
+
+Skip this only when the user explicitly asks for an immediate trivial edit (e.g. typo) with no behavioural risk.
+
+## Every change must answer
+
+- What user or business problem does this solve?
+- Does this already exist somewhere in GhostDash?
+- Is this the leanest maintainable approach?
+- Does it reduce or increase LLM token reliance?
+- Is it fit for human use?
+- Can it be tested?
+- What must be cleaned up?
+
+## Systemic layers (prefer fixes at the right layer)
+
+Do not default to static fixes. Do not hardcode around a single observed error unless the user explicitly asks for a temporary patch.
+
+Prefer systemic fixes at the correct layer:
+
+- UI issue → UI, component, or state fix
+- API issue → endpoint, schema, or contract fix
+- runtime issue → agent-ingress or workflow-runtime fix
+- tool issue → tool router or tool adapter fix
+- guardrail issue → guardrail or output filter fix
+- data issue → migration, schema, or source-of-truth fix
+
+## Human purpose first
+
+Fit-for-human purpose comes first. A technically correct feature that is awkward, confusing, slow, or wasteful is not complete.
+
+## No cruft
+
+Never leave dead code, unused imports, obsolete files, abandoned routes, test scaffolding, or duplicate config behind. If a new implementation replaces an old one, remove or deprecate the old one in the same change unless unsafe.
+
+## Proof of completion
+
+Every completed change must provide:
+
+- files changed
+- why this approach was chosen
+- tests run
+- output or screenshot if UI-facing
+- cleanup performed
+- remaining risks

@@ -1,3 +1,25 @@
+# Legacy Odoo API Reference (Retired)
+
+Date: 2026-04-23
+
+The legacy `odoo_primary` agent-visible connector contract is retired.
+
+## What changed
+
+- LLM-facing discovery and direct invocation of `odoo_primary` is no longer supported.
+- Operator/tooling workflows must use the MAS v2 server-side path.
+
+## Canonical path now
+
+- API: `POST /api/odoo/mas/answer`
+- Input: `{ "message": "<finance question>" }`
+- Behavior: deterministic routing -> governed extraction -> normalization -> metric assembly -> reasoning -> composition
+
+## Policy notes
+
+- `NET` remains blocked until explicit business definition approval.
+- ROAS is caveated/unsupported when spend dependency is missing.
+- Unknown business-unit aliases fail closed.
 # Odoo API reference for agents (Ghoststack RAG control plane)
 
 This document describes how an **autonomous agent** (or any HTTP client) should call Odoo **through this repository’s implementation**. It is derived from the running code paths in `backend/src/ghostdash_api/odoo_connector.py`, `tool_registry.py`, and `control_api.py`. Treat Odoo’s own documentation as the source of truth for model fields; treat this file as the source of truth for **allowed operations, envelopes, and guardrails** in this stack.
@@ -264,7 +286,7 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 
 ### 4.11 `odoo.finance.revenue.period`
 
-**Purpose:** Posted revenue over an explicit period on `account.move`.
+**Purpose:** Posted revenue over an explicit period on `account.move.line`, aligned to ledger accounts instead of invoice headers.
 
 **Payload highlights:**
 
@@ -273,9 +295,11 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 | `date_from` / `date_to` | Required ISO date window unless `relative_period` is provided |
 | `relative_period` | Supported: `last_month`, `this_month` |
 | `company_id` | If set, adds `["company_id","=", company_id]` |
+| `revenue_account_ids` | Optional explicit revenue accounts to include |
+| `revenue_account_types` | Optional override for account-type selection, default `["income", "income_other"]` |
 | `domain` | Extra domain clauses |
 
-**Response:** period aggregate with `revenue`, `date_from`, `date_to`, and grouped source rows.
+**Response:** period aggregate with `total`, `basis = posted_ledger_lines`, account scope metadata, and grouped source rows by account.
 
 ---
 
@@ -283,9 +307,9 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 
 **Purpose:** COGS-style expense lines over an explicit period on `account.move.line`.
 
-**Payload:** Same period and company knobs as revenue, plus optional `cogs_account_ids`.
+**Payload:** Same period and company knobs as revenue, plus optional `cogs_account_ids` or `cogs_account_types`.
 
-**Note:** Default account filter remains `account_id.account_type = expense_direct_cost` when `cogs_account_ids` is not provided.
+**Note:** Default account filter remains `account_id.account_type = expense_direct_cost` when neither `cogs_account_ids` nor `cogs_account_types` is provided.
 
 ---
 
@@ -294,6 +318,8 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 **Purpose:** Combines period revenue and period COGS into `revenue`, `cogs`, `gp`, and `gp_pct` for the requested date window.
 
 **Payload:** Same as `odoo.finance.revenue.period` / `odoo.finance.cogs.period`.
+
+**Response notes:** Includes `lookup_basis = posted_ledger_lines`, `revenue_source`, `cogs_source`, and `accuracy_notes` so operators can reconcile the exact finance basis against Odoo P&L lines.
 
 ---
 
@@ -370,6 +396,63 @@ When `read_only` is `true`, any method not in the allowlist raises **`OdooConnec
 **Purpose:** Combines **4.10** and **4.11** and returns merged quarter rows with `revenue`, `cogs`, `gp`, `gp_pct`, and running totals.
 
 **Payload:** Same knobs as the quarterly helpers.
+
+---
+
+### 4.20 `odoo.sales.drilldown.period`
+
+**Purpose:** Return a period drilldown with leading sales agent, leading product sold, and leading payment method.
+
+**Payload highlights:**
+
+| Field | Notes |
+|-------|--------|
+| `date_from` / `date_to` | Preferred explicit ISO date range; if omitted, connector defaults to a recent 7-day lookback window |
+| `relative_period` | Optional (same support as period helpers when provided) |
+| `company_id` | Optional single-company scope |
+| `company_name_terms` | Optional resolver for a single named company |
+| `source_surface` | Optional: `auto` (default), `sale_order`, `invoice`, `pos` |
+| `order_states` | Optional sale.order state list, default `["sale","done"]` |
+| `top_n` | Optional number of ranked rows returned in samples (default 5, max 20) |
+
+**Implementation shape:**
+
+- `sale.order` `read_group` by `user_id` for top sales agent (`amount_total:sum`)
+- `sale.order.line` `read_group` by `product_id` for top product (`price_subtotal:sum`, `product_uom_qty:sum`)
+- payment method grouping via:
+  - `account.payment` (`payment_method_line_id` then `journal_id`) and
+  - fallback `pos.payment.payment_method_id` when `source_surface=auto`
+
+**Response:** `result_type = sales_drilldown_period`, `leaders`, `samples`, `payment_source_used`, `payment_errors`, and `accuracy_notes`.
+
+---
+
+### 4.21 `odoo.sales.products_gp.period_top`
+
+**Purpose:** Return top-N sold products for a period, including per-product GP where tenant fields allow it.
+
+**Payload highlights:**
+
+| Field | Notes |
+|-------|--------|
+| `date_from` / `date_to` | Optional ISO window; if omitted, defaults to month-to-date |
+| `company_id` / `company_name_terms` | Single-company scope (recommended for reliable ranking) |
+| `top_n` | Default 5, max 20 |
+| `can_be_sold` | Product filter mirroring Odoo UI filter “Can be Sold”; defaults `true` |
+| `product_query` / `query` | Optional text filter against `name`/`default_code` |
+| `order_states` | Defaults to `["sale","done"]` |
+| `revenue_reference_total` | Optional revenue checkpoint for reconciliation (e.g. `23074.70`) |
+
+**Implementation shape:**
+
+- Product scope filter: `product.template` with `sale_ok = true` (unless overridden), plus search text.
+- Ranking source: `sale.order.line` `read_group` by `product_id` with revenue and quantity.
+- GP source precedence:
+  1. `sale.order.line.margin` (when available in tenant),
+  2. fallback estimate from `purchase_price * qty` aggregation,
+  3. `null` GP with explicit accuracy note when neither is available.
+
+**Response:** `result_type = sales_products_gp_period_top`, `rows`, `product_filters`, optional `reconciliation`, and `accuracy_notes`.
 
 ---
 

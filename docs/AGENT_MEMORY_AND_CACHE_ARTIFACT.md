@@ -73,6 +73,7 @@ Updated [`backend/src/ghostdash_api/agent_ingress.py`](../backend/src/ghostdash_
 - persists user + assistant messages
 - uses an exact-match response cache keyed by:
   - agent identity/config
+  - conversation id
   - recent conversation context
   - current message
   - corpora

@@ -6,13 +6,15 @@ import mimetypes
 import re
 import shutil
 import time
+from collections import deque
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from uuid import uuid4
 
 import httpx
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -38,7 +40,9 @@ from .collections import (
 )
 from .database import get_session
 from .database import SessionLocal
+from .finance_report_renderer import finance_report_file, load_finance_report
 from .ingest import extract_text_local
+from .magic_mike import MAGIC_MIKE_AGENT_NAME
 from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
@@ -51,8 +55,10 @@ from .models import (
     DocumentFrameRecord,
     DocumentRecord,
     IngestionRunRecord,
+    OdooEvidenceMirrorRecord,
     RetrievalArtifactRecord,
     RuntimeProfileRecord,
+    ToolExecutionAuditRecord,
     WorkflowRunEventRecord,
     RuntimeProfileCollectionRecord,
     WorkflowTaskRecord,
@@ -74,10 +80,12 @@ from .runtime import (
 from .runtime_defaults import get_runtime_defaults, save_runtime_defaults
 from .runtime_profiles import (
     get_default_runtime_profile,
+    save_runtime_profile,
     list_policy_change_audits,
     resolve_agent_runtime_profile,
     seed_default_runtime_profile,
 )
+from .odoo_mas.pipeline import get_classified_ledger_rows, run_odoo_mas_pipeline
 from .schemas import (
     AgentDeletePayload,
     AgentDeleteResponse,
@@ -101,6 +109,8 @@ from .schemas import (
     ConnectionPayload,
     ConnectionTestPayload,
     ConnectionTestResponse,
+    OdooEvidenceMirrorCreatePayload,
+    OdooEvidenceMirrorView,
     ConnectionView,
     ConversationCreatePayload,
     DocumentFrameFragmentCreatePayload,
@@ -115,7 +125,10 @@ from .schemas import (
     RuntimeDefaultsView,
     PolicyChangeAuditView,
     ConfigExplorerEntryView,
+    ConfigExplorerEditRequest,
+    ConfigExplorerRollbackRequest,
     RuntimeProfileView,
+    RuntimeProfileGuardrailsConfig,
     RunSummaryView,
     RequestedParseLane,
     SyncRequest,
@@ -129,6 +142,11 @@ from .schemas import (
     ToolDetailView,
     ToolExecutePayload,
     ToolExecuteResponse,
+    HubTigerRecentTraceView,
+    HubTigerStatusView,
+    HubTigerTestRequest,
+    HubTigerTestResponse,
+    HubTigerToolBindingView,
     ToolPolicyPayload,
     ToolPolicyView,
     ToolSettingsPayload,
@@ -182,6 +200,15 @@ from .workflow_runs import (
 settings = get_settings()
 ACTIVE_WORKFLOW_RUN_STATUSES = {"queued", "running"}
 ACTIVE_WORKFLOW_STEP_STATUSES = {"pending", "running"}
+HUBTIGER_WRITE_OPERATIONS = {"booking_create", "quote_add_line_item"}
+HUBTIGER_BINDINGS = (
+    ("hubtiger_booking_availability", "HubTiger Availability", "availability", False),
+    ("hubtiger_job_lookup", "HubTiger Job Lookup", "jobs", False),
+    ("hubtiger_quote_preview", "HubTiger Quote Preview", "quotes", False),
+    ("hubtiger_booking_create", "HubTiger Booking Create", "booking", True),
+    ("hubtiger_quote_add_line_item", "HubTiger Quote Add Line Item", "quotes", True),
+)
+HUBTIGER_RECENT_TRACES: deque[HubTigerRecentTraceView] = deque(maxlen=25)
 
 
 def initialize_control_runtime_state() -> None:
@@ -268,6 +295,68 @@ def _map_connection_test_exception(exc: Exception) -> tuple[int, str]:
         return 503, "Connection test failed: provider service is unavailable."
 
     return 502, "Connection test failed due to an unexpected upstream provider error."
+
+
+def _hubtiger_mode() -> str:
+    mode = str(settings.hubtiger_tool_access or "read_only").strip().lower()
+    return "read_write" if mode == "read_write" else "read_only"
+
+
+def _hubtiger_status_view() -> HubTigerStatusView:
+    mcp_configured = bool(str(settings.hubtiger_mcp_url or "").strip())
+    proxy_configured = bool(str(settings.hubtiger_proxy_url or "").strip())
+    if not mcp_configured:
+        return HubTigerStatusView(
+            mode=cast(Any, _hubtiger_mode()),
+            mcp_url_configured=False,
+            proxy_url_configured=proxy_configured,
+            read_timeout_ms=int(settings.hubtiger_read_timeout_ms),
+            mutation_timeout_ms=int(settings.hubtiger_mutation_timeout_ms),
+            health="unconfigured",
+            message="Set HUBTIGER_MCP_URL to enable HubTiger diagnostics and test console.",
+        )
+    return HubTigerStatusView(
+        mode=cast(Any, _hubtiger_mode()),
+        mcp_url_configured=True,
+        proxy_url_configured=proxy_configured,
+        read_timeout_ms=int(settings.hubtiger_read_timeout_ms),
+        mutation_timeout_ms=int(settings.hubtiger_mutation_timeout_ms),
+        health="healthy",
+        message="HubTiger diagnostics are available.",
+    )
+
+
+def _hubtiger_bindings() -> list[HubTigerToolBindingView]:
+    mode = _hubtiger_mode()
+    bindings: list[HubTigerToolBindingView] = []
+    for tool_id, label, category, write_action in HUBTIGER_BINDINGS:
+        bindings.append(
+            HubTigerToolBindingView(
+                tool_id=tool_id,
+                label=label,
+                category=cast(Any, category),
+                mode=cast(Any, "read_only" if write_action and mode == "read_only" else mode),
+                write_action=write_action,
+                enabled=True,
+            )
+        )
+    return bindings
+
+
+def _odoo_evidence_mirror_to_view(record: OdooEvidenceMirrorRecord) -> OdooEvidenceMirrorView:
+    return OdooEvidenceMirrorView(
+        id=record.id,
+        tool_audit_id=record.tool_audit_id,
+        trace_id=record.trace_id,
+        operation=record.operation,
+        status=record.status,
+        source_mode=record.source_mode,
+        scope_json=dict(record.scope_json or {}),
+        request_json=dict(record.request_json or {}),
+        response_json=dict(record.response_json or {}),
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
 
 
 def _run_documents(run: IngestionRunRecord, session: Session) -> tuple[list[TaskDocumentView], int, int, str | None, str | None]:
@@ -1437,6 +1526,140 @@ def create_app() -> FastAPI:
             entries = filtered
         return entries
 
+    def _parse_config_explorer_key(key: str) -> tuple[str, str]:
+        parts = str(key or "").split(".")
+        # Expected: runtime_profile.{runtime_profile_id}.{namespace}
+        if len(parts) < 3 or parts[0] != "runtime_profile":
+            raise HTTPException(400, "Invalid config explorer key format")
+        runtime_profile_id = parts[1]
+        namespace = parts[2]
+        return runtime_profile_id, namespace
+
+    @app.patch("/api/config/explorer/{key}", response_model=ConfigExplorerEntryView)
+    def api_patch_config_explorer(
+        key: str,
+        body: ConfigExplorerEditRequest,
+        session: Session = Depends(get_session),
+    ) -> ConfigExplorerEntryView:
+        runtime_profile_id, namespace = _parse_config_explorer_key(key)
+        if namespace.casefold() != "guardrails":
+            raise HTTPException(400, "Phase-2 safe editing is implemented for guardrails only")
+
+        profile = session.get(RuntimeProfileRecord, runtime_profile_id)
+        if profile is None:
+            raise HTTPException(404, "runtime profile not found")
+
+        expected = body.expected_updated_at
+        # Compare exact timestamps to prevent accidental overwrite.
+        if profile.updated_at != expected:
+            raise HTTPException(409, "updated_at mismatch; refresh the config entry and retry")
+
+        current_guardrails = dict(profile.guardrails_config_json or {})
+        incoming_value = dict(body.value_json or {})
+        merged_guardrails = {**current_guardrails, **incoming_value}
+
+        # Schema validation: ensure merged guardrails satisfy runtime guardrails model.
+        validated = RuntimeProfileGuardrailsConfig(**merged_guardrails)
+
+        payload = {
+            "id": profile.id,
+            "name": profile.name,
+            "description": profile.description,
+            "llm_config": dict(profile.llm_config_json or {}),
+            "guardrails_config": validated.model_dump(),
+            "kb_config": dict(profile.kb_config_json or {}),
+            "retrieval_config": dict(profile.retrieval_config_json or {}),
+            "tool_policy_config": dict(profile.tool_policy_config_json or {}),
+            "is_default": profile.is_default,
+            "enabled": profile.enabled,
+            "policy_actor": body.policy_actor,
+            "policy_approval_token": body.policy_approval_token,
+            "policy_approval_reason": body.policy_approval_reason,
+        }
+        try:
+            updated = save_runtime_profile(session, payload, existing_record=profile)
+        except ValueError as exc:
+            # Convert policy/config validation failures into user-facing HTTP errors.
+            raise HTTPException(409, str(exc)) from exc
+
+        # Return updated guardrails entry
+        new_entry = _build_config_explorer_entries(session)
+        updated_entry = next((item for item in new_entry if item.key == key), None)
+        if updated_entry is None:
+            # Fallback: build from updated record if explorer key order changed.
+            return ConfigExplorerEntryView(
+                key=key,
+                namespace=namespace,
+                source_type="runtime_profile",
+                source_id=updated.id,
+                source_name=updated.name,
+                value_json=dict(updated.guardrails_config_json or {}),
+                updated_at=updated.updated_at,
+            )
+        return updated_entry
+
+    @app.get("/api/runtime-profiles/{runtime_profile_id}/policy-audits", response_model=list[PolicyChangeAuditView])
+    def api_runtime_profile_policy_audits(
+        runtime_profile_id: str,
+        limit: int = Query(default=10, ge=1, le=200),
+        session: Session = Depends(get_session),
+    ) -> list[PolicyChangeAuditView]:
+        return [_policy_change_audit_to_view(row) for row in list_policy_change_audits(session, runtime_profile_id, limit=limit)]
+
+    @app.post("/api/config/explorer/rollback/{audit_id}", response_model=ConfigExplorerEntryView)
+    def api_rollback_config_explorer(
+        audit_id: str,
+        body: ConfigExplorerRollbackRequest,
+        session: Session = Depends(get_session),
+    ) -> ConfigExplorerEntryView:
+        audit = session.get(ToolExecutionAuditRecord, audit_id)
+        if audit is None:
+            raise HTTPException(404, "audit not found")
+        if audit.tool_id != "runtime_policy":
+            raise HTTPException(400, "audit is not a runtime policy change")
+        runtime_profile_id = str(audit.policy_decision_id or "")
+        if not runtime_profile_id:
+            raise HTTPException(400, "audit missing runtime profile id")
+
+        profile = session.get(RuntimeProfileRecord, runtime_profile_id)
+        if profile is None:
+            raise HTTPException(404, "runtime profile not found")
+
+        payload_json = dict(audit.payload_json or {})
+        before = dict(payload_json.get("before") or {})
+        before_guardrails = dict(before.get("guardrails_config") or {})
+        before_tool_policy = dict(before.get("tool_policy_config") or profile.tool_policy_config_json or {})
+        validated = RuntimeProfileGuardrailsConfig(**before_guardrails)
+
+        updated_payload = {
+            "id": profile.id,
+            "name": profile.name,
+            "description": profile.description,
+            "llm_config": dict(profile.llm_config_json or {}),
+            "guardrails_config": validated.model_dump(),
+            "kb_config": dict(profile.kb_config_json or {}),
+            "retrieval_config": dict(profile.retrieval_config_json or {}),
+            "tool_policy_config": before_tool_policy,
+            "is_default": profile.is_default,
+            "enabled": profile.enabled,
+            "policy_actor": body.policy_actor,
+            "policy_approval_token": body.policy_approval_token,
+            "policy_approval_reason": body.policy_approval_reason,
+        }
+        try:
+            updated = save_runtime_profile(session, updated_payload, existing_record=profile)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return ConfigExplorerEntryView(
+            key=f"runtime_profile.{updated.id}.guardrails",
+            namespace="guardrails",
+            source_type="runtime_profile",
+            source_id=updated.id,
+            source_name=updated.name,
+            value_json=dict(updated.guardrails_config_json or {}),
+            updated_at=updated.updated_at,
+        )
+
     @app.get("/api/connections", response_model=list[ConnectionView])
     def api_list_connections(session: Session = Depends(get_session)) -> list[ConnectionView]:
         rows = list_connections(session)
@@ -1556,6 +1779,129 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code, detail) from exc
         return ConnectionTestResponse(ok=True, **result)
 
+    @app.get("/api/hubtiger/status")
+    def api_hubtiger_status() -> dict[str, Any]:
+        status = _hubtiger_status_view()
+        return {
+            "status": status,
+            "bindings": _hubtiger_bindings(),
+        }
+
+    @app.get("/api/hubtiger/traces", response_model=list[HubTigerRecentTraceView])
+    def api_hubtiger_recent_traces(limit: int = Query(default=20, ge=1, le=50)) -> list[HubTigerRecentTraceView]:
+        return list(HUBTIGER_RECENT_TRACES)[-limit:][::-1]
+
+    @app.post("/api/hubtiger/test", response_model=HubTigerTestResponse)
+    async def api_hubtiger_test(
+        body: HubTigerTestRequest,
+        request: Request,
+    ) -> HubTigerTestResponse:
+        trace_id = str(getattr(request.state, "trace_id", "") or "") or uuid4().hex
+        mode = _hubtiger_mode()
+        operation = str(body.operation)
+        if mode == "read_only" and operation in HUBTIGER_WRITE_OPERATIONS:
+            blocked = HubTigerTestResponse(
+                success=False,
+                blocked=True,
+                mode="read_only",
+                operation=operation,
+                trace_id=trace_id,
+                message="Write tests are disabled while HubTiger runs in read-only mode.",
+                data={"blocked_reason": "read_only_mode"},
+            )
+            HUBTIGER_RECENT_TRACES.append(
+                HubTigerRecentTraceView(
+                    trace_id=trace_id,
+                    operation=operation,
+                    success=False,
+                    blocked=True,
+                    mode="read_only",
+                    created_at=datetime.now(timezone.utc),
+                    summary=blocked.message,
+                )
+            )
+            return blocked
+
+        base_url = str(settings.hubtiger_mcp_url or "").strip().rstrip("/")
+        if not base_url:
+            unavailable = HubTigerTestResponse(
+                success=False,
+                blocked=False,
+                mode=cast(Any, mode),
+                operation=operation,
+                trace_id=trace_id,
+                message="HubTiger MCP URL is not configured.",
+                data={"configured": False},
+            )
+            HUBTIGER_RECENT_TRACES.append(
+                HubTigerRecentTraceView(
+                    trace_id=trace_id,
+                    operation=operation,
+                    success=False,
+                    blocked=False,
+                    mode=cast(Any, mode),
+                    created_at=datetime.now(timezone.utc),
+                    summary=unavailable.message,
+                )
+            )
+            return unavailable
+
+        timeout_s = (
+            int(settings.hubtiger_mutation_timeout_ms if operation in HUBTIGER_WRITE_OPERATIONS else settings.hubtiger_read_timeout_ms)
+            / 1000.0
+        )
+        try:
+            async with httpx.AsyncClient(timeout=timeout_s) as client:
+                upstream = await client.post(
+                    f"{base_url}/test",
+                    json={"operation": operation, "payload": body.payload, "mode": mode, "trace_id": trace_id},
+                )
+            if upstream.status_code >= 400:
+                safe_message = "HubTiger test endpoint returned an unavailable response."
+                result = HubTigerTestResponse(
+                    success=False,
+                    blocked=False,
+                    mode=cast(Any, mode),
+                    operation=operation,
+                    trace_id=trace_id,
+                    message=safe_message,
+                    data={"status_code": upstream.status_code},
+                )
+            else:
+                payload = upstream.json() if upstream.content else {}
+                result = HubTigerTestResponse(
+                    success=bool(payload.get("success", True)),
+                    blocked=bool(payload.get("blocked", False)),
+                    mode=cast(Any, mode),
+                    operation=operation,
+                    trace_id=trace_id,
+                    message=str(payload.get("message") or "HubTiger test completed."),
+                    data=dict(payload.get("data") or {}),
+                )
+        except Exception:
+            result = HubTigerTestResponse(
+                success=False,
+                blocked=False,
+                mode=cast(Any, mode),
+                operation=operation,
+                trace_id=trace_id,
+                message="HubTiger test is unavailable right now.",
+                data={},
+            )
+
+        HUBTIGER_RECENT_TRACES.append(
+            HubTigerRecentTraceView(
+                trace_id=trace_id,
+                operation=operation,
+                success=result.success,
+                blocked=result.blocked,
+                mode=cast(Any, mode),
+                created_at=datetime.now(timezone.utc),
+                summary=result.message,
+            )
+        )
+        return result
+
     @app.get("/api/tools/catalog", response_model=list[ToolCatalogEntryView])
     def api_tool_catalog(session: Session = Depends(get_session)) -> list[ToolCatalogEntryView]:
         return list_tool_catalog(session)
@@ -1632,13 +1978,104 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(404, str(exc)) from exc
 
+    @app.post("/api/odoo/evidence/mirror", response_model=OdooEvidenceMirrorView)
+    def api_create_odoo_evidence_mirror(
+        body: OdooEvidenceMirrorCreatePayload,
+        session: Session = Depends(get_session),
+    ) -> OdooEvidenceMirrorView:
+        record = OdooEvidenceMirrorRecord(
+            tool_audit_id=body.tool_audit_id,
+            trace_id=body.trace_id,
+            operation=body.operation,
+            status=body.status,
+            source_mode=body.source_mode,
+            scope_json=body.scope_json,
+            request_json=body.request_json,
+            response_json=body.response_json,
+        )
+        session.add(record)
+        session.commit()
+        session.refresh(record)
+        return _odoo_evidence_mirror_to_view(record)
+
+    @app.get("/api/odoo/evidence/mirror", response_model=list[OdooEvidenceMirrorView])
+    def api_list_odoo_evidence_mirror(
+        limit: int = Query(default=25, ge=1, le=200),
+        operation: str | None = Query(default=None),
+        session: Session = Depends(get_session),
+    ) -> list[OdooEvidenceMirrorView]:
+        query = select(OdooEvidenceMirrorRecord)
+        if operation:
+            query = query.where(OdooEvidenceMirrorRecord.operation == operation)
+        rows = list(
+            session.scalars(
+                query.order_by(OdooEvidenceMirrorRecord.created_at.desc()).limit(limit)
+            )
+        )
+        return [_odoo_evidence_mirror_to_view(row) for row in rows]
+
+    @app.post("/api/odoo/mas/answer")
+    def api_odoo_mas_answer(
+        body: dict[str, Any],
+        request: Request,
+        session: Session = Depends(get_session),
+    ) -> dict[str, Any]:
+        message = str(body.get("message") or "").strip()
+        if not message:
+            raise HTTPException(400, "message is required")
+        trace_id = str(getattr(request.state, "trace_id", "") or "") or None
+        return run_odoo_mas_pipeline(session, message=message, trace_id=trace_id)
+
+    @app.get("/api/finance/reports/{run_id}")
+    def api_get_finance_report(run_id: str) -> dict[str, Any]:
+        try:
+            return load_finance_report(run_id)
+        except FileNotFoundError:
+            raise HTTPException(404, "finance report not found")
+
+    @app.get("/api/finance/reports/{run_id}/pdf")
+    def api_get_finance_report_pdf(run_id: str) -> FileResponse:
+        path = finance_report_file(run_id, "pdf")
+        if not path.exists():
+            raise HTTPException(404, "finance report PDF not found")
+        return FileResponse(path, media_type="application/pdf", filename=f"finance-report-{run_id}.pdf")
+
+    @app.get("/api/finance/reports/{run_id}/html")
+    def api_get_finance_report_html(run_id: str) -> FileResponse:
+        path = finance_report_file(run_id, "html")
+        if not path.exists():
+            raise HTTPException(404, "finance report HTML not found")
+        return FileResponse(path, media_type="text/html; charset=utf-8", filename=f"finance-report-{run_id}.html")
+
+    @app.post("/api/odoo/mas/ledger/classified")
+    def api_odoo_mas_ledger_classified(
+        body: dict[str, Any],
+        session: Session = Depends(get_session),
+    ) -> dict[str, Any]:
+        entity = str(body.get("entity") or "").strip()
+        date_from = str(body.get("date_from") or "").strip()
+        date_to = str(body.get("date_to") or "").strip()
+        if not entity:
+            raise HTTPException(400, "entity is required")
+        if not date_from or not date_to:
+            raise HTTPException(400, "date_from and date_to are required")
+        return get_classified_ledger_rows(
+            session,
+            entity=entity,
+            date_from=date_from,
+            date_to=date_to,
+        )
+
     @app.get("/api/chat/bootstrap", response_model=ChatBootstrapView)
     def api_chat_bootstrap(
         surface: str = "ghostdash",
         session: Session = Depends(get_session),
     ) -> ChatBootstrapView:
         agents = [_agent_to_view(agent, resolve_agent_runtime_profile(session, agent)) for agent in list_agents(session)]
-        default_agent = next((agent for agent in agents if agent.is_default), agents[0] if agents else None)
+        if str(surface or "").strip().casefold() == "prod_chatui":
+            default_agent = next((agent for agent in agents if agent.name == MAGIC_MIKE_AGENT_NAME), None)
+        else:
+            default_agent = next((agent for agent in agents if agent.is_default), agents[0] if agents else None)
         return ChatBootstrapView(
             surface=surface,
             default_agent_id=default_agent.id if default_agent is not None else None,

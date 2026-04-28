@@ -5,6 +5,7 @@ from sqlalchemy import select
 from ghostdash_api.agent_memory import seed_default_agent_profiles
 from ghostdash_api.magic_mike import MAGIC_MIKE_AGENT_NAME, MAGIC_MIKE_CORPUS, MAGIC_MIKE_RUNTIME_NAME, RIDE_ELECTRIC_FAT_TYRE_URL
 from ghostdash_api.models import AgentProfileRecord, RuntimeProfileRecord
+from ghostdash_api.settings import get_settings
 
 from test_connections_and_bootstrap import build_client, seed_defaults
 
@@ -72,8 +73,9 @@ def test_seed_creates_magic_mike_voice_agent_with_truth_sources(monkeypatch) -> 
         assert profile.name == MAGIC_MIKE_RUNTIME_NAME
         assert profile.llm_config_json["temperature"] == 0.1
         assert profile.llm_config_json["max_tokens"] == 120
+        assert profile.llm_config_json["model_id"] == get_settings().app_default_chat_model
         assert profile.llm_config_json["llm_orchestration"]["enabled"] is True
-        assert profile.llm_config_json["llm_orchestration"]["fallback_model_id"] == "gemini-3-pro"
+        assert profile.llm_config_json["llm_orchestration"]["fallback_model_id"] == get_settings().app_default_chat_model
         assert profile.guardrails_config_json["voice_enabled"] is True
         assert profile.guardrails_config_json["tools_required_for_claims"] is True
         assert profile.kb_config_json["default_corpora"] == [MAGIC_MIKE_CORPUS]

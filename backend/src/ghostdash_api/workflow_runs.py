@@ -71,6 +71,46 @@ MAS_CONSULT_WORKFLOW_DEFINITION: dict[str, Any] = {
     ],
 }
 
+BP_MODE_WORKFLOW_DEFINITION: dict[str, Any] = {
+    "version": 1,
+    "workflow_id": "bp_mode_closeout_v1",
+    "name": "BP Mode Closeout Orchestration",
+    "execution_mode": "sequential",
+    "min_agents": 3,
+    "max_agents": 3,
+    "persist_child_conversations": True,
+    "head_agent": {
+        "selection_mode": "active_agent",
+        "prompt_template": DEFAULT_HEAD_AGENT_PROMPT_TEMPLATE,
+    },
+    "nodes": [
+        {
+            "id": "bp_case_framing",
+            "type": "child_agent",
+            "description": "Case framing agent defines objective, metrics, scope, and blockers.",
+            "prompt_template": DEFAULT_SUB_AGENT_PROMPT_TEMPLATE,
+        },
+        {
+            "id": "bp_lead_architect",
+            "type": "child_agent",
+            "description": "Lead architect plans execution and synthesizes evidence strategy.",
+            "prompt_template": DEFAULT_SUB_AGENT_PROMPT_TEMPLATE,
+        },
+        {
+            "id": "bp_auditor",
+            "type": "child_agent",
+            "description": "Auditor evaluates fitness, quality, and remediation requirements.",
+            "prompt_template": DEFAULT_SUB_AGENT_PROMPT_TEMPLATE,
+        },
+        {
+            "id": "bp_final_synthesis",
+            "type": "head_agent_synthesis",
+            "description": "Produce final board-ready output from BP role chain.",
+            "prompt_template": DEFAULT_HEAD_AGENT_PROMPT_TEMPLATE,
+        },
+    ],
+}
+
 
 def normalize_workflow_definition(definition: dict[str, Any]) -> dict[str, Any]:
     normalized = deepcopy(definition)
@@ -167,6 +207,7 @@ def list_workflow_definitions(session: Session) -> list[WorkflowDefinitionRecord
 
 def seed_workflow_definitions(session: Session) -> None:
     upsert_workflow_definition(session, MAS_CONSULT_WORKFLOW_DEFINITION)
+    upsert_workflow_definition(session, BP_MODE_WORKFLOW_DEFINITION)
 
 
 def upsert_workflow_definition(session: Session, definition: dict[str, Any]) -> WorkflowDefinitionRecord:

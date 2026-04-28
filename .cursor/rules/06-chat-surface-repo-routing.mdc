@@ -1,0 +1,19 @@
+---
+description: Route chat UI work to the correct repo before editing.
+alwaysApply: true
+---
+
+# Chat Surface -> Repo Routing (Hard Stop)
+
+- Before any `ghost_chatui` or operator chat edits, confirm the served route in `Caddyfile` and map it to the source repo.
+- If URL is `https://ghoststack.rideai.com.au/ghost_chatui/`, edit `/var/Ghost-chatUI` first; do not default to `ghoststack-rag/ui`.
+- If URL/surface is the GhostDASH app root (non-`ghost_chatui`), edit `ghoststack-rag/ui`.
+- Do not implement changes until this mapping check is complete.
+- If uncertain, stop and run one verification command, then proceed only after the mapping is explicit.
+
+## Required parity behavior
+
+- When a fix affects shared voice/chat behavior, sweep both codebases:
+  - `ghoststack-rag/ui`
+  - `/var/Ghost-chatUI`
+- Report parity status explicitly: `both`, `ghoststack-rag/ui only`, or `/var/Ghost-chatUI only`.

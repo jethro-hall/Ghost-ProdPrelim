@@ -17,6 +17,7 @@ import ChatPage from "./pages/chat/ChatPage";
 export default function App() {
   return (
     <Routes>
+      {/* Legacy dev-only full-page chat; production uses https://ghoststack.rideai.com.au/ghost_chatui/ (Caddy redirects /chat* → /ghost_chatui/). */}
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Dashboard />} />

@@ -21,6 +21,7 @@ from .models import ConnectionRecord, EmbeddingCacheRecord
 from .runtime_profiles import DEFAULT_SYSTEM_PROMPT
 from .settings import get_settings
 from .telemetry import log_event, log_instant_event, new_span_id, wrap_outbound_call
+from .token_usage import normalize_provider_usage_dict
 
 settings = get_settings()
 SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT
@@ -34,6 +35,7 @@ class LlmCompletionResult:
 
     text: str
     openai_response_id: str | None = None
+    usage: dict[str, int | bool] | None = None
 
 
 @dataclass(slots=True)
@@ -47,10 +49,30 @@ class ProviderConnectionConfig:
     auth_header_name: str | None = None
 
 
-def _normalize_provider_model_id(provider: str, model_id: str | None, fallback: str) -> str:
-    model = model_id or fallback
-    if provider == "openai" and model.startswith("openai/"):
-        return model.split("/", 1)[1]
+def _normalize_provider_model_id(
+    provider: str,
+    model_id: str | None,
+    fallback: str,
+    *,
+    provider_kind: str | None = None,
+) -> str:
+    model = (model_id or fallback or "").strip()
+    # Strip `openai/` prefix for any OpenAI-family provider (openai, openai-staging, …) so outbound
+    # model ids match provider catalogs (same behavior as native OpenAI).
+    p = (provider or "").strip().lower()
+    kind = (provider_kind or "").strip().lower()
+    if p.startswith("openai") or kind in {"openai", "openai_compatible"}:
+        lowered = model.lower()
+        if lowered.startswith("openai/"):
+            model = model.split("/", 1)[1]
+            lowered = model.lower()
+        if lowered.startswith("model/"):
+            model = model.split("/", 1)[1]
+        model = model.lstrip("/")
+        # OpenAI-compatible gateways are effectively case-insensitive for model IDs; normalizing
+        # prevents outages from persisted values like `LLAMA31-8B`.
+        if model and model.upper() == model:
+            model = model.lower()
     return model
 
 
@@ -193,9 +215,87 @@ def _gemini_generate_content(
     raise ValueError(f"Gemini generateContent returned no text: {payload!r}")
 
 
+def _gemini_generate_content_result(
+    connection: ProviderConnectionConfig,
+    *,
+    prompt: str,
+    model_id: str,
+) -> LlmCompletionResult:
+    base_url = _normalize_gemini_native_base_url(_provider_base_url(connection))
+    model = _normalize_gemini_model_id(model_id)
+    if not model:
+        raise ValueError("Gemini model id is required (e.g. gemini-flash-latest)")
+    url = f"{base_url}/models/{model}:generateContent"
+    headers = {"Content-Type": "application/json", **_gemini_native_auth_headers(connection)}
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
+    timeout = float(getattr(settings, "app_llm_request_timeout_seconds", 120.0))
+    with httpx.Client(timeout=timeout) as client:
+        response = client.post(url, headers=headers, json=body)
+        if response.status_code >= 400:
+            raise ValueError(f"Gemini generateContent failed ({response.status_code}): {response.text[:800]}")
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise ValueError(f"Gemini generateContent returned non-JSON: {response.text[:800]}") from exc
+    candidates = payload.get("candidates") or []
+    content = (candidates[0] or {}).get("content") if candidates else None
+    parts = (content or {}).get("parts") if isinstance(content, dict) else None
+    texts = [str(part.get("text", "")) for part in parts if isinstance(part, dict) and part.get("text")] if isinstance(parts, list) else []
+    text = "".join(texts).strip()
+    if not text:
+        raise ValueError(f"Gemini generateContent returned no text: {payload!r}")
+    usage_metadata = payload.get("usageMetadata") if isinstance(payload, dict) else None
+    usage = (
+        normalize_provider_usage_dict(
+            prompt_tokens=usage_metadata.get("promptTokenCount") if isinstance(usage_metadata, dict) else None,
+            completion_tokens=usage_metadata.get("candidatesTokenCount") if isinstance(usage_metadata, dict) else None,
+            total_tokens=usage_metadata.get("totalTokenCount") if isinstance(usage_metadata, dict) else None,
+        )
+        if isinstance(usage_metadata, dict)
+        else None
+    )
+    return LlmCompletionResult(text=text, openai_response_id=None, usage=usage)
+
+
+def _extract_openai_chat_usage(response: Any) -> dict[str, int | bool] | None:
+    usage = getattr(response, "usage", None)
+    if usage is None and isinstance(response, dict):
+        usage = response.get("usage")
+    if usage is None:
+        return None
+    return normalize_provider_usage_dict(
+        prompt_tokens=getattr(usage, "prompt_tokens", None) if not isinstance(usage, dict) else usage.get("prompt_tokens"),
+        completion_tokens=getattr(usage, "completion_tokens", None) if not isinstance(usage, dict) else usage.get("completion_tokens"),
+        total_tokens=getattr(usage, "total_tokens", None) if not isinstance(usage, dict) else usage.get("total_tokens"),
+    )
+
+
+def _extract_openai_responses_usage(response: Any) -> dict[str, int | bool] | None:
+    usage = getattr(response, "usage", None)
+    if usage is None and isinstance(response, dict):
+        usage = response.get("usage")
+    if usage is None:
+        return None
+    prompt_tokens = getattr(usage, "input_tokens", None) if not isinstance(usage, dict) else usage.get("input_tokens")
+    completion_tokens = getattr(usage, "output_tokens", None) if not isinstance(usage, dict) else usage.get("output_tokens")
+    total_tokens = getattr(usage, "total_tokens", None) if not isinstance(usage, dict) else usage.get("total_tokens")
+    if prompt_tokens is None and completion_tokens is None and total_tokens is None:
+        prompt_tokens = getattr(usage, "prompt_tokens", None) if not isinstance(usage, dict) else usage.get("prompt_tokens")
+        completion_tokens = getattr(usage, "completion_tokens", None) if not isinstance(usage, dict) else usage.get("completion_tokens")
+    return normalize_provider_usage_dict(
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+    )
+
+
 def _uses_rideai_chat_gateway(connection: ProviderConnectionConfig) -> bool:
     base_url = _provider_base_url(connection)
-    parsed = urlsplit(base_url)
+    return _uses_rideai_llamaindex_base_url(base_url)
+
+
+def _uses_rideai_llamaindex_base_url(base_url: str) -> bool:
+    parsed = urlsplit(base_url.rstrip("/"))
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/")
     return hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1")
@@ -231,10 +331,13 @@ def _embedding_provider_base_url(connection: ProviderConnectionConfig) -> str:
 
 
 def _embedding_provider_api_key(connection: ProviderConnectionConfig) -> str:
+    embedding_base = _embedding_provider_base_url(connection)
+    # RideAI gateway uses the same internal key as chat (and X-Internal-Key); do not use OPENAI_EMBEDDING_API_KEY=local-tei.
+    if _uses_rideai_llamaindex_base_url(embedding_base):
+        return _provider_api_key(connection)
     configured = settings.openai_embedding_api_key
     if configured:
         return configured
-    embedding_base = _embedding_provider_base_url(connection)
     if embedding_base != _provider_base_url(connection):
         # Local TEI does not require auth, but the OpenAI client still expects a placeholder key.
         return "local-tei"
@@ -270,7 +373,12 @@ def _build_llm(
     max_tokens: int | None,
     system_prompt: str,
 ) -> LlamaIndexOpenAI:
-    model = _normalize_provider_model_id(connection.provider, model_id, settings.app_default_chat_model)
+    model = _normalize_provider_model_id(
+        connection.provider,
+        model_id,
+        settings.app_default_chat_model,
+        provider_kind=connection.provider_kind,
+    )
     return LlamaIndexOpenAI(
         model=model,
         api_key=_provider_api_key(connection),
@@ -279,7 +387,61 @@ def _build_llm(
         temperature=temperature,
         max_tokens=max_tokens,
         system_prompt=system_prompt,
+        timeout=float(getattr(settings, "app_llm_request_timeout_seconds", 300.0) or 300.0),
     )
+
+
+def _responses_error_should_fallback_to_chat(exc: BaseException) -> bool:
+    """True when a non-streaming or streaming /v1/responses call is likely to succeed on chat.completions."""
+    if isinstance(exc, (httpx.TimeoutException, TimeoutError, OSError)):
+        return True
+    name = (type(exc).__name__ or "").lower()
+    if "timeout" in name:
+        return True
+    text = f"{type(exc).__name__} {exc!r} {exc}".lower()
+    if "504" in text:
+        return True
+    if "upstream" in text and "timeout" in text:
+        return True
+    if "upstream llm" in text:
+        return True
+    if "gateway" in text and "timeout" in text:
+        return True
+    return False
+
+
+def _openai_stream_chat_completions_deltas(
+    client: OpenAIClient,
+    *,
+    resolved_model: str,
+    system_prompt: str,
+    prompt: str,
+    temperature: float,
+    max_tokens: int | None,
+    usage_out: list[dict[str, int | bool] | None] | None = None,
+) -> Iterator[str]:
+    kwargs: dict[str, Any] = {
+        "model": resolved_model,
+        "messages": [
+            {"role": "system", "content": system_prompt or "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": temperature,
+        "stream": True,
+        "stream_options": {"include_usage": True},
+    }
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    stream = client.chat.completions.create(**kwargs)
+    for chunk in stream:
+        usage = _extract_openai_chat_usage(chunk)
+        if usage is not None and usage_out is not None and len(usage_out) > 0:
+            usage_out[0] = usage
+        if not chunk.choices:
+            continue
+        delta = _coerce_content_fragment_to_text(chunk.choices[0].delta.content)
+        if delta:
+            yield delta
 
 
 def _coerce_content_fragment_to_text(fragment: Any) -> str:
@@ -307,6 +469,7 @@ def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: s
         connection.provider,
         embedding_model,
         settings.app_default_embedding_model,
+        provider_kind=connection.provider_kind,
     )
     embed_kwargs = {
         "api_key": _embedding_provider_api_key(connection),
@@ -320,6 +483,11 @@ def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: s
         embed_kwargs["model_name"] = model
     else:
         embed_kwargs["model"] = model
+    emb_base = _embedding_provider_base_url(connection)
+    if _uses_rideai_llamaindex_base_url(emb_base):
+        headers = _provider_default_headers(connection)
+        if headers:
+            embed_kwargs["default_headers"] = headers
     return OpenAIEmbedding(**embed_kwargs)
 
 
@@ -360,6 +528,7 @@ def _embedding_cache_key(
         connection.provider,
         embedding_model,
         settings.app_default_embedding_model,
+        provider_kind=connection.provider_kind,
     )
     text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return connection.provider, _embedding_provider_base_url(connection), model, text_hash
@@ -512,6 +681,9 @@ def save_connection(session: Session, provider: str, **fields) -> ConnectionReco
     for key, value in fields.items():
         if key == "api_key" and value in (None, ""):
             continue
+        if key == "default_model_id" and value in (None, ""):
+            record.default_model_id = None
+            continue
         setattr(record, key, value)
 
     if provider == "openai":
@@ -523,6 +695,15 @@ def save_connection(session: Session, provider: str, **fields) -> ConnectionReco
 
     session.commit()
     session.refresh(record)
+    return record
+
+
+def delete_connection(session: Session, connection_id: str) -> ConnectionRecord:
+    record = session.get(ConnectionRecord, connection_id)
+    if record is None:
+        raise ValueError(f"connection {connection_id} not found")
+    session.delete(record)
+    session.commit()
     return record
 
 
@@ -649,14 +830,18 @@ def generate_answer(
     use_openai_responses_http: bool = False,
 ) -> LlmCompletionResult:
     provider_connection = _merge_provider_connection(connection)
-    resolved_model = _normalize_provider_model_id(provider_connection.provider, model_id, settings.app_default_chat_model)
+    resolved_model = _normalize_provider_model_id(
+        provider_connection.provider,
+        model_id,
+        settings.app_default_chat_model,
+        provider_kind=provider_connection.provider_kind,
+    )
 
     base_url = _provider_base_url(provider_connection)
     if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
 
         def _run() -> LlmCompletionResult:
-            text = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model)
-            return LlmCompletionResult(text=text.strip(), openai_response_id=None)
+            return _gemini_generate_content_result(provider_connection, prompt=prompt, model_id=resolved_model)
 
         if trace_id:
             return wrap_outbound_call(trace_id=trace_id, service=service, route="gemini.generateContent", fn=_run)
@@ -666,23 +851,50 @@ def generate_answer(
         client = _build_openai_compatible_client(provider_connection)
 
         def _run() -> LlmCompletionResult:
-            response = client.chat.completions.create(
-                model=resolved_model,
-                messages=[
+            kwargs: dict[str, Any] = {
+                "model": resolved_model,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=temperature,
-                max_tokens=max_tokens,
-                stream=False,
-            )
+                "temperature": temperature,
+                "stream": False,
+            }
+            if max_tokens is not None:
+                kwargs["max_tokens"] = max_tokens
+            response = client.chat.completions.create(**kwargs)
             content = response.choices[0].message.content if response.choices else ""
-            return LlmCompletionResult(text=_coerce_content_fragment_to_text(content).strip(), openai_response_id=None)
+            return LlmCompletionResult(
+                text=_coerce_content_fragment_to_text(content).strip(),
+                openai_response_id=None,
+                usage=_extract_openai_chat_usage(response),
+            )
 
     elif use_openai_responses_http:
         client = _build_openai_compatible_client(provider_connection)
 
         def _run() -> LlmCompletionResult:
+            def _non_stream_chat_fallback() -> LlmCompletionResult:
+                s = (system_prompt or "").strip() or "You are a helpful assistant."
+                kwargs2: dict[str, Any] = {
+                    "model": resolved_model,
+                    "messages": [
+                        {"role": "system", "content": s},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "temperature": temperature,
+                    "stream": False,
+                }
+                if max_tokens is not None:
+                    kwargs2["max_tokens"] = max_tokens
+                response = client.chat.completions.create(**kwargs2)
+                content = response.choices[0].message.content if response.choices else ""
+                return LlmCompletionResult(
+                    text=_coerce_content_fragment_to_text(content).strip(),
+                    openai_response_id=None,
+                    usage=_extract_openai_chat_usage(response),
+                )
+
             instr = (system_prompt or "").strip() or "You are a helpful assistant."
             kwargs: dict = {
                 "model": resolved_model,
@@ -694,9 +906,19 @@ def generate_answer(
                 kwargs["max_output_tokens"] = max_tokens
             if previous_response_id:
                 kwargs["previous_response_id"] = previous_response_id
-            resp = client.responses.create(**kwargs)
-            text = (getattr(resp, "output_text", None) or "").strip()
-            return LlmCompletionResult(text=text, openai_response_id=getattr(resp, "id", None))
+            try:
+                resp = client.responses.create(**kwargs)
+                text = (getattr(resp, "output_text", None) or "").strip()
+                return LlmCompletionResult(
+                    text=text,
+                    openai_response_id=getattr(resp, "id", None),
+                    usage=_extract_openai_responses_usage(resp),
+                )
+            except Exception as exc:  # noqa: BLE001 - classified below
+                fb = bool(getattr(settings, "app_llm_responses_fallback_to_chat", True))
+                if not fb or previous_response_id is not None or not _responses_error_should_fallback_to_chat(exc):
+                    raise
+                return _non_stream_chat_fallback()
 
     else:
         llm = _build_llm(
@@ -710,7 +932,8 @@ def generate_answer(
         def _run() -> LlmCompletionResult:
             response = llm.complete(prompt)
             out = getattr(response, "text", str(response)).strip()
-            return LlmCompletionResult(text=out, openai_response_id=None)
+            usage = _extract_openai_chat_usage(response)
+            return LlmCompletionResult(text=out, openai_response_id=None, usage=usage)
 
     route = f"openai.{api_mode}"
     if trace_id:
@@ -732,9 +955,15 @@ def stream_answer(
     previous_response_id: str | None = None,
     use_openai_responses_http: bool = False,
     openai_response_id_out: list[str | None] | None = None,
+    usage_out: list[dict[str, int | bool] | None] | None = None,
 ) -> Iterator[str]:
     provider_connection = _merge_provider_connection(connection)
-    resolved_model = _normalize_provider_model_id(provider_connection.provider, model_id, settings.app_default_chat_model)
+    resolved_model = _normalize_provider_model_id(
+        provider_connection.provider,
+        model_id,
+        settings.app_default_chat_model,
+        provider_kind=provider_connection.provider_kind,
+    )
     span_id = new_span_id()
     start_ts = time.time()
     error: str | None = None
@@ -744,7 +973,10 @@ def stream_answer(
         if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
             # Native Gemini does not currently support token-delta streaming through this path.
             # We still stream by yielding the completed answer once (or in a few chunks).
-            text = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model).strip()
+            result = _gemini_generate_content_result(provider_connection, prompt=prompt, model_id=resolved_model)
+            if usage_out is not None and len(usage_out) > 0:
+                usage_out[0] = result.usage
+            text = result.text.strip()
             if text:
                 chunk_size = 240
                 for i in range(0, len(text), chunk_size):
@@ -753,48 +985,59 @@ def stream_answer(
 
         if _uses_rideai_chat_gateway(provider_connection):
             client = _build_openai_compatible_client(provider_connection)
-            stream = client.chat.completions.create(
-                model=resolved_model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
+            s = (system_prompt or "").strip() or "You are a helpful assistant."
+            yield from _openai_stream_chat_completions_deltas(
+                client,
+                resolved_model=resolved_model,
+                system_prompt=s,
+                prompt=prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                stream=True,
+                usage_out=usage_out,
             )
-            for chunk in stream:
-                if not chunk.choices:
-                    continue
-                delta = _coerce_content_fragment_to_text(chunk.choices[0].delta.content)
-                if delta:
-                    yield delta
         elif use_openai_responses_http:
             client = _build_openai_compatible_client(provider_connection)
             instr = (system_prompt or "").strip() or "You are a helpful assistant."
-            kwargs: dict = {
-                "model": resolved_model,
-                "instructions": instr,
-                "input": prompt,
-                "temperature": temperature,
-                "stream": True,
-            }
-            if max_tokens is not None:
-                kwargs["max_output_tokens"] = max_tokens
-            if previous_response_id:
-                kwargs["previous_response_id"] = previous_response_id
-            stream = client.responses.create(**kwargs)
-            for event in stream:
-                et = getattr(event, "type", None)
-                if et == "response.output_text.delta":
-                    delta = _coerce_content_fragment_to_text(getattr(event, "delta", ""))
-                    if delta:
-                        yield delta
-                elif et == "response.completed":
-                    resp_obj = getattr(event, "response", None)
-                    rid = getattr(resp_obj, "id", None) if resp_obj is not None else None
-                    if openai_response_id_out is not None and len(openai_response_id_out) > 0:
-                        openai_response_id_out[0] = rid
+            try:
+                kwargs: dict = {
+                    "model": resolved_model,
+                    "instructions": instr,
+                    "input": prompt,
+                    "temperature": temperature,
+                    "stream": True,
+                }
+                if max_tokens is not None:
+                    kwargs["max_output_tokens"] = max_tokens
+                if previous_response_id:
+                    kwargs["previous_response_id"] = previous_response_id
+                stream = client.responses.create(**kwargs)
+                for event in stream:
+                    et = getattr(event, "type", None)
+                    if et == "response.output_text.delta":
+                        delta = _coerce_content_fragment_to_text(getattr(event, "delta", ""))
+                        if delta:
+                            yield delta
+                    elif et == "response.completed":
+                        resp_obj = getattr(event, "response", None)
+                        rid = getattr(resp_obj, "id", None) if resp_obj is not None else None
+                        if openai_response_id_out is not None and len(openai_response_id_out) > 0:
+                            openai_response_id_out[0] = rid
+                        usage = _extract_openai_responses_usage(resp_obj)
+                        if usage is not None and usage_out is not None and len(usage_out) > 0:
+                            usage_out[0] = usage
+            except Exception as exc:  # noqa: BLE001 - classified for fallback
+                fb = bool(getattr(settings, "app_llm_responses_fallback_to_chat", True))
+                if not fb or previous_response_id is not None or not _responses_error_should_fallback_to_chat(exc):
+                    raise
+                yield from _openai_stream_chat_completions_deltas(
+                    client,
+                    resolved_model=resolved_model,
+                    system_prompt=instr,
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    usage_out=usage_out,
+                )
         else:
             llm = _build_llm(
                 provider_connection,
@@ -841,6 +1084,7 @@ def stream_answer_to_result(
     use_openai_responses_http: bool = False,
 ) -> LlmCompletionResult:
     holder: list[str | None] = [None]
+    usage_holder: list[dict[str, int | bool] | None] = [None]
     parts: list[str] = []
     for delta in stream_answer(
         prompt,
@@ -855,9 +1099,14 @@ def stream_answer_to_result(
         previous_response_id=previous_response_id,
         use_openai_responses_http=use_openai_responses_http,
         openai_response_id_out=holder,
+        usage_out=usage_holder,
     ):
         parts.append(delta)
-    return LlmCompletionResult(text="".join(parts).strip(), openai_response_id=holder[0] if holder else None)
+    return LlmCompletionResult(
+        text="".join(parts).strip(),
+        openai_response_id=holder[0] if holder else None,
+        usage=usage_holder[0] if usage_holder else None,
+    )
 
 
 def test_provider_connection(
@@ -880,6 +1129,7 @@ def test_provider_connection(
         provider_connection.provider,
         model_id,
         settings.app_default_chat_model,
+        provider_kind=provider_connection.provider_kind,
     )
 
     def _run() -> dict[str, str]:

@@ -17,8 +17,8 @@ Magic Mike is the public Ride Electric voice assistant for retail callers. He is
 
 ## Runtime Settings
 
-- Primary provider/model: `openai` / `openai/gpt-5.5`
-- Fallback provider/model: `gemini` / `gemini-3-pro`
+- Primary provider/model: `openai` / current deployed `APP_DEFAULT_CHAT_MODEL`
+- Fallback provider/model: `openai` / current deployed `APP_DEFAULT_CHAT_MODEL`
 - API mode: `chat_completions`
 - Temperature: `0.1`
 - Max output tokens: `120`
@@ -70,6 +70,10 @@ The approved web fallback is intentionally lower priority than RAG to keep laten
 ## Tool Reality
 
 The prompt reserves Hubtiger tool names for the intended booking/job/quote workflow, but those tool executors are not present in this repo yet. Until implemented and registered, Magic Mike must fail closed: he can discuss the flow, collect handoff details, or transfer, but must not claim a booking, quote, product lookup, or job lookup succeeded.
+
+## Model Reality
+
+The requested `gpt-5.5` model id is not currently accepted by the configured provider gateway. Magic Mike is pinned to the deployed default chat model until a valid GPT-5.5 provider catalog entry and a Gemini fallback connection are present. This prevents public voice calls from failing with upstream model-not-found errors.
 
 ## Human QA Checklist
 

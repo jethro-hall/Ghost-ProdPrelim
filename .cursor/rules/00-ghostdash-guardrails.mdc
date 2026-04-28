@@ -57,3 +57,9 @@ All inbound HTTP requests and outbound service calls must log structured JSON wi
 - Browser control traffic goes through `/api/*`.
 - Browser chat traffic goes through `/agent/*`.
 - Do not call OpenAI, Qdrant, or other privileged services directly from the browser.
+
+## Canonical operator chat URL (production)
+
+- On `ghoststack.rideai.com.au`, the operator chat **page** operators should open is **`https://ghoststack.rideai.com.au/ghost_chatui/`** (see `Caddyfile`).
+- Never document **`https://ghoststack.rideai.com.au/chat`** as the primary chat URL; Caddy **308**-redirects `/chat*` to `/ghost_chatui/`.
+- `POST /agent/chat` and `POST /agent/chat/stream` are **ingress API** paths, not the browser SPA path for Ghost ChatUI.

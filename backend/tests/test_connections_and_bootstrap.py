@@ -56,6 +56,7 @@ def test_connections_round_trip_provider_metadata(monkeypatch) -> None:
             "api_key": "change_me_llamaindex_internal_key",
             "base_url": "https://one.rideai.com.au/api/llamaindex/v1",
             "enabled": True,
+            "default_model_id": "custom/staging-model",
         },
     )
 
@@ -64,6 +65,7 @@ def test_connections_round_trip_provider_metadata(monkeypatch) -> None:
     assert payload["provider_kind"] == "openai_compatible"
     assert payload["auth_strategy"] == "custom_header"
     assert payload["auth_header_name"] == "X-Internal-Key"
+    assert payload["default_model_id"] == "custom/staging-model"
 
     list_response = client.get("/api/connections")
     assert list_response.status_code == 200
@@ -71,6 +73,7 @@ def test_connections_round_trip_provider_metadata(monkeypatch) -> None:
     assert saved["rideai-local"]["provider_kind"] == "openai_compatible"
     assert saved["rideai-local"]["auth_strategy"] == "custom_header"
     assert saved["rideai-local"]["auth_header_name"] == "X-Internal-Key"
+    assert saved["rideai-local"]["default_model_id"] == "custom/staging-model"
 
 
 def test_chat_bootstrap_returns_shared_runtime_and_agents(monkeypatch) -> None:

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BoardPack",
+  "description": "Structured board-ready output; all numbers from upstream evidence packs only.",
+  "type": "object",
+  "required": ["format", "sections"],
+  "properties": {
+    "format": { "type": "string", "const": "board_v1" },
+    "period_label": { "type": "string" },
+    "sections": {
+      "type": "object",
+      "properties": {
+        "executive_summary": { "type": "string" },
+        "kpi_table": { "type": "string" },
+        "performance_drivers": { "type": "string" },
+        "anomalies": { "type": "string" },
+        "forecast": { "type": "string" },
+        "risks": { "type": "string" },
+        "recommendations": { "type": "string" },
+        "caveats": { "type": "string" }
+      }
+    },
+    "structured": { "type": "object" }
+  },
+  "additionalProperties": true
+}

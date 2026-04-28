@@ -5,12 +5,14 @@ import json
 import math
 import re
 import time
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -42,6 +44,7 @@ from .agent_builds import (
     parse_odoo_operation_action_request,
 )
 from .database import SessionLocal, get_session
+from .elevenlabs_flash25_realtime import router as elevenlabs_flash25_realtime_router
 from .models import (
     AgentConversationRecord,
     AgentMessageRecord,
@@ -49,6 +52,14 @@ from .models import (
     ChatUploadRecord,
     ConnectionRecord,
     DocumentFrameRecord,
+)
+from .magic_mike import MAGIC_MIKE_AGENT_NAME
+from .public_response_presenter import (
+    PUBLIC_GREETING_FALLBACK_TEXT,
+    PublicStreamPresenter,
+    contains_forbidden_public_output,
+    is_production_chat_surface,
+    present_public_chat_response_payload,
 )
 from .runtime import (
     LlmCompletionResult,
@@ -68,12 +79,16 @@ from .settings import get_settings
 from .telemetry import log_instant_event
 from .tool_registry import build_tool_readiness_summary, execute_tool_operation_for_agent
 from .voice_ingress import (
+    ELEVENLABS_STREAM_ROUTE,
+    ELEVENLABS_TTS_STREAM_ROUTE,
     VoiceChatCompletionsRequest,
     VoicePreviewRequest,
+    handle_tts_stream_websocket,
     handle_voice_chat_completions,
     handle_voice_stream_websocket,
     list_elevenlabs_voices,
     preview_elevenlabs_voice,
+    voice_provider_health,
 )
 from .odoo_agentic import (
     external_citations_for_tool_events,
@@ -91,6 +106,128 @@ DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK = (
     "4) Which entities roll up into group-level reporting, and how should group totals be interpreted?\n"
     "5) Any non-negotiable accounting or scope rules (for example include/exclude tax, refunds, intercompany, or specific journals)?"
 )
+
+
+def _present_chat_response_for_surface(response: ChatResponse, surface: str | None) -> ChatResponse:
+    if not is_production_chat_surface(surface):
+        return response
+    return ChatResponse(**present_public_chat_response_payload(response.model_dump(mode="json")))
+
+
+PRODUCTION_CHAT_ROUTE_MODE = "production_chat"
+CONSUMER_CUSTOMER_AGENT_CATEGORY = "consumer_customer"
+PRODUCTION_CONTRACT_ERROR = "Magic Mike is not available in the correct customer-service mode right now."
+
+
+def _is_magic_mike_agent(agent: AgentProfileRecord) -> bool:
+    return str(agent.name or "").strip().casefold() == MAGIC_MIKE_AGENT_NAME.casefold()
+
+
+def _get_magic_mike_agent(session: Session) -> AgentProfileRecord | None:
+    return session.scalar(
+        select(AgentProfileRecord).where(
+            AgentProfileRecord.name == MAGIC_MIKE_AGENT_NAME,
+            AgentProfileRecord.enabled.is_(True),
+        )
+    )
+
+
+def _is_greeting_intent(message: str) -> bool:
+    normalized = re.sub(r"[^a-z0-9\s']", " ", str(message or "").casefold())
+    normalized = " ".join(normalized.split())
+    if not normalized:
+        return False
+    greeting_patterns = (
+        r"^(hi|hello|hey|gday|good morning|morning|good afternoon|afternoon)(\s+magic|\s+mike|\s+magic mike)?$",
+        r"^(hi|hello|hey|gday)\s+(magic|mike|magic mike)(\s+how('?s| is) it going)?$",
+        r"^(how are you|how('?s| is) it going)(\s+magic|\s+mike|\s+magic mike)?$",
+        r"^(hi|hello|hey)\s+(magic|mike|magic mike)[,\s]+how('?s| is) it going$",
+    )
+    return any(re.search(pattern, normalized) for pattern in greeting_patterns)
+
+
+def _call_init_greeting(local_time: str | None = None, timezone_name: str | None = None) -> str:
+    tz_name = str(timezone_name or "Australia/Brisbane").strip() or "Australia/Brisbane"
+    try:
+        tz = ZoneInfo(tz_name)
+    except Exception:
+        tz = ZoneInfo("Australia/Brisbane")
+    now = datetime.now(tz)
+    if local_time:
+        try:
+            parsed = datetime.fromisoformat(str(local_time).replace("Z", "+00:00"))
+            now = parsed.astimezone(tz) if parsed.tzinfo else parsed.replace(tzinfo=tz)
+        except Exception:
+            pass
+    if now.hour < 12:
+        return "Morning, I’m Mike from Ride Electric. How are you?"
+    if now.hour < 17:
+        return "Afternoon, you’re speaking with Mike at Ride Electric. What can I help you with?"
+    return "Evening, you’re speaking with Mike at Ride Electric. What can I help you with?"
+
+
+def _production_contract_requested(body: ChatRequest) -> bool:
+    return (
+        str(body.route_mode or "").strip() == PRODUCTION_CHAT_ROUTE_MODE
+        and str(body.agent_category or "").strip() == CONSUMER_CUSTOMER_AGENT_CATEGORY
+        and body.public_presenter_required
+        and body.retail_output_guard_required
+        and body.diagnostics_visible is False
+    )
+
+
+def _resolve_production_chat_agent(
+    *,
+    session: Session,
+    body: ChatRequest,
+    requested_agent: AgentProfileRecord,
+) -> AgentProfileRecord:
+    if not is_production_chat_surface(body.surface):
+        return requested_agent
+    if not _production_contract_requested(body):
+        raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
+    magic_mike = _get_magic_mike_agent(session)
+    if magic_mike is None:
+        raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
+    if body.agent_id and requested_agent.id != magic_mike.id:
+        raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
+    return magic_mike
+
+
+def _is_valid_magic_mike_consumer_runtime(agent: AgentProfileRecord, guardrails_config: dict[str, Any]) -> bool:
+    category = str(guardrails_config.get("agent_category") or "").strip()
+    route_mode = str(guardrails_config.get("route_mode") or "").strip()
+    if category and category != CONSUMER_CUSTOMER_AGENT_CATEGORY:
+        return False
+    if route_mode and route_mode != PRODUCTION_CHAT_ROUTE_MODE:
+        return False
+    return _is_magic_mike_agent(agent)
+
+
+def _sanitize_production_guardrails(agent: AgentProfileRecord, guardrails_config: dict[str, Any]) -> dict[str, Any]:
+    if not _is_magic_mike_agent(agent):
+        return guardrails_config
+    sanitized = dict(guardrails_config)
+    sanitized["agent_category"] = CONSUMER_CUSTOMER_AGENT_CATEGORY
+    sanitized["route_mode"] = PRODUCTION_CHAT_ROUTE_MODE
+    sanitized["public_presenter_required"] = True
+    sanitized["retail_output_guard_required"] = True
+    sanitized["diagnostics_visible"] = False
+    sanitized["business_structure_required"] = False
+    sanitized["owner_operator_questionnaire"] = ""
+    sanitized["owner_operator_questionnaire_compact"] = ""
+    sanitized["business_structure_context"] = ""
+    sanitized["business_structure_context_compact"] = ""
+    return sanitized
+
+
+def _public_safe_history_context(history_context: str) -> str:
+    lines = []
+    for line in str(history_context or "").splitlines():
+        if contains_forbidden_public_output(line):
+            continue
+        lines.append(line)
+    return "\n".join(lines).strip()
 
 
 def _effective_chat_model_id(body: ChatRequest, llm_config: dict) -> str:
@@ -3440,7 +3577,7 @@ def dedupe_answer_text(answer: str) -> str:
     if not text:
         return text
 
-    minimum_duplicate_size = max(200, len(text) // 4)
+    minimum_duplicate_size = max(12, len(text) // 4)
     for split in range(len(text) // 2, minimum_duplicate_size - 1, -1):
         left = text[:split].strip()
         right = text[split:].strip()
@@ -4002,6 +4139,9 @@ def create_app() -> FastAPI:
         openapi_url="/agent/openapi.json",
         startup_hooks=[initialize_agent_runtime_state],
     )
+    app.include_router(elevenlabs_flash25_realtime_router)
+    app.add_api_websocket_route(ELEVENLABS_STREAM_ROUTE, handle_voice_stream_websocket)
+    app.add_api_websocket_route(ELEVENLABS_TTS_STREAM_ROUTE, handle_tts_stream_websocket)
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -4020,12 +4160,12 @@ def create_app() -> FastAPI:
         return await list_elevenlabs_voices(trace_id=request.state.trace_id)
 
     @app.post("/agent/voice/preview")
-    async def voice_preview(body: VoicePreviewRequest, request: Request) -> dict:
+    async def voice_preview(body: VoicePreviewRequest, request: Request) -> Response:
         return await preview_elevenlabs_voice(body=body, trace_id=request.state.trace_id)
 
-    @app.websocket("/agent/voice/stream")
-    async def voice_stream(websocket):
-        await handle_voice_stream_websocket(websocket)
+    @app.get("/agent/voice/health")
+    async def voice_health() -> dict[str, Any]:
+        return voice_provider_health()
 
     @app.post("/agent/chat", response_model=ChatResponse)
     async def agent_chat(
@@ -4034,6 +4174,7 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> ChatResponse:
         requested_agent = get_agent(session, body.agent_id)
+        requested_agent = _resolve_production_chat_agent(session=session, body=body, requested_agent=requested_agent)
         agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
         if body.docx_mode.enabled and resolve_docx_operation(body.docx_mode) == "finalize" and not str(body.docx_mode.template_id or "").strip():
@@ -4041,7 +4182,9 @@ def create_app() -> FastAPI:
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
-        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        guardrails_config = _sanitize_production_guardrails(agent, dict(runtime_profile.guardrails_config_json or {}))
+        if is_production_chat_surface(body.surface) and not _is_valid_magic_mike_consumer_runtime(agent, guardrails_config):
+            raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
         guardrails_config, _captured_business_context = maybe_bank_business_structure_context(
             session,
             runtime_profile=runtime_profile,
@@ -4058,6 +4201,14 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        call_init_turn = bool(body.call_init.enabled and _is_magic_mike_agent(agent))
+        magic_call_init_greeting = call_init_turn and _is_magic_mike_agent(agent)
+        magic_call_init_greeting = call_init_turn and _is_magic_mike_agent(agent)
+        production_magic_greeting = (
+            is_production_chat_surface(body.surface)
+            and _is_magic_mike_agent(agent)
+            and (call_init_turn or _is_greeting_intent(body.message))
+        )
         missing_business_structure_answer = build_missing_business_structure_answer(
             message=body.message,
             workflow_mode=workflow_mode,
@@ -4111,6 +4262,8 @@ def create_app() -> FastAPI:
         chat_upload_cache_context = build_chat_upload_cache_context(chat_uploads)
         history = list_messages(session, conversation.id, limit=max(settings.app_agent_memory_window_messages * 2, 20))
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
+        if is_production_chat_surface(body.surface):
+            history_context = _public_safe_history_context(history_context)
         llm_config = dict(runtime_profile.llm_config_json or {})
         connection = resolve_llm_connection(
             session,
@@ -4180,7 +4333,26 @@ def create_app() -> FastAPI:
                 guardrails_config.get("business_structure_context_compact") or ""
             ),
         )
-        if missing_business_structure_answer:
+        if magic_call_init_greeting or production_magic_greeting:
+            plan = {
+                "query_mode": "blended",
+                "direct_answer": (
+                    _call_init_greeting(
+                        local_time=body.call_init.local_time if call_init_turn else None,
+                        timezone_name=body.call_init.timezone if call_init_turn else None,
+                    )
+                    if call_init_turn
+                    else PUBLIC_GREETING_FALLBACK_TEXT
+                ),
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": None,
+                    "mode": "none",
+                    "reason": "call_init_greeting_bypass" if call_init_turn else "production_greeting_bypass",
+                },
+            }
+        elif missing_business_structure_answer:
             plan = {
                 "query_mode": "structured",
                 "direct_answer": missing_business_structure_answer,
@@ -4281,11 +4453,13 @@ def create_app() -> FastAPI:
                     if existing_prompt
                     else evidence_retrieval_prompt(body.message)
                 )
+        if is_production_chat_surface(body.surface) and _is_magic_mike_agent(agent):
+            plan["tool_plan"] = {"tool_id": None, "mode": "none", "reason": "production_consumer_tool_policy"}
         effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
         use_odoo_agentic = should_use_odoo_agentic(
             body=body,
             workflow_mode=workflow_mode,
-            odoo_ready=odoo_ready,
+            odoo_ready=False if is_production_chat_surface(body.surface) else odoo_ready,
             connection=connection,
             use_openai_responses_chain=use_openai_responses_chain,
         )
@@ -4395,7 +4569,8 @@ def create_app() -> FastAPI:
             )
         cache_key = None
         if (
-            use_approved_web
+            is_production_chat_surface(body.surface)
+            or use_approved_web
             or use_openai_responses_chain
             or str(tool_evidence.plan.get("mode") or "none") != "none"
             or use_odoo_agentic
@@ -4511,7 +4686,7 @@ def create_app() -> FastAPI:
                     diagnostics_json=docx_diagnostics,
                 )
                 session.commit()
-            return ChatResponse(
+            return _present_chat_response_for_surface(ChatResponse(
                 answer=cached.answer_text,
                 query_mode=cached.query_mode,
                 citations=cached.citations_json,
@@ -4527,7 +4702,7 @@ def create_app() -> FastAPI:
                 route_decision=route_decision,
                 docx_artifacts=docx_artifacts,
                 docx_diagnostics=docx_diagnostics,
-            )
+            ), body.surface)
         if plan.get("direct_answer") and not combined_upload_context:
             answer = plan["direct_answer"]
         else:
@@ -4917,7 +5092,7 @@ def create_app() -> FastAPI:
                 diagnostics_json=docx_diagnostics,
             )
             session.commit()
-        return ChatResponse(
+        return _present_chat_response_for_surface(ChatResponse(
             answer=answer,
             query_mode=plan["query_mode"],
             citations=citations,
@@ -4933,7 +5108,7 @@ def create_app() -> FastAPI:
             route_decision=route_decision,
             docx_artifacts=docx_artifacts,
             docx_diagnostics=docx_diagnostics,
-        )
+        ), body.surface)
 
     @app.post("/agent/chat/stream")
     async def agent_chat_stream(
@@ -4942,6 +5117,7 @@ def create_app() -> FastAPI:
         session: Session = Depends(get_session),
     ) -> StreamingResponse:
         requested_agent = get_agent(session, body.agent_id)
+        requested_agent = _resolve_production_chat_agent(session=session, body=body, requested_agent=requested_agent)
         agent = resolve_docx_fixed_agent(session, fallback_agent=requested_agent) if body.docx_mode.enabled else requested_agent
         runtime_profile = resolve_agent_runtime_profile(session, agent)
         if body.docx_mode.enabled and resolve_docx_operation(body.docx_mode) == "finalize" and not str(body.docx_mode.template_id or "").strip():
@@ -4949,7 +5125,9 @@ def create_app() -> FastAPI:
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
         corpora = resolve_corpora(runtime_profile, body.corpora)
-        guardrails_config = dict(runtime_profile.guardrails_config_json or {})
+        guardrails_config = _sanitize_production_guardrails(agent, dict(runtime_profile.guardrails_config_json or {}))
+        if is_production_chat_surface(body.surface) and not _is_valid_magic_mike_consumer_runtime(agent, guardrails_config):
+            raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
         guardrails_config, _captured_business_context = maybe_bank_business_structure_context(
             session,
             runtime_profile=runtime_profile,
@@ -4966,6 +5144,13 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         workflow_mode = resolve_workflow_mode(requested_mode=body.workflow_mode, conversation=conversation)
+        call_init_turn = bool(body.call_init.enabled and _is_magic_mike_agent(agent))
+        magic_call_init_greeting = call_init_turn and _is_magic_mike_agent(agent)
+        production_magic_greeting = (
+            is_production_chat_surface(body.surface)
+            and _is_magic_mike_agent(agent)
+            and (call_init_turn or _is_greeting_intent(body.message))
+        )
         missing_business_structure_answer = build_missing_business_structure_answer(
             message=body.message,
             workflow_mode=workflow_mode,
@@ -5019,6 +5204,8 @@ def create_app() -> FastAPI:
         chat_upload_cache_context = build_chat_upload_cache_context(chat_uploads)
         history = list_messages(session, conversation.id, limit=max(settings.app_agent_memory_window_messages * 2, 20))
         history_context = build_history_context(history, window_messages=settings.app_agent_memory_window_messages)
+        if is_production_chat_surface(body.surface):
+            history_context = _public_safe_history_context(history_context)
         llm_config = dict(runtime_profile.llm_config_json or {})
         connection = resolve_llm_connection(
             session,
@@ -5088,7 +5275,26 @@ def create_app() -> FastAPI:
                 guardrails_config.get("business_structure_context_compact") or ""
             ),
         )
-        if missing_business_structure_answer:
+        if magic_call_init_greeting or production_magic_greeting:
+            plan = {
+                "query_mode": "blended",
+                "direct_answer": (
+                    _call_init_greeting(
+                        local_time=body.call_init.local_time if call_init_turn else None,
+                        timezone_name=body.call_init.timezone if call_init_turn else None,
+                    )
+                    if call_init_turn
+                    else PUBLIC_GREETING_FALLBACK_TEXT
+                ),
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": None,
+                    "mode": "none",
+                    "reason": "call_init_greeting_bypass" if call_init_turn else "production_greeting_bypass",
+                },
+            }
+        elif missing_business_structure_answer:
             plan = {
                 "query_mode": "structured",
                 "direct_answer": missing_business_structure_answer,
@@ -5127,11 +5333,13 @@ def create_app() -> FastAPI:
                 "Auditor quality gate contract:\n" + bp_mode_auditor_prompt(body.message),
             ]
             plan["prompt"] = "\n\n".join(part for part in bp_prompt_parts if part).strip()
+        if is_production_chat_surface(body.surface) and _is_magic_mike_agent(agent):
+            plan["tool_plan"] = {"tool_id": None, "mode": "none", "reason": "production_consumer_tool_policy"}
         effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
         use_odoo_agentic = should_use_odoo_agentic(
             body=body,
             workflow_mode=workflow_mode,
-            odoo_ready=odoo_ready,
+            odoo_ready=False if is_production_chat_surface(body.surface) else odoo_ready,
             connection=connection,
             use_openai_responses_chain=use_openai_responses_chain,
         )
@@ -5225,7 +5433,8 @@ def create_app() -> FastAPI:
             )
         cache_key = None
         if (
-            use_approved_web
+            is_production_chat_surface(body.surface)
+            or use_approved_web
             or use_openai_responses_chain
             or str(tool_evidence.plan.get("mode") or "none") != "none"
             or use_odoo_agentic
@@ -5282,10 +5491,17 @@ def create_app() -> FastAPI:
             log_answer_prompt_compaction(trace_id=request.state.trace_id, package=primary_prompt)
             prompt_variants = unique_answer_prompt_variants(primary_prompt, retry_prompt, tertiary_prompt)
 
-        def _encode(payload: dict) -> str:
-            return f"data: {json.dumps(payload)}\n\n"
-
         def _stream():
+            public_presenter = PublicStreamPresenter(enabled=is_production_chat_surface(body.surface))
+
+            def _encode(payload: dict) -> str:
+                presented = public_presenter.present_event(payload)
+                if presented is None:
+                    return ""
+                if isinstance(presented, list):
+                    return "".join(f"data: {json.dumps(event)}\n\n" for event in presented)
+                return f"data: {json.dumps(presented)}\n\n"
+
             ran_stream_odoo_agentic = False
             answer_parts: list[str] = []
             successful_user_prompt: str | None = None

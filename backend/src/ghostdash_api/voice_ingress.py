@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import hashlib
+import asyncio
 import json
+import re
 import secrets
 import time
 from collections.abc import Iterator
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 import httpx
+import websockets
 from fastapi import HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -20,6 +23,7 @@ from .agent_memory import append_message, build_history_context, create_conversa
 from .approved_web import fetch_approved_web_context, get_tool_config, normalize_allowed_urls
 from .database import SessionLocal
 from .models import AgentConversationRecord, RuntimeProfileRecord, VoiceTurnRecord
+from .public_response_presenter import contains_forbidden_public_output
 from .runtime import resolve_llm_connection, stream_answer
 from .runtime_profiles import resolve_agent_runtime_profile, resolve_corpora
 from .settings import get_settings
@@ -35,6 +39,7 @@ VOICE_MODEL_ALIASES = frozenset({"ghostdash-default", "magic-mike", "mike"})
 ELEVENLABS_VOICES_ROUTE = "/agent/voice/voices"
 ELEVENLABS_PREVIEW_ROUTE = "/agent/voice/preview"
 ELEVENLABS_STREAM_ROUTE = "/agent/voice/stream"
+ELEVENLABS_TTS_STREAM_ROUTE = "/agent/voice/tts-stream"
 VOICE_FORBIDDEN_INPUT_PATTERNS = (
     "ignore previous instructions",
     "ignore all previous instructions",
@@ -78,6 +83,37 @@ class VoiceChatCompletionsRequest(BaseModel):
 class VoicePreviewRequest(BaseModel):
     voice_id: str = Field(min_length=1, max_length=128)
     text: str = Field(default="This is Magic Mike from Ride Electric.", min_length=1, max_length=300)
+    model_id: str = Field(default="eleven_flash_v2_5", min_length=1, max_length=64)
+    language_code: str = Field(default="en", min_length=1, max_length=16)
+    seed: int | None = Field(default=None, ge=0)
+    previous_text: str | None = Field(default=None, max_length=400)
+    next_text: str | None = Field(default=None, max_length=400)
+    apply_text_normalization: Literal["auto", "on", "off"] = "auto"
+    voice_settings: dict[str, Any] = Field(default_factory=lambda: {"stability": 0.5, "similarity_boost": 0.75, "style": 0.0, "use_speaker_boost": True, "speed": 1.0})
+    pronunciation_dictionary_locators: list[dict[str, str]] = Field(default_factory=list)
+    pronunciation_replacements: list[dict[str, str]] = Field(default_factory=list)
+
+
+def _normalize_voice_settings(value: dict[str, Any] | None) -> dict[str, Any]:
+    payload = dict(value or {})
+    return {
+        "stability": max(0.0, min(1.0, float(payload.get("stability", 0.5)))),
+        "similarity_boost": max(0.0, min(1.0, float(payload.get("similarity_boost", 0.75)))),
+        "style": max(0.0, min(1.0, float(payload.get("style", 0.0)))),
+        "use_speaker_boost": bool(payload.get("use_speaker_boost", True)),
+        "speed": max(0.7, min(1.2, float(payload.get("speed", 1.0)))),
+    }
+
+
+def _apply_pronunciation_replacements(text: str, replacements: list[dict[str, str]]) -> str:
+    output = text
+    for entry in replacements:
+        src = str(entry.get("key") or "").strip()
+        dst = str(entry.get("value") or "").strip()
+        if not src or not dst:
+            continue
+        output = re.sub(rf"\b{re.escape(src)}\b", dst, output, flags=re.IGNORECASE)
+    return output
 
 
 def _allowed_elevenlabs_voice_ids() -> list[str]:
@@ -87,6 +123,28 @@ def _allowed_elevenlabs_voice_ids() -> list[str]:
 
 def _elevenlabs_configured() -> bool:
     return bool((settings.elevenlabs_api_key or "").strip())
+
+
+def voice_provider_health() -> dict[str, Any]:
+    provider = str(settings.app_voice_stt_provider or "deepgram_primary").strip() or "deepgram_primary"
+    return {
+        "status": "ok",
+        "stt_provider": provider,
+        "stt": {
+            "deepgram_configured": bool(str(settings.deepgram_api_key or "").strip()),
+            "model": str(settings.deepgram_model or "nova-2"),
+            "endpointing_ms": int(settings.app_voice_stt_endpointing_ms),
+            "max_endpointing_ms": int(settings.app_voice_stt_max_endpointing_ms),
+            "min_utterance_chars": int(settings.app_voice_stt_min_utterance_chars),
+            "fallback": "browser_local",
+        },
+        "tts": {
+            "provider": "elevenlabs",
+            "configured": _elevenlabs_configured(),
+            "realtime_route": "/api/voice/elevenlabs/flash25/realtime",
+            "output_format": "pcm_24000",
+        },
+    }
 
 
 async def list_elevenlabs_voices(*, trace_id: str) -> dict[str, Any]:
@@ -154,23 +212,70 @@ async def list_elevenlabs_voices(*, trace_id: str) -> dict[str, Any]:
     }
 
 
-async def preview_elevenlabs_voice(*, body: VoicePreviewRequest, trace_id: str) -> dict[str, Any]:
+async def preview_elevenlabs_voice(*, body: VoicePreviewRequest, trace_id: str) -> Response:
     if not _elevenlabs_configured():
         raise HTTPException(503, "ElevenLabs is not configured")
     allowed_ids = set(_allowed_elevenlabs_voice_ids())
     if allowed_ids and body.voice_id not in allowed_ids:
         raise HTTPException(403, "voice_id is not allowlisted")
-    log_instant_event(
-        trace_id=trace_id,
-        service="agent-ingress",
-        route=ELEVENLABS_PREVIEW_ROUTE,
-        status="preview_not_implemented",
-        details={"voice_id": body.voice_id},
-    )
-    return {
-        "ok": False,
-        "message": "Voice preview is reserved for the server-side ElevenLabs audio implementation.",
-    }
+    start_ts = time.time()
+    error: str | None = None
+    request_text = _apply_pronunciation_replacements(body.text, body.pronunciation_replacements)
+    voice_settings = _normalize_voice_settings(body.voice_settings)
+    pronunciation_locators: list[dict[str, str]] = []
+    for locator in body.pronunciation_dictionary_locators:
+        pronunciation_dictionary_id = str(locator.get("pronunciation_dictionary_id") or "").strip()
+        version_id = str(locator.get("version_id") or "").strip()
+        if pronunciation_dictionary_id and version_id:
+            pronunciation_locators.append(
+                {
+                    "pronunciation_dictionary_id": pronunciation_dictionary_id,
+                    "version_id": version_id,
+                }
+            )
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{body.voice_id}",
+                headers={
+                    "xi-api-key": str(settings.elevenlabs_api_key),
+                    "accept": "audio/mpeg",
+                    "content-type": "application/json",
+                },
+                json={
+                    "text": request_text,
+                    "model_id": body.model_id,
+                    "language_code": body.language_code,
+                    "voice_settings": voice_settings,
+                    "seed": body.seed,
+                    "previous_text": body.previous_text,
+                    "next_text": body.next_text,
+                    "apply_text_normalization": body.apply_text_normalization,
+                    "pronunciation_dictionary_locators": pronunciation_locators,
+                },
+            )
+            response.raise_for_status()
+            audio = response.content
+    except Exception as exc:  # noqa: BLE001 - surfaced to UI as preview failure
+        error = repr(exc)
+        raise HTTPException(502, f"ElevenLabs TTS failed: {exc}") from exc
+    finally:
+        log_event(
+            trace_id=trace_id,
+            span_id=new_span_id(),
+            service="agent-ingress",
+            route=ELEVENLABS_PREVIEW_ROUTE,
+            start_ts=start_ts,
+            end_ts=time.time(),
+            status="error" if error else "ok",
+            error=error,
+            details={
+                "voice_id": body.voice_id,
+                "model_id": body.model_id,
+                "seed": body.seed,
+            },
+        )
+    return Response(content=audio, media_type="audio/mpeg")
 
 
 async def handle_voice_stream_websocket(websocket: WebSocket) -> None:
@@ -189,7 +294,10 @@ async def handle_voice_stream_websocket(websocket: WebSocket) -> None:
                     "message": "ElevenLabs realtime streaming is not configured on the server.",
                 }
             )
-            await websocket.close(code=1011)
+            try:
+                await websocket.receive_text()
+            except WebSocketDisconnect:
+                pass
             return
         await websocket.send_json(
             {
@@ -215,6 +323,161 @@ async def handle_voice_stream_websocket(websocket: WebSocket) -> None:
             end_ts=time.time(),
             status=status,
             error=error,
+        )
+
+
+async def handle_tts_stream_websocket(websocket: WebSocket) -> None:
+    trace_id = websocket.headers.get("x-trace-id") or f"tts-ws-{int(time.time())}"
+    voice_id = (websocket.query_params.get("voice_id") or settings.elevenlabs_default_voice_id or "").strip()
+    model_id = (websocket.query_params.get("model_id") or "eleven_flash_v2_5").strip() or "eleven_flash_v2_5"
+    language_code = (websocket.query_params.get("language_code") or "").strip() or None
+    apply_text_normalization = (websocket.query_params.get("apply_text_normalization") or "auto").strip().lower()
+    if apply_text_normalization not in {"auto", "on", "off"}:
+        apply_text_normalization = "auto"
+    previous_text = (websocket.query_params.get("previous_text") or "").strip() or None
+    next_text = (websocket.query_params.get("next_text") or "").strip() or None
+    seed: int | None = None
+    if websocket.query_params.get("seed") is not None:
+        try:
+            seed = max(0, int(str(websocket.query_params.get("seed") or "0").strip()))
+        except Exception:
+            seed = None
+
+    def _to_float(name: str, default: float, lower: float, upper: float) -> float:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        try:
+            return max(lower, min(upper, float(str(raw).strip())))
+        except Exception:
+            return default
+
+    def _to_bool(name: str, default: bool) -> bool:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+    voice_settings = {
+        "stability": _to_float("stability", 0.5, 0.0, 1.0),
+        "similarity_boost": _to_float("similarity_boost", 0.75, 0.0, 1.0),
+        "style": _to_float("style", 0.0, 0.0, 1.0),
+        "use_speaker_boost": _to_bool("use_speaker_boost", True),
+        "speed": _to_float("speed", 1.0, 0.7, 1.2),
+    }
+    await websocket.accept()
+    start_ts = time.time()
+    status = "closed"
+    error: str | None = None
+    if not _elevenlabs_configured():
+        await websocket.send_json({"type": "error", "message": "ElevenLabs is not configured."})
+        try:
+            await websocket.receive_text()
+        except WebSocketDisconnect:
+            pass
+        return
+    allowed_ids = set(_allowed_elevenlabs_voice_ids())
+    if allowed_ids and voice_id not in allowed_ids:
+        await websocket.send_json({"type": "error", "message": "voice_id is not allowlisted."})
+        await websocket.close(code=1008)
+        return
+    if not voice_id:
+        await websocket.send_json({"type": "error", "message": "voice_id is required."})
+        await websocket.close(code=1008)
+        return
+
+    elevenlabs_url = (
+        f"wss://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream-input"
+        f"?model_id={model_id}&output_format=mp3_44100_128&optimize_streaming_latency=3"
+    )
+    try:
+        async with websockets.connect(elevenlabs_url, max_size=8 * 1024 * 1024) as upstream:
+            init_payload: dict[str, Any] = {
+                "text": " ",
+                "voice_settings": voice_settings,
+                "xi_api_key": settings.elevenlabs_api_key,
+                "apply_text_normalization": apply_text_normalization,
+            }
+            if language_code:
+                init_payload["language_code"] = language_code
+            if seed is not None:
+                init_payload["seed"] = seed
+            if previous_text:
+                init_payload["previous_text"] = previous_text
+            if next_text:
+                init_payload["next_text"] = next_text
+            await upstream.send(json.dumps(init_payload))
+            await websocket.send_json({"type": "status", "status": "connected", "voice_id": voice_id})
+
+            async def _forward_until_idle(*, timeout_s: float, stop_on_final: bool) -> bool:
+                saw_final = False
+                while True:
+                    try:
+                        raw = await asyncio.wait_for(upstream.recv(), timeout=timeout_s)
+                    except TimeoutError:
+                        break
+                    payload = json.loads(raw)
+                    audio = payload.get("audio")
+                    if audio:
+                        await websocket.send_json({"type": "audio", "audio": audio})
+                    if payload.get("isFinal"):
+                        saw_final = True
+                        if stop_on_final:
+                            break
+                return saw_final
+
+            while True:
+                inbound = await websocket.receive_json()
+                kind = str(inbound.get("type") or "").strip()
+                if kind == "text":
+                    text = str(inbound.get("text") or "")
+                    if not text:
+                        continue
+                    text_payload: dict[str, Any] = {"text": text, "try_trigger_generation": True}
+                    if previous_text:
+                        text_payload["previous_text"] = previous_text
+                    if next_text:
+                        text_payload["next_text"] = next_text
+                    await upstream.send(json.dumps(text_payload))
+                    await _forward_until_idle(timeout_s=0.07, stop_on_final=False)
+                elif kind == "flush":
+                    await upstream.send(json.dumps({"flush": True, "text": " "}))
+                    await _forward_until_idle(timeout_s=0.2, stop_on_final=False)
+                elif kind == "end":
+                    await upstream.send(json.dumps({"text": ""}))
+                    await _forward_until_idle(timeout_s=1.0, stop_on_final=True)
+                    await websocket.send_json({"type": "done"})
+                    status = "completed"
+                    await websocket.close(code=1000)
+                    return
+                elif kind == "stop":
+                    status = "stopped"
+                    try:
+                        await upstream.send(json.dumps({"flush": True, "text": ""}))
+                    except Exception:
+                        pass
+                    await websocket.close(code=1000)
+                    return
+    except WebSocketDisconnect:
+        status = "client_disconnected"
+    except Exception as exc:  # noqa: BLE001 - terminal state must be logged
+        status = "failed"
+        error = repr(exc)
+        try:
+            await websocket.send_json({"type": "error", "message": str(exc)})
+        except Exception:
+            pass
+    finally:
+        log_event(
+            trace_id=trace_id,
+            span_id=new_span_id(),
+            service="agent-ingress",
+            route=ELEVENLABS_TTS_STREAM_ROUTE,
+            start_ts=start_ts,
+            end_ts=time.time(),
+            status=status,
+            error=error,
+            details={"voice_id": voice_id, "model_id": model_id},
         )
 
 
@@ -429,7 +692,25 @@ def _stream_guard_blocks(text: str) -> str | None:
     for pattern in VOICE_FORBIDDEN_OUTPUT_PATTERNS:
         if pattern in lowered:
             return pattern
+    if contains_forbidden_public_output(text):
+        return "public_output_guard"
     return None
+
+
+def _voice_route_decision(**extra: Any) -> dict[str, Any]:
+    return {
+        "route_type": "direct",
+        "rationale_summary": "Voice turn handled by the GhostDASH voice ingress path.",
+        "document_intent": False,
+        "tool_expectations": {
+            "surface": "voice",
+            "tools_required_for_claims": True,
+        },
+        "recommended_workers": [],
+        "suggested_specialist_template": None,
+        "llm_execution": [],
+        **extra,
+    }
 
 
 def _voice_intent(message: str) -> str:
@@ -729,7 +1010,7 @@ async def handle_voice_chat_completions(
             api_mode="chat_completions",
             conversation_mode="quick",
             workflow_mode="standard",
-            route_decision={"surface": "voice", "voice_turn_id": voice_turn.id},
+            route_decision=_voice_route_decision(voice_turn_id=voice_turn.id),
         )
         session.commit()
     except IntegrityError as exc:
@@ -761,7 +1042,7 @@ async def handle_voice_chat_completions(
             answer=guard_text or VOICE_PRE_GUARD_BLOCK_TEXT,
             model=runtime_model or body.model,
             trace_id=trace_id,
-            route_decision={"surface": "voice", "voice_turn_id": voice_turn.id, "guard_blocked": True},
+            route_decision=_voice_route_decision(voice_turn_id=voice_turn.id, guard_blocked=True),
             audit_patch={"pre_guard": {"allowed": False, "category": guard_category}},
         )
 
@@ -820,7 +1101,7 @@ async def handle_voice_chat_completions(
             answer="I am having trouble checking that right now. Please try again in a moment.",
             model=runtime_model or body.model,
             trace_id=trace_id,
-            route_decision={"surface": "voice", "voice_turn_id": voice_turn.id, "terminal_status": "failed"},
+            route_decision=_voice_route_decision(voice_turn_id=voice_turn.id, terminal_status="failed"),
             error_message=repr(exc),
             audit_patch={"setup_error": repr(exc)},
         )
@@ -1013,13 +1294,12 @@ async def handle_voice_chat_completions(
                             api_mode="chat_completions",
                             conversation_mode="quick",
                             workflow_mode="standard",
-                            route_decision={
-                                "surface": "voice",
-                                "voice_turn_id": row.id,
-                                "terminal_status": terminal_status,
-                                "cache_hit": False,
-                                "model_id": active_model,
-                            },
+                            route_decision=_voice_route_decision(
+                                voice_turn_id=row.id,
+                                terminal_status=terminal_status,
+                                cache_hit=False,
+                                model_id=active_model,
+                            ),
                         )
                     final_session.commit()
             log_event(

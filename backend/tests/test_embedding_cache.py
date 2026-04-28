@@ -197,3 +197,35 @@ def test_build_llm_adds_internal_header_for_rideai_gateway(monkeypatch):
     assert captured["api_base"] == "https://one.rideai.com.au/api/llamaindex/v1"
     assert captured["default_headers"] == {"X-Internal-Key": "change_me_llamaindex_internal_key"}
     assert captured["api_key"] == "change_me_llamaindex_internal_key"
+
+
+def test_get_embed_model_adds_internal_header_for_rideai_embedding_gateway(monkeypatch):
+    captured: dict[str, object] = {}
+
+    class FakeOpenAIEmbedding:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setattr(runtime, "OpenAIEmbedding", FakeOpenAIEmbedding)
+    monkeypatch.setattr(runtime.settings, "app_embedding_batch_size", 8)
+    monkeypatch.setattr(
+        runtime.settings,
+        "openai_embedding_base_url",
+        "https://one.rideai.com.au/api/llamaindex/v1",
+    )
+    monkeypatch.setattr(runtime.settings, "openai_embedding_api_key", "local-tei")
+
+    connection = runtime.ProviderConnectionConfig(
+        provider="openai",
+        label="RideAI",
+        api_key="change_me_llamaindex_internal_key",
+        base_url="https://one.rideai.com.au/api/llamaindex/v1/chat/completions",
+    )
+
+    runtime._get_embed_model(connection, embedding_model="openai/intfloat/multilingual-e5-large-instruct")
+
+    assert captured["api_base"] == "https://one.rideai.com.au/api/llamaindex/v1"
+    assert captured["default_headers"] == {"X-Internal-Key": "change_me_llamaindex_internal_key"}
+    assert captured["api_key"] == "change_me_llamaindex_internal_key"
+    assert captured["model"] == runtime.OPENAI_EMBEDDING_VALIDATION_MODEL
+    assert captured["model_name"] == "intfloat/multilingual-e5-large-instruct"

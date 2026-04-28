@@ -164,7 +164,8 @@ def magic_mike_runtime_profile_payload() -> dict[str, Any]:
     payload["llm_config_json"].update(
         {
             "provider": "openai",
-            "model_id": "openai/gpt-5.5",
+            # Keep the public voice agent on the deployed default until GPT-5.5 is present in the provider catalog.
+            "model_id": settings.app_default_chat_model,
             "temperature": 0.1,
             "max_tokens": 120,
             "api_mode": "chat_completions",
@@ -173,8 +174,8 @@ def magic_mike_runtime_profile_payload() -> dict[str, Any]:
                 "trigger_mode": "on_prompt_overflow",
                 "prompt_token_soft_limit": 1800,
                 "fallback_connection_id": None,
-                "fallback_provider": "gemini",
-                "fallback_model_id": "gemini-3-pro",
+                "fallback_provider": "openai",
+                "fallback_model_id": settings.app_default_chat_model,
                 "include_primary_answer_context": True,
             },
         }
@@ -188,11 +189,20 @@ def magic_mike_runtime_profile_payload() -> dict[str, Any]:
             "voice_rag_default": "off",
             "voice_rag_allowed_for": ["product_question", "legal_question", "policy_question"],
             "voice_truth_source_order": ["rag", "approved_ride_electric_web"],
+            "agent_category": "consumer_customer",
+            "route_mode": "production_chat",
+            "public_presenter_required": True,
+            "retail_output_guard_required": True,
+            "diagnostics_visible": False,
             "tools_required_for_claims": True,
             "handoff_requires_contact_details": True,
             "competitor_praise_blocked": True,
             "legal_answers_source_required": True,
             "business_structure_required": False,
+            "owner_operator_questionnaire": "",
+            "owner_operator_questionnaire_compact": "",
+            "business_structure_context": "",
+            "business_structure_context_compact": "",
             "insufficient_context_behavior": "Say briefly that Ride Electric approved product knowledge does not contain that detail and offer team follow-up.",
         }
     )
@@ -217,6 +227,8 @@ def magic_mike_runtime_profile_payload() -> dict[str, Any]:
     )
     tools = []
     for tool in deepcopy(payload["tool_policy_config_json"]["tools"]):
+        if tool["id"] == "odoo_primary":
+            tool["enabled"] = False
         if tool["id"] == "kb":
             tool["enabled"] = True
         if tool["id"] == "web":

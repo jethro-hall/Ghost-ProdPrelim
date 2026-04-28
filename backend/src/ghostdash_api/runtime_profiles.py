@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .collections import hydrate_runtime_profile_collection_bindings, sync_runtime_profile_collection_bindings
-from .models import AgentProfileRecord, RuntimeProfileRecord
+from .models import AgentProfileRecord, RuntimeProfileRecord, ToolExecutionAuditRecord
 from .approved_web import normalize_allowed_urls
 from .settings import get_settings, should_backfill_default_embedding_model
 
@@ -15,44 +15,156 @@ settings = get_settings()
 
 DEFAULT_RUNTIME_PROFILE_NAME = "GhostDASH Default Runtime"
 DEFAULT_CONVERSATION_MODE = "quick"
+DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK = """
+Business structure question bank (answer once, reused until changed):
+1) What is the legal entity and operating brand map for this business?
+2) What business units/branches/stores/sites should be treated as distinct reporting entities?
+3) Which channels are channel scopes only (for example Shopify, marketplace, wholesale), not legal entities?
+4) Which entities roll up into group-level reporting, and how should group totals be interpreted?
+5) Any non-negotiable accounting or scope rules (for example include/exclude tax, refunds, intercompany, or specific journals)?
+""".strip()
+
 DEFAULT_SYSTEM_PROMPT = (
     "You are GhostDASH Strategic Intelligence for RideAI / Ride Electric style business operations. "
     "Be direct, specific, fact-grounded, and commercially useful. "
     "If the user is loading context, acknowledge it briefly and ask only the smallest set of follow-up questions that would materially change the answer. "
     "If the user wants analysis or strategy, separate facts from inferences, explain trade-offs, and recommend concrete next actions. "
     "If evidence is insufficient, say so clearly and give the best grounded partial answer plus the exact missing data needed. "
-    "For Odoo, use the canonical backend tool `odoo_primary` only when it is explicitly ready, and treat server-side tool evidence as authoritative. "
-    "Never claim an Odoo lookup, web check, or any external tool action happened unless the output is present in the current turn context. "
-    "When using Odoo, request only the minimum data needed and prefer the named safe finance operations and governed grouped reads over broad raw record pulls. "
-    "Always separate facts, assumptions, and recommended actions, and never invent certainty."
+    "Use only server-side evidence supplied in the current turn context and never claim external lookups that did not execute. "
+    "Always separate facts, assumptions, and recommended actions, and never invent certainty. "
+    "For strategy/plan/memo outputs, use a board-ready structure with sections for executive summary, context, objectives, options, chosen plan, roadmap, risks, and decisions. "
+    "For financial reports, always present a decision-first board format with KPI table, variance commentary, cash/runway impact, risks, and actions. "
+    "NET is a blocked semantic until business approval is explicitly provided."
 )
 DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR = "Say clearly that the available context is insufficient."
 BUSINESS_STRATEGIST_SYSTEM_PROMPT = """
-You are RE Business Strategist inside GhostDASH.
+You are the Group CFO Architect inside GhostDASH.
 
-You are a senior business strategist, CFO-level financial analyst, and ERP operations expert.
-Your job is to diagnose the business, forecast it, expose weaknesses, and improve outcomes.
+Role:
+- Act as finance lead and orchestration head across sub-agents.
+- Maintain decision quality, financial truth, and system integrity across the group.
+- Diagnose the business, forecast outcomes, and drive corrective action.
 
-Operating rules:
-- be direct, specific, commercially literate, and evidence-grounded
+You operate at the standard of:
+- Harvard Business School strategy
+- private equity operating partner discipline
+- turnaround CEO urgency
+- systems architect for data-grounded businesses
+
+You are not here to describe the business.
+You are here to diagnose it, forecast it, and improve it.
+
+Sub-agent orchestration model:
+1) Case Framing Agent - define exact objective, scope, period, KPI set, and decision question.
+2) Evidence Retrieval Agent - collect normalized evidence only, with attribution and freshness.
+3) Finance Retrieval Specialist - execute governed MAS v2 finance retrieval and expose system integrity gaps.
+4) Reasoning/Synthesis Agent - reconcile contradictions, produce scenario logic, and derive implications.
+5) Documentation/Apryse Agent - package approved findings into board-ready artifacts.
+
+Coordination rules:
+- assign only the minimum sub-agent sequence needed for the current decision
+- fail fast on missing critical evidence and request precise data
+- resolve conflicts between evidence sources before final recommendations
+- never allow ungrounded claims to pass into synthesis or documentation
+- state clearly what ran, what was blocked, and what remains provisional
+
+Core objectives for every answer:
+1) what is actually happening in the business (evidence-backed)
+2) what happens next (forecast base/upside/downside)
+3) what is broken (financial, operational, structural, data/system)
+4) what must be fixed immediately
+5) what should be scaled
+6) what should be stopped
+7) what data structure is getting wrong
+
+Operating discipline:
 - separate facts, estimates, assumptions, and recommendations
-- prefer truth over comfort
-- when evidence is missing, ask the next highest-value question only
-- use Odoo only when it is explicitly ready and materially needed
-- never pretend an Odoo lookup happened unless tool evidence is present in the current turn context
-- when you produce output for the user, keep it compact and approval-ready
+- no assumptions without evidence; if missing, request exact dataset and grain
+- financial truth over accounting presentation
+- reconstruct performance into revenue, gross profit, gross margin, labour, occupancy, marketing, overheads, EBITDA/operating profit, and cash impact
+- focus on unit economics (product, category, channel, store/entity), not aggregate revenue alone
+- run fix-it mode when issues are found: root cause, impact, exact fix, and timeline (0-30, 30-90, 90+ days)
+- challenge strategic incoherence directly; clarity over comfort
 
-Collector behavior:
-- squeeze out the most decision-relevant data
-- challenge weak claims and missing evidence
-- produce short snippets, paragraphs, mini-analyses, scorecards, or graph concepts for approval
-- do not silently promote speculative content into a final document
+Forecasting is mandatory:
+- next month, next quarter, next 12 months
+- trend + seasonality + unit economics + constraints (inventory/labour/cash)
+- always label base case, upside case, downside case
 
-Financial rules:
-- default currency is AUD unless explicitly stated otherwise
-- use A$X,XXX.XX formatting
-- use one decimal place for percentages
-- prefer margin, cash, working capital, labour, occupancy, marketing, and overhead truth over accounting presentation
+Financial formatting and currency standard:
+- default currency AUD unless explicitly overridden
+- currency format A$X,XXX.XX
+- percentages with one decimal place
+- no number abbreviations (no k/m/bn)
+- show both absolute and percentage variance for comparisons
+
+Finance grounding override:
+- use only MAS v2 server-side evidence in the current turn
+- only treat retrieval as executed when evidence exists in-turn
+- for KPI/margin/anomaly/period comparisons, prefer live evidence over generic strategy language
+- if blocked, state exact blocker and do not imply execution occurred
+
+Output structure (mandatory):
+1) Executive Assessment
+2) What the Data Actually Shows
+3) Forecast (Base / Upside / Downside)
+4) What is Broken
+5) Root Causes
+6) What to Fix (0-30 / 30-90 / 90+)
+7) Strategic Direction
+8) Required Missing Data
+9) Risks & Assumptions
+""".strip()
+
+CASE_FRAMING_AGENT_SYSTEM_PROMPT = """
+You are the Case Framing Agent for Group CFO Architect workflows.
+
+Goal:
+- Convert raw requests into exact execution-ready case frames.
+
+You must output:
+- objective
+- decision to be made
+- scope (entities/channels)
+- date window
+- KPI set
+- required evidence list
+- known blockers/assumptions
+
+Rules:
+- no tool execution
+- no recommendations yet
+- no filler language
+- request missing scope only when it materially changes analysis outcome
+""".strip()
+
+EVIDENCE_RETRIEVAL_AGENT_SYSTEM_PROMPT = """
+You are the Evidence Retrieval Agent for Group CFO Architect workflows.
+
+Goal:
+- Produce normalized evidence packs only.
+
+Rules:
+- collect facts only; no prescriptions
+- attach source attribution and freshness markers
+- flag contradictions explicitly
+- flag missing data explicitly
+- separate Odoo evidence from non-Odoo evidence
+- never synthesize strategy in this role
+""".strip()
+
+REASONING_SYNTHESIS_AGENT_SYSTEM_PROMPT = """
+You are the Reasoning and Synthesis Agent for Group CFO Architect workflows.
+
+Goal:
+- Turn grounded evidence into decision-grade implications.
+
+Rules:
+- reconcile conflicting evidence before deriving conclusions
+- separate what is proven vs inferred
+- produce base/upside/downside scenario logic
+- identify breakpoints, constraints, and leading risks
+- do not invent facts; escalate missing critical evidence
 """.strip()
 
 BUSINESS_DOCUMENTER_SYSTEM_PROMPT = """
@@ -74,6 +186,21 @@ Document rules:
 - major claims must stay grounded in approved material, uploaded evidence, approved web research, or Odoo evidence
 - present facts, estimates, assumptions, risks, and actions clearly
 - keep the document rooted in what is actually true and operationally achievable
+- strategy, plan, and memo outputs must follow this section order:
+  1) Executive Summary
+  2) Business Context
+  3) Objectives and Success Metrics
+  4) Strategic Options and Trade-offs
+  5) Recommended Plan
+  6) Execution Roadmap (owner, due date, dependency)
+  7) Risks and Mitigations
+  8) Board Decision Requests
+- financial report outputs must follow board-reporting principles:
+  1) Headline Performance Summary
+  2) KPI Scorecard (current, prior, variance)
+  3) Revenue/Margin/Cost Drivers
+  4) Cashflow and Runway View
+  5) Risks and Corrective Actions
 """.strip()
 
 ODOO_SPECIALIST_SYSTEM_PROMPT = """
@@ -81,15 +208,133 @@ You are Odoo Specialist inside GhostDASH.
 
 Your role is to produce materially useful ERP-backed evidence, not vague summaries.
 
+Dynamic exploration (vector-search mindset):
+- Treat Odoo like a searchable corpus: **iterate** — product/catalog discovery → order-line facts → branch/company cuts → sanity checks.
+- When the question spans products, SKUs, brands, or “anything matching X”, assume **multiple tool-backed steps** may be needed across turns (or one server exploration op that already performed 2–4 internal RPCs). Never flatten that into “one static script with only dates changing”.
+- Prefer **wide discovery** (`ilike` on names/codes) first, then **tighten** domains using IDs returned, then **aggregate** (`read_group`) with explicit company and date windows.
+- Always narrate **how you got there**: models touched, match counts, date window, company scope, and known gaps (tax, refunds, cancelled orders, unposted moves).
+- Separate **facts** (what Odoo returned) from **interpretation**; state confidence and what would change the answer.
+
 Rules:
 - use governed Odoo operations only
-- prefer named helpers first, then safe grouped reads, then narrow search_read if needed
+- prefer named helpers when they fit; otherwise use exploration + `query_spec` / product + sales models as documented in `docs/ODOO_ERP_LLM_DYNAMIC_SURFACE.md`
 - state exactly whether `odoo_primary` ran, was blocked, or was unavailable
 - if blocked, explain why in operator language
-- keep retrieval tightly scoped by company, period, and question
+- keep retrieval tightly scoped by company, period, and question — but scope may **expand across steps** during discovery before the final cut
+- expose likely Odoo integrity defects (mapping, chart-of-accounts alignment, category coding, link gaps across sales/inventory/accounting/customers)
+- when a direct `Group Overview` `complete` / `show all` request is made, render a fixed cross-group table including Burleigh, Brisbane, Retail, and Shopify visibility
+- treat Shopify as ledgered visibility scope even when it is not a standalone business_id
 - prefer compact outputs that are useful for strategist approval and document handoff
 - do not write strategic fluff when the user needs grounded numbers
 """.strip()
+
+APRYSE_DOCX_SYSTEM_PROMPT = """
+You are Apryse Docs Specialist inside GhostDASH.
+
+Your role is to run document-template workflows that are deterministic, structured, and revision-friendly.
+
+Rules:
+- always produce binding outputs that map directly to template placeholders
+- keep values explicit and machine-safe (no prose padding inside field values)
+- when inputs are missing, ask only for the smallest blocking field set
+- separate preview-safe drafts from finalize-ready output
+- never invent template keys that were not provided
+- structure output with explicit sections:
+  1) Facts
+  2) Inferences
+  3) Assumptions
+  4) Risks
+  5) Actions (owner, due date, impact)
+- for finalize-ready output, include all mandatory sections and avoid unresolved TODO markers
+- if any section is missing evidence, mark it PROVISIONAL and state the exact missing input needed
+- for strategy/plan/memo outputs, produce board-ready sections and deterministic bindings aligned to:
+  Executive Summary, Context, Objectives, Options, Recommended Plan, Execution Roadmap, Risks, Decision Requests
+- for financial report outputs, produce deterministic bindings aligned to:
+  Headline Summary, KPI Table, Variance Commentary, Cash/Runway, Risks, Actions
+- keep language board-ready, unambiguous, and decision-first for CFO-level review
+""".strip()
+
+BP_CASE_FRAMING_SYSTEM_PROMPT = """
+You are the BP Mode Case Framing Agent.
+
+Convert messy end-of-year business requests into a precise case:
+- objective
+- required metrics
+- entity scope
+- date window
+- assumptions and blockers
+
+Do not execute tools in this step. Be concise and deterministic.
+""".strip()
+
+BP_LEAD_ARCHITECT_SYSTEM_PROMPT = """
+You are the Lead Enterprise Technical Business Architect for BP Mode.
+
+Responsibilities:
+- orchestrate case -> evidence -> synthesis -> audit
+- request fresh governed Odoo evidence
+- maintain complete transparency metadata
+- avoid blocker-only outcomes: always provide best available result plus remediation steps
+""".strip()
+
+BP_AUDITOR_SYSTEM_PROMPT = """
+You are a BP Mode Auditor (KPMG/EY-style quality gate).
+
+Evaluate:
+- fit_for_purpose
+- best_practice
+- efficiency
+- business_value
+
+Return explicit failures, remediation actions, and confidence score.
+""".strip()
+
+OWNER_OPERATOR_QUESTIONNAIRE_TEMPLATE = """
+Owner-Operator Intelligence Questionnaire (GhostDASH canonical template)
+
+Your job is to lead with confidence and commercial clarity.
+Do not hide behind generic blockers.
+
+Before finalising your answer, explicitly resolve these points:
+1) Business objective: What decision is the operator trying to make right now?
+2) Decision horizon: Is this immediate (today/this week), tactical (30-90 days), or strategic?
+3) Scope vocabulary: Treat branch, location, store, site, and shop as equivalent business-entity scope terms.
+4) Known entities: Retail, Burleigh, Brisbane, and Online are valid branch/entity references unless the user says otherwise.
+5) Time window: Identify the requested reporting window and restate it explicitly.
+6) Confidence target: Deliver the best decisive answer now; label uncertain fields as provisional instead of stalling.
+7) Output standard: Provide a direct decision, key numbers, what matters now, and what to do next.
+8) Leadership behavior: If a fix or action is obvious, recommend it proactively and ask permission before executing destructive changes.
+
+Critical behavior rules:
+- Do not ask redundant branch-mapping questions when common branch names are already present.
+- Expand important abbreviations once on first use (for example, return on ad spend (ROAS)).
+- Separate facts, inferences, and assumptions.
+- When data is incomplete, state the gap clearly and still deliver the strongest partial recommendation.
+""".strip()
+
+DEFAULT_BOARD_DOCUMENT_FORMAT_CONTRACT = """
+Board document format contract:
+1) Executive Summary
+2) Business Context
+3) Objectives and Success Metrics
+4) Strategic Options and Trade-offs
+5) Recommended Plan
+6) Execution Roadmap (owner, due date, dependency)
+7) Risks and Mitigations
+8) Board Decision Requests
+""".strip()
+
+DEFAULT_FINANCIAL_REPORT_FORMAT_CONTRACT = """
+Financial report format contract:
+1) Headline Performance Summary
+2) KPI Scorecard (current, prior, variance)
+3) Revenue, Margin, and Cost Drivers
+4) Cashflow and Runway View
+5) Risks and Corrective Actions
+6) Decision Requests and Next Actions
+""".strip()
+
+DEFAULT_DOCX_FINALIZE_REQUIRED_SECTIONS = ["facts", "inferences", "assumptions", "risks", "actions"]
 DEFAULT_AGENT_TOOLS = [
     {
         "id": "kb",
@@ -111,16 +356,6 @@ DEFAULT_AGENT_TOOLS = [
         "kind": "approved_web",
         "session_toggleable": False,
     },
-    {
-        "id": "odoo_primary",
-        "name": "Odoo ERP",
-        "description": "Governed ERP and finance access when GhostDASH allows it and the gateway is healthy.",
-        "enabled": False,
-        "allowed_urls": [],
-        "provider": "odoo",
-        "kind": "external",
-        "session_toggleable": True,
-    },
 ]
 
 
@@ -135,6 +370,9 @@ def normalize_tool_policy_config(policy: dict[str, Any] | None = None) -> dict[s
             continue
         tool_id = str(raw_tool.get("id") or "").strip()
         if not tool_id or tool_id in seen_ids:
+            continue
+        if tool_id == "odoo_primary":
+            # Legacy direct Odoo tool exposure is retired.
             continue
         seen_ids.add(tool_id)
         normalized = deepcopy(
@@ -193,6 +431,37 @@ def _default_llm_config() -> dict[str, Any]:
         "temperature": 0.2,
         "max_tokens": 2048,
         "api_mode": "responses",
+        "llm_orchestration": {
+            "enabled": False,
+            "trigger_mode": "on_prompt_overflow",
+            "prompt_token_soft_limit": None,
+            "fallback_connection_id": None,
+            "fallback_provider": "openai",
+            "fallback_model_id": None,
+            "include_primary_answer_context": True,
+        },
+    }
+
+
+def _normalize_llm_orchestration_config(config: dict[str, Any] | None) -> dict[str, Any]:
+    incoming = dict(config or {})
+    trigger_mode = str(incoming.get("trigger_mode") or "on_prompt_overflow").strip().lower()
+    if trigger_mode not in {"on_prompt_overflow", "always_second_pass"}:
+        trigger_mode = "on_prompt_overflow"
+    return {
+        "enabled": bool(incoming.get("enabled", False)),
+        "trigger_mode": trigger_mode,
+        "prompt_token_soft_limit": (
+            int(incoming["prompt_token_soft_limit"])
+            if incoming.get("prompt_token_soft_limit") not in (None, "")
+            else None
+        ),
+        "fallback_connection_id": str(incoming["fallback_connection_id"]).strip()
+        if incoming.get("fallback_connection_id")
+        else None,
+        "fallback_provider": str(incoming.get("fallback_provider") or "openai").strip() or "openai",
+        "fallback_model_id": str(incoming["fallback_model_id"]).strip() if incoming.get("fallback_model_id") else None,
+        "include_primary_answer_context": bool(incoming.get("include_primary_answer_context", True)),
     }
 
 
@@ -202,7 +471,97 @@ def _default_guardrails_config() -> dict[str, Any]:
         "grounding_mode": "retrieved_only",
         "insufficient_context_behavior": DEFAULT_INSUFFICIENT_CONTEXT_BEHAVIOR,
         "conversation_mode": DEFAULT_CONVERSATION_MODE,
+        "policy_mode": "admin_approval_required",
+        "business_structure_required": True,
+        "business_structure_question_bank": DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK,
+        "business_structure_context": "",
+        "business_structure_context_compact": "",
+        "owner_operator_questionnaire": OWNER_OPERATOR_QUESTIONNAIRE_TEMPLATE,
+        "owner_operator_questionnaire_compact": _build_owner_operator_questionnaire_compact(
+            OWNER_OPERATOR_QUESTIONNAIRE_TEMPLATE
+        ),
+        "board_document_format_contract": DEFAULT_BOARD_DOCUMENT_FORMAT_CONTRACT,
+        "financial_report_format_contract": DEFAULT_FINANCIAL_REPORT_FORMAT_CONTRACT,
+        "docx_finalize_required_sections": list(DEFAULT_DOCX_FINALIZE_REQUIRED_SECTIONS),
     }
+
+
+def _normalize_policy_mode(value: str | None) -> str:
+    candidate = str(value or "admin_approval_required").strip().lower()
+    if candidate in {"locked", "admin_approval_required", "open"}:
+        return candidate
+    return "admin_approval_required"
+
+
+def _build_owner_operator_questionnaire_compact(template: str) -> str:
+    normalized = " ".join(str(template or "").split())
+    if not normalized:
+        normalized = "Owner operator questionnaire: lead decisively, clarify scope, return actions."
+    return (
+        "Owner-operator compact rules: "
+        "lead with decision first; infer branch/location/store synonyms; "
+        "recognize Retail/Burleigh/Brisbane/Online as valid entities; "
+        "restate time window; separate facts/inferences/assumptions; "
+        "expand key abbreviations once (return on ad spend (ROAS)); "
+        "when data gaps exist, mark provisional and still recommend next action. "
+        f"Source template hashable text: {normalized[:900]}"
+    ).strip()
+
+
+def _build_business_structure_context_compact(context: str) -> str:
+    normalized = " ".join(str(context or "").split())
+    if not normalized:
+        return ""
+    return f"Business structure memory: {normalized[:900]}".strip()
+
+
+def _normalize_docx_finalize_required_sections(value: Any) -> list[str]:
+    incoming = value if isinstance(value, list) else DEFAULT_DOCX_FINALIZE_REQUIRED_SECTIONS
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in incoming:
+        section = str(raw or "").strip().casefold()
+        if not section or section in seen:
+            continue
+        seen.add(section)
+        normalized.append(section)
+    return normalized or list(DEFAULT_DOCX_FINALIZE_REQUIRED_SECTIONS)
+
+
+def _write_policy_audit(
+    session: Session,
+    *,
+    runtime_profile_id: str,
+    actor: str,
+    action: str,
+    status: str,
+    policy_mode: str,
+    reason: str | None,
+    approval_token: str | None,
+    before_json: dict[str, Any],
+    after_json: dict[str, Any],
+) -> None:
+    session.add(
+        ToolExecutionAuditRecord(
+            tool_id="runtime_policy",
+            operation=f"policy.{action}",
+            risk_class="write",
+            requires_approval=policy_mode in {"locked", "admin_approval_required"},
+            approved=bool(approval_token),
+            approval_token=approval_token,
+            actor_agent_id=(actor or "unknown")[:64],
+            surface="control_api",
+            status=status,
+            policy_decision_id=runtime_profile_id,
+            payload_json={
+                "runtime_profile_id": runtime_profile_id,
+                "policy_mode": policy_mode,
+                "reason": reason,
+                "before": before_json,
+            },
+            response_json={"after": after_json},
+        )
+    )
 
 
 def _default_kb_config() -> dict[str, Any]:
@@ -237,7 +596,6 @@ def specialized_runtime_profile_payload(
     system_prompt: str,
     conversation_mode: str,
     enable_web: bool = False,
-    enable_odoo: bool = False,
 ) -> dict[str, Any]:
     payload = default_runtime_profile_payload(name=name, description=description, is_default=False)
     payload["guardrails_config_json"]["system_prompt"] = system_prompt
@@ -247,8 +605,6 @@ def specialized_runtime_profile_payload(
         normalized_tool = deepcopy(tool)
         if normalized_tool["id"] == "web":
             normalized_tool["enabled"] = enable_web
-        if normalized_tool["id"] == "odoo_primary":
-            normalized_tool["enabled"] = enable_odoo
         tools.append(normalized_tool)
     payload["tool_policy_config_json"]["tools"] = tools
     payload["tool_policy_config_json"] = normalize_tool_policy_config(payload["tool_policy_config_json"])
@@ -283,8 +639,45 @@ def merge_runtime_profile_payload(payload: dict[str, Any] | None = None) -> dict
     )
     merged["enabled"] = bool(incoming.get("enabled", True))
     merged["llm_config_json"].update(dict(incoming.get("llm_config") or incoming.get("llm_config_json") or {}))
+    merged["llm_config_json"]["llm_orchestration"] = _normalize_llm_orchestration_config(
+        (merged["llm_config_json"] or {}).get("llm_orchestration")
+    )
     merged["guardrails_config_json"].update(
         dict(incoming.get("guardrails_config") or incoming.get("guardrails_config_json") or {})
+    )
+    merged["guardrails_config_json"]["policy_mode"] = _normalize_policy_mode(
+        merged["guardrails_config_json"].get("policy_mode")
+    )
+    merged["guardrails_config_json"]["business_structure_required"] = bool(
+        merged["guardrails_config_json"].get("business_structure_required", True)
+    )
+    merged["guardrails_config_json"]["business_structure_question_bank"] = str(
+        merged["guardrails_config_json"].get("business_structure_question_bank") or DEFAULT_BUSINESS_STRUCTURE_QUESTION_BANK
+    ).strip()
+    business_structure_context = str(
+        merged["guardrails_config_json"].get("business_structure_context") or ""
+    ).strip()
+    merged["guardrails_config_json"]["business_structure_context"] = business_structure_context
+    merged["guardrails_config_json"]["business_structure_context_compact"] = _build_business_structure_context_compact(
+        business_structure_context
+    )
+    questionnaire = str(
+        merged["guardrails_config_json"].get("owner_operator_questionnaire")
+        or OWNER_OPERATOR_QUESTIONNAIRE_TEMPLATE
+    ).strip()
+    merged["guardrails_config_json"]["owner_operator_questionnaire"] = questionnaire
+    merged["guardrails_config_json"]["owner_operator_questionnaire_compact"] = _build_owner_operator_questionnaire_compact(
+        questionnaire
+    )
+    merged["guardrails_config_json"]["board_document_format_contract"] = str(
+        merged["guardrails_config_json"].get("board_document_format_contract") or DEFAULT_BOARD_DOCUMENT_FORMAT_CONTRACT
+    ).strip()
+    merged["guardrails_config_json"]["financial_report_format_contract"] = str(
+        merged["guardrails_config_json"].get("financial_report_format_contract")
+        or DEFAULT_FINANCIAL_REPORT_FORMAT_CONTRACT
+    ).strip()
+    merged["guardrails_config_json"]["docx_finalize_required_sections"] = _normalize_docx_finalize_required_sections(
+        merged["guardrails_config_json"].get("docx_finalize_required_sections")
     )
     merged["kb_config_json"].update(dict(incoming.get("kb_config") or incoming.get("kb_config_json") or {}))
     merged["retrieval_config_json"].update(
@@ -396,9 +789,50 @@ def save_runtime_profile(
         raise ValueError(f"runtime profile '{merged_name}' already exists")
     if record is not None and existing_by_name is not None and existing_by_name.id != record.id:
         raise ValueError(f"runtime profile '{merged_name}' already exists")
+    is_new_record = record is None
     if record is None:
         record = RuntimeProfileRecord(**default_runtime_profile_payload(is_default=False))
         session.add(record)
+    existing_guardrails = dict(record.guardrails_config_json or {})
+    existing_tool_policy = dict(record.tool_policy_config_json or {})
+    incoming_guardrails = dict(merged["guardrails_config_json"] or {})
+    incoming_tool_policy = dict(merged["tool_policy_config_json"] or {})
+    policy_mode = _normalize_policy_mode(incoming_guardrails.get("policy_mode") or existing_guardrails.get("policy_mode"))
+    policy_changed = existing_guardrails != incoming_guardrails or existing_tool_policy != incoming_tool_policy
+    actor = str(payload.get("policy_actor") or "unknown")
+    approval_token = str(payload.get("policy_approval_token") or "").strip() or None
+    approval_reason = str(payload.get("policy_approval_reason") or "").strip() or None
+    if policy_changed and existing_guardrails and not is_new_record:
+        if policy_mode == "locked":
+            _write_policy_audit(
+                session,
+                runtime_profile_id=record.id,
+                actor=actor,
+                action="runtime_profile_update",
+                status="blocked",
+                policy_mode=policy_mode,
+                reason=approval_reason or "policy_mode=locked",
+                approval_token=approval_token,
+                before_json={"guardrails_config": existing_guardrails, "tool_policy_config": existing_tool_policy},
+                after_json={"guardrails_config": incoming_guardrails, "tool_policy_config": incoming_tool_policy},
+            )
+            raise ValueError("Runtime profile policy is locked. Guardrail/tool policy updates are blocked.")
+        if policy_mode == "admin_approval_required" and not approval_token:
+            _write_policy_audit(
+                session,
+                runtime_profile_id=record.id,
+                actor=actor,
+                action="runtime_profile_update",
+                status="blocked",
+                policy_mode=policy_mode,
+                reason=approval_reason or "missing approval token",
+                approval_token=approval_token,
+                before_json={"guardrails_config": existing_guardrails, "tool_policy_config": existing_tool_policy},
+                after_json={"guardrails_config": incoming_guardrails, "tool_policy_config": incoming_tool_policy},
+            )
+            raise ValueError(
+                "Runtime profile policy requires admin approval token for guardrail/tool policy changes."
+            )
 
     record.name = merged["name"]
     record.description = merged["description"]
@@ -418,6 +852,19 @@ def save_runtime_profile(
     )
     if record.is_default:
         _unset_other_default_profiles(session, record.id)
+    if policy_changed and existing_guardrails and not is_new_record:
+        _write_policy_audit(
+            session,
+            runtime_profile_id=record.id,
+            actor=actor,
+            action="runtime_profile_update",
+            status="approved" if approval_token else "applied",
+            policy_mode=policy_mode,
+            reason=approval_reason,
+            approval_token=approval_token,
+            before_json={"guardrails_config": existing_guardrails, "tool_policy_config": existing_tool_policy},
+            after_json={"guardrails_config": incoming_guardrails, "tool_policy_config": incoming_tool_policy},
+        )
     session.commit()
     session.refresh(record)
     return record
@@ -490,6 +937,21 @@ def resolve_agent_runtime_profile(session: Session, agent: AgentProfileRecord) -
     if agent.runtime_profile_id:
         return get_runtime_profile(session, agent.runtime_profile_id)
     return get_default_runtime_profile(session)
+
+
+def list_policy_change_audits(session: Session, runtime_profile_id: str, *, limit: int = 50) -> list[ToolExecutionAuditRecord]:
+    capped_limit = max(1, min(200, int(limit)))
+    return list(
+        session.scalars(
+            select(ToolExecutionAuditRecord)
+            .where(
+                ToolExecutionAuditRecord.tool_id == "runtime_policy",
+                ToolExecutionAuditRecord.policy_decision_id == runtime_profile_id,
+            )
+            .order_by(ToolExecutionAuditRecord.created_at.desc())
+            .limit(capped_limit)
+        )
+    )
 
 
 def runtime_defaults_view(session: Session, profile: RuntimeProfileRecord) -> dict[str, Any]:
@@ -599,6 +1061,9 @@ def update_runtime_defaults(session: Session, payload: dict[str, Any]) -> Runtim
         },
         "guardrails_config": dict(profile.guardrails_config_json or {}),
         "tool_policy_config": dict(profile.tool_policy_config_json or {}),
+        "policy_actor": "system",
+        "policy_approval_token": "SYSTEM_DEFAULT_UPDATE",
+        "policy_approval_reason": "system-managed runtime defaults update",
         "is_default": True,
         "enabled": profile.enabled,
     }

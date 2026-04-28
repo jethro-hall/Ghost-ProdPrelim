@@ -223,3 +223,48 @@ def test_voice_setup_failure_marks_turn_failed_and_replays_on_retry(monkeypatch)
         turn = session.scalar(select(VoiceTurnRecord))
         assert turn.status == "failed"
         assert "missing provider connection" in (turn.error_message or "")
+
+
+def test_voice_provider_voices_returns_unconfigured_status(monkeypatch) -> None:
+    client, _SessionLocal = build_client(monkeypatch)
+    monkeypatch.setattr(voice_ingress.settings, "elevenlabs_api_key", None)
+    monkeypatch.setattr(voice_ingress.settings, "elevenlabs_default_voice_id", "voice-default")
+
+    response = client.get("/agent/voice/voices")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["configured"] is False
+    assert payload["default_voice_id"] == "voice-default"
+    assert payload["voices"][0]["preview_available"] is False
+
+
+def test_voice_preview_fails_closed_without_elevenlabs_config(monkeypatch) -> None:
+    client, _SessionLocal = build_client(monkeypatch)
+    monkeypatch.setattr(voice_ingress.settings, "elevenlabs_api_key", None)
+
+    response = client.post("/agent/voice/preview", json={"voice_id": "voice-1", "text": "hello"})
+
+    assert response.status_code == 503
+
+
+def test_voice_stream_websocket_reports_unconfigured(monkeypatch) -> None:
+    client, _SessionLocal = build_client(monkeypatch)
+    monkeypatch.setattr(voice_ingress.settings, "elevenlabs_api_key", None)
+
+    with client.websocket_connect("/agent/voice/stream") as websocket:
+        payload = websocket.receive_json()
+
+    assert payload["type"] == "error"
+    assert payload["status"] == "unconfigured"
+
+
+def test_tts_stream_websocket_reports_unconfigured(monkeypatch) -> None:
+    client, _SessionLocal = build_client(monkeypatch)
+    monkeypatch.setattr(voice_ingress.settings, "elevenlabs_api_key", None)
+
+    with client.websocket_connect("/agent/voice/tts-stream?voice_id=voice-1") as websocket:
+        payload = websocket.receive_json()
+
+    assert payload["type"] == "error"
+    assert "not configured" in payload["message"]

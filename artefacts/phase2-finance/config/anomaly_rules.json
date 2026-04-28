@@ -1,0 +1,34 @@
+{
+  "rules": {
+    "revenue_mom_drop": {
+      "metric": "revenue",
+      "comparison": "mom",
+      "threshold_pct": -0.2,
+      "severity": "medium"
+    },
+    "cogs_mom_spike": {
+      "metric": "cogs",
+      "comparison": "mom",
+      "threshold_pct": 0.2,
+      "severity": "medium"
+    },
+    "gross_margin_drop": {
+      "metric": "gross_margin_pct",
+      "comparison": "mom",
+      "threshold_abs": -0.05,
+      "severity": "high"
+    },
+    "marketing_spend_spike": {
+      "metric": "marketing_cost",
+      "comparison": "mom",
+      "threshold_pct": 0.25,
+      "severity": "medium"
+    },
+    "roas_drop": {
+      "metric": "roas",
+      "comparison": "mom",
+      "threshold_pct": -0.2,
+      "severity": "high"
+    }
+  }
+}

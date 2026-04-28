@@ -31,6 +31,7 @@ Maintain or extend:
 - UI calls only `/api/*`.
 - Use `ui/src/api.ts`.
 - No direct browser calls to OpenAI, Qdrant, or `llama-stack`.
+- Production operator chat **page** URL on `ghoststack.rideai.com.au` is **`https://ghoststack.rideai.com.au/ghost_chatui/`** (not `/chat`; see `Caddyfile` and `AGENTS.md`).
 
 ## Build checklist
 

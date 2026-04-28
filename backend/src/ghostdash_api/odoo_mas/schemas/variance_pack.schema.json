@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VariancePack",
+  "description": "Cross-entity or month-over-month variance for finance metrics (deterministic; no LLM).",
+  "type": "object",
+  "required": ["comparison_type", "period_label"],
+  "properties": {
+    "comparison_type": {
+      "type": "string",
+      "enum": ["entity_vs_entity", "month_over_month", "period_over_period", "trailing_baseline", "yoy_not_available"]
+    },
+    "period_label": { "type": "string" },
+    "caveats": { "type": "array", "items": { "type": "string" } },
+    "entity_table": {
+      "type": "object",
+      "description": "Maps entity label to metric -> number",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": ["number", "null"] }
+      }
+    },
+    "metric_spreads": {
+      "type": "object",
+      "description": "Per-metric min/max and spread for entity_vs_entity",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "min": { "type": ["object", "null"] },
+          "max": { "type": ["object", "null"] },
+          "spread": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "pairwise_deltas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "a": { "type": "string" },
+          "b": { "type": "string" },
+          "metric": { "type": "string" },
+          "delta_abs": { "type": ["number", "null"] },
+          "delta_pct": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "description": "month_over_month changes keyed by metric",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "current": { "type": ["number", "null"] },
+          "prior": { "type": ["number", "null"] },
+          "delta": { "type": ["number", "null"] },
+          "pct_change": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "context": { "type": "object" }
+  },
+  "additionalProperties": true
+}

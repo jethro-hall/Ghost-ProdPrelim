@@ -1,0 +1,43 @@
+---
+description: GhostDash architecture boundaries — Caddy edge, agent-ingress, workflow-runtime, control-api, Postgres truth, no duplicate gateways or stores.
+alwaysApply: true
+---
+
+# GhostDash Architecture Boundaries
+
+Respect the current GhostDash architecture.
+
+## Public edge
+
+- Caddy is the public HTTPS edge.
+- Public runtime routes must go through the existing route structure.
+- Do not create a new public gateway if agent-ingress already owns that responsibility.
+
+## Agent runtime
+
+- **agent-ingress** owns public agent, chat, and voice ingress, OpenAI-compatible streaming, runtime profile resolution, trace envelope creation, and output streaming.
+- **workflow-runtime** owns workflow execution, tool planning, tool routing, and structured business actions.
+- **control-api** owns configuration, admin, and control-plane responsibilities.
+- **Postgres** is the source of truth.
+- **Redis**, if used, is disposable L1 cache only.
+- **Qdrant** and the vector store are retrieval only, not truth.
+
+## Do not create
+
+- a second LLM gateway
+- a second runtime profile store
+- duplicate agent config tables
+- duplicate conversation tables
+- duplicate tool-call tables
+- duplicate auth or session mechanisms
+- browser-only hacks for server-owned responsibilities
+
+## If a new service is proposed, justify
+
+1. why an existing service cannot own it
+2. latency impact
+3. operational cost
+4. logging and tracing impact
+5. migration and cleanup plan
+
+Default to extending existing GhostDash services cleanly before adding containers.

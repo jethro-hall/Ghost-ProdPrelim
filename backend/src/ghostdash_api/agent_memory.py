@@ -486,6 +486,29 @@ def seed_default_agent_profiles(session: Session) -> None:
             changed = True
         else:
             runtime_profile = existing_runtime_profile
+        if payload["name"] == "Magic Mike":
+            safety_guardrails = dict(runtime_profile.guardrails_config_json or {})
+            desired_guardrails = dict(payload["runtime_profile_payload"].get("guardrails_config_json") or {})
+            for key in (
+                "agent_category",
+                "route_mode",
+                "public_presenter_required",
+                "retail_output_guard_required",
+                "diagnostics_visible",
+                "business_structure_required",
+                "owner_operator_questionnaire",
+                "owner_operator_questionnaire_compact",
+                "business_structure_context",
+                "business_structure_context_compact",
+            ):
+                safety_guardrails[key] = desired_guardrails.get(key)
+            if safety_guardrails != dict(runtime_profile.guardrails_config_json or {}):
+                runtime_profile.guardrails_config_json = safety_guardrails
+                changed = True
+            desired_tool_policy = dict(payload["runtime_profile_payload"].get("tool_policy_config_json") or {})
+            if desired_tool_policy and desired_tool_policy != dict(runtime_profile.tool_policy_config_json or {}):
+                runtime_profile.tool_policy_config_json = desired_tool_policy
+                changed = True
         if existing_agent is None:
             # Do not resurrect intentionally deleted special agents on restart.
             # If the runtime profile already exists, treat that as prior operator-managed state.

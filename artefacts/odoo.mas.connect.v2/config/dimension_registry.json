@@ -1,0 +1,53 @@
+{
+  "business_unit": {
+    "required": false,
+    "mapping_strategy": "configured_lookup",
+    "description": "Maps user terms to exact Odoo company/entity selector values.",
+    "supported_values": {
+      "ebd": {
+        "aliases": [
+          "ebd"
+        ],
+        "dimension_type": "company_selector",
+        "value": "EBD"
+      },
+      "ride-electric-wholesale": {
+        "aliases": [
+          "wholesale",
+          "ride electric wholesale"
+        ],
+        "dimension_type": "company_selector",
+        "value": "Ride Electric Wholesale"
+      },
+      "ride-electric-retail": {
+        "aliases": [
+          "retail",
+          "ride electric retail"
+        ],
+        "dimension_type": "company_selector",
+        "value": "Ride Electric Retail"
+      },
+      "ride-electric-burleigh": {
+        "aliases": [
+          "burleigh",
+          "ride electric burleigh"
+        ],
+        "dimension_type": "company_selector",
+        "value": "Ride Electric Burleigh"
+      },
+      "ride-electric-brisbane": {
+        "aliases": [
+          "brisbane",
+          "ride electric brisbane"
+        ],
+        "dimension_type": "company_selector",
+        "value": "Ride Electric Brisbane"
+      }
+    }
+  },
+  "period": {
+    "required": true,
+    "mapping_strategy": "date_resolver",
+    "description": "Resolves month, quarter, year, and comparative windows into ISO date ranges."
+  }
+}

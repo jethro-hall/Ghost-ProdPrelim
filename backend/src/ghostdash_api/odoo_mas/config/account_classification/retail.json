@@ -1,0 +1,53 @@
+{
+  "entity": "retail",
+  "accounts": {
+    "518 Marketing - Advertising - Google": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "520 Marketing - Advertising - Klaviyo": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "522 Marketing - Advertising - Meta": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "524 Marketing - Advertising - Billboards": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "526 Shopify Fees": {
+      "class": "merchant_fees",
+      "include_in_metric": false
+    },
+    "527 Marketing - Advertising - Aws": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "528 Marketing - Graphic Design": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "536 Marketing - Commission Factory": {
+      "class": "marketing_direct",
+      "include_in_metric": true
+    },
+    "510 Marketing - Wages": {
+      "class": "marketing_wages",
+      "include_in_metric": false
+    },
+    "523 Marketing - Merchant Fees - Bunnings": {
+      "class": "merchant_fees",
+      "include_in_metric": false
+    },
+    "583 Marketing - Business Advisor": {
+      "class": "business_advisor",
+      "include_in_metric": false
+    },
+    "520 Contract Mechanic": {
+      "class": "workshop_cost",
+      "include_in_metric": false
+    }
+  }
+}

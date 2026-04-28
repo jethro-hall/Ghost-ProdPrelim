@@ -22,6 +22,13 @@ EXPLICIT_WEB_HINTS = (
     "latest on",
 )
 
+ODOO_ONLY_HINTS = (
+    "using only odoo",
+    "use only odoo",
+    "odoo only",
+    "only odoo",
+)
+
 
 def normalize_allowed_urls(urls: list[str] | None) -> list[str]:
     normalized: list[str] = []
@@ -52,9 +59,11 @@ def should_use_approved_web_context(
     allowed_urls: list[str],
     force_use: bool,
 ) -> bool:
+    lowered = message.casefold()
+    if any(hint in lowered for hint in ODOO_ONLY_HINTS):
+        return False
     if force_use and allowed_urls:
         return True
-    lowered = message.casefold()
     if any(hint in lowered for hint in EXPLICIT_WEB_HINTS):
         return bool(allowed_urls)
     if any(urlparse(url).netloc.casefold() in lowered for url in allowed_urls):

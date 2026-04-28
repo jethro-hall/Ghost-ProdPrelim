@@ -238,6 +238,19 @@ async def execute_workflow_run(
                             "usage": result.get("usage"),
                         },
                     )
+                    if workflow_mode == "bp_mode":
+                        append_workflow_run_event(
+                            session,
+                            run_id=run_id,
+                            event_type="BP_AUDIT_EVALUATED",
+                            task_key=f"{step.node_id}:{step.sequence}",
+                            actor_id=step.agent_id,
+                            metadata_json={
+                                "step_id": step.id,
+                                "step_status": "completed",
+                                "hard_fail": False,
+                            },
+                        )
                 completed_agents += 1
             except asyncio.CancelledError:
                 with session_factory() as session:
@@ -251,6 +264,20 @@ async def execute_workflow_run(
             except Exception as exc:
                 failed_agents += 1
                 with session_factory() as session:
+                    if workflow_mode == "bp_mode":
+                        append_workflow_run_event(
+                            session,
+                            run_id=run_id,
+                            event_type="BP_AUDIT_FAILED",
+                            task_key=f"{step.node_id}:{step.sequence}",
+                            actor_id=step.agent_id,
+                            metadata_json={
+                                "step_id": step.id,
+                                "step_status": "failed",
+                                "hard_fail": True,
+                                "error": str(exc)[:500],
+                            },
+                        )
                     append_workflow_run_event(
                         session,
                         run_id=run_id,
@@ -286,6 +313,18 @@ async def execute_workflow_run(
                         "failed_agents": failed_agents,
                     },
                 )
+                if workflow_mode == "bp_mode":
+                    append_workflow_run_event(
+                        session,
+                        run_id=run_id,
+                        event_type="BP_AUDIT_PASSED" if failed_agents == 0 else "BP_AUDIT_FAILED",
+                        actor_id=None,
+                        metadata_json={
+                            "completed_agents": completed_agents,
+                            "failed_agents": failed_agents,
+                            "hard_fail": failed_agents > 0,
+                        },
+                    )
                 snapshot = memory_service.build_episodic_snapshot(session, run_id)
                 memory_service.set_working_memory(
                     f"run:{run_id}:episodic_snapshot",

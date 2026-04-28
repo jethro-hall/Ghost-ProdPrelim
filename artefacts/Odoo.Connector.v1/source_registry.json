@@ -1,0 +1,68 @@
+{
+  "Profit and Loss": {
+    "source_type": "default_report",
+    "odoo_key": "profit_and_loss",
+    "extractor": "extract_profit_and_loss",
+    "allowed_filters": ["date_from", "date_to", "comparison", "company_id"]
+  },
+  "Balance Sheet": {
+    "source_type": "default_report",
+    "odoo_key": "balance_sheet",
+    "extractor": "extract_balance_sheet",
+    "allowed_filters": ["date_from", "date_to", "comparison", "company_id"]
+  },
+  "Cash Flow Statement": {
+    "source_type": "default_report",
+    "odoo_key": "cash_flow_statement",
+    "extractor": "extract_cash_flow",
+    "allowed_filters": ["date_from", "date_to", "comparison", "company_id"]
+  },
+  "Aged Receivables": {
+    "source_type": "default_report",
+    "odoo_key": "aged_receivables",
+    "extractor": "extract_aged_receivables",
+    "allowed_filters": ["date_from", "date_to", "company_id"]
+  },
+  "Aged Payables": {
+    "source_type": "default_report",
+    "odoo_key": "aged_payables",
+    "extractor": "extract_aged_payables",
+    "allowed_filters": ["date_from", "date_to", "company_id"]
+  },
+  "Tax Report": {
+    "source_type": "default_report",
+    "odoo_key": "tax_report",
+    "extractor": "extract_tax_report",
+    "allowed_filters": ["date_from", "date_to", "company_id"]
+  },
+  "General Ledger": {
+    "source_type": "default_report",
+    "odoo_key": "general_ledger",
+    "extractor": "extract_general_ledger_summary",
+    "allowed_filters": ["date_from", "date_to", "company_id", "account_ids"]
+  },
+  "Partner Ledger": {
+    "source_type": "default_report",
+    "odoo_key": "partner_ledger",
+    "extractor": "extract_partner_ledger_summary",
+    "allowed_filters": ["date_from", "date_to", "company_id", "partner_ids"]
+  },
+  "Budget Report": {
+    "source_type": "default_report",
+    "odoo_key": "budget_report",
+    "extractor": "extract_budget_report",
+    "allowed_filters": ["date_from", "date_to", "company_id", "comparison"]
+  },
+  "Journal Report": {
+    "source_type": "default_report",
+    "odoo_key": "journal_report",
+    "extractor": "extract_journal_report_summary",
+    "allowed_filters": ["date_from", "date_to", "company_id", "journal_ids"]
+  },
+  "Journal Dashboard / Reconciliation View": {
+    "source_type": "journal_dashboard",
+    "odoo_key": "journal_dashboard_status",
+    "extractor": "extract_journal_status",
+    "allowed_filters": ["date_from", "date_to", "company_id", "journal_name"]
+  }
+}
