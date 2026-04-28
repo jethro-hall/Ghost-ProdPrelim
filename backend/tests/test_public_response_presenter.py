@@ -44,6 +44,16 @@ def test_present_public_text_rewrites_raw_odoo_tool_failure() -> None:
     assert safe is False
 
 
+def test_present_public_text_allows_citing_odoo_by_name() -> None:
+    """Production retail answers may name Odoo ERP; only internal leak phrases are scrubbed."""
+    text, safe = present_public_text(
+        "Using Odoo, marketing costs for Ride Electric Retail in March 2026 were $1,200."
+    )
+
+    assert "Odoo" in text
+    assert safe is True
+
+
 def test_public_chat_response_strips_diagnostics_and_odoo_finance_card() -> None:
     payload = {
         "answer": "Here is the safe executive summary.",

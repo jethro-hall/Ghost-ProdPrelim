@@ -178,12 +178,22 @@ def _present_public_tool_events(value: object) -> list[dict[str, Any]]:
     return events
 
 
+def _is_internal_odoo_tool_operation_slug(operation: str) -> bool:
+    """Block internal op names like ``odoo.finance.roas`` in public tool metadata only."""
+    op = (operation or "").strip()
+    if not op:
+        return False
+    return bool(re.match(r"^odoo[._]", op, re.IGNORECASE))
+
+
 def _present_public_tool_event(value: object) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         return None
     tool_id = str(value.get("tool_id") or "")
     status = str(value.get("status") or "")
     operation = str(value.get("operation") or "")
+    if _is_internal_odoo_tool_operation_slug(operation):
+        return None
     if contains_forbidden_public_output(" ".join([tool_id, status, operation, str(value.get("summary") or ""), str(value.get("blocked_reason") or "")])):
         return None
 
