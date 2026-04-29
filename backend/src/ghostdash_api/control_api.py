@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import httpx
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -43,6 +43,7 @@ from .database import SessionLocal
 from .finance_report_renderer import finance_report_file, load_finance_report
 from .ingest import extract_text_local
 from .hubtiger_mcp import call_hubtiger_mcp, to_hubtiger_test_response
+from .integrations.hubtiger_elevenlabs_tool import router as elevenlabs_hubtiger_router
 from .magic_mike import MAGIC_MIKE_AGENT_NAME
 from .models import (
     AgentConversationRecord,
@@ -147,6 +148,7 @@ from .schemas import (
     HubTigerStatusView,
     HubTigerTestRequest,
     HubTigerTestResponse,
+    ElevenLabsHubTigerBookingAvailabilityRequest,
     HubTigerToolBindingView,
     ToolPolicyPayload,
     ToolPolicyView,
@@ -167,6 +169,7 @@ from .schemas import (
 from .service_common import build_app
 from .settings import get_settings
 from .telemetry import log_instant_event, new_span_id
+from .voice_ingress import _check_hubtiger_voice_auth, _check_voice_auth
 from .tool_registry import (
     execute_tool_operation,
     get_agent_tool_policy,
@@ -202,7 +205,7 @@ settings = get_settings()
 ACTIVE_WORKFLOW_RUN_STATUSES = {"queued", "running"}
 ACTIVE_WORKFLOW_STEP_STATUSES = {"pending", "running"}
 HUBTIGER_BINDINGS = (
-    ("hubtiger_booking_availability", "HubTiger Availability", "availability", False),
+    ("hubtiger_booking_availability", "HubTiger Booking Availability", "availability", False),
     ("hubtiger_job_lookup", "HubTiger Job Lookup", "jobs", False),
     ("hubtiger_quote_preview", "HubTiger Quote Preview", "quotes", False),
     ("hubtiger_booking_create", "HubTiger Booking Create", "booking", True),
@@ -1779,6 +1782,10 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code, detail) from exc
         return ConnectionTestResponse(ok=True, **result)
 
+    @app.get("/api/hubtiger")
+    def api_hubtiger_root() -> RedirectResponse:
+        return RedirectResponse(url="/api/hubtiger/status", status_code=307)
+
     @app.get("/api/hubtiger/status")
     def api_hubtiger_status() -> dict[str, Any]:
         status = _hubtiger_status_view()
@@ -1808,6 +1815,38 @@ def create_app() -> FastAPI:
             HubTigerRecentTraceView(
                 trace_id=trace_id,
                 operation=operation,
+                success=raw.success,
+                blocked=raw.blocked,
+                mode=cast(Any, raw.mode),
+                created_at=datetime.now(timezone.utc),
+                summary=result.message,
+            )
+        )
+        return result
+
+    @app.post("/api/elevenlabs/hubtiger/booking_availability", response_model=HubTigerTestResponse)
+    async def api_elevenlabs_hubtiger_booking_availability(
+        body: ElevenLabsHubTigerBookingAvailabilityRequest,
+        request: Request,
+    ) -> HubTigerTestResponse:
+        """ElevenLabs webhook-style path under /api: same HubTiger operation as hubtiger_booking_availability (availability_lookup)."""
+        _check_hubtiger_voice_auth(request)
+        trace_id = str(getattr(request.state, "trace_id", "") or "") or uuid4().hex
+        payload = {
+            "store": body.store.strip(),
+            "start_date": body.start_date.strip(),
+            "limit": body.limit,
+        }
+        raw = await call_hubtiger_mcp(
+            operation="availability_lookup",
+            payload=payload,
+            trace_id=trace_id,
+        )
+        result = to_hubtiger_test_response(raw)
+        HUBTIGER_RECENT_TRACES.append(
+            HubTigerRecentTraceView(
+                trace_id=trace_id,
+                operation="availability_lookup",
                 success=raw.success,
                 blocked=raw.blocked,
                 mode=cast(Any, raw.mode),
@@ -2845,6 +2884,8 @@ def create_app() -> FastAPI:
     @app.get("/api/vector-stats", response_model=VectorStatsView)
     def api_vector_stats(corpus: str | None = None, session: Session = Depends(get_session)) -> VectorStatsView:
         return _compute_vector_stats(session, corpus)
+
+    app.include_router(elevenlabs_hubtiger_router)
 
     return app
 
