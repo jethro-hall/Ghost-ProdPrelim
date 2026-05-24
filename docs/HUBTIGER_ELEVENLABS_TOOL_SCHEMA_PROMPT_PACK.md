@@ -173,6 +173,12 @@ Use a no-cache retry only for read operations (`job_search`, `job_retrieve`, `bo
 - Quote preview appears out of date after recent parts or line-item changes.
 - A transient upstream issue was seen and the next turn needs a fresh check.
 
+### Identifier disambiguation safeguards
+
+- If input is weak/ambiguous (for example `1234`), do not assume it is a job card.
+- Ask whether it is a job card number or phone fragment before retrieval.
+- If only a first name is provided, request one stronger identifier (surname, full phone, job card, or store) before proceeding.
+
 ### Retry pattern
 
 1. Run normal read call first (default cache mode).
@@ -189,3 +195,29 @@ Use a no-cache retry only for read operations (`job_search`, `job_retrieve`, `bo
 
 3. Use the second result as current evidence for customer wording.
 4. If still unavailable, give one concrete fallback action (callback/handoff/manual confirmation).
+
+## 8) Store ambiguity guardrail (must enforce)
+
+For job search/retrieve with store context, treat these fields as authoritative:
+
+- `store_requested`
+- `store_matched`
+- `store_match`
+- `selection_required`
+- `allowed_next_actions`
+
+Required behavior:
+
+- If `store_match=false`, never claim branch-specific certainty.
+- Ask for clarification or explicit case selection before giving definitive status.
+
+### If you still get 422 lookup-only error
+
+If the API returns `{"detail":"Lookup-only mode supports \`lookup_job\`."}`, the running `control-api` is on an older build.
+
+Deploy/restart with the current build so `/api/elevenlabs/hubtiger/tool` accepts:
+
+- `job_search`
+- `job_retrieve`
+- `booking_availability`
+- `quote_preview`

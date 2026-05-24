@@ -82,6 +82,18 @@ test('buildOperationExecuteRequest accepts cache bypass hint from payload', () =
   assert.equal(mapped.proxyPath, '/jobs/search');
 });
 
+test('buildOperationExecuteRequest accepts cache bypass hint from top-level body', () => {
+  const mapped = buildOperationExecuteRequest({
+    operation: 'job_retrieve',
+    cache_mode: 'fresh',
+    payload: {
+      job_card_no: '#35872',
+    },
+  });
+  assert.equal(mapped.cacheMode, 'bypass');
+  assert.equal(mapped.proxyPath, '/jobs/search');
+});
+
 test('buildOperationExecuteRequest maps job_retrieve to jobs search route', () => {
   const mapped = buildOperationExecuteRequest({
     operation: 'job_retrieve',

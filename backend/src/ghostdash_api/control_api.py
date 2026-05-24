@@ -44,6 +44,7 @@ from .finance_report_renderer import finance_report_file, load_finance_report
 from .ingest import extract_text_local
 from .hubtiger_mcp import call_hubtiger_mcp, to_hubtiger_test_response
 from .integrations.hubtiger_elevenlabs_tool import router as elevenlabs_hubtiger_router
+from .integrations.shopify_elevenlabs_tool import router as elevenlabs_shopify_router
 from .magic_mike import MAGIC_MIKE_AGENT_NAME
 from .models import (
     AgentConversationRecord,
@@ -206,7 +207,9 @@ ACTIVE_WORKFLOW_RUN_STATUSES = {"queued", "running"}
 ACTIVE_WORKFLOW_STEP_STATUSES = {"pending", "running"}
 HUBTIGER_BINDINGS = (
     ("hubtiger_booking_availability", "HubTiger Booking Availability", "availability", False),
-    ("hubtiger_job_lookup", "HubTiger Job Lookup", "jobs", False),
+    ("hubtiger_job_search", "HubTiger Job Search", "jobs", False),
+    ("hubtiger_job_retrieve", "HubTiger Job Retrieve", "jobs", False),
+    ("hubtiger_job_lookup", "HubTiger Job Lookup (Legacy)", "jobs", False),
     ("hubtiger_quote_preview", "HubTiger Quote Preview", "quotes", False),
     ("hubtiger_booking_create", "HubTiger Booking Create", "booking", True),
     ("hubtiger_quote_add_line_item", "HubTiger Quote Add Line Item", "quotes", True),
@@ -2886,6 +2889,7 @@ def create_app() -> FastAPI:
         return _compute_vector_stats(session, corpus)
 
     app.include_router(elevenlabs_hubtiger_router)
+    app.include_router(elevenlabs_shopify_router)
 
     return app
 
