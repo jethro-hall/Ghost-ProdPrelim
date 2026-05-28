@@ -1,0 +1,41 @@
+---
+description: GhostDash token and LLM efficiency — strip context, deterministic first, bounded budgets, no waste in customer-facing paths.
+alwaysApply: true
+---
+
+# GhostDash Token and LLM Efficiency
+
+LLM tokens are a production resource. Do not waste them.
+
+## Before sending data to an LLM
+
+1. Strip irrelevant fields.
+2. Summarise tool results into compact context.
+3. Use deterministic code for routing, formatting, validation, filtering, and calculations where possible.
+4. Do not use the LLM for simple classification if rules or a small local classifier are sufficient.
+5. Do not send full documents, full transcripts, full JSON dumps, or raw database rows unless required.
+
+## Prefer
+
+- deterministic guardrails
+- structured tool contracts
+- cached tool results
+- compact runtime profiles
+- intent classification before retrieval
+- retrieval only when needed
+- short voice outputs
+
+## Do not
+
+- run heavy RAG every turn
+- ask the LLM to fix malformed backend data repeatedly
+- ask the LLM to enforce rules that middleware should enforce
+- send internal traces, citations, diagnostics, or full tool payloads into customer-facing generation
+
+## Every agent feature must define
+
+- which part is deterministic
+- which part uses the LLM
+- why the LLM is required
+- expected token budget
+- cache opportunities

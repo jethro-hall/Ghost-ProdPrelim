@@ -1,0 +1,137 @@
+{
+  "captured_at": "2026-04-10",
+  "workspace": "/home/ubuntu/Ghost-AI-Dashboard",
+  "summary": {
+    "ghostdash_core_status": "healthy",
+    "odoo_integration_status": "configured_but_unreachable",
+    "primary_blocker": "ghost-control-plane cannot reach configured Odoo module at http://odoo-rpc:8097"
+  },
+  "runtime_evidence": {
+    "core_containers_present": [
+      "ghost-edge-gateway",
+      "ghost-control-plane",
+      "ghost-control-plane-canary",
+      "ghost-postgres",
+      "ghost-redis"
+    ],
+    "odoo_container_present": false,
+    "odoo_container_name_observed": null
+  },
+  "odoo_tool_rows": [
+    {
+      "id": "591461d7-452c-4072-880a-1afd328357c4",
+      "name": "Odoo ERP Gateway QA",
+      "kind": "odoo_rpc",
+      "status": "active",
+      "config": {
+        "base_url": "http://odoo-rpc:8097",
+        "test_path": "/health",
+        "module_url": "",
+        "execute_path": "/tool"
+      },
+      "recommended_for_migration": true
+    },
+    {
+      "id": "47a505da-4cd9-47fe-8024-3ae6afd33799",
+      "name": "Odoo ERP Gateway",
+      "kind": "odoo_rpc",
+      "status": "active",
+      "config": {
+        "version": "v1",
+        "test_path": "/health",
+        "execute_path": "/tool"
+      },
+      "recommended_for_migration": false
+    },
+    {
+      "id": "c7ecb555-db25-40e8-93cf-4a0d7dfed3a8",
+      "name": "Odoo ERP",
+      "kind": "odoo_rpc",
+      "status": "active",
+      "config": {
+        "version": "v1"
+      },
+      "recommended_for_migration": false
+    }
+  ],
+  "ghostdash_contract": {
+    "env_keys": [
+      "ODOO_RPC_URL",
+      "ODOO_RPC_INTERNAL_KEY",
+      "ODOO_RPC_API_TOKEN"
+    ],
+    "health_route": {
+      "method": "GET",
+      "path": "/health",
+      "headers": [
+        "x-trace-id",
+        "x-span-id",
+        "x-internal-key (optional)",
+        "Authorization: Bearer <token> (optional)"
+      ]
+    },
+    "execute_route": {
+      "method": "POST",
+      "path": "/tool",
+      "headers": [
+        "Content-Type: application/json",
+        "x-trace-id",
+        "x-span-id",
+        "x-internal-key (optional)",
+        "Authorization: Bearer <token> (optional)"
+      ],
+      "body": {
+        "operation": "<string>",
+        "payload": {},
+        "tool_id": "<uuid>"
+      }
+    }
+  },
+  "operations_expected_by_ghostdash": [
+    "odoo.current_user",
+    "odoo.products.search",
+    "odoo.customers.search",
+    "odoo.sale_orders.search",
+    "odoo.invoices.search",
+    "odoo.search_read",
+    "odoo.execute_kw"
+  ],
+  "live_checks": {
+    "tool_test": {
+      "tool_id": "591461d7-452c-4072-880a-1afd328357c4",
+      "status_code": 502,
+      "response": {
+        "ok": false,
+        "error": "odoo_rpc_request_failed"
+      }
+    },
+    "tool_execute": {
+      "tool_id": "591461d7-452c-4072-880a-1afd328357c4",
+      "status_code": 502,
+      "response": "wget exited on HTTP 502"
+    },
+    "direct_upstream_health_from_control_plane": {
+      "url": "http://odoo-rpc:8097/health",
+      "result": "fetch failed"
+    }
+  },
+  "repo_touch_points": [
+    "server/control-plane/index.js",
+    "src/pages/Tools.tsx",
+    "src/pages/IntegrationLab.tsx",
+    "docs/ODOO_OPENAI_CHAT_E2E.md",
+    "docs/ARCHITECTURE_HANDOVER_HUBTIGER_ODOO.md",
+    "docs/ODOO_LIFT_SHIFT_READY.md"
+  ],
+  "external_dependency_required": {
+    "required": true,
+    "service_name_expected": "odoo-rpc",
+    "private_port_expected": 8097,
+    "note": "This repo does not contain the Odoo connector implementation. The destination server must supply the Odoo module service.",
+    "credential_handoff": {
+      "odoo_api_key_supplied_out_of_band": true,
+      "persist_raw_secret_in_repo_artifacts": false,
+      "recommended_secret_target": "external Odoo connector service"
+    }
+  }
+}

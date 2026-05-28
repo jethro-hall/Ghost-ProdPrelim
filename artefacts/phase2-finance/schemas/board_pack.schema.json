@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BoardPack",
+  "type": "object",
+  "required": [
+    "executive_summary",
+    "kpi_rows",
+    "drivers",
+    "anomalies",
+    "forecast",
+    "risks",
+    "caveats"
+  ],
+  "properties": {
+    "executive_summary": {
+      "type": "string"
+    },
+    "kpi_rows": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "drivers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "anomalies": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "forecast": {
+      "type": "object"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

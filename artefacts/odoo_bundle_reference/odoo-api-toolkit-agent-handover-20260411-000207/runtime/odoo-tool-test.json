@@ -1,0 +1,2 @@
+{"level":"info","msg":"otel_sdk_started","service":"ghost-control-plane","exporter_url":"http://otel-collector:4318/v1/traces"}
+{"ok":true,"status":200,"latency_ms":700,"trace_id":"9bc0419f-9120-405d-a041-53a9947f978d","response_snippet":"{\"ok\":true,\"service\":\"odoo-rpc\",\"latency_ms\":692,\"auth_ok\":true,\"uid\":342,\"read_only\":true,\"version\":{\"server_version\":\"17.0+e\",\"server_version_info\":[17,0,0,\"final\",0,\"e\"],\"server_serie\":\"17.0\",\"protocol_version\":1}}"}

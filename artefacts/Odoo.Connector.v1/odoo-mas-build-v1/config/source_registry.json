@@ -1,0 +1,103 @@
+{
+  "profit_and_loss": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": [
+      "revenue",
+      "cogs",
+      "gross_profit",
+      "net_profit",
+      "gross_margin_pct"
+    ],
+    "supported_dimensions": [
+      "date_range",
+      "business_unit",
+      "journal_scope",
+      "posted_only",
+      "comparison"
+    ],
+    "required_params": [
+      "date_from",
+      "date_to"
+    ],
+    "extractor_key": "odoo-profit-and-loss",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "balance_sheet": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": [
+      "cash_balance"
+    ],
+    "supported_dimensions": [
+      "date_range",
+      "business_unit",
+      "posted_only",
+      "comparison"
+    ],
+    "required_params": [
+      "date_to"
+    ],
+    "extractor_key": "odoo-balance-sheet",
+    "output_contract": "NormalizedReport",
+    "fallback": null,
+    "freshness": "real_time"
+  },
+  "cash_flow": {
+    "system": "odoo",
+    "kind": "accounting_report",
+    "supported_metrics": [
+      "cash_balance"
+    ],
+    "supported_dimensions": [
+      "date_range",
+      "business_unit",
+      "posted_only",
+      "comparison"
+    ],
+    "required_params": [
+      "date_from",
+      "date_to"
+    ],
+    "extractor_key": "odoo-cash-flow",
+    "output_contract": "NormalizedReport",
+    "fallback": "balance_sheet",
+    "freshness": "real_time"
+  },
+  "journal_dashboard": {
+    "system": "odoo",
+    "kind": "operational_finance_view",
+    "supported_metrics": [],
+    "supported_dimensions": [
+      "business_unit"
+    ],
+    "required_params": [],
+    "extractor_key": "odoo-journal-dashboard",
+    "output_contract": "OperationalJournalSnapshot",
+    "fallback": "general_ledger",
+    "freshness": "real_time"
+  },
+  "marketing_spend_by_business_unit": {
+    "system": "external",
+    "kind": "marketing_spend",
+    "supported_metrics": [
+      "ad_spend",
+      "roas"
+    ],
+    "supported_dimensions": [
+      "date_range",
+      "business_unit"
+    ],
+    "required_params": [
+      "date_from",
+      "date_to",
+      "business_unit"
+    ],
+    "extractor_key": "external-marketing-spend",
+    "output_contract": "SpendRows",
+    "fallback": null,
+    "freshness": "daily"
+  }
+}

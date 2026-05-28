@@ -1,0 +1,27 @@
+---
+description: "Observability law: trace propagation and structured latency logs for every service and tool call."
+globs:
+  - backend/src/**/*.py
+  - docker-compose.yml
+  - Caddyfile
+alwaysApply: false
+---
+
+# Observability And Latency Law
+
+## Required fields
+- Every inbound request and every outbound service/tool call must emit structured JSON with:
+- `trace_id`, `span_id`, `service`, `route`, `start_ts`, `end_ts`, `latency_ms`, `status`, `error`
+
+## Trace propagation
+- Accept trace context at ingress.
+- Propagate trace context to downstream service calls and async work.
+- Return `X-Trace-Id` where useful for operator debugging.
+
+## Caller-side timing
+- Measure latency at the boundary performing the call, not only at the callee.
+- Errors must include a machine-readable code or explicit exception detail.
+
+## No unstructured spam
+- Avoid ad-hoc logs that cannot be parsed or correlated.
+- One structured summary event per meaningful call path is the default expectation.

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvidencePack",
+  "type": "object",
+  "required": ["source", "period", "currency", "metrics", "notes"],
+  "properties": {
+    "source": {"type": "string"},
+    "period": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "currency": {"type": "string"},
+    "metrics": {"type": "object"},
+    "notes": {"type": "array", "items": {"type": "string"}},
+    "top_positive_drivers": {"type": "array", "items": {"type": "array", "items": [{"type": "string"}, {"type": "number"}], "minItems": 2, "maxItems": 2}},
+    "top_negative_drivers": {"type": "array", "items": {"type": "array", "items": [{"type": "string"}, {"type": "number"}], "minItems": 2, "maxItems": 2}}
+  },
+  "additionalProperties": true
+}

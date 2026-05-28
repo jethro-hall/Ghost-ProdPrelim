@@ -1,0 +1,8 @@
+{"question":"Are we profitable this quarter?","expected_primary_source":"Profit and Loss","expected_primary_intent":"profitability"}
+{"question":"Why is cash tight this month?","expected_primary_source":"Cash Flow Statement","expected_primary_intent":"cash_position"}
+{"question":"Who owes us money right now?","expected_primary_source":"Aged Receivables","expected_primary_intent":"receivables"}
+{"question":"What do we owe suppliers this week?","expected_primary_source":"Aged Payables","expected_primary_intent":"payables"}
+{"question":"How much GST do we owe?","expected_primary_source":"Tax Report","expected_primary_intent":"tax_position"}
+{"question":"What is stuck in PayPal?","expected_primary_source":"Journal Dashboard / Reconciliation View","expected_primary_intent":"reconciliation_status"}
+{"question":"Are Vsett payouts reconciling?","expected_primary_source":"Journal Dashboard / Reconciliation View","expected_primary_intent":"reconciliation_status"}
+{"question":"What is happening in the contra accounts?","expected_primary_source":"Journal Dashboard / Reconciliation View","expected_primary_intent":"reconciliation_status"}

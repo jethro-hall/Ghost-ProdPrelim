@@ -1,0 +1,23 @@
+{
+  "metric_concepts": [
+    "revenue",
+    "sales",
+    "cogs",
+    "gross profit",
+    "gross margin",
+    "net profit",
+    "net",
+    "marketing costs",
+    "ad spend",
+    "roas",
+    "workshop margin",
+    "cash",
+    "ar",
+    "ap"
+  ],
+  "planner_policy": {
+    "block_ledger_search_primary_for_metric_requests": true,
+    "require_metric_pack_before_composer": true,
+    "ledger_rows_support_only": true
+  }
+}

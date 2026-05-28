@@ -1,0 +1,35 @@
+{
+  "ride electric retail": {
+    "marketing_account_codes": [510, 512, 514, 516, 518, 519, 520, 522, 523, 524, 526, 527, 528, 536, 538],
+    "marketing_account_terms": [
+      "marketing - wages",
+      "marketing - website design",
+      "marketing - bookkeeping",
+      "marketing - software subscriptions",
+      "marketing - advertising - google",
+      "marketing - advertising - shopify",
+      "marketing - advertising - klaviyo",
+      "marketing - advertising - facebook",
+      "marketing - advertising - meta",
+      "marketing - merchant fees - bunnings",
+      "marketing - advertising - billboards",
+      "marketing - advertising - other",
+      "marketing - advertising - aws",
+      "marketing - graphic design",
+      "marketing - commission factory",
+      "marketing - business advisor"
+    ]
+  },
+  "ride electric burleigh": {
+    "marketing_account_codes": [583],
+    "marketing_account_terms": [
+      "marketing - business advisor"
+    ]
+  },
+  "ride electric brisbane": {
+    "marketing_account_codes": [530],
+    "marketing_account_terms": [
+      "marketing expenses"
+    ]
+  }
+}

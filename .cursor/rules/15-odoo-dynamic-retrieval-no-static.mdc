@@ -1,0 +1,28 @@
+---
+description: Enforce dynamic Odoo retrieval logic; no static data/query code outside config/settings.
+alwaysApply: true
+---
+
+# Odoo Retrieval Rule (Dynamic Only)
+
+- Odoo data retrieval must be request-driven and config-backed.
+- Do not hardcode date ranges, month shortcuts, company IDs, company names, table/model selections, or fixed query payloads in runtime retrieval logic.
+- Static defaults are allowed only in settings/config registries (for example `backend/src/ghostdash_api/odoo_mas/config/*` or explicit settings modules).
+
+## Required pattern
+
+1. Parse request intent (date range, scope, metric).
+2. Resolve through config/registry mappings.
+3. Build execution payload dynamically from parsed inputs.
+4. Return explicit blocked/error state when required inputs are missing. Never silently fallback to unrelated static periods.
+
+## Never do
+
+- `if "march" in message: ...` style period routing for retrieval execution.
+- Fixed `company_ids=[...]` or hardcoded `company_name_terms=[...]` in live retrieval paths.
+- Embedding SQL-like or Odoo-domain literals in code when they belong in config.
+
+## Verification
+
+- Add/update tests whenever retrieval routing changes.
+- Ensure explicit user date ranges are honored exactly (inclusive start, exclusive end normalization).

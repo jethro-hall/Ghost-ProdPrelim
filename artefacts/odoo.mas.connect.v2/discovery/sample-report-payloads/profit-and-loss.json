@@ -1,0 +1,37 @@
+{
+  "sample_id": "pnl_last_month_burleigh_2026_04_23",
+  "request": {
+    "operation": "odoo.finance.pnl.period_summary",
+    "payload": {
+      "relative_period": "last_month",
+      "company_name_terms": ["burleigh"],
+      "required_metrics": ["revenue", "cogs", "gp", "net", "roas"]
+    }
+  },
+  "response": {
+    "success": true,
+    "operation": "odoo.finance.pnl.period_summary",
+    "trace_id": "15cbe71dc51e4c56ba765949000280ec",
+    "data": {
+      "result_type": "period_pnl_summary",
+      "date_from": "2026-03-01",
+      "date_to": "2026-04-01",
+      "company_ids": [5],
+      "company_name_terms": ["burleigh"],
+      "rows": [
+        {
+          "company_id": 5,
+          "company_name": "Ride Electric Burleigh",
+          "revenue": 280841.32999999996,
+          "cogs": 189080.31000000003,
+          "gp": 91761.04999999996,
+          "net_profit": -2.9103830456733704e-11,
+          "ad_spend": 0.0,
+          "roas": null
+        }
+      ],
+      "lookup_basis": "odoo_profit_and_loss_from_posted_move_lines",
+      "evidence_source_mode": "live_odoo"
+    }
+  }
+}

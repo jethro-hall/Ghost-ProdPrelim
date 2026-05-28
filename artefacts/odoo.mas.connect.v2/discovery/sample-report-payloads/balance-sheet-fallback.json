@@ -1,0 +1,47 @@
+{
+  "sample_id": "balance_sheet_fallback_search_read_2026_04_23",
+  "request": {
+    "operation": "odoo.rpc.search_read",
+    "payload": {
+      "model": "account.move.line",
+      "domain": [
+        ["parent_state", "=", "posted"],
+        ["date", "<", "2026-04-01"],
+        ["company_id", "=", 5]
+      ],
+      "fields": ["id", "date", "account_id", "balance", "debit", "credit"],
+      "limit": 50,
+      "order": "date desc"
+    }
+  },
+  "response": {
+    "success": true,
+    "operation": "odoo.rpc.search_read",
+    "trace_id": "d689157e933b4ce3997829d263c4d999",
+    "data": {
+      "model": "account.move.line",
+      "method": "search_read",
+      "result_type": "records",
+      "count": 50,
+      "records_preview": [
+        {
+          "id": 6902980,
+          "date": "2026-03-31",
+          "account_id": [2565, "130 Cash Payments"],
+          "balance": -500.0,
+          "debit": 0.0,
+          "credit": 500.0
+        },
+        {
+          "id": 6903139,
+          "date": "2026-03-31",
+          "account_id": [2467, "610 Accounts Receivable"],
+          "balance": 124.99,
+          "debit": 124.99,
+          "credit": 0.0
+        }
+      ],
+      "evidence_source_mode": "live_odoo"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "include_merchant_fees_in_marketing": false,
+  "include_marketing_wages_in_marketing": false,
+  "marketing_mode": "centralized",
+  "primary_entity": "retail",
+  "centralized_marketing_allocation_method": "revenue_weighted",
+  "allow_blended_marketing_efficiency": true,
+  "output_sign_mode": "absolute",
+  "internal_sign_mode": "accounting",
+  "allowed_override_keys": [
+    "include_merchant_fees_in_marketing",
+    "include_marketing_wages_in_marketing",
+    "output_sign_mode"
+  ],
+  "merchant_fee_match_terms": [
+    "merchant fee",
+    "merchant fees",
+    "shopify fees",
+    "bunnings"
+  ],
+  "marketing_wage_match_terms": [
+    "marketing - wages",
+    "wages - marketing",
+    "wages marketing"
+  ]
+}

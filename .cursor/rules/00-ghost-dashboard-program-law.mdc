@@ -1,0 +1,39 @@
+---
+description: "GhostDASH program law: repo-first, one source of truth, human QA, observability, and no duplicated ownership."
+alwaysApply: true
+---
+
+# GhostDASH Program Law
+
+## Repo-first
+- Treat this repo as canonical.
+- Before changing architecture, read `docker-compose.yml`, `Caddyfile`, `AGENTS.md`, `docs/ARCHITECTURE.md`, and `docs/HANDOFF.md`.
+- Do not invent service names, routes, ports, env vars, tables, or storage ownership.
+
+## One source of truth
+- Runtime behavior must have one authoritative persistence location and one authoritative API contract.
+- LLM config, guardrails, KB binding, retrieval policy, and tool policy must not be duplicated across tables or edit surfaces.
+
+## No duplicated ownership
+- Each responsibility belongs to one service.
+- Browser traffic goes only through repo-defined boundaries: `/api/*` for operator control and `/agent/*` for chat.
+- The browser never talks directly to model providers, vector stores, or third-party tools.
+
+## Human-grade QA is required
+- Do not declare work done until automated checks and a human-style walkthrough are complete.
+- If UI or service behavior is touched, validate intuition, consistency, error handling, and real flow outcomes.
+
+## Observability is mandatory
+- Every inbound request and outbound service/tool call must emit structured JSON with:
+- `trace_id`, `span_id`, `service`, `route`, `start_ts`, `end_ts`, `latency_ms`, `status`, `error`
+
+## Config edits
+- For `docker-compose*.yml`, `Caddyfile`, nginx configs, and otel configs, rewrite the full file and revalidate.
+
+## Execution protocol
+1. Restate the goal in one sentence.
+2. Inventory repo and runtime reality.
+3. Make a small plan.
+4. Implement with minimal blast radius.
+5. Verify with automation and human-style QA.
+6. Report what changed, risks, and exact verify commands.

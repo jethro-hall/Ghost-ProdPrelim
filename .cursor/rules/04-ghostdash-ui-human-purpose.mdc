@@ -1,0 +1,40 @@
+---
+description: GhostDash UI — human purpose; task-first, minimal clutter, states and proof on every change.
+alwaysApply: true
+---
+
+# GhostDash UI — Human Purpose
+
+UI work is not complete unless it helps a real human complete the task. (See also `20-ui-ux-human-intuition.mdc` for design intuition; this rule is the GhostDash delivery bar.)
+
+## Before UI implementation
+
+1. Identify the user.
+2. Identify the task.
+3. Identify the shortest path to task completion.
+4. Identify error states, loading states, empty states, and recovery states.
+5. Avoid visual or interaction clutter.
+
+## For GhostChat, voice, config, and admin UI
+
+- show only what the user needs now
+- hide diagnostics unless in admin or debug mode
+- never expose backend traces to public users
+- make failure recoverable
+- preserve context
+- avoid unnecessary clicks
+- use clear labels over clever labels
+
+## Architecture vs human job
+
+- Do not build UI around internal architecture.
+- Build UI around the human job.
+
+## Every UI change must include
+
+- happy path
+- empty state
+- loading state
+- error state
+- screenshot or description of visual proof
+- accessibility sanity check

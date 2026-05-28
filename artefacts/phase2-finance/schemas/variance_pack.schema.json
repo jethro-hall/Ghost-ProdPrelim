@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VariancePack",
+  "type": "object",
+  "required": [
+    "period",
+    "comparison_period",
+    "dimension",
+    "rows"
+  ],
+  "properties": {
+    "period": {
+      "type": "string"
+    },
+    "comparison_period": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "profitability": {
+    "keywords": ["profit", "profitable", "margin", "gross margin", "net margin", "expenses", "costs", "overhead", "revenue vs expenses", "loss", "ebitda", "burn"],
+    "question_type": "strategic",
+    "primary_report": "Profit and Loss"
+  },
+  "cash_position": {
+    "keywords": ["cash", "cash position", "cashflow", "cash flow", "liquidity", "runway", "bank balance", "money in bank", "can we afford", "short on cash"],
+    "question_type": "strategic",
+    "primary_report": "Cash Flow Statement",
+    "secondary_reports": ["Balance Sheet", "Aged Receivables"]
+  },
+  "financial_position": {
+    "keywords": ["balance sheet", "assets", "liabilities", "equity", "financial position", "solvency"],
+    "question_type": "strategic",
+    "primary_report": "Balance Sheet"
+  },
+  "receivables": {
+    "keywords": ["who owes us", "debtors", "receivables", "overdue invoices", "unpaid invoices", "late customers", "collections", "outstanding customer balances"],
+    "question_type": "strategic",
+    "primary_report": "Aged Receivables",
+    "secondary_reports": ["Partner Ledger"]
+  },
+  "payables": {
+    "keywords": ["what do we owe", "creditors", "payables", "supplier balances", "overdue bills", "unpaid suppliers", "upcoming payments"],
+    "question_type": "strategic",
+    "primary_report": "Aged Payables",
+    "secondary_reports": ["Partner Ledger"]
+  },
+  "tax_position": {
+    "keywords": ["gst", "bas", "vat", "tax", "income tax", "tax owed", "tax payable", "sales tax"],
+    "question_type": "strategic",
+    "primary_report": "Tax Report",
+    "fallback_journals": ["Retail GST Acc (4397)", "Retail Income Tax Acc (5426)"]
+  },
+  "budget_variance": {
+    "keywords": ["budget", "budget vs actual", "variance", "plan vs actual", "overspend", "underspend"],
+    "question_type": "strategic",
+    "primary_report": "Budget Report"
+  },
+  "account_activity": {
+    "keywords": ["general ledger", "ledger", "account activity", "transactions in account", "movement in account"],
+    "question_type": "analytical",
+    "primary_report": "General Ledger"
+  },
+  "account_balances": {
+    "keywords": ["trial balance", "all account balances", "balances by account"],
+    "question_type": "analytical",
+    "primary_report": "Trial Balance"
+  },
+  "journal_activity": {
+    "keywords": ["journal", "journal entries", "journal activity"],
+    "question_type": "operational",
+    "primary_report": "Journal Report"
+  },
+  "reconciliation_status": {
+    "keywords": ["reconcile", "unreconciled", "mismatch", "settlement", "clearing", "payout", "bank feed issue", "payment issue"],
+    "question_type": "operational",
+    "primary_report": "Journal Dashboard / Reconciliation View",
+    "secondary_reports": ["General Ledger", "Journal Report"]
+  }
+}

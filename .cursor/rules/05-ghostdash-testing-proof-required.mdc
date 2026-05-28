@@ -1,0 +1,49 @@
+---
+description: GhostDash testing and proof — no change complete without evidence, test matrix by layer, or explicit why not.
+alwaysApply: true
+---
+
+# GhostDash Testing and Proof Required
+
+No change is complete without proof.
+
+## For every task, provide
+
+1. Summary of requirement.
+2. Files changed.
+3. Architecture impact.
+4. Tests run.
+5. Test output.
+6. Manual verification steps.
+7. Cleanup performed.
+8. Known risks.
+
+## For agent or runtime changes, test
+
+- normal happy path
+- tool failure
+- unknown price, stock, or availability
+- prompt injection
+- internal leakage attempt
+- unsupported legal question
+- customer-facing response formatting
+
+## For UI changes, test
+
+- desktop
+- mobile or narrow layout if relevant
+- loading state
+- error state
+- repeated use
+- no duplicate API calls unless intended
+
+## For database changes, test
+
+- migration applies
+- migration is idempotent or safely ordered
+- indexes and constraints exist
+- old code path is removed or still compatible
+
+## If tests cannot be run
+
+Explicitly state why and provide the closest available proof.

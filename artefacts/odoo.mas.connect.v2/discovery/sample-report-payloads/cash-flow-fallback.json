@@ -1,0 +1,31 @@
+{
+  "sample_id": "cash_runway_last_month_burleigh_2026_04_23",
+  "request": {
+    "operation": "odoo.finance.cash.runway_summary",
+    "payload": {
+      "relative_period": "last_month",
+      "company_name_terms": ["burleigh"]
+    }
+  },
+  "response": {
+    "success": true,
+    "operation": "odoo.finance.cash.runway_summary",
+    "trace_id": "2b2350f5a9be47209420f72fede2c7f9",
+    "data": {
+      "result_type": "cash_runway_summary",
+      "date_from": "2026-03-01",
+      "date_to": "2026-04-01",
+      "company_id": 5,
+      "company_ids": [5],
+      "revenue": 280841.36,
+      "cogs": 189080.31000000003,
+      "gp": 91761.04999999996,
+      "cash_position": -66257.95,
+      "daily_burn": 8705.323225806453,
+      "runway_days": -7.611199295114274,
+      "status": "insufficient_inputs",
+      "insufficient_inputs": ["cash_position"],
+      "evidence_source_mode": "live_odoo"
+    }
+  }
+}

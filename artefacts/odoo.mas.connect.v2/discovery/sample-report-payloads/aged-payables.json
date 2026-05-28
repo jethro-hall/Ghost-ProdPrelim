@@ -1,0 +1,41 @@
+{
+  "sample_id": "aged_payables_open_2026_04_23",
+  "request": {
+    "operation": "odoo.finance.payables.open",
+    "payload": {
+      "limit": 20
+    }
+  },
+  "response": {
+    "success": true,
+    "operation": "odoo.finance.payables.open",
+    "trace_id": "e4be729e3e814991b0113e8b72ed5233",
+    "data": {
+      "count": 20,
+      "total_residual": 171445.49,
+      "records_preview": [
+        {
+          "id": 16201,
+          "name": "BILL/2023/0031",
+          "invoice_date": "2023-07-04",
+          "invoice_date_due": "2023-07-07",
+          "state": "posted",
+          "payment_state": "partial",
+          "amount_total": 18971.6,
+          "amount_residual": 10000.0
+        },
+        {
+          "id": 26793,
+          "name": "BILL/2023/0115",
+          "invoice_date": "2023-08-31",
+          "invoice_date_due": "2023-08-31",
+          "state": "posted",
+          "payment_state": "partial",
+          "amount_total": 34191.0,
+          "amount_residual": 15616.6
+        }
+      ],
+      "evidence_source_mode": "live_odoo"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RouterOutput",
+  "type": "object",
+  "required": ["primary_intent", "secondary_intents", "question_type", "entities", "time_range", "comparison", "primary_source", "secondary_sources", "confidence", "reason"],
+  "properties": {
+    "primary_intent": {"type": "string"},
+    "secondary_intents": {"type": "array", "items": {"type": "string"}},
+    "question_type": {"type": "string", "enum": ["strategic", "analytical", "operational"]},
+    "entities": {"type": "array", "items": {"type": "string"}},
+    "time_range": {"type": ["string", "null"]},
+    "comparison": {"type": "boolean"},
+    "primary_source": {
+      "type": "object",
+      "required": ["source_type", "source_name"],
+      "properties": {
+        "source_type": {"type": "string", "enum": ["default_report", "journal_dashboard"]},
+        "source_name": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "secondary_sources": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["source_type", "source_name"],
+        "properties": {
+          "source_type": {"type": "string", "enum": ["default_report", "journal_dashboard"]},
+          "source_name": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "reason": {"type": "string"}
+  },
+  "additionalProperties": false
+}

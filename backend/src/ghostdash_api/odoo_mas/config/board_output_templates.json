@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "section_titles": {
+    "executive_summary": "Executive summary",
+    "kpi_table": "KPI table",
+    "performance_drivers": "Performance drivers",
+    "anomalies": "Anomalies",
+    "forecast": "Forecast",
+    "risks": "Risks",
+    "recommendations": "Recommended actions",
+    "caveats": "Caveats"
+  },
+  "caveat_lines": {
+    "no_new_math": "All figures are from assembled metric packs; this composer does not compute new financial truth.",
+    "incomplete": "Input evidence was incomplete; sections may be partial."
+  }
+}
