@@ -1,0 +1,111 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_job_retrieve",
+  "description": "Retrieve one selected HubTiger workshop job by exact job card number or internal job id.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use hubtiger_job_retrieve only when the caller gives an exact job card number, such as #35872, or after a job_search result has been selected.\n\nDo not use this tool for vague lookups such as first name only, surname only, \"my bike\", \"my service\", or four digits only.\n\nIf the caller gives only four digits, ask whether those digits are the job card number or the last digits of their phone number.\n\nNormal retrieval now validates cached results and automatically falls back to fresh/no-cache server-side when cached job data is invalid, stale, empty, or unavailable. Do not manually call a no-cache variant during normal calls.\n\nIf the tool returns selection_required=true, do not choose a job yourself. Ask the caller to confirm the job card or store.\n\nNever expose raw JSON, trace IDs, headers, backend errors, or internal diagnostics to the caller.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "job_retrieve",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Description\nRide Electric store slug if known. Use exactly one of: southport, brisbane, burleigh. If the caller does not know the store, leave this blank.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "cache_mode",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional cache mode for operator diagnostics only. Normal job retrieval already validates cache and falls back to fresh/no-cache internally. Leave blank for regular ElevenLabs calls.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Selected job identifier object. Include job_card_no when the caller gives a job card number. Include job_id only if already known from a previous HubTiger result.",
+          "properties": [
+            {
+              "id": "job_card_no",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Exact job card number, for example #35872. Use only when the caller gives a job card number or chooses a listed job card.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "job_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Internal HubTiger job id if already known from a previous HubTiger result.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}
