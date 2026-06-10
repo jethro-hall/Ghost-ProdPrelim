@@ -1,0 +1,22 @@
+{
+  "status": "written",
+  "snapshot_id": "eofy_accounting_sample_2026-06-09T05-52-11-276Z",
+  "model": "res.currency",
+  "group": "master_data",
+  "offset": 0,
+  "limit": 200,
+  "exported_rows": 170,
+  "first_id": 1,
+  "last_id": 170,
+  "output_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T05-52-11-276Z__master_data__res_currency__000000000.jsonl",
+  "manifest_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T05-52-11-276Z__master_data__res_currency__000000000.manifest.json",
+  "exported_at": "2026-06-09T05:52:42.834Z",
+  "source_company_context": [
+    4
+  ],
+  "sanitisation": {
+    "partner_names_hashed": false,
+    "bank_details_redacted": true,
+    "descriptions_compacted": true
+  }
+}

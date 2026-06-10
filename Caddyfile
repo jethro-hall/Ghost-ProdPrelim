@@ -1,5 +1,7 @@
 :80 {
 	encode gzip
+	@protean_host host protean.rideai.com.au
+	redir @protean_host https://protean.rideai.com.au{uri} 308
 	@legacy_chat path /chat*
 	redir @legacy_chat https://ghoststack.rideai.com.au/ghost_chatui/ 308
 	@ghost_chatui_root path /ghost_chatui
@@ -55,10 +57,10 @@ ghoststack.rideai.com.au {
 	@prod_chatui_root path /prod_chatui
 	redir @prod_chatui_root /prod_chatui/ 308
 	handle_path /prod_chatui/* {
-		reverse_proxy ghost-chatui:3000
+		reverse_proxy ghost-chatui:3500
 	}
 	handle_path /ghost_chatui/* {
-		reverse_proxy ghost-chatui:3000
+		reverse_proxy ghost-chatui:3500
 	}
 	handle /docx-artifacts/* {
 		reverse_proxy docx-templater:8080 {
@@ -93,6 +95,11 @@ ghoststack.rideai.com.au {
 workflow.rideai.com.au {
 	encode gzip
 	reverse_proxy n8n:5678
+}
+
+protean.rideai.com.au {
+	encode gzip
+	reverse_proxy agentic_workflow_web:3000
 }
 
 https://ghoststack.rideai.com.au:6333 {

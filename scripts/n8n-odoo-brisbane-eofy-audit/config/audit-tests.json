@@ -1,0 +1,95 @@
+{
+  "completeness_tests": [
+    "Validate model presence against minimum dataset.",
+    "Validate expected row counts against Odoo search_count manifests.",
+    "Validate full FY date coverage for date-scoped models.",
+    "Validate no first-N cap unless sample_mode is explicitly enabled.",
+    "Validate no duplicate snapshots in the same scanned root.",
+    "Validate company_id = 4 scope on company-scoped records."
+  ],
+  "accounting_integrity_tests": [
+    "debits equal credits by account_move",
+    "posted moves included; draft/cancelled moves separately identified",
+    "account totals by month",
+    "journal totals by month",
+    "receivable/payable residuals",
+    "manual journal outliers",
+    "late write_date changes after FY end",
+    "duplicate invoice names",
+    "credit note/reversal chains"
+  ],
+  "pos_revenue_tests": [
+    "pos_order total = sum(pos_order_line)",
+    "pos_order amount_paid = sum(pos_payment)",
+    "pos_order.account_move links to account_move",
+    "POS sales reconcile to revenue accounts",
+    "refunds are negative/reversed properly",
+    "discount outliers",
+    "session-level cash/payment imbalance",
+    "payment method anomalies"
+  ],
+  "bank_reconciliation_tests": [
+    "bank statement line matched to accounting move",
+    "payment matched to invoice/bill via account_partial_reconcile",
+    "unreconciled receivable/payable lines",
+    "duplicate payment amounts/dates/partners",
+    "suspense/write-off accounts",
+    "stale residual balances"
+  ],
+  "gst_tax_tests": [
+    "tax base lines support tax lines",
+    "amount_tax reconciles to tax move lines",
+    "tax use matches move_type",
+    "GST on unusual accounts",
+    "negative tax anomalies",
+    "manual tax adjustments"
+  ],
+  "product_stock_cogs_tests": [
+    "invoice/POS product lines link to products",
+    "product category has expected accounts",
+    "stock valuation links to stock moves and accounting moves",
+    "COGS exists for stockable products",
+    "negative quantity/value anomalies",
+    "zero quantity with non-zero value",
+    "unusual margin or discount patterns"
+  ],
+  "audit_trail_tests": [
+    "late write_date after FY end",
+    "high-value records changed late",
+    "unusual users creating/writing records",
+    "field tracking for payment state, amount, date, partner, account",
+    "attachments missing for supplier bills or imported bank records"
+  ],
+  "minimum_models_for_full_audit": [
+    "account_move",
+    "account_move_line",
+    "account_account",
+    "account_journal",
+    "account_payment",
+    "account_partial_reconcile",
+    "account_full_reconcile",
+    "account_tax",
+    "res_partner",
+    "res_company",
+    "res_currency",
+    "pos_order",
+    "pos_order_line",
+    "pos_payment",
+    "pos_payment_method",
+    "pos_session",
+    "pos_config",
+    "product_product",
+    "product_template",
+    "product_category",
+    "uom_uom",
+    "stock_move",
+    "stock_move_line",
+    "stock_picking",
+    "stock_valuation_layer",
+    "account_bank_statement",
+    "account_bank_statement_line",
+    "res_users",
+    "ir_attachment",
+    "mail_tracking_value"
+  ]
+}

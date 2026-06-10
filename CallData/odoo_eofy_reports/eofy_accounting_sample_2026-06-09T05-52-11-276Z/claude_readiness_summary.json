@@ -1,0 +1,670 @@
+{
+  "summary": {
+    "ok": true,
+    "status": "REVIEW_PII_REMAINS",
+    "selected_snapshot_id": "eofy_accounting_sample_2026-06-09T05-52-11-276Z",
+    "raw_root": "/home/node/.n8n/odoo_eofy_exports",
+    "sanitised_root": "/home/node/.n8n/odoo_eofy_exports_sanitised/eofy_accounting_sample_2026-06-09T05-52-11-276Z",
+    "report_root": "/home/node/.n8n/odoo_eofy_reports/eofy_accounting_sample_2026-06-09T05-52-11-276Z",
+    "files_profiled": 11,
+    "models_profiled": 11,
+    "total_rows": 1169,
+    "parse_errors": 0,
+    "pii_after_total": 41,
+    "personal_fields_redacted": 728,
+    "bank_fields_redacted": 0,
+    "compacted_text_fields": 800,
+    "combined_payload_jsonl": "/home/node/.n8n/odoo_eofy_reports/eofy_accounting_sample_2026-06-09T05-52-11-276Z/claude_payload_all.jsonl",
+    "generated_at_utc": "2026-06-09T05:52:43.806Z"
+  },
+  "model_summaries": [
+    {
+      "model": "account_move",
+      "files": 1,
+      "rows": 200,
+      "distinct_ids": 200,
+      "field_count": 42,
+      "fields": [
+        "_sanitisation",
+        "amount_residual",
+        "amount_tax",
+        "amount_total",
+        "amount_untaxed",
+        "commercial_partner_id",
+        "commercial_partner_id_id",
+        "commercial_partner_id_label",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "create_uid",
+        "create_uid_id",
+        "create_uid_label",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "date",
+        "fiscal_position_id",
+        "id",
+        "invoice_date",
+        "invoice_date_due",
+        "invoice_origin",
+        "invoice_payment_term_id",
+        "invoice_payment_term_id_id",
+        "invoice_payment_term_id_label",
+        "journal_id",
+        "journal_id_id",
+        "journal_id_label",
+        "move_type",
+        "name",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "payment_state",
+        "ref",
+        "state",
+        "write_date",
+        "write_uid",
+        "write_uid_id",
+        "write_uid_label"
+      ],
+      "min_date": "2024-07-01",
+      "max_date": "2024-07-08",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 600
+    },
+    {
+      "model": "account_partial_reconcile",
+      "files": 1,
+      "rows": 200,
+      "distinct_ids": 200,
+      "field_count": 14,
+      "fields": [
+        "_sanitisation",
+        "amount",
+        "create_date",
+        "credit_amount_currency",
+        "credit_move_id",
+        "credit_move_id_id",
+        "credit_move_id_label",
+        "debit_amount_currency",
+        "debit_move_id",
+        "debit_move_id_id",
+        "debit_move_id_label",
+        "id",
+        "max_date",
+        "write_date"
+      ],
+      "min_date": "2023-07-04 00:20:02",
+      "max_date": "2023-07-17 02:40:45",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 151527.54,
+      "pii_hits_after": 36,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_payment",
+      "files": 1,
+      "rows": 200,
+      "distinct_ids": 200,
+      "field_count": 34,
+      "fields": [
+        "_sanitisation",
+        "amount",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "create_uid",
+        "create_uid_id",
+        "create_uid_label",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "date",
+        "id",
+        "journal_id",
+        "journal_id_id",
+        "journal_id_label",
+        "move_id",
+        "move_id_id",
+        "move_id_label",
+        "name",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "partner_type",
+        "payment_method_line_id",
+        "payment_method_line_id_id",
+        "payment_method_line_id_label",
+        "payment_type",
+        "state",
+        "write_date",
+        "write_uid",
+        "write_uid_id",
+        "write_uid_label"
+      ],
+      "min_date": "2024-07-03",
+      "max_date": "2024-11-30",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 632858.65,
+      "pii_hits_after": 4,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 200
+    },
+    {
+      "model": "res_partner",
+      "files": 1,
+      "rows": 200,
+      "distinct_ids": 200,
+      "field_count": 24,
+      "fields": [
+        "_sanitisation",
+        "commercial_partner_id",
+        "commercial_partner_id_id",
+        "commercial_partner_id_label",
+        "company_id",
+        "country_id",
+        "country_id_id",
+        "country_id_label",
+        "create_date",
+        "customer_rank",
+        "display_name",
+        "email",
+        "id",
+        "is_company",
+        "mobile",
+        "name",
+        "partner_hash",
+        "phone",
+        "state_id",
+        "state_id_id",
+        "state_id_label",
+        "supplier_rank",
+        "vat",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:34:29",
+      "max_date": "2022-10-13 02:38:02",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 728,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "res_currency",
+      "files": 1,
+      "rows": 170,
+      "distinct_ids": 170,
+      "field_count": 9,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "create_date",
+        "decimal_places",
+        "id",
+        "name",
+        "rounding",
+        "symbol",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:34:31",
+      "max_date": "2024-09-18 09:05:58",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_account",
+      "files": 1,
+      "rows": 165,
+      "distinct_ids": 165,
+      "field_count": 9,
+      "fields": [
+        "_sanitisation",
+        "account_type",
+        "code",
+        "create_date",
+        "deprecated",
+        "id",
+        "name",
+        "reconcile",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2026-05-25 02:16:09",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_journal",
+      "files": 1,
+      "rows": 17,
+      "distinct_ids": 17,
+      "field_count": 14,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "code",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "id",
+        "name",
+        "type",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2026-03-02 05:30:01",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_tax",
+      "files": 1,
+      "rows": 16,
+      "distinct_ids": 16,
+      "field_count": 15,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "amount",
+        "amount_type",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "id",
+        "name",
+        "tax_group_id",
+        "tax_group_id_id",
+        "tax_group_id_label",
+        "type_tax_use",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2022-08-14 23:12:42",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 100000100,
+      "pii_hits_after": 1,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "res_company",
+      "files": 1,
+      "rows": 1,
+      "distinct_ids": 1,
+      "field_count": 12,
+      "fields": [
+        "_sanitisation",
+        "create_date",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "id",
+        "name",
+        "parent_id",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "write_date"
+      ],
+      "min_date": "2022-08-05 16:33:50",
+      "max_date": "2022-08-05 16:33:50",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_full_reconcile",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_move_line",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    }
+  ],
+  "findings": [
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 7,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "45000000000002",
+            "45000000000002",
+            "45000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 82,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7000000000003",
+            "7000000000003",
+            "7000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 85,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7599999999998",
+            "7599999999998",
+            "7599999999998"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 96,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7600000000000002",
+            "7600000000000002",
+            "7600000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 106,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "980000000000004",
+            "980000000000004",
+            "980000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 131,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "2000000000003",
+            "2000000000003",
+            "2000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 136,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "860000000001",
+            "860000000001",
+            "860000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 163,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "740000000000002",
+            "740000000000002",
+            "740000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 171,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "6899999999996",
+            "6899999999996",
+            "6899999999996"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 177,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "8500000000000005",
+            "8500000000000005",
+            "8500000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 180,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "159999999999997",
+            "159999999999997",
+            "159999999999997"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 195,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "240000000000002",
+            "240000000000002",
+            "240000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 115,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "007502246",
+            "007445635",
+            "007510831"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 155,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "007502246"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_tax",
+      "source_file": "eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_tax__000000000.jsonl",
+      "line_no": 15,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "100000000"
+          ]
+        }
+      ]
+    }
+  ]
+}

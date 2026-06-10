@@ -1,0 +1,23 @@
+{
+  "default_partner_id": 2186,
+  "popular": [
+    {
+      "key": "service_full",
+      "id": 19798,
+      "label": "Service Full",
+      "customer_label": "full service and safety check"
+    },
+    {
+      "key": "service_plus",
+      "id": 19799,
+      "label": "Service Plus",
+      "customer_label": "service plus with minor electrical diagnostics"
+    }
+  ],
+  "non_standard_fallback": {
+    "key": "quotation",
+    "id": 79575,
+    "label": "Quotation",
+    "customer_label": "workshop review and quote"
+  }
+}

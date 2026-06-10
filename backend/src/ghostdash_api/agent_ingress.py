@@ -2167,6 +2167,17 @@ def normalize_docx_finalize_answer(*, operation: str, answer_text: str, required
     return "\n\n".join(section_chunks).strip()
 
 
+def resolve_chat_base_system_prompt(
+    *,
+    guardrails_config: dict[str, Any] | None,
+    system_prompt_override: str | None,
+) -> str:
+    override = str(system_prompt_override or "").strip()
+    if override:
+        return override
+    return str((guardrails_config or {}).get("system_prompt", "") or "")
+
+
 def build_effective_system_prompt(
     *,
     base_system_prompt: str,
@@ -4219,7 +4230,10 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         effective_system_prompt = build_effective_system_prompt(
-            base_system_prompt=str(guardrails_config.get("system_prompt", "")),
+            base_system_prompt=resolve_chat_base_system_prompt(
+                guardrails_config=guardrails_config,
+                system_prompt_override=body.system_prompt_override,
+            ),
             conversation_mode=conversation_mode,
             workflow_mode=workflow_mode,
             guardrails_config=guardrails_config,
@@ -5161,7 +5175,10 @@ def create_app() -> FastAPI:
             guardrails_config=guardrails_config,
         )
         effective_system_prompt = build_effective_system_prompt(
-            base_system_prompt=str(guardrails_config.get("system_prompt", "")),
+            base_system_prompt=resolve_chat_base_system_prompt(
+                guardrails_config=guardrails_config,
+                system_prompt_override=body.system_prompt_override,
+            ),
             conversation_mode=conversation_mode,
             workflow_mode=workflow_mode,
             guardrails_config=guardrails_config,

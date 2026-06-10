@@ -1,0 +1,114 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_service_job_submit",
+  "description": "Final submit step: create the service booking after customer confirms details and slot.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute booking_create (submit booking)",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "booking_create",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Submission payload for Hubtiger ScheduleService. Use slot data from booking availability and bike/customer IDs from customer/bike tools.",
+          "properties": [
+            {
+              "id": "ID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "PartnerID for Ride Electric (use 2186).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "BikeID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Bike/scooter ID to book (from existing job/customer bike or bike_create result).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "ServiceType",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Single Hubtiger service type ID. Server converts this into ServiceTypes array automatically.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "ServiceDate",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Confirmed slot start datetime from booking availability result, e.g. 2026-03-13T15:30:00.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "TechnicianID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Confirmed technician ID from booking availability result.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 25,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

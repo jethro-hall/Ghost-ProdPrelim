@@ -1,0 +1,931 @@
+{
+  "run_id": "simrun_1779389537_1338a0a0",
+  "trace_id": "260f2f0f131c4224a9340547dff302fd",
+  "status": "failed",
+  "latency_ms": 5695.366,
+  "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+  "upstream_endpoint": "/v1/convai/agents/agent_3701kq9fcmz1errsmhesm3j47rsg/simulate-conversation",
+  "elevenlabs_request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "I'd like to look at my bike, um, at the workshop, please.",
+          "time_in_call_secs": 5
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 12
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 12
+        },
+        {
+          "role": "agent",
+          "message": "Can I grab your mobile number so I can check that for you?",
+          "time_in_call_secs": 14
+        },
+        {
+          "role": "user",
+          "message": "0435185134.",
+          "time_in_call_secs": 17
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 28
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 30
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 36
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 38
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 42
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 45
+        },
+        {
+          "role": "agent",
+          "message": "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+          "time_in_call_secs": 46
+        },
+        {
+          "role": "user",
+          "message": "...",
+          "time_in_call_secs": 60
+        },
+        {
+          "role": "agent",
+          "message": "[Patient] I didn’t catch that — is it...",
+          "time_in_call_secs": 62
+        },
+        {
+          "role": "user",
+          "message": "Yes.",
+          "time_in_call_secs": 63
+        },
+        {
+          "role": "agent",
+          "message": "[Patient] Which one is it, the Fatfish Biggie or the VSETT Apex ten plus?",
+          "time_in_call_secs": 68
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 2
+  },
+  "started_at": "2026-05-21T18:52:17.357779+00:00",
+  "call_successful": "failure",
+  "transcript_summary": "The user initiated a request to check on their bike at a workshop. The agent, \"Magic Mike,\" requested a mobile number to locate the relevant information. After receiving the number, the agent found two jobs under \"Jeff Hall\" for a \"Fatfish Biggie\" and a \"VSETT Apex ten plus,\" and repeatedly sought clarification from the user on which specific bike they were inquiring about.",
+  "call_summary_title": "Confirm Bike for Workshop",
+  "evaluation_criteria_results": {
+    "ghostdash_success_criteria": {
+      "criteria_id": "ghostdash_success_criteria",
+      "result": "failure",
+      "rationale": "The agent is concise and customer-safe, but the conversation ends before the agent can complete the user's request to \"look at my bike at the workshop\" as the agent is still trying to identify the correct bike."
+    }
+  },
+  "turns": [
+    {
+      "role": "agent",
+      "message": "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "I'd like to look at my bike, um, at the workshop, please.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Can I grab your mobile number so I can check that for you?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "0435185134.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "...",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "[Patient] I didn’t catch that — is it...",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "Yes.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "[Patient] Which one is it, the Fatfish Biggie or the VSETT Apex ten plus?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "Could you please clarify which specific jobs you are referring to under Jeff Hall?  This will help me provide a more accurate response regarding whether they are for the Fatfish Biggie or the VSETT Apex ten plus.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "[Patient] I see  two jobs under  Jeff Hall: one  for a Fat fish Biggie and  another for a  VSETT Apex ten  plus.  Could you confirm  which bike you 're referring to ?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.21073880605399609
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.18567309714853764
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.4190029031597078
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "new_turns": [
+    {
+      "role": "user",
+      "message": "Could you please clarify which specific jobs you are referring to under Jeff Hall?  This will help me provide a more accurate response regarding whether they are for the Fatfish Biggie or the VSETT Apex ten plus.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "[Patient] I see  two jobs under  Jeff Hall: one  for a Fat fish Biggie and  another for a  VSETT Apex ten  plus.  Could you confirm  which bike you 're referring to ?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.21073880605399609
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.18567309714853764
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.4190029031597078
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "turn_count": 19,
+  "message": "Simulation step completed.",
+  "file_name": "JSON_Jeff_Hall_context_The_user_initiated_a_request_to_check_on_their_bike_at&Bike_Repair_Job_Inquiry_SIMULATION.json",
+  "step_mode": "both",
+  "stop_index": 16,
+  "partial_turn_count": 17,
+  "request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "I'd like to look at my bike, um, at the workshop, please.",
+          "time_in_call_secs": 5
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 12
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 12
+        },
+        {
+          "role": "agent",
+          "message": "Can I grab your mobile number so I can check that for you?",
+          "time_in_call_secs": 14
+        },
+        {
+          "role": "user",
+          "message": "0435185134.",
+          "time_in_call_secs": 17
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 28
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 30
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 36
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 38
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 42
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 45
+        },
+        {
+          "role": "agent",
+          "message": "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+          "time_in_call_secs": 46
+        },
+        {
+          "role": "user",
+          "message": "...",
+          "time_in_call_secs": 60
+        },
+        {
+          "role": "agent",
+          "message": "[Patient] I didn’t catch that — is it...",
+          "time_in_call_secs": 62
+        },
+        {
+          "role": "user",
+          "message": "Yes.",
+          "time_in_call_secs": 63
+        },
+        {
+          "role": "agent",
+          "message": "[Patient] Which one is it, the Fatfish Biggie or the VSETT Apex ten plus?",
+          "time_in_call_secs": 68
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 2
+  },
+  "upstream": {
+    "simulated_conversation": [
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 0,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "I'd like to look at my bike, um, at the workshop, please.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 1,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 2,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 3,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Can I grab your mobile number so I can check that for you?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 4,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "0435185134.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 5,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 6,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 7,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 8,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 9,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 10,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 11,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 12,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "...",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 13,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "[Patient] I didn’t catch that — is it...",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 14,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "Yes.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 15,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "[Patient] Which one is it, the Fatfish Biggie or the VSETT Apex ten plus?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 16,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "Could you please clarify which specific jobs you are referring to under Jeff Hall?  This will help me provide a more accurate response regarding whether they are for the Fatfish Biggie or the VSETT Apex ten plus.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 17,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": {
+          "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+          "branch_id": null,
+          "workflow_node_id": null,
+          "version_id": null
+        },
+        "message": "[Patient] I see  two jobs under  Jeff Hall: one  for a Fat fish Biggie and  another for a  VSETT Apex ten  plus.  Could you confirm  which bike you 're referring to ?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": {
+          "metrics": {
+            "convai_llm_service_ttf_sentence": {
+              "elapsed_time": 0.21073880605399609
+            },
+            "convai_llm_service_ttfb": {
+              "elapsed_time": 0.18567309714853764
+            },
+            "convai_llm_service_tt_last_sentence": {
+              "elapsed_time": 0.4190029031597078
+            }
+          },
+          "convai_asr_provider": null,
+          "convai_tts_model": null,
+          "convai_tts_cascade": null
+        },
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 18,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      }
+    ],
+    "analysis": {
+      "evaluation_criteria_results": {
+        "ghostdash_success_criteria": {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent is concise and customer-safe, but the conversation ends before the agent can complete the user's request to \"look at my bike at the workshop\" as the agent is still trying to identify the correct bike."
+        }
+      },
+      "data_collection_results": {},
+      "evaluation_criteria_results_list": [
+        {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent is concise and customer-safe, but the conversation ends before the agent can complete the user's request to \"look at my bike at the workshop\" as the agent is still trying to identify the correct bike."
+        }
+      ],
+      "data_collection_results_list": [],
+      "call_successful": "failure",
+      "transcript_summary": "The user initiated a request to check on their bike at a workshop. The agent, \"Magic Mike,\" requested a mobile number to locate the relevant information. After receiving the number, the agent found two jobs under \"Jeff Hall\" for a \"Fatfish Biggie\" and a \"VSETT Apex ten plus,\" and repeatedly sought clarification from the user on which specific bike they were inquiring about.",
+      "call_summary_title": "Confirm Bike for Workshop",
+      "scoped": []
+    },
+    "guardrails_result": {
+      "triggered": false
+    }
+  }
+}

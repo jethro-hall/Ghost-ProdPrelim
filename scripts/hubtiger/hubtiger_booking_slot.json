@@ -1,0 +1,86 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_slot",
+  "description": "Step 1a: Store the customer's chosen workshop slot in a server-side booking session. Call once after availability is accepted.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "First booking step after availability. Pass ServiceDate and TechnicianID from recommended_slot. Set slot_from_availability true when the slot came from the availability tool.\n\nReturns booking_session_id — keep it for all later booking tools.\n\nWorkshop hours Mon–Sat 8:30am–5:00pm only.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_slot_hold",
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Required. southport, brisbane, or burleigh.",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Slot fields from availability.",
+          "properties": [
+            {
+              "id": "ServiceDate",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "From recommended_slot, e.g. 2026-05-23T13:40.",
+              "required": true
+            },
+            {
+              "id": "TechnicianID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "From recommended_slot.",
+              "required": true
+            },
+            {
+              "id": "slot_from_availability",
+              "type": "boolean",
+              "value_type": "llm_prompt",
+              "description": "Set true when slot came from hubtiger_booking_availability_readonly.",
+              "required": false
+            },
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Only if continuing an existing session.",
+              "required": false
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 30,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

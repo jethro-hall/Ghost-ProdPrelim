@@ -1,0 +1,35 @@
+{
+  "business": "Ride Electric Brisbane",
+  "company_id": 4,
+  "company_name": "Ride Electric Brisbane",
+  "financial_year_start": "2024-07-01",
+  "financial_year_end": "2025-06-30",
+  "timezone": "Australia/Brisbane",
+  "scope_note": "Brisbane pilot only (company_id 4). Do not generalise findings to other Ride Electric entities unless the data explicitly supports it.",
+  "n8n_server": "https://workflow.rideai.com.au",
+  "export_paths": {
+    "output_root": "/home/node/.n8n/odoo_forensic_exports",
+    "raw_root": "/home/node/.n8n/odoo_forensic_exports",
+    "sanitised_root": "/home/node/.n8n/odoo_forensic_exports",
+    "report_root": "/home/node/.n8n/odoo_forensic_exports"
+  },
+  "export_defaults": {
+    "batch_size": 500,
+    "sample_limit_per_model": null,
+    "order": "id asc",
+    "sanitise": {
+      "partner_names_hashed": true,
+      "bank_details_redacted": true,
+      "descriptions_compacted": true,
+      "text_compact_max_len": 64
+    }
+  },
+  "handover_caveats": [
+    "This is Brisbane/company_id 4 only.",
+    "This is not group-wide unless explicitly expanded.",
+    "Missing data is an extraction gap, not proof of no issue.",
+    "Sanitised identifiers are stable for grouping but not re-identification.",
+    "Do not run financial conclusions without account_move_line.",
+    "Do not run POS conclusions without pos_order, pos_order_line, and pos_payment."
+  ]
+}

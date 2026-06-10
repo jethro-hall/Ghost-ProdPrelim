@@ -1,0 +1,166 @@
+{
+  "run_id": "chunk_review_2026-06-09T05-17-54-614Z",
+  "model": "res.company",
+  "group": "master_data",
+  "snapshot_id": "eofy_2025_2026-06-09T05-17-48-425Z",
+  "chunk_index": "000000000",
+  "source_file": "/home/node/.n8n/odoo_eofy_exports/eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.jsonl",
+  "sanitised_file": "/home/node/.n8n/odoo_eofy_exports_sanitised/eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.sanitised.jsonl",
+  "source_rows": 1,
+  "sanitised_rows": 1,
+  "parse_errors": 0,
+  "source_size_bytes": 508,
+  "sanitised_size_bytes": 808,
+  "sha256_source": "00db897860de9ed2fd3b59d91fabb1ad0671d16b977531688e488f80b07f3d76",
+  "sha256_sanitised": "4840a9faba7712f303cdf3cbac41c090be6cac2f03520fcc6028ab56193fb383",
+  "pii_before": {
+    "email": 0,
+    "phone": 0,
+    "url": 0,
+    "longToken": 1,
+    "bsb": 0,
+    "longNumber": 0
+  },
+  "pii_after": {
+    "email": 0,
+    "phone": 1,
+    "url": 0,
+    "longToken": 1,
+    "bsb": 0,
+    "longNumber": 0
+  },
+  "pii_before_total": 1,
+  "pii_after_total": 2,
+  "personal_fields_redacted": 0,
+  "bank_fields_redacted": 0,
+  "secret_fields_redacted": 0,
+  "description_fields_compacted": 0,
+  "field_count": 12,
+  "fields": [
+    {
+      "field": "_export",
+      "present_rows": 1,
+      "types": {
+        "object": 1
+      }
+    },
+    {
+      "field": "create_date",
+      "present_rows": 1,
+      "types": {
+        "string": 1
+      }
+    },
+    {
+      "field": "currency_id",
+      "present_rows": 1,
+      "types": {
+        "array": 1
+      }
+    },
+    {
+      "field": "currency_id_id",
+      "present_rows": 1,
+      "types": {
+        "number": 1
+      }
+    },
+    {
+      "field": "currency_id_label",
+      "present_rows": 1,
+      "types": {
+        "string": 1
+      }
+    },
+    {
+      "field": "id",
+      "present_rows": 1,
+      "types": {
+        "number": 1
+      }
+    },
+    {
+      "field": "name",
+      "present_rows": 1,
+      "types": {
+        "string": 1
+      }
+    },
+    {
+      "field": "parent_id",
+      "present_rows": 1,
+      "types": {
+        "boolean": 1
+      }
+    },
+    {
+      "field": "partner_id",
+      "present_rows": 1,
+      "types": {
+        "array": 1
+      }
+    },
+    {
+      "field": "partner_id_id",
+      "present_rows": 1,
+      "types": {
+        "number": 1
+      }
+    },
+    {
+      "field": "partner_id_label",
+      "present_rows": 1,
+      "types": {
+        "string": 1
+      }
+    },
+    {
+      "field": "write_date",
+      "present_rows": 1,
+      "types": {
+        "string": 1
+      }
+    }
+  ],
+  "sample_rows": [
+    {
+      "id": 4,
+      "name": "Ride Electric Brisbane",
+      "currency_id": [
+        21,
+        "AUD"
+      ],
+      "parent_id": false,
+      "partner_id": [
+        360,
+        "PARTNER_48eca9bdd7d2"
+      ],
+      "create_date": "2022-08-05 16:33:50",
+      "write_date": "2026-06-08 01:53:48",
+      "partner_id_id": 360,
+      "partner_id_label": "Ride Electric Brisbane",
+      "currency_id_id": 21,
+      "currency_id_label": "AUD",
+      "_export": {
+        "snapshot_id": "[LONG_TOKEN_REDACTED]",
+        "model": "res.company",
+        "group": "master_data",
+        "offset": 0,
+        "limit": 10,
+        "exported_at": "2026-06-09T05:17:50.770Z",
+        "source_company_context": [
+          4
+        ]
+      },
+      "_sanitisation": {
+        "model": "res.company",
+        "source_file": "eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.jsonl",
+        "sanitised_at_utc": "2026-06-09T05:17:54.661Z",
+        "personal_fields_redacted": 0,
+        "bank_fields_redacted": 0,
+        "description_policy": "descriptions compacted/truncated with hash where required"
+      }
+    }
+  ],
+  "assessed_at_utc": "2026-06-09T05:17:54.663Z"
+}

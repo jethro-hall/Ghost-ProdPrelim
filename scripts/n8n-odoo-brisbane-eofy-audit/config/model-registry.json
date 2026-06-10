@@ -1,0 +1,723 @@
+{
+  "version": "1.0.0",
+  "description": "Ride Electric Brisbane EOFY forensic audit — Odoo model extraction map. Odoo API uses dot notation; export file names use underscores.",
+  "groups": {
+    "accounting_core": "Accounting headers, lines, journals, payments, reconciliation, tax",
+    "master_data": "Companies, partners, currency, users",
+    "pos_core": "POS orders, lines, payments, sessions",
+    "bank_reconciliation": "Bank statements and reconciliation rules",
+    "sales_purchases": "Sales and purchase order source documents",
+    "product_context": "Products, categories, units of measure",
+    "stock_inventory": "Stock moves, pickings, valuation layers",
+    "analytic": "Analytic accounts and distributions",
+    "audit_metadata": "Attachments, tracking, model registry, ACL context"
+  },
+  "models": [
+    {
+      "odoo_model": "account.move",
+      "export_key": "account_move",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Accounting document header: invoice, bill, journal, credit note",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "ref", "move_type", "state", "date", "invoice_date", "invoice_date_due",
+        "journal_id", "partner_id", "commercial_partner_id", "company_id", "currency_id",
+        "payment_state", "amount_untaxed", "amount_tax", "amount_total", "amount_residual",
+        "reversed_entry_id", "reversal_move_id", "invoice_origin", "invoice_payment_term_id",
+        "create_uid", "create_date", "write_uid", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "account.move.line",
+      "export_key": "account_move_line",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Ledger/journal line detail — required for any serious financial audit",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "move_id", "date", "parent_state", "account_id", "journal_id", "partner_id",
+        "product_id", "company_id", "currency_id", "name", "ref", "debit", "credit", "balance",
+        "amount_currency", "quantity", "price_unit", "discount", "price_subtotal", "price_total",
+        "tax_ids", "tax_line_id", "tax_base_amount", "reconciled", "matching_number",
+        "full_reconcile_id", "payment_id", "statement_line_id", "analytic_distribution",
+        "create_uid", "create_date", "write_uid", "write_date"
+      ],
+      "notes": "Do NOT request commercial_partner_id on account.move.line — invalid on this Odoo version."
+    },
+    {
+      "odoo_model": "account.account",
+      "export_key": "account_account",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Chart of accounts",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "code", "name", "account_type", "internal_group", "reconcile", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.journal",
+      "export_key": "account_journal",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Journal/register metadata",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "code", "type", "company_id", "default_account_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.payment",
+      "export_key": "account_payment",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Payment records",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "payment_type", "partner_type", "partner_id", "amount", "currency_id",
+        "date", "journal_id", "state", "move_id", "company_id", "create_uid", "create_date",
+        "write_uid", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "account.partial.reconcile",
+      "export_key": "account_partial_reconcile",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Reconciliation edges between move lines",
+      "date_field": "create_date",
+      "company_field": null,
+      "domain_extra": [],
+      "fields": [
+        "id", "debit_move_id", "credit_move_id", "amount", "debit_amount_currency",
+        "credit_amount_currency", "full_reconcile_id", "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "account.full.reconcile",
+      "export_key": "account_full_reconcile",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "Full reconciliation groups",
+      "date_field": "create_date",
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.tax",
+      "export_key": "account_tax",
+      "group": "accounting_core",
+      "required_for_full_audit": true,
+      "relevance": "GST/tax configuration",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "amount", "amount_type", "type_tax_use", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.tax.repartition.line",
+      "export_key": "account_tax_repartition_line",
+      "group": "accounting_core",
+      "required_for_full_audit": false,
+      "relevance": "Tax posting configuration",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "tax_id", "account_id", "repartition_type", "factor", "company_id"]
+    },
+    {
+      "odoo_model": "account.fiscal.position",
+      "export_key": "account_fiscal_position",
+      "group": "accounting_core",
+      "required_for_full_audit": false,
+      "relevance": "Tax/account remapping",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.payment.term",
+      "export_key": "account_payment_term",
+      "group": "accounting_core",
+      "required_for_full_audit": false,
+      "relevance": "Payment terms",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "res.partner",
+      "export_key": "res_partner",
+      "group": "master_data",
+      "required_for_full_audit": true,
+      "relevance": "Customers, suppliers, contacts",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "display_name", "company_id", "commercial_partner_id", "customer_rank",
+        "supplier_rank", "vat", "email", "phone", "is_company", "parent_id", "active",
+        "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "res.company",
+      "export_key": "res_company",
+      "group": "master_data",
+      "required_for_full_audit": true,
+      "relevance": "Company master",
+      "date_field": null,
+      "company_field": "id",
+      "domain_extra": [["id", "=", 4]],
+      "fields": ["id", "name", "currency_id", "partner_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "res.currency",
+      "export_key": "res_currency",
+      "group": "master_data",
+      "required_for_full_audit": true,
+      "relevance": "Currency reference",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "symbol", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "res.users",
+      "export_key": "res_users",
+      "group": "master_data",
+      "required_for_full_audit": true,
+      "relevance": "Create/write user resolution",
+      "date_field": null,
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "name", "login", "active", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "pos.order",
+      "export_key": "pos_order",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "POS sale/refund header",
+      "date_field": "date_order",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "date_order", "session_id", "config_id", "partner_id", "user_id",
+        "company_id", "amount_total", "amount_tax", "amount_paid", "amount_return", "state",
+        "account_move", "create_uid", "create_date", "write_uid", "write_date"
+      ],
+      "notes": "Requires Odoo credential with Point of Sale/User (or Inventory) group."
+    },
+    {
+      "odoo_model": "pos.order.line",
+      "export_key": "pos_order_line",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "POS item lines",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "order_id", "product_id", "qty", "price_unit", "discount", "price_subtotal",
+        "price_subtotal_incl", "tax_ids", "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "pos.payment",
+      "export_key": "pos_payment",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "POS tender detail",
+      "date_field": "payment_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "pos_order_id", "payment_method_id", "amount", "payment_date", "session_id",
+        "company_id", "create_uid", "create_date", "write_uid", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "pos.payment.method",
+      "export_key": "pos_payment_method",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "Payment method config",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "is_cash_count", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "pos.session",
+      "export_key": "pos_session",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "POS register session",
+      "date_field": "start_at",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "config_id", "state", "start_at", "stop_at", "company_id",
+        "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "pos.config",
+      "export_key": "pos_config",
+      "group": "pos_core",
+      "required_for_full_audit": true,
+      "relevance": "POS register/site setup",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "pos.category",
+      "export_key": "pos_category",
+      "group": "pos_core",
+      "required_for_full_audit": false,
+      "relevance": "POS product grouping",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "parent_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.bank.statement",
+      "export_key": "account_bank_statement",
+      "group": "bank_reconciliation",
+      "required_for_full_audit": true,
+      "relevance": "Bank statement batch/header",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "date", "journal_id", "company_id", "balance_start", "balance_end_real", "state", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.bank.statement.line",
+      "export_key": "account_bank_statement_line",
+      "group": "bank_reconciliation",
+      "required_for_full_audit": true,
+      "relevance": "Imported bank transactions",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "statement_id", "date", "payment_ref", "amount", "partner_id", "move_id",
+        "is_reconciled", "company_id", "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "account.reconcile.model",
+      "export_key": "account_reconcile_model",
+      "group": "bank_reconciliation",
+      "required_for_full_audit": false,
+      "relevance": "Auto-reconciliation rules",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "rule_type", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "res.partner.bank",
+      "export_key": "res_partner_bank",
+      "group": "bank_reconciliation",
+      "required_for_full_audit": false,
+      "relevance": "Partner bank accounts",
+      "date_field": null,
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "partner_id", "acc_number", "bank_id", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "sale.order",
+      "export_key": "sale_order",
+      "group": "sales_purchases",
+      "required_for_full_audit": false,
+      "relevance": "Sales order header",
+      "date_field": "date_order",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "partner_id", "state", "date_order", "amount_total", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "sale.order.line",
+      "export_key": "sale_order_line",
+      "group": "sales_purchases",
+      "required_for_full_audit": false,
+      "relevance": "Sales order detail",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "order_id", "product_id", "product_uom_qty", "qty_delivered", "qty_invoiced", "price_subtotal", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "purchase.order",
+      "export_key": "purchase_order",
+      "group": "sales_purchases",
+      "required_for_full_audit": false,
+      "relevance": "Purchase order header",
+      "date_field": "date_order",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "partner_id", "state", "date_order", "amount_total", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "purchase.order.line",
+      "export_key": "purchase_order_line",
+      "group": "sales_purchases",
+      "required_for_full_audit": false,
+      "relevance": "Purchase order detail",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "order_id", "product_id", "product_qty", "qty_received", "qty_invoiced", "price_subtotal", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "product.product",
+      "export_key": "product_product",
+      "group": "product_context",
+      "required_for_full_audit": true,
+      "relevance": "Product variant/SKU",
+      "date_field": "create_date",
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "default_code", "product_tmpl_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "product.template",
+      "export_key": "product_template",
+      "group": "product_context",
+      "required_for_full_audit": true,
+      "relevance": "Product master",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "name", "type", "categ_id", "list_price", "standard_price", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "product.category",
+      "export_key": "product_category",
+      "group": "product_context",
+      "required_for_full_audit": true,
+      "relevance": "Income/expense/stock account mapping",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "parent_id", "property_account_income_categ_id", "property_account_expense_categ_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "uom.uom",
+      "export_key": "uom_uom",
+      "group": "product_context",
+      "required_for_full_audit": true,
+      "relevance": "Unit of measure",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "category_id", "factor", "uom_type", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "uom.category",
+      "export_key": "uom_category",
+      "group": "product_context",
+      "required_for_full_audit": false,
+      "relevance": "UoM grouping",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "stock.move",
+      "export_key": "stock_move",
+      "group": "stock_inventory",
+      "required_for_full_audit": true,
+      "relevance": "Inventory movement",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "name", "product_id", "product_uom_qty", "quantity", "state", "date", "picking_id",
+        "location_id", "location_dest_id", "company_id", "create_date", "write_date"
+      ]
+    },
+    {
+      "odoo_model": "stock.move.line",
+      "export_key": "stock_move_line",
+      "group": "stock_inventory",
+      "required_for_full_audit": true,
+      "relevance": "Detailed stock movement",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "move_id", "product_id", "quantity", "lot_id", "location_id", "location_dest_id", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "stock.picking",
+      "export_key": "stock_picking",
+      "group": "stock_inventory",
+      "required_for_full_audit": true,
+      "relevance": "Receipt/delivery document",
+      "date_field": "date_done",
+      "date_field_fallback": "scheduled_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "partner_id", "state", "picking_type_id", "scheduled_date", "date_done", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "stock.valuation.layer",
+      "export_key": "stock_valuation_layer",
+      "group": "stock_inventory",
+      "required_for_full_audit": true,
+      "relevance": "COGS and inventory value bridge",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": [
+        "id", "product_id", "quantity", "unit_cost", "value", "remaining_qty", "remaining_value",
+        "stock_move_id", "account_move_id", "company_id", "create_date", "description"
+      ]
+    },
+    {
+      "odoo_model": "stock.location",
+      "export_key": "stock_location",
+      "group": "stock_inventory",
+      "required_for_full_audit": false,
+      "relevance": "Inventory location",
+      "date_field": null,
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "name", "usage", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "stock.warehouse",
+      "export_key": "stock_warehouse",
+      "group": "stock_inventory",
+      "required_for_full_audit": false,
+      "relevance": "Warehouse/site mapping",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "code", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "stock.lot",
+      "export_key": "stock_lot",
+      "group": "stock_inventory",
+      "required_for_full_audit": false,
+      "relevance": "Serial/lot tracking",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "product_id", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.analytic.line",
+      "export_key": "account_analytic_line",
+      "group": "analytic",
+      "required_for_full_audit": false,
+      "relevance": "Analytic postings",
+      "date_field": "date",
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "date", "amount", "account_id", "partner_id", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.analytic.account",
+      "export_key": "account_analytic_account",
+      "group": "analytic",
+      "required_for_full_audit": false,
+      "relevance": "Analytic account master",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "plan_id", "company_id", "active", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.analytic.plan",
+      "export_key": "account_analytic_plan",
+      "group": "analytic",
+      "required_for_full_audit": false,
+      "relevance": "Analytic dimension structure",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "name", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "account.analytic.distribution.model",
+      "export_key": "account_analytic_distribution_model",
+      "group": "analytic",
+      "required_for_full_audit": false,
+      "relevance": "Default allocation rules",
+      "date_field": null,
+      "company_field": "company_id",
+      "domain_extra": [],
+      "fields": ["id", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "res.groups",
+      "export_key": "res_groups",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Permission context",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "category_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "mail.message",
+      "export_key": "mail_message",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Chatter messages",
+      "date_field": "date",
+      "company_field": null,
+      "domain_extra": [["model", "in", ["account.move", "account.payment", "pos.order"]]],
+      "fields": ["id", "model", "res_id", "message_type", "date", "author_id", "create_date"]
+    },
+    {
+      "odoo_model": "mail.tracking.value",
+      "export_key": "mail_tracking_value",
+      "group": "audit_metadata",
+      "required_for_full_audit": true,
+      "relevance": "Tracked field changes",
+      "date_field": "create_date",
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "field_id", "old_value_char", "new_value_char", "mail_message_id", "create_date"]
+    },
+    {
+      "odoo_model": "ir.attachment",
+      "export_key": "ir_attachment",
+      "group": "audit_metadata",
+      "required_for_full_audit": true,
+      "relevance": "Attachment metadata (not binary)",
+      "date_field": "create_date",
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [["res_model", "in", ["account.move", "account.payment", "account.bank.statement.line"]]],
+      "fields": ["id", "name", "res_model", "res_id", "mimetype", "file_size", "company_id", "create_date", "write_date"]
+    },
+    {
+      "odoo_model": "ir.model",
+      "export_key": "ir_model",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Custom model discovery",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "model", "name", "state"]
+    },
+    {
+      "odoo_model": "ir.model.fields",
+      "export_key": "ir_model_fields",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Custom field discovery",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "model", "field_description", "ttype", "required", "readonly"]
+    },
+    {
+      "odoo_model": "ir.model.access",
+      "export_key": "ir_model_access",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "ACL metadata",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "model_id", "perm_read", "perm_write", "perm_create", "perm_unlink"]
+    },
+    {
+      "odoo_model": "ir.rule",
+      "export_key": "ir_rule",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Record rules / company filters",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "model_id", "domain_force", "active"]
+    },
+    {
+      "odoo_model": "ir.module.module",
+      "export_key": "ir_module_module",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Installed modules",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [["state", "=", "installed"]],
+      "fields": ["id", "name", "shortdesc", "state", "latest_version"]
+    },
+    {
+      "odoo_model": "ir.model.data",
+      "export_key": "ir_model_data",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "External IDs",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "module", "model", "res_id", "noupdate"]
+    },
+    {
+      "odoo_model": "ir.property",
+      "export_key": "ir_property",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Company-dependent defaults",
+      "date_field": null,
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "name", "fields_id", "value_text", "company_id", "res_id"]
+    },
+    {
+      "odoo_model": "ir.default",
+      "export_key": "ir_default",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Default values",
+      "date_field": null,
+      "company_field": "company_id",
+      "company_field_optional": true,
+      "domain_extra": [],
+      "fields": ["id", "field_id", "json_value", "company_id"]
+    },
+    {
+      "odoo_model": "ir.ui.view",
+      "export_key": "ir_ui_view",
+      "group": "audit_metadata",
+      "required_for_full_audit": false,
+      "relevance": "Studio/custom UI clues",
+      "date_field": null,
+      "company_field": null,
+      "domain_extra": [],
+      "fields": ["id", "name", "model", "type", "active", "create_date", "write_date"]
+    }
+  ]
+}

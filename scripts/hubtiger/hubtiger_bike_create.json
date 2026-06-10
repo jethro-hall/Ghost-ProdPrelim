@@ -1,0 +1,117 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_bike_create",
+  "description": "Create a new bike/scooter asset for an existing or newly created customer.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute bike_create",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "bike_create",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Bike/scooter creation payload",
+          "properties": [
+            {
+              "id": "CustomerID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Customer ID to attach this bike/scooter to.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Manufacturer",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Vehicle manufacturer/brand.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Model",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Exact bike/scooter model.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "SerialNumber",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Serial number if available.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "BikeType",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional type label (bike/scooter).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": [
+                "bike",
+                "scooter"
+              ],
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

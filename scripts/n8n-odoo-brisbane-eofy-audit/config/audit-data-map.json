@@ -1,0 +1,81 @@
+{
+  "title": "Odoo / Ride Electric Brisbane Audit Data Map and Relevance",
+  "purpose": "Tacit operating knowledge for the forensic audit agent. Odoo models form a connected transaction graph — reconstruct it, test completeness, identify anomalies.",
+  "transaction_chains": {
+    "accounting": [
+      "account.move → account.move.line → account.account, account.journal, res.partner, account.tax, product.product",
+      "account.move.line → account.partial.reconcile → account.full.reconcile",
+      "account.payment → account.move → account.move.line → account.partial.reconcile"
+    ],
+    "pos": [
+      "pos.order → pos.order.line → product.product, product.template, account.tax",
+      "pos.order → pos.payment → pos.payment.method",
+      "pos.order → pos.session → pos.config",
+      "pos.order.account_move → account.move → account.move.line"
+    ],
+    "product_stock_cogs": [
+      "product.product → product.template → product.category → uom.uom",
+      "stock.move → stock.move.line, stock.valuation.layer → account.move → account.move.line",
+      "stock.move → stock.picking"
+    ],
+    "reconciliation": [
+      "account.move.line → account.partial.reconcile (debit_move_id / credit_move_id)",
+      "account.bank.statement.line → account.move"
+    ]
+  },
+  "retail_operating_model": [
+    "POS retail sales",
+    "customer invoices",
+    "supplier bills",
+    "product and parts sales",
+    "service/repair activity",
+    "refunds and credit notes",
+    "cash/card/Afterpay receipts",
+    "inventory movement",
+    "COGS/stock valuation",
+    "GST/tax reporting",
+    "bank reconciliation",
+    "manual journals"
+  ],
+  "group_structure_note": "Ride Electric Brisbane (company_id 4) is the audit population. Other entities (Retail, Wholesale) exist but are out of scope unless data explicitly supports cross-entity findings.",
+  "critical_field_sets": {
+    "account_move": [
+      "id", "name", "ref", "move_type", "state", "date", "invoice_date", "invoice_date_due",
+      "journal_id", "partner_id", "commercial_partner_id", "company_id", "currency_id",
+      "payment_state", "amount_untaxed", "amount_tax", "amount_total", "amount_residual",
+      "reversed_entry_id", "reversal_move_id", "invoice_origin", "invoice_payment_term_id",
+      "create_uid", "create_date", "write_uid", "write_date"
+    ],
+    "account_move_line": [
+      "id", "move_id", "date", "parent_state", "account_id", "journal_id", "partner_id",
+      "product_id", "company_id", "currency_id", "name", "ref", "debit", "credit", "balance",
+      "amount_currency", "quantity", "price_unit", "discount", "price_subtotal", "price_total",
+      "tax_ids", "tax_line_id", "tax_base_amount", "reconciled", "matching_number",
+      "full_reconcile_id", "payment_id", "statement_line_id", "analytic_distribution",
+      "create_uid", "create_date", "write_uid", "write_date"
+    ],
+    "pos_order": [
+      "id", "name", "date_order", "session_id", "config_id", "partner_id", "user_id",
+      "company_id", "amount_total", "amount_tax", "amount_paid", "amount_return", "state",
+      "account_move", "create_uid", "create_date", "write_uid", "write_date"
+    ],
+    "pos_order_line": [
+      "id", "order_id", "product_id", "qty", "price_unit", "discount", "price_subtotal",
+      "price_subtotal_incl", "tax_ids", "create_date", "write_date"
+    ],
+    "pos_payment": [
+      "id", "pos_order_id", "payment_method_id", "amount", "payment_date", "session_id",
+      "company_id", "create_uid", "create_date", "write_uid", "write_date"
+    ],
+    "stock_valuation_layer": [
+      "id", "product_id", "quantity", "unit_cost", "value", "remaining_qty", "remaining_value",
+      "stock_move_id", "account_move_id", "company_id", "create_date", "description"
+    ]
+  },
+  "references": {
+    "model_registry": "config/model-registry.json",
+    "join_keys": "config/join-keys.json",
+    "audit_tests": "config/audit-tests.json",
+    "scope": "config/audit-scope.json"
+  }
+}

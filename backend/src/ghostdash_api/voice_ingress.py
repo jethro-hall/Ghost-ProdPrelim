@@ -582,6 +582,43 @@ def _check_voice_auth(request: Request) -> None:
         raise HTTPException(401, "unauthorized voice ingress request")
 
 
+def _check_hubtiger_voice_auth(request: Request) -> None:
+    primary_secret = (settings.app_voice_ingress_secret or "").strip()
+    webhook_secret = (settings.elevenlabs_hubtiger_webhook_secret or "").strip()
+    expected_values = [secret for secret in (primary_secret, webhook_secret) if secret]
+    if not expected_values:
+        raise HTTPException(503, "voice ingress secret is not configured")
+    provided = (request.headers.get("x-ghost-voice-key") or "").strip()
+    authorization = (request.headers.get("authorization") or "").strip()
+    if authorization.lower().startswith("bearer "):
+        provided = authorization.split(" ", 1)[1].strip()
+    if not provided:
+        raise HTTPException(401, "unauthorized voice ingress request")
+    for expected in expected_values:
+        if secrets.compare_digest(provided, expected):
+            return
+    raise HTTPException(401, "unauthorized voice ingress request")
+
+
+def _check_shopify_voice_auth(request: Request) -> None:
+    """ElevenLabs Shopify tools: dedicated webhook secret, optional shared voice secret for ops."""
+    primary_secret = (settings.app_voice_ingress_secret or "").strip()
+    shopify_secret = (settings.elevenlabs_shopify_webhook_secret or "").strip()
+    expected_values = [secret for secret in (shopify_secret, primary_secret) if secret]
+    if not expected_values:
+        raise HTTPException(503, "Shopify voice webhook secret is not configured")
+    provided = (request.headers.get("x-ghost-voice-key") or "").strip()
+    authorization = (request.headers.get("authorization") or "").strip()
+    if authorization.lower().startswith("bearer "):
+        provided = authorization.split(" ", 1)[1].strip()
+    if not provided:
+        raise HTTPException(401, "unauthorized voice ingress request")
+    for expected in expected_values:
+        if secrets.compare_digest(provided, expected):
+            return
+    raise HTTPException(401, "unauthorized voice ingress request")
+
+
 def _resolve_voice_agent(session: Session, metadata: dict[str, Any]):
     agent_id = str(metadata.get("agent_id") or "").strip() or None
     agent = get_agent(session, agent_id)

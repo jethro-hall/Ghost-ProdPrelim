@@ -1,0 +1,138 @@
+{
+  "description": "Exact join keys for audit agent graph reconstruction. Use _id flattened fields from sanitised exports.",
+  "joins": [
+    {
+      "from_model": "account_move_line",
+      "from_field": "move_id_id",
+      "to_model": "account_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_move_line",
+      "from_field": "account_id_id",
+      "to_model": "account_account",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_move_line",
+      "from_field": "journal_id_id",
+      "to_model": "account_journal",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_move_line",
+      "from_field": "partner_id_id",
+      "to_model": "res_partner",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_move_line",
+      "from_field": "product_id_id",
+      "to_model": "product_product",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_move_line",
+      "from_field": "full_reconcile_id_id",
+      "to_model": "account_full_reconcile",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_partial_reconcile",
+      "from_field": "debit_move_id_id",
+      "to_model": "account_move_line",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_partial_reconcile",
+      "from_field": "credit_move_id_id",
+      "to_model": "account_move_line",
+      "to_field": "id"
+    },
+    {
+      "from_model": "account_payment",
+      "from_field": "move_id_id",
+      "to_model": "account_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_order",
+      "from_field": "account_move_id",
+      "to_model": "account_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_order",
+      "from_field": "account_move_id_id",
+      "to_model": "account_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_order_line",
+      "from_field": "order_id_id",
+      "to_model": "pos_order",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_payment",
+      "from_field": "pos_order_id_id",
+      "to_model": "pos_order",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_payment",
+      "from_field": "payment_method_id_id",
+      "to_model": "pos_payment_method",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_order",
+      "from_field": "session_id_id",
+      "to_model": "pos_session",
+      "to_field": "id"
+    },
+    {
+      "from_model": "pos_session",
+      "from_field": "config_id_id",
+      "to_model": "pos_config",
+      "to_field": "id"
+    },
+    {
+      "from_model": "product_product",
+      "from_field": "product_tmpl_id_id",
+      "to_model": "product_template",
+      "to_field": "id"
+    },
+    {
+      "from_model": "product_template",
+      "from_field": "categ_id_id",
+      "to_model": "product_category",
+      "to_field": "id"
+    },
+    {
+      "from_model": "stock_valuation_layer",
+      "from_field": "stock_move_id_id",
+      "to_model": "stock_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "stock_valuation_layer",
+      "from_field": "account_move_id_id",
+      "to_model": "account_move",
+      "to_field": "id"
+    },
+    {
+      "from_model": "stock_move",
+      "from_field": "product_id_id",
+      "to_model": "product_product",
+      "to_field": "id"
+    },
+    {
+      "from_model": "stock_move",
+      "from_field": "picking_id_id",
+      "to_model": "stock_picking",
+      "to_field": "id"
+    }
+  ],
+  "missing_field_policy": "If a join field is absent in export, report it as an extraction limitation."
+}

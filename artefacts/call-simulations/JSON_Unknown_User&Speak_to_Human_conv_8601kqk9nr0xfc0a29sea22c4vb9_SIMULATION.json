@@ -1,0 +1,233 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_8601kqk9nr0xfc0a29sea22c4vb9",
+    "title": "Speak to Human",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Speak to Human",
+    "duration_seconds": 37,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 262,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 7,
+      "text": "No, I wanna speak to a real person.",
+      "asr_ms": 102,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 10,
+      "text": "I understand you'd like to speak to a real person. I'm here to help you get connected quickly. Let me route your call to the right team. [Patient]",
+      "asr_ms": null,
+      "llm_seconds": 0.167,
+      "workflow_route_seconds": null,
+      "tts_ms": 301,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 23,
+      "text": "She's still listening.",
+      "asr_ms": 95,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 25,
+      "text": "I'm still here and ready to help...",
+      "asr_ms": null,
+      "llm_seconds": 0.154,
+      "workflow_route_seconds": null,
+      "tts_ms": 319,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 26,
+      "text": "'Cause it's not gonna work.",
+      "asr_ms": 49,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "I hear you, and I'm here to help. Let me connect you with the right person. [Patient]",
+      "asr_ms": null,
+      "llm_seconds": 0.214,
+      "workflow_route_seconds": null,
+      "tts_ms": 275,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after...",
+    "TTS 262 ms",
+    "user",
+    "7s",
+    "No, I wanna speak to a real person.",
+    "ASR 102 ms",
+    "agent",
+    "10s",
+    "I understand you'd like to speak to a real person. I'm here to help you get connected quickly. Let me route your call to the right team. [Patient]",
+    "LLM 0.167 s",
+    "TTS 301 ms",
+    "user",
+    "23s",
+    "She's still listening.",
+    "ASR 95 ms",
+    "agent",
+    "25s",
+    "I'm still here and ready to help...",
+    "LLM 0.154 s",
+    "TTS 319 ms",
+    "user",
+    "26s",
+    "'Cause it's not gonna work.",
+    "ASR 49 ms",
+    "agent",
+    "28s",
+    "I hear you, and I'm here to help. Let me connect you with the right person. [Patient]",
+    "LLM 0.214 s",
+    "TTS 275 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 0,
+      "turns_before_first_tool": 7,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 2.33,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_8601kqk9nr0xfc0a29sea22c4vb9-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: No, I wanna speak to a real person.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_8601kqk9nr0xfc0a29sea22c4vb9-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_8601kqk9nr0xfc0a29sea22c4vb9-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

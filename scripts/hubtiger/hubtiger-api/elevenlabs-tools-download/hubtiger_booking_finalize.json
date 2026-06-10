@@ -1,0 +1,76 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_finalize",
+  "description": "Step 3: Submit the booking with service type and issue description. API merges session state.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Final step. Requires booking_session_id from earlier steps.\n\nOffer service_full (Service Full) or service_plus (Service Plus). For tyres, controller errors, or unclear repair: still book with needs_workshop_callback true and tell customer a mechanic will call about costs.\n\nNever expose raw JSON or backend errors.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_finalize",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "properties": [
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            },
+            {
+              "id": "service_type",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "service_full or service_plus.",
+              "required": true
+            },
+            {
+              "id": "issue_description",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Brief: what they want done or what is wrong.",
+              "required": true
+            },
+            {
+              "id": "needs_workshop_callback",
+              "type": "boolean",
+              "value_type": "llm_prompt",
+              "required": false
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 45,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

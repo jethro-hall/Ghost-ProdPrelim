@@ -1,0 +1,89 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_customer_search",
+  "description": "Step 1b: Search for an existing customer. Does not confirm — follow with hubtiger_booking_customer_confirm.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Requires booking_session_id from hubtiger_booking_slot. Collect first name, last name, mobile before calling.\n\nRead message and candidates to the customer. Then call customer_confirm.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_customer_search",
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Same store as slot step.",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "properties": [
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "From hubtiger_booking_slot response.",
+              "required": true
+            },
+            {
+              "id": "first_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            },
+            {
+              "id": "last_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            },
+            {
+              "id": "mobile",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Australian mobile.",
+              "required": true
+            },
+            {
+              "id": "email",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": false
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 30,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

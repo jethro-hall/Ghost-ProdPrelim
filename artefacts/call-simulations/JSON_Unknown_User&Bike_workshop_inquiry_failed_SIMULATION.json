@@ -1,0 +1,538 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4801kqejr60vecs9ga179g3d61mx",
+    "title": "Bike workshop inquiry failed",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Bike workshop inquiry failed",
+    "duration_seconds": 56,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 134,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 4,
+      "text": "Hi, I just wanted to ask about my bike that's in the workshop, please.",
+      "asr_ms": 147,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 11,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 4.015,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_1_met_e426a57300b34e7dbe63e5eeb5161622",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 11,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_1_met_e426a57300b34e7dbe63e5eeb5161622",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 20,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.773990415036678e-05,
+                "type": "edge",
+                "edge_id": "edge_identify_to_troubleshoot",
+                "target_node_id": "troubleshoot"
+              },
+              {
+                "step_latency_secs": 0.00748362997546792,
+                "type": "nested_tools",
+                "node_id": "troubleshoot",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_9101kqejrhb9edbrqtq64dtpna7k",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"troubleshoot\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_9101kqejrhb9edbrqtq64dtpna7k",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"troubleshoot\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00014052004553377628,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "troubleshoot",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "Can I grab your mobile number so I can check that for you?",
+      "asr_ms": null,
+      "llm_seconds": 4.423,
+      "workflow_route_seconds": null,
+      "tts_ms": 123,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 19,
+      "text": "Yeah, it's 0435 185 134.",
+      "asr_ms": 58,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 5.435,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_2_met_36e148b656324571b333126012032152",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "hubtiger_job_search": {
+                "payload": {
+                  "query": "0435 185 134"
+                },
+                "function": "job_search"
+              }
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_2_met_36e148b656324571b333126012032152",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2204,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.375004209578037e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqa5p95afk49v0wen7d5sha6",
+                "target_node_id": "node_01kqa5p959fk49v0w1dj59t21g"
+              },
+              {
+                "step_latency_secs": 2.1937903210055083,
+                "type": "nested_tools",
+                "node_id": "node_01kqa5p959fk49v0w1dj59t21g",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_8801kqejs2ymepwr1er96pthez3j",
+                    "tool_name": "hubtiger_job_search",
+                    "params_as_json": "{\"payload\": {\"query\": \"0435 185 134\"}, \"function\": \"job_search\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": {
+                      "type": "webhook",
+                      "method": "POST",
+                      "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "X-Ghost-Voice-Key": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+                      },
+                      "path_params": {},
+                      "query_params": {},
+                      "body": "{\"function\": \"job_search\", \"payload\": {\"query\": \"0435 185 134\"}}"
+                    }
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_8801kqejs2ymepwr1er96pthez3j",
+                    "tool_name": "hubtiger_job_search",
+                    "result_value": "{\"success\":true,\"message\":\"HubTiger call completed.\",\"operation\":\"job_search\",\"blocked\":false,\"data\":{\"ok\":true,\"matches\":[],\"results\":[],\"count\":0}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 2.1905383309349418,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": true
+              },
+              {
+                "step_latency_secs": 8.034007623791695e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqejk2x3fanb7cz4zw9kx044",
+                "target_node_id": "node_01kqejk2x1fanb7cyznvb2hwhp"
+              },
+              {
+                "step_latency_secs": 0.009451379999518394,
+                "type": "nested_tools",
+                "node_id": "node_01kqejk2x1fanb7cyznvb2hwhp",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_1601kqejs536f1d9wja260ny5t6t",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"agent_3701kq9fcmz1errsmhesm3j47rsg\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_1601kqejs536f1d9wja260ny5t6t",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":\"Customer data found\",\"enable_transferred_agent_first_message\":false,\"branch_info\":{\"branch_reason\":\"defaulting_to_main\",\"branch_id\":\"agtbrch_0101kq9gd5xsfgr95gqhm4bqgsmy\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.006560359848663211,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": "Customer data found",
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": {
+                        "branch_reason": "defaulting_to_main",
+                        "branch_id": "agtbrch_0101kq9gd5xsfgr95gqhm4bqgsmy"
+                      }
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "Customer data found",
+      "asr_ms": null,
+      "llm_seconds": 5.435,
+      "workflow_route_seconds": null,
+      "tts_ms": 84,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": ": No matches found for mobile number 0435 185 134.\n\nI couldn't confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+      "asr_ms": null,
+      "llm_seconds": 2.433,
+      "workflow_route_seconds": null,
+      "tts_ms": 116,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 47,
+      "text": "No.",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, I'm magic Mike from Ride Electric, I'm here to help, ready when you're!",
+    "TTS 134 ms",
+    "user",
+    "4s",
+    "Hi, I just wanted to ask about my bike that's in the workshop, please.",
+    "ASR 147 ms",
+    "agent",
+    "11s",
+    "...",
+    "LLM 4.015 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "11s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 20 ms",
+    "Show result payload",
+    "agent",
+    "15s",
+    "Can I grab your mobile number so I can check that for you?",
+    "LLM 4.423 s",
+    "TTS 123 ms",
+    "user",
+    "19s",
+    "Yeah, it's 0435 185 134.",
+    "ASR 58 ms",
+    "agent",
+    "29s",
+    "...",
+    "LLM 5.435 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "31s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 2204 ms",
+    "Show result payload",
+    "agent",
+    "31s",
+    "Customer data found",
+    "LLM 5.435 s",
+    "TTS 84 ms",
+    "agent",
+    "31s",
+    ": No matches found for mobile number 0435 185 134.\n\nI couldn't confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+    "LLM 2.433 s",
+    "TTS 116 ms",
+    "user",
+    "47s",
+    "No."
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 1
+        },
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 8.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4801kqejr60vecs9ga179g3d61mx-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hi, I just wanted to ask about my bike that's in the workshop, please.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4801kqejr60vecs9ga179g3d61mx-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4801kqejr60vecs9ga179g3d61mx-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_4801kqejr60vecs9ga179g3d61mx-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

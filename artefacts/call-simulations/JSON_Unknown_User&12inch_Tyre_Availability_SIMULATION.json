@@ -1,0 +1,798 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4501krbxbnhye1f803qegjyxebqb",
+    "title": "12-inch Tyre Availability",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "12-inch Tyre Availability",
+    "duration_seconds": 27,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 0,
+      "text": "hey enquiring about 12\" tyres",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.793,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-b936fe51664b49818377dda0958ba53c",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-b936fe51664b49818377dda0958ba53c",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.808006972074509e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.004103679908439517,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_4201krbxbqy4fjdsbmks44c46325",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4201krbxbqy4fjdsbmks44c46325",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00018978002481162548,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "Just a moment, checking stock for 12 inch tyres.",
+      "asr_ms": null,
+      "llm_seconds": 2.866,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 2.866,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-03049a674fb24f7281c241b299c4dc35",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "product_search",
+            "payload": {
+              "search": "12 inch tyres",
+              "category": "part"
+            },
+            "system__message_to_speak": "Just a moment, checking stock for 12 inch tyres."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 6,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-03049a674fb24f7281c241b299c4dc35",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 1653,
+          "result": {
+            "success": true,
+            "message": "Found 4 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/8207695282453",
+                  "title": "VSETT 10+ Electric Scooter",
+                  "handle": "vsett-10-electric-scooter",
+                  "status": "ACTIVE",
+                  "vendor": "Ningbo Vsett Intelligent Technology",
+                  "product_type": "VSETT SCOOTERS",
+                  "tags": [
+                    "VSETT 10+ Parts"
+                  ],
+                  "storefront_path": "/products/vsett-10-electric-scooter",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/vsett10-plus-escooter-16.png?v=1682572560",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688641458453",
+                      "title": "VSETT 10+ Electric Scooter - 60V 20.8",
+                      "sku": "VSETT-10+-20.8",
+                      "barcode": "7849663894747",
+                      "price": {
+                        "amount": "3499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740162806037",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Vsett Scooters",
+                          "value": "60V 20.8"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688641491221",
+                      "title": "VSETT 10+ Electric Scooter - 60V 25.6 LG",
+                      "sku": "VSETT-10+-25.6-LG",
+                      "barcode": "9667403341294",
+                      "price": {
+                        "amount": "3999.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740162838805",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Vsett Scooters",
+                          "value": "60V 25.6 LG"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688641523989",
+                      "title": "VSETT 10+ Electric Scooter - 60V 28 LG",
+                      "sku": "VSETT-10+-28-LG",
+                      "barcode": "4609736222753",
+                      "price": {
+                        "amount": "4499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740162871573",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Vsett Scooters",
+                          "value": "60V 28 LG"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207707799829",
+                  "title": "VSETT Mini Electric Scooter 36V 7.8Ah",
+                  "handle": "vsett-mini-36v-7-8ah",
+                  "status": "ACTIVE",
+                  "vendor": "Ride Electric Wholesale",
+                  "product_type": "VSETT SCOOTERS",
+                  "tags": [
+                    "VSETT Mini Parts"
+                  ],
+                  "storefront_path": "/products/vsett-mini-36v-7-8ah",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/vsett-mini-yellow-large-product-image-0.png?v=1723766720",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688657121557",
+                      "title": "VSETT Mini Electric Scooter 36V 7.8Ah - Army Green",
+                      "sku": "VSETT-MINI-ARMYGREEN",
+                      "barcode": "5297744451501",
+                      "price": {
+                        "amount": "499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740178895125",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Army Green"
+                        }
+                      ],
+                      "colour": "Army Green"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688657154325",
+                      "title": "VSETT Mini Electric Scooter 36V 7.8Ah - Green",
+                      "sku": "VSETT-MINI-GREEN",
+                      "barcode": "8169579444478",
+                      "price": {
+                        "amount": "499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740178927893",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Green"
+                        }
+                      ],
+                      "colour": "Green"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688657187093",
+                      "title": "VSETT Mini Electric Scooter 36V 7.8Ah - Yellow",
+                      "sku": "VSETT-MINI-YELLOW",
+                      "barcode": "MINI36V612205291",
+                      "price": {
+                        "amount": "499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 61,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740178960661",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 61
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Yellow"
+                        }
+                      ],
+                      "colour": "Yellow"
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 61,
+                        "location_name": "",
+                        "colour": "Yellow",
+                        "descriptor": "Yellow",
+                        "variant_title": "VSETT Mini Electric Scooter 36V 7.8Ah - Yellow",
+                        "sku": "VSETT-MINI-YELLOW"
+                      }
+                    ],
+                    "summary": "61x store · Yellow"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207715074325",
+                  "title": "ZERO 10 Electric Scooter",
+                  "handle": "zero-10-electric-scooter",
+                  "status": "ACTIVE",
+                  "vendor": "Falcon PEV Pte Ltd",
+                  "product_type": "ZERO SCOOTERS",
+                  "tags": [
+                    "Zero 10 Parts"
+                  ],
+                  "storefront_path": "/products/zero-10-electric-scooter",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/products/Zero10-escooter-01.png?v=1682307516",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688666951957",
+                      "title": "ZERO 10 Electric Scooter - 52V 18.2AH",
+                      "sku": "ZERO-10-52V18",
+                      "barcode": "5803412029943",
+                      "price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740188725525",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "52V 18.2AH"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688666984725",
+                      "title": "ZERO 10 Electric Scooter - 52V 18AH LG",
+                      "sku": "ZERO-10-52V18-LG",
+                      "barcode": "4624047991013",
+                      "price": {
+                        "amount": "2099.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740188758293",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "52V 18AH LG"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207719170325",
+                  "title": "ZERO 11X Electric Scooter",
+                  "handle": "zero-11x-electric-scooter",
+                  "status": "ACTIVE",
+                  "vendor": "Falcon PEV Pte Ltd",
+                  "product_type": "ZERO SCOOTERS",
+                  "tags": [
+                    "Zero 11X Parts"
+                  ],
+                  "storefront_path": "/products/zero-11x-electric-scooter",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/products/Zero11X-escooter-01.png?v=1682309873",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688671080725",
+                      "title": "ZERO 11X Electric Scooter - with Off-road Tyre",
+                      "sku": "ZERO-11X-72V35-OFF-ROAD",
+                      "barcode": "6695416835274",
+                      "price": {
+                        "amount": "5500.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740192854293",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "with Off-road Tyre"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688671113493",
+                      "title": "ZERO 11X Electric Scooter - With Road Tyre",
+                      "sku": "ZERO-11X-72V35-ROAD",
+                      "barcode": "7736154894310",
+                      "price": {
+                        "amount": "5500.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740192887061",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "With Road Tyre"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                }
+              ],
+              "count": 4,
+              "query": "12 inch tyres",
+              "shopify_query": "12 inch tyres",
+              "search_term": "12 inch tyres",
+              "category": "part",
+              "category_filter_applied": false,
+              "category_heuristic_applied": true,
+              "category_heuristic_filtered_out": 1,
+              "category_filter_note": "Category filter was requested but no Shopify fragment is configured. Set SHOPIFY_SEARCH_FILTER_PART, SHOPIFY_SEARCH_FILTER_EBIKE, or SHOPIFY_SEARCH_FILTER_SCOOTER on shopify-mcp to match this store product types—or pass payload.category_query.",
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 6,
+      "text": "We don’t currently have 12 inch tyres in stock. Would you like help finding a compatible alternative?",
+      "asr_ms": null,
+      "llm_seconds": 0.716,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 22,
+      "text": "no thanks",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "No problem at all. Let me know if you need help with anything else. Have a great day!",
+      "asr_ms": null,
+      "llm_seconds": 0.317,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "0s",
+    "hey enquiring about 12\" tyres",
+    "agent",
+    "2s",
+    "...",
+    "LLM 1.793 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "2s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "2s",
+    "Just a moment, checking stock for 12 inch tyres.",
+    "LLM 2.866 s",
+    "agent",
+    "5s",
+    "...",
+    "LLM 2.866 s",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "6s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 1653 ms",
+    "Show result payload",
+    "agent",
+    "6s",
+    "We don’t currently have 12 inch tyres in stock. Would you like help finding a compatible alternative?",
+    "LLM 0.716 s",
+    "user",
+    "22s",
+    "no thanks",
+    "agent",
+    "22s",
+    "No problem at all. Let me know if you need help with anything else. Have a great day!",
+    "LLM 0.317 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4501krbxbnhye1f803qegjyxebqb-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: hey enquiring about 12\" tyres",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4501krbxbnhye1f803qegjyxebqb-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4501krbxbnhye1f803qegjyxebqb-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

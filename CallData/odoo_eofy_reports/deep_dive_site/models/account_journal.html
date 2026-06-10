@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model: account_journal</title>
+<style>
+:root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151; --accent:#38bdf8; --bad:#fb7185; --ok:#34d399; --warn:#fbbf24; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+header { padding:20px 28px; background:#020617; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+header h1 { margin:0 0 6px 0; font-size:22px; } header .sub { color:var(--muted); font-size:13px; }
+main { padding:24px 28px 60px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.metric { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.metric .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.metric .value { font-size:26px; font-weight:700; margin-top:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } th, td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; } th { text-align:left; color:#cbd5e1; background:#020617; position:sticky; top:77px; }
+.bad { color:var(--bad); font-weight:700; } .ok { color:var(--ok); font-weight:700; } .warn { color:var(--warn); font-weight:700; }
+pre { white-space:pre-wrap; overflow:auto; background:#020617; padding:12px; border-radius:10px; border:1px solid var(--line); color:#d1d5db; font-size:12px; }
+details { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:10px 0; background:#111827; } summary { cursor:pointer; color:#e2e8f0; }
+input { width:100%; max-width:520px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:#020617; color:var(--text); margin: 8px 0 14px; }
+small, .muted { color:var(--muted); }
+.pill { display:inline-block; border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin:2px; background:#020617; color:#cbd5e1; font-size:12px; }
+</style>
+
+</head>
+<body>
+<header><h1>Model: account_journal</h1><div class="sub"><a href="../index.html">Index</a> · <a href="../source_files.html">Source files</a> · Generated 2026-06-09T06:12:02.294Z</div></header>
+<main>
+<div class="card"><a href="../index.html">← Back to index</a></div>
+<div class="grid">
+  <div class="metric"><div class="label">Rows</div><div class="value">17</div></div>
+  <div class="metric"><div class="label">Distinct Odoo IDs</div><div class="value">17</div></div>
+  <div class="metric"><div class="label">Raw PII-like hits</div><div class="value ok">0</div></div>
+  <div class="metric"><div class="label">Redaction tokens</div><div class="value">0</div></div>
+</div>
+<div class="card"><h2>Accounting totals</h2><table><tr><th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th><th>Date range</th></tr><tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td> → </td></tr></table></div>
+<div class="card"><h2>Field profile</h2><p class="muted">Raw PII-like hits should generally be zero before this data goes to Claude. Redaction tokens are expected in sanitised data.</p><table><thead><tr><th>Field</th><th>Present</th><th>%</th><th>Types</th><th>Raw PII hits</th><th>Redaction hits</th><th>Sensitive name hits</th><th>Examples</th></tr></thead><tbody><tr>
+<td><code>active</code></td><td>17</td><td>100.0%</td><td>boolean:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">true</span> <span class="pill">false</span></td></tr>
+<tr>
+<td><code>code</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">BRINV</span> <span class="pill">BILL</span> <span class="pill">MISC</span> <span class="pill">EXCH</span> <span class="pill">CABA</span></td></tr>
+<tr>
+<td><code>company_id</code></td><td>17</td><td>100.0%</td><td>array:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[4,&quot;Ride Electric Brisbane&quot;]</span></td></tr>
+<tr>
+<td><code>company_id_id</code></td><td>17</td><td>100.0%</td><td>number:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">4</span></td></tr>
+<tr>
+<td><code>company_id_label</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">Ride Electric Brisbane</span></td></tr>
+<tr>
+<td><code>create_date</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-08-14 23:12:42</span> <span class="pill">2023-08-07 00:17:49</span> <span class="pill">2024-06-10 03:09:04</span> <span class="pill">2024-08-11 23:51:26</span> <span class="pill">2024-08-12 04:25:21</span></td></tr>
+<tr>
+<td><code>currency_id</code></td><td>17</td><td>100.0%</td><td>boolean:16, array:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">false</span> <span class="pill">[21,&quot;AUD&quot;]</span></td></tr>
+<tr>
+<td><code>currency_id_id</code></td><td>1</td><td>5.9%</td><td>number:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">21</span></td></tr>
+<tr>
+<td><code>currency_id_label</code></td><td>1</td><td>5.9%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">AUD</span></td></tr>
+<tr>
+<td><code>id</code></td><td>17</td><td>100.0%</td><td>number:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">35</span> <span class="pill">36</span> <span class="pill">37</span> <span class="pill">38</span> <span class="pill">39</span></td></tr>
+<tr>
+<td><code>name</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>17</td>
+<td><span class="pill">Customer Invoices</span> <span class="pill">Vendor Bills</span> <span class="pill">Miscellaneous Journals</span> <span class="pill">Exchange Difference</span> <span class="pill">Cash Basis Taxes</span></td></tr>
+<tr>
+<td><code>type</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">sale</span> <span class="pill">purchase</span> <span class="pill">general</span> <span class="pill">cash</span> <span class="pill">bank</span></td></tr>
+<tr>
+<td><code>write_date</code></td><td>17</td><td>100.0%</td><td>string:17</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2025-01-19 22:55:07</span> <span class="pill">2025-01-19 22:55:12</span> <span class="pill">2026-05-14 02:00:30</span> <span class="pill">2025-01-19 23:23:59</span> <span class="pill">2026-03-02 05:35:02</span></td></tr></tbody></table></div>
+<div class="card"><h2>Sample records</h2><input id="q" placeholder="Filter visible sample records..." oninput="filterRecords()"><p class="muted">Showing up to 500 records for this model.</p><details class="record" data-search="{&quot;id&quot;:35,&quot;name&quot;:&quot;customer invoices&quot;,&quot;code&quot;:&quot;brinv&quot;,&quot;type&quot;:&quot;sale&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#35 | Customer Invoices <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 1</small></summary><pre>{
+  &quot;id&quot;: 35,
+  &quot;name&quot;: &quot;Customer Invoices&quot;,
+  &quot;code&quot;: &quot;BRINV&quot;,
+  &quot;type&quot;: &quot;sale&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:36,&quot;name&quot;:&quot;vendor bills&quot;,&quot;code&quot;:&quot;bill&quot;,&quot;type&quot;:&quot;purchase&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#36 | Vendor Bills <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 2</small></summary><pre>{
+  &quot;id&quot;: 36,
+  &quot;name&quot;: &quot;Vendor Bills&quot;,
+  &quot;code&quot;: &quot;BILL&quot;,
+  &quot;type&quot;: &quot;purchase&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:37,&quot;name&quot;:&quot;miscellaneous journals&quot;,&quot;code&quot;:&quot;misc&quot;,&quot;type&quot;:&quot;general&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#37 | Miscellaneous Journals <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 3</small></summary><pre>{
+  &quot;id&quot;: 37,
+  &quot;name&quot;: &quot;Miscellaneous Journals&quot;,
+  &quot;code&quot;: &quot;MISC&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:38,&quot;name&quot;:&quot;exchange difference&quot;,&quot;code&quot;:&quot;exch&quot;,&quot;type&quot;:&quot;general&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#38 | Exchange Difference <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 4</small></summary><pre>{
+  &quot;id&quot;: 38,
+  &quot;name&quot;: &quot;Exchange Difference&quot;,
+  &quot;code&quot;: &quot;EXCH&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:39,&quot;name&quot;:&quot;cash basis taxes&quot;,&quot;code&quot;:&quot;caba&quot;,&quot;type&quot;:&quot;general&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#39 | Cash Basis Taxes <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 5</small></summary><pre>{
+  &quot;id&quot;: 39,
+  &quot;name&quot;: &quot;Cash Basis Taxes&quot;,
+  &quot;code&quot;: &quot;CABA&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:40,&quot;name&quot;:&quot;inventory valuation&quot;,&quot;code&quot;:&quot;stj&quot;,&quot;type&quot;:&quot;general&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#40 | Inventory Valuation <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 6</small></summary><pre>{
+  &quot;id&quot;: 40,
+  &quot;name&quot;: &quot;Inventory Valuation&quot;,
+  &quot;code&quot;: &quot;STJ&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:41,&quot;name&quot;:&quot;cash&quot;,&quot;code&quot;:&quot;csh1&quot;,&quot;type&quot;:&quot;cash&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#41 | Cash <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 7</small></summary><pre>{
+  &quot;id&quot;: 41,
+  &quot;name&quot;: &quot;Cash&quot;,
+  &quot;code&quot;: &quot;CSH1&quot;,
+  &quot;type&quot;: &quot;cash&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:42,&quot;name&quot;:&quot;brisbane cheque acc (4188)&quot;,&quot;code&quot;:&quot;bneq&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.361z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#42 | Brisbane Cheque Acc (4188) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 8</small></summary><pre>{
+  &quot;id&quot;: 42,
+  &quot;name&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;code&quot;: &quot;BNEQ&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:69,&quot;name&quot;:&quot;brisbane income tax acc (6836)&quot;,&quot;code&quot;:&quot;bnet&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2023-08-07 00:17:49&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:12&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#69 | Brisbane Income Tax Acc (6836) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 9</small></summary><pre>{
+  &quot;id&quot;: 69,
+  &quot;name&quot;: &quot;Brisbane Income Tax Acc (6836)&quot;,
+  &quot;code&quot;: &quot;BNET&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2023-08-07 00:17:49&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:104,&quot;name&quot;:&quot;wholesale/brisbane payments (872)(dnu)&quot;,&quot;code&quot;:&quot;wbnep&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-06-10 03:09:04&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#104 | Wholesale/Brisbane Payments (872)(DNU) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 10</small></summary><pre>{
+  &quot;id&quot;: 104,
+  &quot;name&quot;: &quot;Wholesale/Brisbane Payments (872)(DNU)&quot;,
+  &quot;code&quot;: &quot;WBNEP&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-06-10 03:09:04&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:108,&quot;name&quot;:&quot;brisbane payroll acc (3084)&quot;,&quot;code&quot;:&quot;bnep&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id_id&quot;:21,&quot;currency_id&quot;:[21,&quot;aud&quot;],&quot;currency_id_label&quot;:&quot;aud&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-08-11 23:51:26&quot;,&quot;write_date&quot;:&quot;2026-05-14 02:00:30&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#108 | Brisbane Payroll Acc (3084) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 11</small></summary><pre>{
+  &quot;id&quot;: 108,
+  &quot;name&quot;: &quot;Brisbane Payroll Acc (3084)&quot;,
+  &quot;code&quot;: &quot;BNEP&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-08-11 23:51:26&quot;,
+  &quot;write_date&quot;: &quot;2026-05-14 02:00:30&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:110,&quot;name&quot;:&quot;retail/brisbane contra (854)&quot;,&quot;code&quot;:&quot;rt/bn&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-08-12 04:25:21&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#110 | Retail/Brisbane Contra (854) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 12</small></summary><pre>{
+  &quot;id&quot;: 110,
+  &quot;name&quot;: &quot;Retail/Brisbane Contra (854)&quot;,
+  &quot;code&quot;: &quot;RT/BN&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-08-12 04:25:21&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:111,&quot;name&quot;:&quot;burleigh/brisbane contra (855)&quot;,&quot;code&quot;:&quot;br/bn&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-08-22 04:59:38&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:07&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#111 | Burleigh/Brisbane Contra (855) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 13</small></summary><pre>{
+  &quot;id&quot;: 111,
+  &quot;name&quot;: &quot;Burleigh/Brisbane Contra (855)&quot;,
+  &quot;code&quot;: &quot;BR/BN&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-08-22 04:59:38&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:113,&quot;name&quot;:&quot;brisbane rent acc (8764)&quot;,&quot;code&quot;:&quot;bner&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-09-16 07:05:41&quot;,&quot;write_date&quot;:&quot;2025-01-19 22:55:12&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#113 | Brisbane Rent Acc (8764) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 14</small></summary><pre>{
+  &quot;id&quot;: 113,
+  &quot;name&quot;: &quot;Brisbane Rent Acc (8764)&quot;,
+  &quot;code&quot;: &quot;BNER&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-09-16 07:05:41&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:158,&quot;name&quot;:&quot;brisbane gst acc (1203)&quot;,&quot;code&quot;:&quot;bneg&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2025-01-19 22:54:58&quot;,&quot;write_date&quot;:&quot;2025-01-19 23:23:59&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.362z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#158 | Brisbane GST Acc (1203) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 15</small></summary><pre>{
+  &quot;id&quot;: 158,
+  &quot;name&quot;: &quot;Brisbane GST Acc (1203)&quot;,
+  &quot;code&quot;: &quot;BNEG&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2025-01-19 22:54:58&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 23:23:59&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.362Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:187,&quot;name&quot;:&quot;brisbane amex (81007)&quot;,&quot;code&quot;:&quot;bamx&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2026-03-02 05:28:52&quot;,&quot;write_date&quot;:&quot;2026-03-02 05:35:02&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.363z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#187 | Brisbane AMEX (81007) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 16</small></summary><pre>{
+  &quot;id&quot;: 187,
+  &quot;name&quot;: &quot;Brisbane AMEX (81007)&quot;,
+  &quot;code&quot;: &quot;BAMX&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2026-03-02 05:28:52&quot;,
+  &quot;write_date&quot;: &quot;2026-03-02 05:35:02&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.363Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:188,&quot;name&quot;:&quot;brisbane amex (81007)&quot;,&quot;code&quot;:&quot;bnamx&quot;,&quot;type&quot;:&quot;bank&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id&quot;:false,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2026-03-02 05:30:01&quot;,&quot;write_date&quot;:&quot;2026-03-02 05:30:01&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_journal&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_journal__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.363z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#188 | Brisbane Amex (81007) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.sanitised.jsonl line 17</small></summary><pre>{
+  &quot;id&quot;: 188,
+  &quot;name&quot;: &quot;Brisbane Amex (81007)&quot;,
+  &quot;code&quot;: &quot;BNAMX&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2026-03-02 05:30:01&quot;,
+  &quot;write_date&quot;: &quot;2026-03-02 05:30:01&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.363Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details></div>
+<script>
+function filterRecords(){ const q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.record').forEach(el=>{ el.style.display = el.dataset.search.includes(q) ? '' : 'none'; }); }
+</script></main>
+</body></html>

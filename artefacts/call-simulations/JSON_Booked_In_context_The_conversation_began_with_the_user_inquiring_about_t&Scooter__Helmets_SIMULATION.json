@@ -1,0 +1,2388 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_9301kqrgc3ccfv98mab92pdqv6vb",
+    "title": "Scooter & Helmets",
+    "status": "done",
+    "user": "Booked In (context: \"The conversation began with the user inquiring about their scooter in the workshop. After the user provided their name, \"Jeff Hall,\" and ...\")",
+    "brief_summary": "Scooter & Helmets",
+    "duration_seconds": 138,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 0,
+      "text": "Hi, I am wondering about my scooter in the workshop",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.257,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-6e0f1cbf765c443196ea8a371ce81ad7",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-6e0f1cbf765c443196ea8a371ce81ad7",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.112999886274338e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhc9h67fvp96jv06b4n0smq",
+                "target_node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b"
+              },
+              {
+                "step_latency_secs": 0.003329809755086899,
+                "type": "nested_tools",
+                "node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_3801kqrgc4caemgv486j67j1dzwk",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhc76b8fvp96jtwpp3a9b1b\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_3801kqrgc4caemgv486j67j1dzwk",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhc76b8fvp96jtwpp3a9b1b\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010365061461925507,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Could you please provide your full name or phone number so I can check the status of your scooter in the workshop?",
+      "asr_ms": null,
+      "llm_seconds": 0.352,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 14,
+      "text": "Jeff Hall",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.204,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.204,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_1_met_779a7f21003949d38153e10f8ed32f2b",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system.",
+            "nested_tools": {
+              "hubtiger_job_search": {
+                "payload": {
+                  "query": "Jeff Hall"
+                },
+                "function": "job_search"
+              }
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_1_met_779a7f21003949d38153e10f8ed32f2b",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2439,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.20399010181427e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgyefeze07rq8wfv3gy81f8",
+                "target_node_id": "node_01kqgyefexe07rq8w2qkk5ep0z"
+              },
+              {
+                "step_latency_secs": 2.43600501306355,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyefexe07rq8w2qkk5ep0z",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_7201kqrgckkde2g94t2k1r170kac",
+                    "tool_name": "hubtiger_job_search",
+                    "params_as_json": "{\"payload\": {\"query\": \"Jeff Hall\"}, \"function\": \"job_search\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": {
+                      "type": "webhook",
+                      "method": "POST",
+                      "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "X-Ghost-Voice-Key": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+                      },
+                      "path_params": {},
+                      "query_params": {},
+                      "body": "{\"function\": \"job_search\", \"payload\": {\"query\": \"Jeff Hall\"}}"
+                    }
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_7201kqrgckkde2g94t2k1r170kac",
+                    "tool_name": "hubtiger_job_search",
+                    "result_value": "{\"success\":true,\"message\":\"HubTiger call completed.\",\"operation\":\"job_search\",\"blocked\":false,\"data\":{\"ok\":true,\"matches\":[{\"id\":4224640,\"jobCardNo\":\"#36022\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-07T09:00:00\",\"scheduledDate\":\"2026-05-07T09:00:00\",\"durationMinutes\":0},{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0},{\"id\":4036225,\"jobCardNo\":\"#34155\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2026-03-23T10:00:00\",\"scheduledDate\":\"2026-03-23T10:00:00\",\"durationMinutes\":0},{\"id\":4041278,\"jobCardNo\":\"#34249\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-13T14:30:00\",\"scheduledDate\":\"2026-03-13T14:30:00\",\"durationMinutes\":0},{\"id\":4037672,\"jobCardNo\":\"#34196\",\"customerName\":\"jeff hall\",\"bike\":\"Zero 11x\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-12T14:00:00\",\"scheduledDate\":\"2026-03-12T14:00:00\",\"durationMinutes\":0},{\"id\":2405569,\"jobCardNo\":\"#15336\",\"customerName\":\"jeff hall\",\"bike\":\"segway segway\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2024-10-10T11:30:00\",\"scheduledDate\":\"2024-10-10T11:30:00\",\"durationMinutes\":0}],\"results\":[{\"id\":4224640,\"jobCardNo\":\"#36022\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-07T09:00:00\",\"scheduledDate\":\"2026-05-07T09:00:00\",\"durationMinutes\":0},{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0},{\"id\":4036225,\"jobCardNo\":\"#34155\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2026-03-23T10:00:00\",\"scheduledDate\":\"2026-03-23T10:00:00\",\"durationMinutes\":0},{\"id\":4041278,\"jobCardNo\":\"#34249\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-13T14:30:00\",\"scheduledDate\":\"2026-03-13T14:30:00\",\"durationMinutes\":0},{\"id\":4037672,\"jobCardNo\":\"#34196\",\"customerName\":\"jeff hall\",\"bike\":\"Zero 11x\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-12T14:00:00\",\"scheduledDate\":\"2026-03-12T14:00:00\",\"durationMinutes\":0},{\"id\":2405569,\"jobCardNo\":\"#15336\",\"customerName\":\"jeff hall\",\"bike\":\"segway segway\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2024-10-10T11:30:00\",\"scheduledDate\":\"2024-10-10T11:30:00\",\"durationMinutes\":0}],\"count\":6,\"job_cards\":[{\"id\":4224640,\"job_card_no\":\"#36022\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-05-07T09:00:00\",\"last_updated\":\"2026-05-07T09:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #36022 | VSETT APEX 10+ | 15\"},{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"},{\"id\":4036225,\"job_card_no\":\"#34155\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2026-03-23T10:00:00\",\"last_updated\":\"2026-03-23T10:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts\"},{\"id\":4041278,\"job_card_no\":\"#34249\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-03-13T14:30:00\",\"last_updated\":\"2026-03-13T14:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34249 | VSETT APEX 10+ | 15\"},{\"id\":4037672,\"job_card_no\":\"#34196\",\"customer_name\":\"jeff hall\",\"bike\":\"Zero 11x\",\"status\":\"15\",\"scheduled_date\":\"2026-03-12T14:00:00\",\"last_updated\":\"2026-03-12T14:00:00\",\"store_matched\":\"\",\"label\":\"jeff hall | #34196 | Zero 11x | 15\"},{\"id\":2405569,\"job_card_no\":\"#15336\",\"customer_name\":\"jeff hall\",\"bike\":\"segway segway\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2024-10-10T11:30:00\",\"last_updated\":\"2024-10-10T11:30:00\",\"store_matched\":\"\",\"label\":\"jeff hall | #15336 | segway segway | Waiting - Parts\"}],\"case_select\":{\"identified_customer\":\"Jeff Hall\",\"job_card_count\":6,\"selection_required\":true,\"assistant_prompt\":\"I found 6 job cards for Jeff Hall. Ask which job they are calling about.\",\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\",\"identifier_value\":\"Jeff Hall\",\"ambiguous_identifier\":null,\"possible_identifier_types\":[],\"allowed_next_actions\":[\"list_matching_cases\"],\"options\":[{\"id\":4224640,\"job_card_no\":\"#36022\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-05-07T09:00:00\",\"last_updated\":\"2026-05-07T09:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #36022 | VSETT APEX 10+ | 15\"},{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"},{\"id\":4036225,\"job_card_no\":\"#34155\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2026-03-23T10:00:00\",\"last_updated\":\"2026-03-23T10:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts\"},{\"id\":4041278,\"job_card_no\":\"#34249\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-03-13T14:30:00\",\"last_updated\":\"2026-03-13T14:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34249 | VSETT APEX 10+ | 15\"},{\"id\":4037672,\"job_card_no\":\"#34196\",\"customer_name\":\"jeff hall\",\"bike\":\"Zero 11x\",\"status\":\"15\",\"scheduled_date\":\"2026-03-12T14:00:00\",\"last_updated\":\"2026-03-12T14:00:00\",\"store_matched\":\"\",\"label\":\"jeff hall | #34196 | Zero 11x | 15\"},{\"id\":2405569,\"job_card_no\":\"#15336\",\"customer_name\":\"jeff hall\",\"bike\":\"segway segway\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2024-10-10T11:30:00\",\"last_updated\":\"2024-10-10T11:30:00\",\"store_matched\":\"\",\"label\":\"jeff hall | #15336 | segway segway | Waiting - Parts\"}]},\"identified_customer\":\"Jeff Hall\",\"job_card_count\":6,\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"selection_required\":true,\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 2.434223862364888,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": true
+              },
+              {
+                "step_latency_secs": 6.965082138776779e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgz0z0ne07rq90k4ws4qkbb",
+                "target_node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm"
+              },
+              {
+                "step_latency_secs": 0.003059079870581627,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_4901kqrgcnzjff78kxjj2b9ea88s",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqgyxf77e07rq8yjf4g1f6tm\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4901kqrgcnzjff78kxjj2b9ea88s",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqgyxf77e07rq8yjf4g1f6tm\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.0001063905656337738,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "I found6 job cards for Jeff Hall. Could you please let me know which one you're referring to? Here are the details:\n\n- #36022: VSETT APEX10+ | Status:15- #35872: Fatfish Biggie | Status: Booked In- #34155: VSETT APEX10+ | Status: Waiting - Parts- #34249: VSETT APEX10+ | Status:15- #34196: Zero11x | Status:15- #15336: segway segway | Status: Waiting - PartsPlease confirm the job card number or vehicle you're asking about.",
+      "asr_ms": null,
+      "llm_seconds": 0.315,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 27,
+      "text": "#35872",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.333,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_1_met_86dbd410069145b68c574535ce4b081b",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_1_met_86dbd410069145b68c574535ce4b081b",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.066992551088333e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqjtzqt8fk6vvpn5fz3sxntt",
+                "target_node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b"
+              },
+              {
+                "step_latency_secs": 0.0032799597829580307,
+                "type": "nested_tools",
+                "node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_9101kqrgd0xcet3atmtpcm4afd98",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhc76b8fvp96jtwpp3a9b1b\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_9101kqrgd0xcet3atmtpcm4afd98",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhc76b8fvp96jtwpp3a9b1b\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010028015822172165,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 32,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.341,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_2_met_86bd3147b9034a4188d9ceab571912fd",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "hubtiger_job_retrieve": {
+                "payload": {
+                  "job_card_no": "#35872"
+                },
+                "function": "job_retrieve"
+              }
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 36,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_2_met_86bd3147b9034a4188d9ceab571912fd",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3956,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.809962749481201e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgyqat6e07rq8y9yzf85q6z",
+                "target_node_id": "node_01kqgyqat4e07rq8y6vygxqs62"
+              },
+              {
+                "step_latency_secs": 3.9526570020243526,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyqat4e07rq8y6vygxqs62",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_4801kqrgd3bgegpsxeab2aqck1j0",
+                    "tool_name": "hubtiger_job_retrieve",
+                    "params_as_json": "{\"payload\": {\"job_card_no\": \"#35872\"}, \"function\": \"job_retrieve\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": {
+                      "type": "webhook",
+                      "method": "POST",
+                      "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "X-Ghost-Voice-Key": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+                      },
+                      "path_params": {},
+                      "query_params": {},
+                      "body": "{\"function\": \"job_retrieve\", \"payload\": {\"job_card_no\": \"#35872\"}}"
+                    }
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4801kqrgd3bgegpsxeab2aqck1j0",
+                    "tool_name": "hubtiger_job_retrieve",
+                    "result_value": "{\"success\":true,\"message\":\"HubTiger call completed.\",\"operation\":\"job_retrieve\",\"blocked\":false,\"data\":{\"ok\":true,\"matches\":[{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0}],\"results\":[{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0}],\"count\":1,\"job_cards\":[{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"}],\"case_select\":{\"identified_customer\":\"Jeff Hall\",\"job_card_count\":1,\"selection_required\":false,\"assistant_prompt\":\"I found 1 job card for Jeff Hall. Confirm this is the correct case before continuing.\",\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"identifier_type\":\"job_card_no\",\"identifier_confidence\":\"exact\",\"identifier_value\":\"#35872\",\"ambiguous_identifier\":null,\"possible_identifier_types\":[],\"allowed_next_actions\":[\"list_matching_cases\"],\"options\":[{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"}]},\"identified_customer\":\"Jeff Hall\",\"job_card_count\":1,\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"selection_required\":false,\"identifier_type\":\"job_card_no\",\"identifier_confidence\":\"exact\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 3.950934442691505,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": true
+              },
+              {
+                "step_latency_secs": 6.92298635840416e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgyxf79e07rq8yr8etc59pg",
+                "target_node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm"
+              },
+              {
+                "step_latency_secs": 0.0030619706958532333,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_6601kqrgd771e0p9rvxjeard87ga",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqgyxf77e07rq8yjf4g1f6tm\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6601kqrgd771e0p9rvxjeard87ga",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqgyxf77e07rq8yjf4g1f6tm\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00011315010488033295,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 36,
+      "text": "Your scooter, a Fatfish Biggie, is currently Booked In. It was scheduled for service on2026-05-02 at10:30 AM. Is there anything specific you'd like to know about the service?",
+      "asr_ms": null,
+      "llm_seconds": 0.279,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 54,
+      "text": "what does it say is involved in the service?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 54,
+      "text": "I can't see the specific details of the service from here. I can take your details and have the team check it manually for you.",
+      "asr_ms": null,
+      "llm_seconds": 2.266,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 75,
+      "text": "I would also like to enquire about a kids helmet",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 75,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 0.583,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 80,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.583,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "hubtiger_job_search_33e5b7496a31428a9f2c65102c2326c8",
+          "tool_name": "hubtiger_job_search",
+          "tool_type": "webhook",
+          "params": {
+            "system__message_to_speak": "Checking for kids helmets",
+            "payload": {
+              "query": "kids helmet"
+            },
+            "function": "job_search"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 83,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "hubtiger_job_search_33e5b7496a31428a9f2c65102c2326c8",
+          "tool_name": "hubtiger_job_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2646,
+          "result": {
+            "success": true,
+            "message": "HubTiger call completed.",
+            "operation": "job_search",
+            "blocked": false,
+            "data": {
+              "ok": true,
+              "matches": [],
+              "results": [],
+              "count": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 83,
+      "text": "I can't find any kids helmets in the workshop system. Would you like me to check our online store for available options?",
+      "asr_ms": null,
+      "llm_seconds": 0.472,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 101,
+      "text": "what helmets do you have in stock?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 101,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.454,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 103,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.454,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "SHOPIFY_product_search_7cbea23178ba414d8753cb42bad8bdec",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "payload": {
+              "search": "helmet"
+            },
+            "system__message_to_speak": "Checking for helmets",
+            "function": "product_search"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 105,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "SHOPIFY_product_search_7cbea23178ba414d8753cb42bad8bdec",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 1510,
+          "result": {
+            "success": true,
+            "message": "Found 5 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/8207647834389",
+                  "title": "Helmet - AIRCRAFT COMPOSITE Silo",
+                  "handle": "helmet-aircraft-composite-silo",
+                  "status": "ACTIVE",
+                  "vendor": "FE Sports",
+                  "product_type": "HELMETS",
+                  "tags": [
+                    "Helmets"
+                  ],
+                  "storefront_path": "/products/helmet-aircraft-composite-silo",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/100percent-aircraft-helmet-07.png?v=1683701438",
+                    "alt_text": "side view of a black full face helmet with white stripes forming a \"v\" pattern "
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688580804885",
+                      "title": "Helmet - AIRCRAFT COMPOSITE Silo - LG",
+                      "sku": "AIRCFT-HELM-SILO-LG",
+                      "barcode": "5376779376727",
+                      "price": {
+                        "amount": "499.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740102152469",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "LG"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688580837653",
+                      "title": "Helmet - AIRCRAFT COMPOSITE Silo - XL",
+                      "sku": "AIRCFT-HELM-SILO-XL",
+                      "barcode": "1628204834925",
+                      "price": {
+                        "amount": "499.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740102185237",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "XL"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207648260373",
+                  "title": "Azur L61 Helmet",
+                  "handle": "helmet-azur-l61",
+                  "status": "ACTIVE",
+                  "vendor": "The Bicycle Corporation",
+                  "product_type": "HELMETS",
+                  "tags": [
+                    "Helmets"
+                  ],
+                  "storefront_path": "/products/helmet-azur-l61",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/azur-helmet-L61-black.png?v=1689571205",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072297237",
+                      "title": "Azur L61 Helmet - Gloss Neon Black Fade / L/XL",
+                      "sku": "HELMET-AZUR-L61-GLSS-NEON-BLCK-FDE/L/XL",
+                      "barcode": "3237306070476",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761741077",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Gloss Neon Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L/XL"
+                        }
+                      ],
+                      "colour": "Gloss Neon Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072330005",
+                      "title": "Azur L61 Helmet - Gloss Neon Black Fade / M/L",
+                      "sku": "HELMET-AZUR-L61-GLSS-NEON-BLCK-FDE/M/L",
+                      "barcode": "6921125352307",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761773845",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Gloss Neon Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M/L"
+                        }
+                      ],
+                      "colour": "Gloss Neon Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072362773",
+                      "title": "Azur L61 Helmet - Gloss Neon Black Fade / S/M",
+                      "sku": "HELMET-AZUR-L61-GLSS-NEON-BLCK-FDE/S/M",
+                      "barcode": "3557404948553",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761806613",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Gloss Neon Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "S/M"
+                        }
+                      ],
+                      "colour": "Gloss Neon Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072395541",
+                      "title": "Azur L61 Helmet - Gloss Neon Black Fade / XL/XXL",
+                      "sku": "HELMET-AZUR-L61-GLSS-NEON-BLCK-FDE/XL/XXL",
+                      "barcode": "2787957006511",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761839381",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Gloss Neon Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL/XXL"
+                        }
+                      ],
+                      "colour": "Gloss Neon Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072428309",
+                      "title": "Azur L61 Helmet - Matt Pink / L/XL",
+                      "sku": "HELMET-AZUR-L61-MATT-PNK-L/XL",
+                      "barcode": "9223284188450",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761872149",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Pink"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L/XL"
+                        }
+                      ],
+                      "colour": "Matt Pink"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072461077",
+                      "title": "Azur L61 Helmet - Matt Pink / M/L",
+                      "sku": "HELMET-AZUR-L61-MATT-PNK-M/L",
+                      "barcode": "9122381311207",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761904917",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Pink"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M/L"
+                        }
+                      ],
+                      "colour": "Matt Pink"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072493845",
+                      "title": "Azur L61 Helmet - Matt Pink / S/M",
+                      "sku": "HELMET-AZUR-L61-MATT-PNK-S/M",
+                      "barcode": "7452819188715",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761937685",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Pink"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "S/M"
+                        }
+                      ],
+                      "colour": "Matt Pink"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072526613",
+                      "title": "Azur L61 Helmet - Matt Pink / XL/XXL",
+                      "sku": "HELMET-AZUR-L61-MATT-PNK-XL-XXL",
+                      "barcode": "6284718193894",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637761970453",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Pink"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL/XXL"
+                        }
+                      ],
+                      "colour": "Matt Pink"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072821525",
+                      "title": "Azur L61 Helmet - Matt Teal / L/XL",
+                      "sku": "HELMET-AZUR-L61-MTTEAL-L/XL",
+                      "barcode": "3156142314714",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762003221",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Teal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L/XL"
+                        }
+                      ],
+                      "colour": "Matt Teal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072854293",
+                      "title": "Azur L61 Helmet - Matt Teal / M/L",
+                      "sku": "HELMET-AZUR-L61-MTTEAL-M/L",
+                      "barcode": "9156224451683",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762035989",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Teal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M/L"
+                        }
+                      ],
+                      "colour": "Matt Teal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072887061",
+                      "title": "Azur L61 Helmet - Matt Teal / S/M",
+                      "sku": "HELMET-AZUR-L61-MTTEAL-S/M",
+                      "barcode": "5898169491396",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762068757",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Teal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "S/M"
+                        }
+                      ],
+                      "colour": "Matt Teal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072919829",
+                      "title": "Azur L61 Helmet - Matt Teal / XL/XXL",
+                      "sku": "HELMET-AZUR-L61-MTTEAL-XL/XXL",
+                      "barcode": "2474146008776",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762101525",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Matt Teal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL/XXL"
+                        }
+                      ],
+                      "colour": "Matt Teal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072559381",
+                      "title": "Azur L61 Helmet - Purple Black Fade / L/XL",
+                      "sku": "HELMET-AZUR-L61-PRPL-BLK-FDE-L/XL",
+                      "barcode": "5146226402237",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762134293",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Purple Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L/XL"
+                        }
+                      ],
+                      "colour": "Purple Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072592149",
+                      "title": "Azur L61 Helmet - Purple Black Fade / M/L",
+                      "sku": "HELMET-AZUR-L61-PRPL-BLK-FDE-M/L",
+                      "barcode": "1728818433849",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762167061",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Purple Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M/L"
+                        }
+                      ],
+                      "colour": "Purple Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072624917",
+                      "title": "Azur L61 Helmet - Purple Black Fade / S/M",
+                      "sku": "HELMET-AZUR-L61-PRPL-BLK-FDE-S/M",
+                      "barcode": "8187148469080",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762199829",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Purple Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "S/M"
+                        }
+                      ],
+                      "colour": "Purple Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655072657685",
+                      "title": "Azur L61 Helmet - Purple Black Fade / XL/XXL",
+                      "sku": "HELMET-AZUR-L61-PRPL-BLK-FDE-XL/XXL",
+                      "barcode": "3316929013623",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762232597",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Purple Black Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL/XXL"
+                        }
+                      ],
+                      "colour": "Purple Black Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/45294333788437",
+                      "title": "Azur L61 Helmet - Pink White Fade / L/XL",
+                      "sku": "HELMET-AZUR-L61-PWF-L/XL",
+                      "barcode": "6539258846244",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=47347092979989",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Pink White Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L/XL"
+                        }
+                      ],
+                      "colour": "Pink White Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/45294333821205",
+                      "title": "Azur L61 Helmet - Pink White Fade / M/L",
+                      "sku": "HELMET-AZUR-L61-PWF-M/L",
+                      "barcode": "6976251640927",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=47347093012757",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Pink White Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M/L"
+                        }
+                      ],
+                      "colour": "Pink White Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/45294333853973",
+                      "title": "Azur L61 Helmet - Pink White Fade / S/M",
+                      "sku": "HELMET-AZUR-L61-PWF-S/M",
+                      "barcode": "9385262362037",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=47347093045525",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Pink White Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "S/M"
+                        }
+                      ],
+                      "colour": "Pink White Fade"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48655071936789",
+                      "title": "Azur L61 Helmet - Pink White Fade / XL/XXL",
+                      "sku": "HELMET-AZUR-L61-PWF-XL/XXL",
+                      "barcode": "5770347656189",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50637762265365",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Pink White Fade"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL/XXL"
+                        }
+                      ],
+                      "colour": "Pink White Fade"
+                    }
+                  ],
+                  "variant_count": 20,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207649177877",
+                  "title": "Helmet - Livall BH60SE",
+                  "handle": "helmet-livall-bh60se",
+                  "status": "ARCHIVED",
+                  "vendor": "Ride Electric Wholesale",
+                  "product_type": "HELMETS",
+                  "tags": [
+                    "Helmets"
+                  ],
+                  "storefront_path": "/products/helmet-livall-bh60se",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Livall-BH60SE-helmet-black-01.png?v=1683694711",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688582476053",
+                      "title": "Helmet - Livall BH60SE - Polar Night",
+                      "sku": "LIV-BH60SE-B",
+                      "barcode": "8641400909733",
+                      "price": {
+                        "amount": "110.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740103823637",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Polar Night"
+                        }
+                      ],
+                      "colour": "Polar Night"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688582508821",
+                      "title": "Helmet - Livall BH60SE - Ivory White",
+                      "sku": "LIV-BH60SE-W",
+                      "barcode": "9725630071220",
+                      "price": {
+                        "amount": "110.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740103856405",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Ivory White"
+                        }
+                      ],
+                      "colour": "Ivory White"
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207649702165",
+                  "title": "100 Percent Status Helmet",
+                  "handle": "helmet-status",
+                  "status": "ACTIVE",
+                  "vendor": "Ride Electric Wholesale",
+                  "product_type": "HELMETS",
+                  "tags": [
+                    "Helmets"
+                  ],
+                  "storefront_path": "/products/helmet-status",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/100percent-status-helmet-black-01.png?v=1683761086",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583000341",
+                      "title": "100 Percent Status Helmet - Black / L",
+                      "sku": "HELMET-STATUS-BLACK-L",
+                      "barcode": "2251377215544",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104347925",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583033109",
+                      "title": "100 Percent Status Helmet - Black / M",
+                      "sku": "HELMET-STATUS-BLACK-M",
+                      "barcode": "8412681114235",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104380693",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583065877",
+                      "title": "100 Percent Status Helmet - Black / XL",
+                      "sku": "HELMET-STATUS-BLACK-XL",
+                      "barcode": "6123532683306",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104413461",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583098645",
+                      "title": "100 Percent Status Helmet - Black / XS",
+                      "sku": "HELMET-STATUS-BLACK-XS",
+                      "barcode": "3826707074277",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104446229",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XS"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583131413",
+                      "title": "100 Percent Status Helmet - Black / XXL",
+                      "sku": "HELMET-STATUS-BLACK-XXL",
+                      "barcode": "6701774090603",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104478997",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XXL"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583164181",
+                      "title": "100 Percent Status Helmet - Carby/Charcoal / L",
+                      "sku": "HELMET-STATUS-CARBY/CHARC-L",
+                      "barcode": "1539903003485",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104511765",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Carby/Charcoal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "L"
+                        }
+                      ],
+                      "colour": "Carby/Charcoal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583196949",
+                      "title": "100 Percent Status Helmet - Carby/Charcoal / M",
+                      "sku": "HELMET-STATUS-CARBY/CHARC-M",
+                      "barcode": "7364048988915",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104544533",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Carby/Charcoal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "M"
+                        }
+                      ],
+                      "colour": "Carby/Charcoal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583229717",
+                      "title": "100 Percent Status Helmet - Carby/Charcoal / XL",
+                      "sku": "HELMET-STATUS-CARBY/CHARC-XL",
+                      "barcode": "8582601271192",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104577301",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Carby/Charcoal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XL"
+                        }
+                      ],
+                      "colour": "Carby/Charcoal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583262485",
+                      "title": "100 Percent Status Helmet - Carby/Charcoal / XS",
+                      "sku": "HELMET-STATUS-CARBY/CHARC-XS",
+                      "barcode": "3140394920632",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104610069",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Carby/Charcoal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XS"
+                        }
+                      ],
+                      "colour": "Carby/Charcoal"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688583295253",
+                      "title": "100 Percent Status Helmet - Carby/Charcoal / XXL",
+                      "sku": "HELMET-STATUS-CARBY/CHARC-XXL",
+                      "barcode": "3508667416280",
+                      "price": {
+                        "amount": "299.99",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740104642837",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Carby/Charcoal"
+                        },
+                        {
+                          "name": "Size",
+                          "value": "XXL"
+                        }
+                      ],
+                      "colour": "Carby/Charcoal"
+                    }
+                  ],
+                  "variant_count": 10,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207651242261",
+                  "title": "100 Percent Status Vsett Helmet",
+                  "handle": "helmet-status-vsett",
+                  "status": "ACTIVE",
+                  "vendor": "FE Sports",
+                  "product_type": "HELMETS",
+                  "tags": [
+                    "Helmets"
+                  ],
+                  "storefront_path": "/products/helmet-status-vsett",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/vsett-full-face-helmet-escooter-05.png?v=1683765492",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688585490709",
+                      "title": "100 Percent Status Vsett Helmet - Black Large",
+                      "sku": "HELMET-STATUS-VSETT-BL-LG",
+                      "barcode": "5895354945269",
+                      "price": {
+                        "amount": "349.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740106838293",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour/Size",
+                          "value": "Black Large"
+                        }
+                      ],
+                      "colour": "Black Large"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688585523477",
+                      "title": "100 Percent Status Vsett Helmet - Black X Large",
+                      "sku": "HELMET-STATUS-VSETT-BL-XL",
+                      "barcode": "5520491156253",
+                      "price": {
+                        "amount": "349.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740106871061",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour/Size",
+                          "value": "Black X Large"
+                        }
+                      ],
+                      "colour": "Black X Large"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688585556245",
+                      "title": "100 Percent Status Vsett Helmet - Black XX Large",
+                      "sku": "HELMET-STATUS-VSETT-BL-XXL",
+                      "barcode": "2864531808621",
+                      "price": {
+                        "amount": "349.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740106903829",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour/Size",
+                          "value": "Black XX Large"
+                        }
+                      ],
+                      "colour": "Black XX Large"
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                }
+              ],
+              "count": 5,
+              "query": "helmet",
+              "shopify_query": "helmet",
+              "search_term": "helmet",
+              "category": "all",
+              "category_filter_applied": false,
+              "category_heuristic_applied": false,
+              "category_heuristic_filtered_out": 0,
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 105,
+      "text": "Here are the helmets available in stock:\n\n1. Aircraft Composite Silo Helmet - $499.99 (Available in Large and XL, but currently out of stock)\n2. Azur L61 Helmet - $54.95 (Available in various colours and sizes, but currently out of stock)\n3. 100 Percent Status Helmet - $299.99 (Available in Black, Carby/Charcoal, and various sizes, but currently out of stock)\n4. 100 Percent Status Vsett Helmet - $349.00 (Available in Black, Large, X Large, and XX Large, but currently out of stock)\n\nAll helmets are currently out of stock. Would you like me to notify you when any of these become available?",
+      "asr_ms": null,
+      "llm_seconds": 0.565,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 126,
+      "text": "Check brisbane store for stock of helmets",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 126,
+      "text": "Based on my last check, all helmets are currently out of stock, including at the Brisbane store. Would you like me to check other stores or notify you when stock arrives?",
+      "asr_ms": null,
+      "llm_seconds": 1.701,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "0s",
+    "Hi, I am wondering about my scooter in the workshop",
+    "agent",
+    "0s",
+    "...",
+    "LLM 0.257 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "0s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "0s",
+    "Could you please provide your full name or phone number so I can check the status of your scooter in the workshop?",
+    "LLM 0.352 s",
+    "user",
+    "14s",
+    "Jeff Hall",
+    "agent",
+    "14s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.204 s",
+    "agent",
+    "16s",
+    "...",
+    "LLM 1.204 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "18s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 2439 ms",
+    "Show result payload",
+    "agent",
+    "18s",
+    "I found6 job cards for Jeff Hall. Could you please let me know which one you're referring to? Here are the details:\n\n- #36022: VSETT APEX10+ | Status:15- #35872: Fatfish Biggie | Status: Booked In- #34155: VSETT APEX10+ | Status: Waiting - Parts- #34249: VSETT APEX10+ | Status:15- #34196: Zero11x | Status:15- #15336: segway segway | Status: Waiting - PartsPlease confirm the job card number or vehicle you're asking about.",
+    "LLM 0.315 s",
+    "user",
+    "27s",
+    "#35872",
+    "agent",
+    "29s",
+    "...",
+    "LLM 1.333 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "29s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "32s",
+    "...",
+    "LLM 1.341 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "36s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 3956 ms",
+    "Show result payload",
+    "agent",
+    "36s",
+    "Your scooter, a Fatfish Biggie, is currently Booked In. It was scheduled for service on2026-05-02 at10:30 AM. Is there anything specific you'd like to know about the service?",
+    "LLM 0.279 s",
+    "user",
+    "54s",
+    "what does it say is involved in the service?",
+    "agent",
+    "54s",
+    "I can't see the specific details of the service from here. I can take your details and have the team check it manually for you.",
+    "LLM 2.266 s",
+    "user",
+    "75s",
+    "I would also like to enquire about a kids helmet",
+    "agent",
+    "75s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 0.583 s",
+    "agent",
+    "80s",
+    "...",
+    "LLM 0.583 s",
+    "Tool dispatch: hubtiger_job_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "83s",
+    "...",
+    "Tool succeeded: hubtiger_job_search",
+    "Result 2646 ms",
+    "Show result payload",
+    "agent",
+    "83s",
+    "I can't find any kids helmets in the workshop system. Would you like me to check our online store for available options?",
+    "LLM 0.472 s",
+    "user",
+    "101s",
+    "what helmets do you have in stock?",
+    "agent",
+    "101s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.454 s",
+    "agent",
+    "103s",
+    "...",
+    "LLM 1.454 s",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "105s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 1510 ms",
+    "Show result payload",
+    "agent",
+    "105s",
+    "Here are the helmets available in stock:\n\n1. Aircraft Composite Silo Helmet - $499.99 (Available in Large and XL, but currently out of stock)\n2. Azur L61 Helmet - $54.95 (Available in various colours and sizes, but currently out of stock)\n3. 100 Percent Status Helmet - $299.99 (Available in Black, Carby/Charcoal, and various sizes, but currently out of stock)\n4. 100 Percent Status Vsett Helmet - $349.00 (Available in Black, Large, X Large, and XX Large, but currently out of stock)\n\nAll helmets are currently out of stock. Would you like me to notify you when any of these become available?",
+    "LLM 0.565 s",
+    "user",
+    "126s",
+    "Check brisbane store for stock of helmets",
+    "agent",
+    "126s",
+    "Based on my last check, all helmets are currently out of stock, including at the Brisbane store. Would you like me to check other stores or notify you when stock arrives?",
+    "LLM 1.701 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 6,
+      "tool_result_count": 6,
+      "tool_success_count": 6,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 3
+        },
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_job_search",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 80,
+      "booking_intent_to_first_hubtiger_seconds": 80
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 6,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.29,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_9301kqrgc3ccfv98mab92pdqv6vb-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hi, I am wondering about my scooter in the workshop",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_9301kqrgc3ccfv98mab92pdqv6vb-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_9301kqrgc3ccfv98mab92pdqv6vb-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_9301kqrgc3ccfv98mab92pdqv6vb-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

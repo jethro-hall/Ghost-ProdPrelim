@@ -1,0 +1,550 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3",
+    "title": "Scooter Repair Status",
+    "status": "done",
+    "user": "Jeff Hall (context: \"The user initiated contact to check the status of a scooter repair. After the agent requested details, the user provided a phone number. ...\")",
+    "brief_summary": "Scooter Repair Status",
+    "duration_seconds": 74,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings,...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 304,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 6,
+      "text": "Yes, Magic. I just wanted to, um, just wanted to check on the status of my, uh, scooter repair in the workshop.",
+      "asr_ms": 56,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 13,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.27,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-4247cf2e41e241099b8a5ae7df3e1f59",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 13,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-4247cf2e41e241099b8a5ae7df3e1f59",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 7.240998093038797e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhc9h67fvp96jv06b4n0smq",
+                "target_node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b"
+              },
+              {
+                "step_latency_secs": 0.0039060799754224718,
+                "type": "nested_tools",
+                "node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_8501kqjv2z2yepy9ncj8w9agaa7z",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhc76b8fvp96jtwpp3a9b1b\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_8501kqjv2z2yepy9ncj8w9agaa7z",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhc76b8fvp96jtwpp3a9b1b\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010861002374440432,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "I can help you with that. Could you please provide your full name and the scooter model?",
+      "asr_ms": null,
+      "llm_seconds": 0.182,
+      "workflow_route_seconds": null,
+      "tts_ms": 437,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 20,
+      "text": "My number is 0435185134.",
+      "asr_ms": 25,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 30,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 3.43,
+      "workflow_route_seconds": null,
+      "tts_ms": 401,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 3.43,
+      "workflow_route_seconds": null,
+      "tts_ms": 401,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_1_met_51562ef242e242849327223cb224552d",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system.",
+            "nested_tools": {
+              "hubtiger_job_search": {
+                "function": "job_search",
+                "payload": {
+                  "query": "0435185134"
+                }
+              }
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 34,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_1_met_51562ef242e242849327223cb224552d",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2903,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 8.586002513766289e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgyefeze07rq8wfv3gy81f8",
+                "target_node_id": "node_01kqgyefexe07rq8w2qkk5ep0z"
+              },
+              {
+                "step_latency_secs": 2.899130791949574,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyefexe07rq8w2qkk5ep0z",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_5401kqjv3gmkewbb8tzzyv53x75h",
+                    "tool_name": "hubtiger_job_search",
+                    "params_as_json": "{\"function\": \"job_search\", \"payload\": {\"query\": \"0435185134\"}}",
+                    "tool_has_been_called": true,
+                    "tool_details": {
+                      "type": "webhook",
+                      "method": "POST",
+                      "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "X-Ghost-Voice-Key": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+                      },
+                      "path_params": {},
+                      "query_params": {},
+                      "body": "{\"function\": \"job_search\", \"payload\": {\"query\": \"0435185134\"}}"
+                    }
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_5401kqjv3gmkewbb8tzzyv53x75h",
+                    "tool_name": "hubtiger_job_search",
+                    "result_value": "{\"success\":true,\"message\":\"HubTiger call completed.\",\"operation\":\"job_search\",\"blocked\":false,\"data\":{\"ok\":true,\"matches\":[{\"id\":4224640,\"jobCardNo\":\"#36022\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-07T09:00:00\",\"scheduledDate\":\"2026-05-07T09:00:00\",\"durationMinutes\":0},{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0},{\"id\":4036225,\"jobCardNo\":\"#34155\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2026-03-23T10:00:00\",\"scheduledDate\":\"2026-03-23T10:00:00\",\"durationMinutes\":0},{\"id\":4041278,\"jobCardNo\":\"#34249\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-13T14:30:00\",\"scheduledDate\":\"2026-03-13T14:30:00\",\"durationMinutes\":0}],\"results\":[{\"id\":4224640,\"jobCardNo\":\"#36022\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-07T09:00:00\",\"scheduledDate\":\"2026-05-07T09:00:00\",\"durationMinutes\":0},{\"id\":4200325,\"jobCardNo\":\"#35872\",\"customerName\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"statusCode\":20,\"statusLabel\":\"Booked In\",\"lastUpdated\":\"2026-05-02T10:30:00\",\"scheduledDate\":\"2026-05-02T10:30:00\",\"durationMinutes\":0},{\"id\":4036225,\"jobCardNo\":\"#34155\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2026-03-23T10:00:00\",\"scheduledDate\":\"2026-03-23T10:00:00\",\"durationMinutes\":0},{\"id\":4041278,\"jobCardNo\":\"#34249\",\"customerName\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-03-13T14:30:00\",\"scheduledDate\":\"2026-03-13T14:30:00\",\"durationMinutes\":0}],\"count\":4,\"job_cards\":[{\"id\":4224640,\"job_card_no\":\"#36022\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-05-07T09:00:00\",\"last_updated\":\"2026-05-07T09:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #36022 | VSETT APEX 10+ | 15\"},{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"},{\"id\":4036225,\"job_card_no\":\"#34155\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2026-03-23T10:00:00\",\"last_updated\":\"2026-03-23T10:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts\"},{\"id\":4041278,\"job_card_no\":\"#34249\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-03-13T14:30:00\",\"last_updated\":\"2026-03-13T14:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34249 | VSETT APEX 10+ | 15\"}],\"case_select\":{\"identified_customer\":\"Jeff Hall\",\"job_card_count\":4,\"selection_required\":true,\"assistant_prompt\":\"I found 4 job cards for Jeff Hall. Ask which job they are calling about.\",\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\",\"identifier_value\":\"0435185134\",\"ambiguous_identifier\":null,\"possible_identifier_types\":[],\"allowed_next_actions\":[\"list_matching_cases\"],\"options\":[{\"id\":4224640,\"job_card_no\":\"#36022\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-05-07T09:00:00\",\"last_updated\":\"2026-05-07T09:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #36022 | VSETT APEX 10+ | 15\"},{\"id\":4200325,\"job_card_no\":\"#35872\",\"customer_name\":\"Jeff Hall\",\"bike\":\"Fatfish Biggie\",\"status\":\"Booked In\",\"scheduled_date\":\"2026-05-02T10:30:00\",\"last_updated\":\"2026-05-02T10:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #35872 | Fatfish Biggie | Booked In\"},{\"id\":4036225,\"job_card_no\":\"#34155\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2026-03-23T10:00:00\",\"last_updated\":\"2026-03-23T10:00:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts\"},{\"id\":4041278,\"job_card_no\":\"#34249\",\"customer_name\":\"Jeff Hall\",\"bike\":\"VSETT APEX 10+\",\"status\":\"15\",\"scheduled_date\":\"2026-03-13T14:30:00\",\"last_updated\":\"2026-03-13T14:30:00\",\"store_matched\":\"\",\"label\":\"Jeff Hall | #34249 | VSETT APEX 10+ | 15\"}]},\"identified_customer\":\"Jeff Hall\",\"job_card_count\":4,\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"selection_required\":true,\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 2.897675482032355,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": true
+              },
+              {
+                "step_latency_secs": 8.729001274332404e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgz0z0ne07rq90k4ws4qkbb",
+                "target_node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm"
+              },
+              {
+                "step_latency_secs": 0.0031733199721202254,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_1701kqjv3kf6fcq84t3w4as78bpk",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqgyxf77e07rq8yjf4g1f6tm\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_1701kqjv3kf6fcq84t3w4as78bpk",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqgyxf77e07rq8yjf4g1f6tm\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00011475000064820051,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 35,
+      "text": "I found four job cards for Jeff Hall. Could you please confirm which one you're asking about? The options are:- #36022: VSETT APEX10+- #35872: Fatfish Biggie- #34155: VSETT APEX10+- #34249: VSETT APEX10+",
+      "asr_ms": null,
+      "llm_seconds": 0.279,
+      "workflow_route_seconds": null,
+      "tts_ms": 326,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 58,
+      "text": "That's a VSETT 10 APEX.",
+      "asr_ms": 42,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 64,
+      "text": "I found three job cards for a VSETT APEX ten plus. Are you referring to job card number three six zero two two, three four one five five, or three four two four...",
+      "asr_ms": null,
+      "llm_seconds": 1.299,
+      "workflow_route_seconds": null,
+      "tts_ms": 308,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings,...",
+    "TTS 304 ms",
+    "user",
+    "6s",
+    "Yes, Magic. I just wanted to, um, just wanted to check on the status of my, uh, scooter repair in the workshop.",
+    "ASR 56 ms",
+    "agent",
+    "13s",
+    "...",
+    "LLM 0.27 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "13s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "14s",
+    "I can help you with that. Could you please provide your full name and the scooter model?",
+    "LLM 0.182 s",
+    "TTS 437 ms",
+    "user",
+    "20s",
+    "My number is 0435185134.",
+    "ASR 25 ms",
+    "agent",
+    "30s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 3.43 s",
+    "TTS 401 ms",
+    "agent",
+    "31s",
+    "...",
+    "LLM 3.43 s",
+    "TTS 401 ms",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "34s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 2903 ms",
+    "Show result payload",
+    "agent",
+    "35s",
+    "I found four job cards for Jeff Hall. Could you please confirm which one you're asking about? The options are:- #36022: VSETT APEX10+- #35872: Fatfish Biggie- #34155: VSETT APEX10+- #34249: VSETT APEX10+",
+    "LLM 0.279 s",
+    "TTS 326 ms",
+    "user",
+    "58s",
+    "That's a VSETT 10 APEX.",
+    "ASR 42 ms",
+    "agent",
+    "64s",
+    "I found three job cards for a VSETT APEX ten plus. Are you referring to job card number three six zero two two, three four one five five, or three four two four...",
+    "LLM 1.299 s",
+    "TTS 308 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 2
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 7.67,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Yes, Magic. I just wanted to, um, just wanted to check on the status of my, uh, scooter repair in the workshop.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

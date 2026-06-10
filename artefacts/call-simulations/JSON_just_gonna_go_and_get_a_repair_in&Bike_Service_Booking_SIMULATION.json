@@ -1,0 +1,830 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3",
+    "title": "Bike Service Booking",
+    "status": "done",
+    "user": "just gonna go and get a repair in",
+    "brief_summary": "Bike Service Booking",
+    "duration_seconds": 100,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. Are you looking to book a bike or scooter in for a service today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 602,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 8,
+      "text": "Yes.",
+      "asr_ms": 83,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 10,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.488,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "call_7f5c5640e0b444c4aa33c23c",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 10,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "call_7f5c5640e0b444c4aa33c23c",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.431007593870163e-05,
+                "type": "edge",
+                "edge_id": "edge_01krywnvn9eshs8hkwy8rqjb39",
+                "target_node_id": "node_01krywnvn7eshs8hkmpgvpyk6n"
+              },
+              {
+                "step_latency_secs": 0.003946865908801556,
+                "type": "nested_tools",
+                "node_id": "node_01krywnvn7eshs8hkmpgvpyk6n",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_3401ks0v26h1fkjbkg1anjrpx67h",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01krywnvn7eshs8hkmpgvpyk6n\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_3401ks0v26h1fkjbkg1anjrpx67h",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3001kryst276f0gbwx8at46gaw9n\",\"to_agent\":\"node_01krywnvn7eshs8hkmpgvpyk6n\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00013299006968736649,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3001kryst276f0gbwx8at46gaw9n",
+                      "to_agent": "node_01krywnvn7eshs8hkmpgvpyk6n",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "[Enthusiastically] Great! To get started, could you please tell me your first and last name?",
+      "asr_ms": null,
+      "llm_seconds": 0.382,
+      "workflow_route_seconds": null,
+      "tts_ms": 397,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 18,
+      "text": "Jeff Hall.",
+      "asr_ms": 87,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.484,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "call_d8898ec22bac419fb880ee79",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "call_d8898ec22bac419fb880ee79",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 5,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 8.264975622296333e-05,
+                "type": "edge",
+                "edge_id": "edge_01krywvghreshs8hmvjep30z8r",
+                "target_node_id": "node_01krywvghqeshs8hmgh27574px"
+              },
+              {
+                "step_latency_secs": 0.0042176260612905025,
+                "type": "nested_tools",
+                "node_id": "node_01krywvghqeshs8hmgh27574px",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_5301ks0v2f67fsqs3g0cgrt6g8k7",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01krywvghqeshs8hmgh27574px\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_5301ks0v2f67fsqs3g0cgrt6g8k7",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3001kryst276f0gbwx8at46gaw9n\",\"to_agent\":\"node_01krywvghqeshs8hmgh27574px\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.0001483997330069542,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3001kryst276f0gbwx8at46gaw9n",
+                      "to_agent": "node_01krywvghqeshs8hmgh27574px",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 21,
+      "text": "[Enthusiastically] Thanks Jeff! And could you please provide your mobile number so I can confirm your details?",
+      "asr_ms": null,
+      "llm_seconds": 0.366,
+      "workflow_route_seconds": null,
+      "tts_ms": 463,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 26,
+      "text": "043595134.",
+      "asr_ms": 26,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "Just to confirm — Jeff Hall and mobile zero four three five nine five one three four. Is that all correct?",
+      "asr_ms": null,
+      "llm_seconds": 0.366,
+      "workflow_route_seconds": null,
+      "tts_ms": 396,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 38,
+      "text": "That's correct, mate.",
+      "asr_ms": 39,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 40,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.499,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "call_3f058f579ca14f049e68c3d2",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 40,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "call_3f058f579ca14f049e68c3d2",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 5,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.752965807914734e-05,
+                "type": "edge",
+                "edge_id": "edge_01kryx0q38eshs8hncgj3thqwj",
+                "target_node_id": "node_01kryx0q36eshs8hn68rhgwcsq"
+              },
+              {
+                "step_latency_secs": 0.004227117169648409,
+                "type": "nested_tools",
+                "node_id": "node_01kryx0q36eshs8hn68rhgwcsq",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_4401ks0v33nrfbf8x1k0zj1dqqdq",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kryx0q36eshs8hn68rhgwcsq\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4401ks0v33nrfbf8x1k0zj1dqqdq",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3001kryst276f0gbwx8at46gaw9n\",\"to_agent\":\"node_01kryx0q36eshs8hn68rhgwcsq\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.000158810056746006,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3001kryst276f0gbwx8at46gaw9n",
+                      "to_agent": "node_01kryx0q36eshs8hn68rhgwcsq",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 42,
+      "text": "[Enthusiastically] Perfect, thanks Jeff! Now, which store is most convenient for you — Southport, Burleigh, or Brisbane?",
+      "asr_ms": null,
+      "llm_seconds": 0.47,
+      "workflow_route_seconds": null,
+      "tts_ms": 422,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 49,
+      "text": "Brisbane.",
+      "asr_ms": 84,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 51,
+      "text": "[Enthusiastically] Awesome, Brisbane it is! Do you have a preferred date for your service, or would you like me to check the soonest available slot?",
+      "asr_ms": null,
+      "llm_seconds": 0.452,
+      "workflow_route_seconds": null,
+      "tts_ms": 410,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 59,
+      "text": "Yeah, I'd like to have it, um, on the 25th of this month.",
+      "asr_ms": 78,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 68,
+      "text": "[Patient] Got it, Jeff. You'd like to book in for the twenty-fifth of May. Just to confirm, that's May twenty-fifth, two thousand and twenty-six, correct? I'll go ahead and check availability at our Brisbane store for that date.",
+      "asr_ms": null,
+      "llm_seconds": 0.912,
+      "workflow_route_seconds": null,
+      "tts_ms": 662,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 71,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.912,
+      "workflow_route_seconds": null,
+      "tts_ms": 662,
+      "tool_dispatch": [
+        {
+          "request_id": "call_6a402651d900419ea14ede86",
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "tool_type": "webhook",
+          "params": {
+            "function": "booking_availability",
+            "store": "brisbane",
+            "start_date": "2026-05-25",
+            "system__message_to_speak": "Checking availability for you"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 74,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "call_6a402651d900419ea14ede86",
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2696,
+          "result": {
+            "success": true,
+            "message": "HubTiger call completed.",
+            "operation": "availability_lookup",
+            "blocked": false,
+            "data": {
+              "success": true,
+              "operation": "availability_lookup",
+              "blocked": false,
+              "message": "I could not see open workshop slots for Ride Electric Brisbane from 2026-05-25.",
+              "data": {
+                "store": "brisbane",
+                "store_label": "Ride Electric Brisbane",
+                "technician_id": 1489,
+                "start_date": "2026-05-25",
+                "days_checked": 1,
+                "service_type": "workshop",
+                "slot_count": 0,
+                "first_slots": [],
+                "closest_slots": [],
+                "slots_by_date": [
+                  {
+                    "date": "2026-05-25",
+                    "slot_count": 0,
+                    "first_slots": [],
+                    "slots": []
+                  }
+                ],
+                "requires_staff_confirmation": true,
+                "source": "hubtiger proxy availability/technicians"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 75,
+      "text": "Apologies Jeff — it looks like there are no...",
+      "asr_ms": null,
+      "llm_seconds": 0.292,
+      "workflow_route_seconds": null,
+      "tts_ms": 369,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 80,
+      "text": "Nah, I think I'm just gonna go and get a repair in 2030. What do you fucking reckon?Neville?",
+      "asr_ms": 73,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 87,
+      "text": "I understand you might be frustrated, Jeff, but I'm here to help you with your current booking needs at Ride Electric. Since there are no available slots on May twenty-fifth, would you like me to check for the soonest ...",
+      "asr_ms": null,
+      "llm_seconds": 0.46,
+      "workflow_route_seconds": null,
+      "tts_ms": 371,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 96,
+      "text": "That's actually more, it's actually more.",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. Are you looking to book a bike or scooter in for a service today?",
+    "TTS 602 ms",
+    "user",
+    "8s",
+    "Yes.",
+    "ASR 83 ms",
+    "agent",
+    "10s",
+    "...",
+    "LLM 0.488 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "10s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "12s",
+    "[Enthusiastically] Great! To get started, could you please tell me your first and last name?",
+    "LLM 0.382 s",
+    "TTS 397 ms",
+    "user",
+    "18s",
+    "Jeff Hall.",
+    "ASR 87 ms",
+    "agent",
+    "19s",
+    "...",
+    "LLM 0.484 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "19s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 5 ms",
+    "Show result payload",
+    "agent",
+    "21s",
+    "[Enthusiastically] Thanks Jeff! And could you please provide your mobile number so I can confirm your details?",
+    "LLM 0.366 s",
+    "TTS 463 ms",
+    "user",
+    "26s",
+    "043595134.",
+    "ASR 26 ms",
+    "agent",
+    "31s",
+    "Just to confirm — Jeff Hall and mobile zero four three five nine five one three four. Is that all correct?",
+    "LLM 0.366 s",
+    "TTS 396 ms",
+    "user",
+    "38s",
+    "That's correct, mate.",
+    "ASR 39 ms",
+    "agent",
+    "40s",
+    "...",
+    "LLM 0.499 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "40s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 5 ms",
+    "Show result payload",
+    "agent",
+    "42s",
+    "[Enthusiastically] Perfect, thanks Jeff! Now, which store is most convenient for you — Southport, Burleigh, or Brisbane?",
+    "LLM 0.47 s",
+    "TTS 422 ms",
+    "user",
+    "49s",
+    "Brisbane.",
+    "ASR 84 ms",
+    "agent",
+    "51s",
+    "[Enthusiastically] Awesome, Brisbane it is! Do you have a preferred date for your service, or would you like me to check the soonest available slot?",
+    "LLM 0.452 s",
+    "TTS 410 ms",
+    "user",
+    "59s",
+    "Yeah, I'd like to have it, um, on the 25th of this month.",
+    "ASR 78 ms",
+    "agent",
+    "68s",
+    "[Patient] Got it, Jeff. You'd like to book in for the twenty-fifth of May. Just to confirm, that's May twenty-fifth, two thousand and twenty-six, correct? I'll go ahead and check availability at our Brisbane store for that date.",
+    "LLM 0.912 s",
+    "TTS 662 ms",
+    "agent",
+    "71s",
+    "...",
+    "LLM 0.912 s",
+    "TTS 662 ms",
+    "Tool dispatch: hubtiger_booking_availability_readonly",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "74s",
+    "...",
+    "Tool succeeded: hubtiger_booking_availability_readonly",
+    "Result 2696 ms",
+    "Show result payload",
+    "agent",
+    "75s",
+    "Apologies Jeff — it looks like there are no...",
+    "LLM 0.292 s",
+    "TTS 369 ms",
+    "user",
+    "80s",
+    "Nah, I think I'm just gonna go and get a repair in 2030. What do you fucking reckon?Neville?",
+    "ASR 73 ms",
+    "agent",
+    "87s",
+    "I understand you might be frustrated, Jeff, but I'm here to help you with your current booking needs at Ride Electric. Since there are no available slots on May twenty-fifth, would you like me to check for the soonest ...",
+    "LLM 0.46 s",
+    "TTS 371 ms",
+    "user",
+    "96s",
+    "That's actually more, it's actually more."
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 4,
+      "tool_result_count": 4,
+      "tool_success_count": 4,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 3
+        },
+        {
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 71,
+      "booking_intent_to_first_hubtiger_seconds": -9
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 6,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": true,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": -9,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "LLM can route booking checks. Live write completion depends on staff review gate."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Yes.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_submit",
+  "description": "Workflow node 3b: Submit booking from server session. Call only after hubtiger_booking_service_set succeeded.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Final write node. Only booking_session_id required if service_set already ran.\n\nSpeak voice_line only. Never say booked in unless booking_confirmed is true.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_submit",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "properties": [
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 45,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

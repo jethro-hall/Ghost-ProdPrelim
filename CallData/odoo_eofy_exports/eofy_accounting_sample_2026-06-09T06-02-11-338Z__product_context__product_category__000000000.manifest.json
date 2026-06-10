@@ -1,0 +1,22 @@
+{
+  "status": "written",
+  "snapshot_id": "eofy_accounting_sample_2026-06-09T06-02-11-338Z",
+  "model": "product.category",
+  "group": "product_context",
+  "offset": 0,
+  "limit": 500,
+  "exported_rows": 47,
+  "first_id": 1,
+  "last_id": 6847,
+  "output_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-02-11-338Z__product_context__product_category__000000000.jsonl",
+  "manifest_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-02-11-338Z__product_context__product_category__000000000.manifest.json",
+  "exported_at": "2026-06-09T06:08:55.683Z",
+  "source_company_context": [
+    4
+  ],
+  "sanitisation": {
+    "partner_names_hashed": false,
+    "bank_details_redacted": true,
+    "descriptions_compacted": true
+  }
+}

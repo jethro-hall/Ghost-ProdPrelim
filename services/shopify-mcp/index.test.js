@@ -10,6 +10,7 @@ import {
   mergeVolatilePricingIntoProducts,
   normalizeProductCategory,
   buildProductSearchShopifyQuery,
+  productMatchesCategoryHeuristic,
   buildInventoryDisplayForProduct,
 } from './index.js';
 
@@ -93,6 +94,21 @@ test('buildProductSearchShopifyQuery notes missing env filter', () => {
   assert.equal(out.category, 'part');
   assert.equal(out.category_filter_applied, false);
   assert.match(out.category_filter_note || '', /SHOPIFY_SEARCH_FILTER/);
+});
+
+test('productMatchesCategoryHeuristic excludes parts when category is ebike', () => {
+  const bike = {
+    title: 'Fatfish OG Fat Tyre E-Bike',
+    product_type: 'FATFISH BIKES (OG)',
+    tags: ['Ride Electric'],
+  };
+  const part = {
+    title: 'Fatfish OG Disc Rotor',
+    product_type: 'FATFISH PARTS (OG)',
+    tags: ['Fatfish Parts'],
+  };
+  assert.equal(productMatchesCategoryHeuristic(bike, 'ebike'), true);
+  assert.equal(productMatchesCategoryHeuristic(part, 'ebike'), false);
 });
 
 test('catalog shape merges volatile price and availability', () => {

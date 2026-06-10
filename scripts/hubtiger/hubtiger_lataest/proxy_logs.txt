@@ -1,0 +1,13 @@
+---------------------------------------------
+🚀 RIDEAI PROXY RUNNING AT PORT 8095
+🌍 URL: http://agents.rideai.com.au:8095
+📂 ROOT: /home/ec2-user/AI-STACK-rebuild/RE_AI_Services/services/hubtiger_api
+---------------------------------------------
+[7:35:35 PM] GET /
+[7:35:35 PM] GET /index.tsx
+[7:35:51 PM] GET /
+[7:35:51 PM] GET /index.tsx
+[7:35:51 PM] GET /favicon.ico
+[8:36:24 PM] GET /
+[8:36:29 PM] GET /favicon.ico
+[8:36:55 PM] GET /sitemap.xml

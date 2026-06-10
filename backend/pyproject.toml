@@ -54,3 +54,9 @@ lint = "ruff check --fix ."
 lint-check = ["ruff check ."]
 test = "pytest"
 all-check = ["format-check", "lint-check", "test"]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+  "src/ghostdash_api",
+  "src/integrations",
+]

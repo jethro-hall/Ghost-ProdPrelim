@@ -1,0 +1,99 @@
+{
+  "name": "05_SUB_MASTER_DATA",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a05trigger-master-data",
+      "name": "When Executed by Core",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─── Stage 05 input writer ───────────────────────────────────────────────────\n// Writes /tmp/odoo_05_master_data_input.json for 05_master_data_exporter.js\n//\n// SIZING GUIDE — pass these keys to control extraction throughput and memory:\n//\n//   page_limit (default 200):\n//     Records fetched per search_read call.\n//     200  → safe for all model sizes, ~40-90 min runtime for full Stage 05\n//     500  → faster on fast/local Odoo; may OOM on stock.move or mail.message\n//     50   → use if extraction keeps timing out or n8n container OOMs\n//\n//   cross_ref_sample_limit (default 50000):\n//     Max rows read per Stage 01/02 JSONL file for cross-reference ID harvest.\n//     50000 → ensures all referenced partner/product/user IDs are collected\n//     5000  → faster cold start, may miss partners/products on larger datasets\n//\n// n8n instance settings required for Stage 05:\n//   Workflow execution timeout: >= 3600 seconds\n//   (Workflow Settings → Execution Timeout)\n//\n// Docker environment recommendation:\n//   Add NODE_OPTIONS=--max-old-space-size=1536 to the n8n service in docker-compose.yml\n//   for datasets where stock.move > 50,000 rows or mail.message > 100,000 rows.\n\nconst fs = require('fs');\nconst input = { ...$input.first().json };\n\nif (input.odoo_api_key_or_password) {\n  input.odoo_api_key_or_password = String(input.odoo_api_key_or_password).trim();\n}\n\n// Apply defaults if caller did not specify sizing params\nif (!input.page_limit)              input.page_limit = 200;\nif (!input.cross_ref_sample_limit)  input.cross_ref_sample_limit = 50000;\nif (!input.max_anomaly_evidence_rows) input.max_anomaly_evidence_rows = 500;\n\nconst inputPath = '/tmp/odoo_05_master_data_input.json';\nfs.writeFileSync(inputPath, JSON.stringify(input), 'utf8');\n\nreturn [{\n  json: {\n    ok: true,\n    input_path: inputPath,\n    snapshot_id: input.snapshot_id,\n    page_limit: input.page_limit,\n    cross_ref_sample_limit: input.cross_ref_sample_limit,\n    message: 'Input JSON written for Stage 05 master data exporter',\n  },\n}];\n"
+      },
+      "id": "a05write-input-json",
+      "name": "Write exporter input JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "command": "node /home/node/.n8n/scripts/05_master_data_exporter.js"
+      },
+      "id": "a05run-master-exporter",
+      "name": "Run Master Data Exporter",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        208,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.exitCode !== undefined && Number(item.exitCode) !== 0) {\n  throw new Error(\n    `Stage 05 master data exporter failed (exit ${item.exitCode}). stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst stdout = String(item.stdout || '').trim();\nif (!stdout) {\n  throw new Error(\n    `Stage 05 master data exporter returned empty stdout. stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst lastLine = stdout.split(/\\r?\\n/).filter(Boolean).pop();\n\ntry {\n  return [{ json: JSON.parse(lastLine) }];\n} catch (e) {\n  throw new Error(\n    `Could not parse Stage 05 exporter stdout as JSON: ${e.message}. stdout starts: ${stdout.slice(0, 500)}`,\n  );\n}\n"
+      },
+      "id": "a05parse-result",
+      "name": "Parse Exporter Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed by Core": {
+      "main": [
+        [
+          {
+            "node": "Write exporter input JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write exporter input JSON": {
+      "main": [
+        [
+          {
+            "node": "Run Master Data Exporter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Master Data Exporter": {
+      "main": [
+        [
+          {
+            "node": "Parse Exporter Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 3600
+  },
+  "meta": {
+    "instanceId": "8a47d164-f11f-4733-bd58-cdf1c672ab88"
+  }
+}

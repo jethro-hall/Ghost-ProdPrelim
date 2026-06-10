@@ -1,0 +1,199 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_create",
+  "description": "Create a HubTiger workshop booking after availability is confirmed. Collects customer details, bike model, service type, and books the selected slot.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use ONLY after hubtiger_booking_availability_readonly returned a slot the customer accepted.\n\nRequired customer fields: first_name, last_name, mobile (+61), vehicle_model (e.g. Fatfish OG), issue_description (what they want done).\n\nService types to offer: service_full (Service Full) or service_plus (Service Plus). For tyres, controller errors, or unclear repair work, still book with service_type service_plus or non_standard and set needs_workshop_callback true — tell the customer a mechanic will call back about outcomes and costs.\n\nRequired slot fields from availability result: ServiceDate, TechnicianID, store.\n\nWorkshop hours: Monday–Saturday 8:30am–5:00pm only. Never book outside these hours.\n\nNever expose raw JSON, trace IDs, or backend errors.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "booking_create",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "dynamic_variable",
+          "description": "Required. southport, brisbane, or burleigh. Set from availability response.",
+          "dynamic_variable": "booking_store",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "cache_mode",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional. Leave blank unless retrying a stale result.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Booking details from the conversation and confirmed availability slot.",
+          "properties": [
+            {
+              "id": "first_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer first name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "last_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer last name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "mobile",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Australian mobile, e.g. 0412345678 or +61412345678.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "vehicle_model",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Bike or scooter model, e.g. Fatfish OG or VSETT Apex.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "issue_description",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Brief description of what the customer wants done or what is wrong.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "service_type",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "service_full or service_plus. Use non_standard for tyre/controller/unclear repair and set needs_workshop_callback.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "needs_workshop_callback",
+              "type": "boolean",
+              "value_type": "llm_prompt",
+              "description": "True when work is outside standard service (tyre, error code, repair quote). Customer still gets a booking but workshop calls back.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "ServiceDate",
+              "type": "string",
+              "value_type": "dynamic_variable",
+              "description": "Confirmed slot from availability: data.recommended_slot.ServiceDate (or backup slot).",
+              "dynamic_variable": "booking_service_date",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "TechnicianID",
+              "type": "number",
+              "value_type": "dynamic_variable",
+              "description": "Technician from availability: data.recommended_slot.TechnicianID.",
+              "dynamic_variable": "booking_technician_id",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "email",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional customer email.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 30,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}

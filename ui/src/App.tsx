@@ -6,6 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import DataSourcesPage from "./pages/DataSourcesPage";
 import ConfigExplorerPage from "./pages/ConfigExplorerPage";
 import KnowledgeLabPage from "./pages/KnowledgeLabPage";
+import ElevenLabsAnalysisPage from "./pages/ElevenLabsAnalysisPage";
+import ElevenLabsOperatorPage from "./pages/ElevenLabsOperatorPage";
+import ElevenLabsTestWorkbenchPage from "./pages/ElevenLabsTestWorkbenchPage";
 import Logs from "./pages/Logs";
 import PipelinesPage from "./pages/PipelinesPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -31,6 +34,11 @@ export default function App() {
         <Route path="config-explorer" element={<ConfigExplorerPage />} />
         <Route path="agent" element={<AgentConfigPage />} />
         <Route path="logs" element={<Logs />} />
+        <Route path="analysis/call-analysis" element={<ElevenLabsAnalysisPage />} />
+        <Route path="analysis/call-analysis/:conversationId" element={<ElevenLabsAnalysisPage />} />
+        <Route path="analysis/simulation-packs" element={<ElevenLabsTestWorkbenchPage />} />
+        <Route path="analysis/test-workbench" element={<ElevenLabsTestWorkbenchPage />} />
+        <Route path="analysis/voice-ops" element={<ElevenLabsOperatorPage />} />
       </Route>
     </Routes>
   );

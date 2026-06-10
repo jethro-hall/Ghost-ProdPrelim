@@ -1,0 +1,435 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_5101kqjs5b3zea9a9061zxsztxft",
+    "title": "Scooter Service Availability",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Scooter Service Availability",
+    "duration_seconds": 66,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 0,
+      "text": "Just wanted to check available dates for a service on my scooter",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.343,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-5630eae8f34343c1ad1f671b81384c5d",
+          "tool_name": "notify_condition_3_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-5630eae8f34343c1ad1f671b81384c5d",
+          "tool_name": "notify_condition_3_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.48800453543663e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqjpvk5wf269rdep9wqt9z5p",
+                "target_node_id": "node_01kqjpvk5vf269rdeae4avjfwr"
+              },
+              {
+                "step_latency_secs": 0.0036259302869439125,
+                "type": "nested_tools",
+                "node_id": "node_01kqjpvk5vf269rdeae4avjfwr",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_8601kqjs5c0seh9shhcj47nqbegg",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqjpvk5vf269rdeae4avjfwr\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_8601kqjs5c0seh9shhcj47nqbegg",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqjpvk5vf269rdeae4avjfwr\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010978057980537415,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqjpvk5vf269rdeae4avjfwr",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Sure, I can check that for you. Could you please confirm the model of your scooter and your preferred date range?",
+      "asr_ms": null,
+      "llm_seconds": 0.247,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 31,
+      "text": "next week sometime",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "I'll check availability for your scooter service next week. Could you please confirm the model of your scooter?",
+      "asr_ms": null,
+      "llm_seconds": 0.256,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 53,
+      "text": "Vsett apex",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 54,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.678,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-0143ce2e2cbf4386a488423def6a9cb1",
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "tool_type": "webhook",
+          "params": {
+            "function": "booking_availability",
+            "store": "brisbane",
+            "start_date": "2026-05-04",
+            "end_date": "2026-05-10"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 57,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-0143ce2e2cbf4386a488423def6a9cb1",
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2824,
+          "result": {
+            "success": false,
+            "message": "Booking availability is currently unavailable from HubTiger. Please retry shortly or offer callback.",
+            "operation": "availability_lookup",
+            "blocked": false,
+            "data": {
+              "status_code": 404,
+              "error_code": "availability_lookup_unavailable_upstream"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 57,
+      "text": "I'm sorry, but I'm currently unable to check real-time availability. Would you like me to arrange a callback or have a team member reach out to you shortly to confirm a suitable time?",
+      "asr_ms": null,
+      "llm_seconds": 0.272,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "0s",
+    "Just wanted to check available dates for a service on my scooter",
+    "agent",
+    "0s",
+    "...",
+    "LLM 0.343 s",
+    "Tool dispatch: notify_condition_3_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "0s",
+    "...",
+    "Tool succeeded: notify_condition_3_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "0s",
+    "Sure, I can check that for you. Could you please confirm the model of your scooter and your preferred date range?",
+    "LLM 0.247 s",
+    "user",
+    "31s",
+    "next week sometime",
+    "agent",
+    "31s",
+    "I'll check availability for your scooter service next week. Could you please confirm the model of your scooter?",
+    "LLM 0.256 s",
+    "user",
+    "53s",
+    "Vsett apex",
+    "agent",
+    "54s",
+    "...",
+    "LLM 0.678 s",
+    "Tool dispatch: hubtiger_booking_availability_readonly",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "57s",
+    "...",
+    "Tool succeeded: hubtiger_booking_availability_readonly",
+    "Result 2824 ms",
+    "Show result payload",
+    "agent",
+    "57s",
+    "I'm sorry, but I'm currently unable to check real-time availability. Would you like me to arrange a callback or have a team member reach out to you shortly to confirm a suitable time?",
+    "LLM 0.272 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_3_met",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_booking_availability_readonly",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 54,
+      "booking_intent_to_first_hubtiger_seconds": 54
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 4,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.33,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": true,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": 54,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "LLM can route booking checks. Live write completion depends on staff review gate."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_5101kqjs5b3zea9a9061zxsztxft-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Just wanted to check available dates for a service on my scooter",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_5101kqjs5b3zea9a9061zxsztxft-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_5101kqjs5b3zea9a9061zxsztxft-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_5101kqjs5b3zea9a9061zxsztxft-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

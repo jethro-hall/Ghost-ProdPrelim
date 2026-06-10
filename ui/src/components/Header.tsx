@@ -6,6 +6,7 @@ type Props = {
   onFullSync: () => void;
   onToggleRight: () => void;
   onToggleSidebar: () => void;
+  onOpenSimulation: () => void;
   syncing: boolean;
 };
 
@@ -20,11 +21,22 @@ const TITLES: Record<string, string> = {
   "/tools": "Tool settings",
   "/agent": "Agent configuration",
   "/logs": "Operational trace",
+  "/analysis/call-analysis": "Call analysis",
+  "/analysis/voice-ops": "Voice Operator Console",
+  "/analysis/test-workbench": "Agent test workbench",
+  "/analysis/simulation-packs": "Agent test workbench",
 };
 
-export default function Header({ onFullSync, onToggleRight, onToggleSidebar, syncing }: Props) {
+export default function Header({ onFullSync, onToggleRight, onToggleSidebar, onOpenSimulation, syncing }: Props) {
   const location = useLocation();
-  const title = TITLES[location.pathname] ?? "GhostDASH";
+  const title = location.pathname.startsWith("/analysis/call-analysis")
+    ? "Call analysis"
+    : location.pathname.startsWith("/analysis/voice-ops")
+      ? "Voice Operator Console"
+      : location.pathname.startsWith("/analysis/test-workbench") ||
+          location.pathname.startsWith("/analysis/simulation-packs")
+        ? "Agent test workbench"
+      : (TITLES[location.pathname] ?? "GhostDASH");
 
   return (
     <header className="glass-header sticky top-0 z-20 flex h-[44px] items-center justify-between px-4">
@@ -41,6 +53,14 @@ export default function Header({ onFullSync, onToggleRight, onToggleSidebar, syn
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenSimulation}
+          className="ghost-btn-primary"
+          title="Open simulator panel (slides in from the right)"
+        >
+          Simulator
+        </button>
         <motion.button
           type="button"
           whileTap={{ scale: 0.98 }}

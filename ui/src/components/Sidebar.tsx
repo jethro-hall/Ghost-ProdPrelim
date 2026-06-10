@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Link, NavLink } from "react-router-dom";
 import {
+  ActivityIcon,
   BarChart3Icon,
   DatabaseIcon,
   FileInputIcon,
@@ -107,6 +108,9 @@ export default function Sidebar({ open, onToggle }: Props) {
         </div>
         <nav className="flex flex-col gap-0.5">
           <NavItem to="/knowledge-lab" label="Knowledge Lab" icon={<FlaskIcon size={14} />} />
+          <NavItem to="/analysis/call-analysis" label="Call Analysis" icon={<ActivityIcon size={14} />} />
+          <NavItem to="/analysis/voice-ops" label="Voice Ops" icon={<ShieldCheckIcon size={14} />} />
+          <NavItem to="/analysis/test-workbench" label="Test Workbench" icon={<ActivityIcon size={14} />} />
         </nav>
       </div>
 

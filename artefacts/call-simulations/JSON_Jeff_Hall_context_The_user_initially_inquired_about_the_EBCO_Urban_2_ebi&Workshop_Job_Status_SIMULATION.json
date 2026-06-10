@@ -1,0 +1,1153 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_3301kqvee218ehb8m3degmp9cne0",
+    "title": "Workshop Job Status",
+    "status": "done",
+    "user": "Jeff Hall (context: \"The user initially inquired about the \"EBCO Urban 2\" e-bike. The agent provided details on two models, the EBCO Urban2R Roadster and Urba...\")",
+    "brief_summary": "Workshop Job Status",
+    "duration_seconds": 71,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 278,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 10,
+      "text": "Interested in a EBCO, uh, Urban 2.",
+      "asr_ms": 157,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.482,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-c2b2195c7e334988be6f26e6e4080d24",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-c2b2195c7e334988be6f26e6e4080d24",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 5,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.8269517719745636e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.004341520369052887,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_6501kqveej6petmtxktf82zs3hcb",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6501kqveej6petmtxktf82zs3hcb",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00011294055730104446,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "Just a moment, I'll check that for you.",
+      "asr_ms": null,
+      "llm_seconds": 1.906,
+      "workflow_route_seconds": null,
+      "tts_ms": 376,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.906,
+      "workflow_route_seconds": null,
+      "tts_ms": 376,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-96b8d270a37a4a2a997edc0518e7ce39",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "product_search",
+            "payload": {
+              "search": "EBCO Urban 2",
+              "category": "ebike"
+            },
+            "system__message_to_speak": "Just a moment, I'll check that for you."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 20,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-96b8d270a37a4a2a997edc0518e7ce39",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 1414,
+          "result": {
+            "success": true,
+            "message": "Found 2 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/9505555546389",
+                  "title": "EBCO Urban 2R Roadster Electric Bike",
+                  "handle": "ebco-urban-2r-roadster-electric-bike",
+                  "status": "ACTIVE",
+                  "vendor": "TVS Motor (Singapore) Pte Limited - Australia Branch",
+                  "product_type": "OTHER BRAND BIKES",
+                  "tags": [],
+                  "storefront_path": "/products/ebco-urban-2r-roadster-electric-bike",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/ebco-urban-roadster-electric-city-bike.png?v=1775552667",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719383829",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Large",
+                      "sku": "EBCO-2R-LARGE",
+                      "barcode": "7512343683763",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 3,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338582805",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 3
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Large"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719416597",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Medium",
+                      "sku": "EBCO-2R-MEDIUM",
+                      "barcode": "3491471756560",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338615573",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Medium"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719449365",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Small",
+                      "sku": "EBCO-2R-SMALL",
+                      "barcode": "8577318373918",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338648341",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Small"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 3,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Large",
+                        "variant_title": "EBCO Urban 2R Roadster Electric Bike - Large",
+                        "sku": "EBCO-2R-LARGE"
+                      }
+                    ],
+                    "summary": "3x store · Large"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9505555579157",
+                  "title": "EBCO Urban 2T Step-Over Electric Bike",
+                  "handle": "ebco-urban-2t-step-over-electric-bike",
+                  "status": "ACTIVE",
+                  "vendor": "TVS Motor (Singapore) Pte Limited - Australia Branch",
+                  "product_type": "OTHER BRAND BIKES",
+                  "tags": [],
+                  "storefront_path": "/products/ebco-urban-2t-step-over-electric-bike",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/ebco-urban-2t-electric-city-bike.png?v=1775552576",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719482133",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Large",
+                      "sku": "EBCO-2T-LARGE",
+                      "barcode": "7455181979837",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 4,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338681109",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 4
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Large"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719514901",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Medium",
+                      "sku": "EBCO-2T-MEDIUM",
+                      "barcode": "9804220669808",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338713877",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Medium"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719547669",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Small",
+                      "sku": "EBCO-2T-SMALL",
+                      "barcode": "1284715811635",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 2,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338746645",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 2
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Small"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 4,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Large",
+                        "variant_title": "EBCO Urban 2T Step-Over Electric Bike - Large",
+                        "sku": "EBCO-2T-LARGE"
+                      },
+                      {
+                        "quantity": 1,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Medium",
+                        "variant_title": "EBCO Urban 2T Step-Over Electric Bike - Medium",
+                        "sku": "EBCO-2T-MEDIUM"
+                      },
+                      {
+                        "quantity": 2,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Small",
+                        "variant_title": "EBCO Urban 2T Step-Over Electric Bike - Small",
+                        "sku": "EBCO-2T-SMALL"
+                      }
+                    ],
+                    "summary": "4x store · Large; 1x store · Medium; 2x store · Small"
+                  }
+                }
+              ],
+              "count": 2,
+              "query": "EBCO Urban 2",
+              "shopify_query": "EBCO Urban 2",
+              "search_term": "EBCO Urban 2",
+              "category": "ebike",
+              "category_filter_applied": false,
+              "category_heuristic_applied": true,
+              "category_heuristic_filtered_out": 0,
+              "category_filter_note": "Category filter was requested but no Shopify fragment is configured. Set SHOPIFY_SEARCH_FILTER_PART, SHOPIFY_SEARCH_FILTER_EBIKE, or SHOPIFY_SEARCH_FILTER_SCOOTER on shopify-mcp to match this store product types—or pass payload.category_query.",
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 21,
+      "text": "I found two models for you: the EBCO Urban2R Roadster and the EBCO Urban2T Step-Over. Both are priced at eight hundred and ninety nine dollars. The2T Step-Over has stock available in Large, Medium, and Small sizes. The2R Roadster is only available in Large. Would you like more details on either model?",
+      "asr_ms": null,
+      "llm_seconds": 0.301,
+      "workflow_route_seconds": null,
+      "tts_ms": 312,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 43,
+      "text": "No, that's okay. I also wanna check on my, um, my scooter's in the workshop.",
+      "asr_ms": 65,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 47,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.43,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-bd289ae5a36248b3b3aa68782d248f0a",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 47,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-bd289ae5a36248b3b3aa68782d248f0a",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.492979496717453e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqvb1bpjfer8f6989ksympjv",
+                "target_node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b"
+              },
+              {
+                "step_latency_secs": 0.0034797899425029755,
+                "type": "nested_tools",
+                "node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_2701kqvefgmyeqsv4vzd77k9yjtq",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhc76b8fvp96jtwpp3a9b1b\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_2701kqvefgmyeqsv4vzd77k9yjtq",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhc76b8fvp96jtwpp3a9b1b\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010397937148809433,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 48,
+      "text": "Can I grab your full name, phone number, or job card number the booking is under?",
+      "asr_ms": null,
+      "llm_seconds": 0.225,
+      "workflow_route_seconds": null,
+      "tts_ms": 373,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 53,
+      "text": "It's 0435-185-134.",
+      "asr_ms": 234,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 59,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.114,
+      "workflow_route_seconds": null,
+      "tts_ms": 380,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 59,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.114,
+      "workflow_route_seconds": null,
+      "tts_ms": 380,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-d2a5d883dcfa4348b63ecfbd88ba7288",
+          "tool_name": "hubtiger_job_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "job_search",
+            "payload": {
+              "query": "0435185134"
+            },
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 64,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-d2a5d883dcfa4348b63ecfbd88ba7288",
+          "tool_name": "hubtiger_job_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4666,
+          "result": {
+            "success": true,
+            "message": "HubTiger call completed.",
+            "operation": "job_search",
+            "blocked": false,
+            "data": {
+              "ok": true,
+              "matches": [
+                {
+                  "id": 4224640,
+                  "jobCardNo": "#36022",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-05-07T09:00:00",
+                  "scheduledDate": "2026-05-07T09:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4200325,
+                  "jobCardNo": "#35872",
+                  "customerName": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "statusCode": 20,
+                  "statusLabel": "Booked In",
+                  "lastUpdated": "2026-05-02T10:30:00",
+                  "scheduledDate": "2026-05-02T10:30:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4036225,
+                  "jobCardNo": "#34155",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "statusCode": 50,
+                  "statusLabel": "Waiting - Parts",
+                  "lastUpdated": "2026-03-23T10:00:00",
+                  "scheduledDate": "2026-03-23T10:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4041278,
+                  "jobCardNo": "#34249",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-03-13T14:30:00",
+                  "scheduledDate": "2026-03-13T14:30:00",
+                  "durationMinutes": 0
+                }
+              ],
+              "results": [
+                {
+                  "id": 4224640,
+                  "jobCardNo": "#36022",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-05-07T09:00:00",
+                  "scheduledDate": "2026-05-07T09:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4200325,
+                  "jobCardNo": "#35872",
+                  "customerName": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "statusCode": 20,
+                  "statusLabel": "Booked In",
+                  "lastUpdated": "2026-05-02T10:30:00",
+                  "scheduledDate": "2026-05-02T10:30:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4036225,
+                  "jobCardNo": "#34155",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "statusCode": 50,
+                  "statusLabel": "Waiting - Parts",
+                  "lastUpdated": "2026-03-23T10:00:00",
+                  "scheduledDate": "2026-03-23T10:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4041278,
+                  "jobCardNo": "#34249",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-03-13T14:30:00",
+                  "scheduledDate": "2026-03-13T14:30:00",
+                  "durationMinutes": 0
+                }
+              ],
+              "count": 4,
+              "job_cards": [
+                {
+                  "id": 4224640,
+                  "job_card_no": "#36022",
+                  "customer_name": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "scheduled_date": "2026-05-07T09:00:00",
+                  "last_updated": "2026-05-07T09:00:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #36022 | VSETT APEX 10+ | 15"
+                },
+                {
+                  "id": 4200325,
+                  "job_card_no": "#35872",
+                  "customer_name": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "scheduled_date": "2026-05-02T10:30:00",
+                  "last_updated": "2026-05-02T10:30:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #35872 | Fatfish Biggie | Booked In"
+                },
+                {
+                  "id": 4036225,
+                  "job_card_no": "#34155",
+                  "customer_name": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "scheduled_date": "2026-03-23T10:00:00",
+                  "last_updated": "2026-03-23T10:00:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts"
+                },
+                {
+                  "id": 4041278,
+                  "job_card_no": "#34249",
+                  "customer_name": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "scheduled_date": "2026-03-13T14:30:00",
+                  "last_updated": "2026-03-13T14:30:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #34249 | VSETT APEX 10+ | 15"
+                }
+              ],
+              "case_select": {
+                "identified_customer": "Jeff Hall",
+                "job_card_count": 4,
+                "selection_required": true,
+                "assistant_prompt": "I found 4 job cards for Jeff Hall. Ask which job they are calling about.",
+                "store_requested": "",
+                "store_matched": "",
+                "store_match": null,
+                "store_verification": "not_requested",
+                "identifier_type": "query_text",
+                "identifier_confidence": "medium",
+                "identifier_value": "0435185134",
+                "ambiguous_identifier": null,
+                "possible_identifier_types": [],
+                "allowed_next_actions": [
+                  "list_matching_cases"
+                ],
+                "options": [
+                  {
+                    "id": 4224640,
+                    "job_card_no": "#36022",
+                    "customer_name": "Jeff Hall",
+                    "bike": "VSETT APEX 10+",
+                    "status": "15",
+                    "scheduled_date": "2026-05-07T09:00:00",
+                    "last_updated": "2026-05-07T09:00:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #36022 | VSETT APEX 10+ | 15"
+                  },
+                  {
+                    "id": 4200325,
+                    "job_card_no": "#35872",
+                    "customer_name": "Jeff Hall",
+                    "bike": "Fatfish Biggie",
+                    "status": "Booked In",
+                    "scheduled_date": "2026-05-02T10:30:00",
+                    "last_updated": "2026-05-02T10:30:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #35872 | Fatfish Biggie | Booked In"
+                  },
+                  {
+                    "id": 4036225,
+                    "job_card_no": "#34155",
+                    "customer_name": "Jeff Hall",
+                    "bike": "VSETT APEX 10+",
+                    "status": "Waiting - Parts",
+                    "scheduled_date": "2026-03-23T10:00:00",
+                    "last_updated": "2026-03-23T10:00:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts"
+                  },
+                  {
+                    "id": 4041278,
+                    "job_card_no": "#34249",
+                    "customer_name": "Jeff Hall",
+                    "bike": "VSETT APEX 10+",
+                    "status": "15",
+                    "scheduled_date": "2026-03-13T14:30:00",
+                    "last_updated": "2026-03-13T14:30:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #34249 | VSETT APEX 10+ | 15"
+                  }
+                ]
+              },
+              "identified_customer": "Jeff Hall",
+              "job_card_count": 4,
+              "store_requested": "",
+              "store_matched": "",
+              "store_match": null,
+              "store_verification": "not_requested",
+              "selection_required": true,
+              "identifier_type": "query_text",
+              "identifier_confidence": "medium"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 65,
+      "text": "I found four jobs under your name, Jeff. Could you please confirm which one you're asking about? Here are the details:- ...",
+      "asr_ms": null,
+      "llm_seconds": 0.142,
+      "workflow_route_seconds": null,
+      "tts_ms": 297,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 278 ms",
+    "user",
+    "10s",
+    "Interested in a EBCO, uh, Urban 2.",
+    "ASR 157 ms",
+    "agent",
+    "16s",
+    "...",
+    "LLM 0.482 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "16s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 5 ms",
+    "Show result payload",
+    "agent",
+    "18s",
+    "Just a moment, I'll check that for you.",
+    "LLM 1.906 s",
+    "TTS 376 ms",
+    "agent",
+    "19s",
+    "...",
+    "LLM 1.906 s",
+    "TTS 376 ms",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "20s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 1414 ms",
+    "Show result payload",
+    "agent",
+    "21s",
+    "I found two models for you: the EBCO Urban2R Roadster and the EBCO Urban2T Step-Over. Both are priced at eight hundred and ninety nine dollars. The2T Step-Over has stock available in Large, Medium, and Small sizes. The2R Roadster is only available in Large. Would you like more details on either model?",
+    "LLM 0.301 s",
+    "TTS 312 ms",
+    "user",
+    "43s",
+    "No, that's okay. I also wanna check on my, um, my scooter's in the workshop.",
+    "ASR 65 ms",
+    "agent",
+    "47s",
+    "...",
+    "LLM 0.43 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "47s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "48s",
+    "Can I grab your full name, phone number, or job card number the booking is under?",
+    "LLM 0.225 s",
+    "TTS 373 ms",
+    "user",
+    "53s",
+    "It's 0435-185-134.",
+    "ASR 234 ms",
+    "agent",
+    "59s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.114 s",
+    "TTS 380 ms",
+    "agent",
+    "59s",
+    "...",
+    "LLM 1.114 s",
+    "TTS 380 ms",
+    "Tool dispatch: hubtiger_job_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "64s",
+    "...",
+    "Tool succeeded: hubtiger_job_search",
+    "Result 4666 ms",
+    "Show result payload",
+    "agent",
+    "65s",
+    "I found four jobs under your name, Jeff. Could you please confirm which one you're asking about? Here are the details:- ...",
+    "LLM 0.142 s",
+    "TTS 297 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 4,
+      "tool_result_count": 4,
+      "tool_success_count": 4,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        },
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_job_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 59,
+      "booking_intent_to_first_hubtiger_seconds": 16
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 3,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 5.33,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_3301kqvee218ehb8m3degmp9cne0-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Interested in a EBCO, uh, Urban 2.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_3301kqvee218ehb8m3degmp9cne0-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_3301kqvee218ehb8m3degmp9cne0-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_3301kqvee218ehb8m3degmp9cne0-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

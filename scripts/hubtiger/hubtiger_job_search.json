@@ -1,0 +1,142 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_job_search",
+  "description": "Search HubTiger workshop jobs by phone, name, email, or job card hint. Use before job_retrieve when the customer asks where their job is up to. Open jobs are listed newest booked-in first. For SMS, mechanic notes, and quote detail, call hubtiger_job_retrieve on the selected job card.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use hubtiger_job_search when the customer asks about job status, progress, pickup, or messages but has not given an exact job card yet.\n\nProvide at least one identifier: customer.phone (preferred), customer first+last name, or payload.query (email address or short search text).\n\nFor email channels, put the sender email in payload.query if no phone is available.\n\nIf multiple jobs return (selection_required=true), ask which job card to open, then call hubtiger_job_retrieve.\n\nDo not use for booking availability — use hubtiger_booking_availability_readonly instead.\n\nIf the result sounds stale, retry once with cache_mode no_cache.\n\nNever expose raw JSON, trace IDs, headers, backend errors, or internal diagnostics.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "job_search",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Ride Electric store slug if known: southport, brisbane, or burleigh. Leave blank if unknown; search runs across stores.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "cache_mode",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional. Use no_cache only when the customer says status sounds stale or they received a newer SMS/update.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "customer",
+          "type": "object",
+          "description": "Customer identifiers from the conversation. Prefer phone when available.",
+          "properties": [
+            {
+              "id": "phone",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Australian mobile or landline, e.g. 0412345678 or +61412345678.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "first_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer first name if given.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "last_name",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer surname if given.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": false,
+          "value_type": "llm_prompt"
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Optional search hints. Use query for email address or free-text search when phone/name are insufficient.",
+          "properties": [
+            {
+              "id": "query",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Email address, job card fragment, or other search text (e.g. customer@example.com).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": false,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}

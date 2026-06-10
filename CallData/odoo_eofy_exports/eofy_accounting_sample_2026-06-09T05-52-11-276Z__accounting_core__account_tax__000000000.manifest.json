@@ -1,0 +1,22 @@
+{
+  "status": "written",
+  "snapshot_id": "eofy_accounting_sample_2026-06-09T05-52-11-276Z",
+  "model": "account.tax",
+  "group": "accounting_core",
+  "offset": 0,
+  "limit": 200,
+  "exported_rows": 16,
+  "first_id": 61,
+  "last_id": 92,
+  "output_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_tax__000000000.jsonl",
+  "manifest_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T05-52-11-276Z__accounting_core__account_tax__000000000.manifest.json",
+  "exported_at": "2026-06-09T05:52:43.294Z",
+  "source_company_context": [
+    4
+  ],
+  "sanitisation": {
+    "partner_names_hashed": false,
+    "bank_details_redacted": true,
+    "descriptions_compacted": true
+  }
+}

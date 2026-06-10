@@ -1,0 +1,12 @@
+model,files,rows,distinct_ids,field_count,min_date,max_date,debit_total,credit_total,balance_total,amount_total,pii_hits_after,personal_fields_redacted,bank_fields_redacted,compacted_text_fields
+account_move,1,200,200,42,2024-07-01,2024-07-08,0,0,0,0,0,0,0,600
+account_partial_reconcile,1,200,200,14,2023-07-04 00:20:02,2023-07-17 02:40:45,0,0,0,151527.54,36,0,0,0
+account_payment,1,200,200,34,2024-07-03,2024-11-30,0,0,0,632858.65,4,0,0,200
+res_partner,1,200,200,24,2022-07-22 02:34:29,2022-10-13 02:38:02,0,0,0,0,0,728,0,0
+res_currency,1,170,170,9,2022-07-22 02:34:31,2024-09-18 09:05:58,0,0,0,0,0,0,0,0
+account_account,1,165,165,9,2022-08-14 23:12:42,2026-05-25 02:16:09,0,0,0,0,0,0,0,0
+account_journal,1,17,17,14,2022-08-14 23:12:42,2026-03-02 05:30:01,0,0,0,0,0,0,0,0
+account_tax,1,16,16,15,2022-08-14 23:12:42,2022-08-14 23:12:42,0,0,0,100000100,1,0,0,0
+res_company,1,1,1,12,2022-08-05 16:33:50,2022-08-05 16:33:50,0,0,0,0,0,0,0,0
+account_full_reconcile,1,0,0,0,,,0,0,0,0,0,0,0,0
+account_move_line,1,0,0,0,,,0,0,0,0,0,0,0,0

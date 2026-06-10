@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model: uom_uom</title>
+<style>
+:root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151; --accent:#38bdf8; --bad:#fb7185; --ok:#34d399; --warn:#fbbf24; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+header { padding:20px 28px; background:#020617; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+header h1 { margin:0 0 6px 0; font-size:22px; } header .sub { color:var(--muted); font-size:13px; }
+main { padding:24px 28px 60px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.metric { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.metric .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.metric .value { font-size:26px; font-weight:700; margin-top:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } th, td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; } th { text-align:left; color:#cbd5e1; background:#020617; position:sticky; top:77px; }
+.bad { color:var(--bad); font-weight:700; } .ok { color:var(--ok); font-weight:700; } .warn { color:var(--warn); font-weight:700; }
+pre { white-space:pre-wrap; overflow:auto; background:#020617; padding:12px; border-radius:10px; border:1px solid var(--line); color:#d1d5db; font-size:12px; }
+details { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:10px 0; background:#111827; } summary { cursor:pointer; color:#e2e8f0; }
+input { width:100%; max-width:520px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:#020617; color:var(--text); margin: 8px 0 14px; }
+small, .muted { color:var(--muted); }
+.pill { display:inline-block; border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin:2px; background:#020617; color:#cbd5e1; font-size:12px; }
+</style>
+
+</head>
+<body>
+<header><h1>Model: uom_uom</h1><div class="sub"><a href="../index.html">Index</a> · <a href="../source_files.html">Source files</a> · Generated 2026-06-09T06:12:02.681Z</div></header>
+<main>
+<div class="card"><a href="../index.html">← Back to index</a></div>
+<div class="grid">
+  <div class="metric"><div class="label">Rows</div><div class="value">28</div></div>
+  <div class="metric"><div class="label">Distinct Odoo IDs</div><div class="value">28</div></div>
+  <div class="metric"><div class="label">Raw PII-like hits</div><div class="value bad">4</div></div>
+  <div class="metric"><div class="label">Redaction tokens</div><div class="value">0</div></div>
+</div>
+<div class="card"><h2>Accounting totals</h2><table><tr><th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th><th>Date range</th></tr><tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td> → </td></tr></table></div>
+<div class="card"><h2>Field profile</h2><p class="muted">Raw PII-like hits should generally be zero before this data goes to Claude. Redaction tokens are expected in sanitised data.</p><table><thead><tr><th>Field</th><th>Present</th><th>%</th><th>Types</th><th>Raw PII hits</th><th>Redaction hits</th><th>Sensitive name hits</th><th>Examples</th></tr></thead><tbody><tr>
+<td><code>factor</code></td><td>28</td><td>100.0%</td><td>number:28</td>
+<td class="bad">4</td><td>0</td><td>0</td>
+<td><span class="pill">1</span> <span class="pill">0.08333333333333333</span> <span class="pill">8</span> <span class="pill">1000</span> <span class="pill">0.001</span></td></tr>
+<tr>
+<td><code>active</code></td><td>28</td><td>100.0%</td><td>boolean:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">true</span></td></tr>
+<tr>
+<td><code>category_id</code></td><td>28</td><td>100.0%</td><td>array:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[1,&quot;Unit&quot;]</span> <span class="pill">[3,&quot;Working Time&quot;]</span> <span class="pill">[4,&quot;Length / Distance&quot;]</span> <span class="pill">[5,&quot;Surface&quot;]</span> <span class="pill">[6,&quot;Volume&quot;]</span></td></tr>
+<tr>
+<td><code>category_id_id</code></td><td>28</td><td>100.0%</td><td>number:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">1</span> <span class="pill">3</span> <span class="pill">4</span> <span class="pill">5</span> <span class="pill">6</span></td></tr>
+<tr>
+<td><code>category_id_label</code></td><td>28</td><td>100.0%</td><td>string:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">Unit</span> <span class="pill">Working Time</span> <span class="pill">Length / Distance</span> <span class="pill">Surface</span> <span class="pill">Volume</span></td></tr>
+<tr>
+<td><code>create_date</code></td><td>28</td><td>100.0%</td><td>string:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-07-22 02:35:13</span> <span class="pill">2022-11-08 23:34:00</span> <span class="pill">2023-09-18 01:28:47</span> <span class="pill">2024-09-18 08:56:42</span></td></tr>
+<tr>
+<td><code>id</code></td><td>28</td><td>100.0%</td><td>number:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">1</span> <span class="pill">2</span> <span class="pill">3</span> <span class="pill">4</span> <span class="pill">5</span></td></tr>
+<tr>
+<td><code>name</code></td><td>28</td><td>100.0%</td><td>string:28</td>
+<td class="ok">0</td><td>0</td><td>28</td>
+<td><span class="pill">Units</span> <span class="pill">Dozens</span> <span class="pill">Days</span> <span class="pill">Hours</span> <span class="pill">m</span></td></tr>
+<tr>
+<td><code>rounding</code></td><td>28</td><td>100.0%</td><td>number:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">0.01</span></td></tr>
+<tr>
+<td><code>write_date</code></td><td>28</td><td>100.0%</td><td>string:28</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-07-22 02:35:13</span> <span class="pill">2025-06-18 01:52:21</span> <span class="pill">2022-11-08 23:34:00</span> <span class="pill">2023-09-18 01:28:47</span> <span class="pill">2024-09-18 08:56:42</span></td></tr></tbody></table></div>
+<div class="card"><h2>Sample records</h2><input id="q" placeholder="Filter visible sample records..." oninput="filterRecords()"><p class="muted">Showing up to 500 records for this model.</p><details class="record" data-search="{&quot;id&quot;:1,&quot;name&quot;:&quot;units&quot;,&quot;category_id_id&quot;:1,&quot;category_id&quot;:[1,&quot;unit&quot;],&quot;category_id_label&quot;:&quot;unit&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#1 | Units <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 1</small></summary><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;Units&quot;,
+  &quot;category_id_id&quot;: 1,
+  &quot;category_id&quot;: [
+    1,
+    &quot;Unit&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Unit&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:2,&quot;name&quot;:&quot;dozens&quot;,&quot;category_id_id&quot;:1,&quot;category_id&quot;:[1,&quot;unit&quot;],&quot;category_id_label&quot;:&quot;unit&quot;,&quot;factor&quot;:0.08333333333333333,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#2 | Dozens <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 2</small></summary><pre>{
+  &quot;id&quot;: 2,
+  &quot;name&quot;: &quot;Dozens&quot;,
+  &quot;category_id_id&quot;: 1,
+  &quot;category_id&quot;: [
+    1,
+    &quot;Unit&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Unit&quot;,
+  &quot;factor&quot;: 0.08333333333333333,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:3,&quot;name&quot;:&quot;days&quot;,&quot;category_id_id&quot;:3,&quot;category_id&quot;:[3,&quot;working time&quot;],&quot;category_id_label&quot;:&quot;working time&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2025-06-18 01:52:21&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#3 | Days <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 3</small></summary><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;Days&quot;,
+  &quot;category_id_id&quot;: 3,
+  &quot;category_id&quot;: [
+    3,
+    &quot;Working Time&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Working Time&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:52:21&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:4,&quot;name&quot;:&quot;hours&quot;,&quot;category_id_id&quot;:3,&quot;category_id&quot;:[3,&quot;working time&quot;],&quot;category_id_label&quot;:&quot;working time&quot;,&quot;factor&quot;:8,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2025-06-18 01:52:21&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#4 | Hours <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 4</small></summary><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;Hours&quot;,
+  &quot;category_id_id&quot;: 3,
+  &quot;category_id&quot;: [
+    3,
+    &quot;Working Time&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Working Time&quot;,
+  &quot;factor&quot;: 8,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:52:21&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:5,&quot;name&quot;:&quot;m&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#5 | m <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 5</small></summary><pre>{
+  &quot;id&quot;: 5,
+  &quot;name&quot;: &quot;m&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6,&quot;name&quot;:&quot;mm&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:1000,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6 | mm <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 6</small></summary><pre>{
+  &quot;id&quot;: 6,
+  &quot;name&quot;: &quot;mm&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 1000,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:7,&quot;name&quot;:&quot;km&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:0.001,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#7 | km <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 7</small></summary><pre>{
+  &quot;id&quot;: 7,
+  &quot;name&quot;: &quot;km&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 0.001,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:8,&quot;name&quot;:&quot;cm&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:100,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#8 | cm <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 8</small></summary><pre>{
+  &quot;id&quot;: 8,
+  &quot;name&quot;: &quot;cm&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 100,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:9,&quot;name&quot;:&quot;m²&quot;,&quot;category_id_id&quot;:5,&quot;category_id&quot;:[5,&quot;surface&quot;],&quot;category_id_label&quot;:&quot;surface&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#9 | m² <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 9</small></summary><pre>{
+  &quot;id&quot;: 9,
+  &quot;name&quot;: &quot;m²&quot;,
+  &quot;category_id_id&quot;: 5,
+  &quot;category_id&quot;: [
+    5,
+    &quot;Surface&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Surface&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:10,&quot;name&quot;:&quot;l&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#10 | L <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 10</small></summary><pre>{
+  &quot;id&quot;: 10,
+  &quot;name&quot;: &quot;L&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:11,&quot;name&quot;:&quot;m³&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:0.001,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.859z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#11 | m³ <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 11</small></summary><pre>{
+  &quot;id&quot;: 11,
+  &quot;name&quot;: &quot;m³&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 0.001,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:12,&quot;name&quot;:&quot;kg&quot;,&quot;category_id_id&quot;:2,&quot;category_id&quot;:[2,&quot;weight&quot;],&quot;category_id_label&quot;:&quot;weight&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#12 | kg <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 12</small></summary><pre>{
+  &quot;id&quot;: 12,
+  &quot;name&quot;: &quot;kg&quot;,
+  &quot;category_id_id&quot;: 2,
+  &quot;category_id&quot;: [
+    2,
+    &quot;Weight&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Weight&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:13,&quot;name&quot;:&quot;g&quot;,&quot;category_id_id&quot;:2,&quot;category_id&quot;:[2,&quot;weight&quot;],&quot;category_id_label&quot;:&quot;weight&quot;,&quot;factor&quot;:1000,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#13 | g <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 13</small></summary><pre>{
+  &quot;id&quot;: 13,
+  &quot;name&quot;: &quot;g&quot;,
+  &quot;category_id_id&quot;: 2,
+  &quot;category_id&quot;: [
+    2,
+    &quot;Weight&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Weight&quot;,
+  &quot;factor&quot;: 1000,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:14,&quot;name&quot;:&quot;t&quot;,&quot;category_id_id&quot;:2,&quot;category_id&quot;:[2,&quot;weight&quot;],&quot;category_id_label&quot;:&quot;weight&quot;,&quot;factor&quot;:0.001,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#14 | t <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 14</small></summary><pre>{
+  &quot;id&quot;: 14,
+  &quot;name&quot;: &quot;t&quot;,
+  &quot;category_id_id&quot;: 2,
+  &quot;category_id&quot;: [
+    2,
+    &quot;Weight&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Weight&quot;,
+  &quot;factor&quot;: 0.001,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:15,&quot;name&quot;:&quot;lb&quot;,&quot;category_id_id&quot;:2,&quot;category_id&quot;:[2,&quot;weight&quot;],&quot;category_id_label&quot;:&quot;weight&quot;,&quot;factor&quot;:2.20462,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#15 | lb <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 15</small></summary><pre>{
+  &quot;id&quot;: 15,
+  &quot;name&quot;: &quot;lb&quot;,
+  &quot;category_id_id&quot;: 2,
+  &quot;category_id&quot;: [
+    2,
+    &quot;Weight&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Weight&quot;,
+  &quot;factor&quot;: 2.20462,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:16,&quot;name&quot;:&quot;oz&quot;,&quot;category_id_id&quot;:2,&quot;category_id&quot;:[2,&quot;weight&quot;],&quot;category_id_label&quot;:&quot;weight&quot;,&quot;factor&quot;:35.274,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#16 | oz <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 16</small></summary><pre>{
+  &quot;id&quot;: 16,
+  &quot;name&quot;: &quot;oz&quot;,
+  &quot;category_id_id&quot;: 2,
+  &quot;category_id&quot;: [
+    2,
+    &quot;Weight&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Weight&quot;,
+  &quot;factor&quot;: 35.274,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:17,&quot;name&quot;:&quot;in&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:39.3701,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#17 | in <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 17</small></summary><pre>{
+  &quot;id&quot;: 17,
+  &quot;name&quot;: &quot;in&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 39.3701,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:18,&quot;name&quot;:&quot;ft&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:3.28084,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#18 | ft <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 18</small></summary><pre>{
+  &quot;id&quot;: 18,
+  &quot;name&quot;: &quot;ft&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 3.28084,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:19,&quot;name&quot;:&quot;mi&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:0.0006213727366498068,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#19 | mi <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 19</small></summary><pre>{
+  &quot;id&quot;: 19,
+  &quot;name&quot;: &quot;mi&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 0.0006213727366498068,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:20,&quot;name&quot;:&quot;ft²&quot;,&quot;category_id_id&quot;:5,&quot;category_id&quot;:[5,&quot;surface&quot;],&quot;category_id_label&quot;:&quot;surface&quot;,&quot;factor&quot;:10.76391,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#20 | ft² <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 20</small></summary><pre>{
+  &quot;id&quot;: 20,
+  &quot;name&quot;: &quot;ft²&quot;,
+  &quot;category_id_id&quot;: 5,
+  &quot;category_id&quot;: [
+    5,
+    &quot;Surface&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Surface&quot;,
+  &quot;factor&quot;: 10.76391,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:21,&quot;name&quot;:&quot;fl oz (us)&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:33.814,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#21 | fl oz (US) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 21</small></summary><pre>{
+  &quot;id&quot;: 21,
+  &quot;name&quot;: &quot;fl oz (US)&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 33.814,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:22,&quot;name&quot;:&quot;qt (us)&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:1.05669,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#22 | qt (US) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 22</small></summary><pre>{
+  &quot;id&quot;: 22,
+  &quot;name&quot;: &quot;qt (US)&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 1.05669,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:23,&quot;name&quot;:&quot;gal (us)&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:0.26417217685798894,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#23 | gal (US) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 23</small></summary><pre>{
+  &quot;id&quot;: 23,
+  &quot;name&quot;: &quot;gal (US)&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 0.26417217685798894,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:24,&quot;name&quot;:&quot;in³&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:61.0237,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#24 | in³ <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 24</small></summary><pre>{
+  &quot;id&quot;: 24,
+  &quot;name&quot;: &quot;in³&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 61.0237,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:25,&quot;name&quot;:&quot;ft³&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:0.035314724827664144,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;write_date&quot;:&quot;2022-07-22 02:35:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#25 | ft³ <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 25</small></summary><pre>{
+  &quot;id&quot;: 25,
+  &quot;name&quot;: &quot;ft³&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 0.035314724827664144,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:28,&quot;name&quot;:&quot;unit&quot;,&quot;category_id_id&quot;:7,&quot;category_id&quot;:[7,&quot;unsorted/imported units&quot;],&quot;category_id_label&quot;:&quot;unsorted/imported units&quot;,&quot;factor&quot;:1,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-11-08 23:34:00&quot;,&quot;write_date&quot;:&quot;2022-11-08 23:34:00&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#28 | unit <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 26</small></summary><pre>{
+  &quot;id&quot;: 28,
+  &quot;name&quot;: &quot;unit&quot;,
+  &quot;category_id_id&quot;: 7,
+  &quot;category_id&quot;: [
+    7,
+    &quot;Unsorted/Imported Units&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Unsorted/Imported Units&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-11-08 23:34:00&quot;,
+  &quot;write_date&quot;: &quot;2022-11-08 23:34:00&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:29,&quot;name&quot;:&quot;cm³&quot;,&quot;category_id_id&quot;:6,&quot;category_id&quot;:[6,&quot;volume&quot;],&quot;category_id_label&quot;:&quot;volume&quot;,&quot;factor&quot;:0.001,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2023-09-18 01:28:47&quot;,&quot;write_date&quot;:&quot;2023-09-18 01:28:47&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#29 | cm³ <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 27</small></summary><pre>{
+  &quot;id&quot;: 29,
+  &quot;name&quot;: &quot;cm³&quot;,
+  &quot;category_id_id&quot;: 6,
+  &quot;category_id&quot;: [
+    6,
+    &quot;Volume&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Volume&quot;,
+  &quot;factor&quot;: 0.001,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2023-09-18 01:28:47&quot;,
+  &quot;write_date&quot;: &quot;2023-09-18 01:28:47&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:32,&quot;name&quot;:&quot;yd&quot;,&quot;category_id_id&quot;:4,&quot;category_id&quot;:[4,&quot;length / distance&quot;],&quot;category_id_label&quot;:&quot;length / distance&quot;,&quot;factor&quot;:1.09361,&quot;rounding&quot;:0.01,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2024-09-18 08:56:42&quot;,&quot;write_date&quot;:&quot;2024-09-18 08:56:42&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;uom_uom&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__uom_uom__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.860z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#32 | yd <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.sanitised.jsonl line 28</small></summary><pre>{
+  &quot;id&quot;: 32,
+  &quot;name&quot;: &quot;yd&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 1.09361,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2024-09-18 08:56:42&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 08:56:42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.860Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details></div>
+<script>
+function filterRecords(){ const q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.record').forEach(el=>{ el.style.display = el.dataset.search.includes(q) ? '' : 'none'; }); }
+</script></main>
+</body></html>

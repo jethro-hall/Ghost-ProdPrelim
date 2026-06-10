@@ -1,0 +1,454 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr",
+    "title": "Ebco Urban 2 Inquiry",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Ebco Urban 2 Inquiry",
+    "duration_seconds": 45,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 0,
+      "text": "Hi Magic Mike, I want to know the price and stock availability of an Ebco Urban 2.\"",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.462,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-37c1ab723d274a8b9dc5c3700b0f8c82",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-37c1ab723d274a8b9dc5c3700b0f8c82",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.645000444725156e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.003373350016772747,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_0101kqv6gz1ke019qrq6mc6nkta5",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_0101kqv6gz1ke019qrq6mc6nkta5",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010688998736441135,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Ebco Urban2",
+      "asr_ms": null,
+      "llm_seconds": 0.292,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 27,
+      "text": "Hey, can you check on the status of my scooter in the workshop? My phone number is 0435 185 134.",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 27,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.059,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.059,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-ce61ecc99eac4e2bb52d2d7570f1200b",
+          "tool_name": "hubtiger_job_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "job_search",
+            "store": "",
+            "payload": {
+              "query": "0435 185 134"
+            },
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-ce61ecc99eac4e2bb52d2d7570f1200b",
+          "tool_name": "hubtiger_job_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3116,
+          "result": {
+            "success": true,
+            "message": "HubTiger call completed.",
+            "operation": "job_search",
+            "blocked": false,
+            "data": {
+              "ok": true,
+              "matches": [],
+              "results": [],
+              "count": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "I couldn't find any workshop jobs linked to your phone number. Could you please provide your job card number or the bike model so I can assist you further?",
+      "asr_ms": null,
+      "llm_seconds": 0.483,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 38,
+      "text": "Hi Magic Mike, I want to know the price and stock availability of an Ebco Urban 2",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 38,
+      "text": "Ebco Urban2",
+      "asr_ms": null,
+      "llm_seconds": 0.312,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "0s",
+    "Hi Magic Mike, I want to know the price and stock availability of an Ebco Urban 2.\"",
+    "agent",
+    "0s",
+    "...",
+    "LLM 0.462 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "0s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "0s",
+    "Ebco Urban2",
+    "LLM 0.292 s",
+    "user",
+    "27s",
+    "Hey, can you check on the status of my scooter in the workshop? My phone number is 0435 185 134.",
+    "agent",
+    "27s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.059 s",
+    "agent",
+    "28s",
+    "...",
+    "LLM 1.059 s",
+    "Tool dispatch: hubtiger_job_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "31s",
+    "...",
+    "Tool succeeded: hubtiger_job_search",
+    "Result 3116 ms",
+    "Show result payload",
+    "agent",
+    "31s",
+    "I couldn't find any workshop jobs linked to your phone number. Could you please provide your job card number or the bike model so I can assist you further?",
+    "LLM 0.483 s",
+    "user",
+    "38s",
+    "Hi Magic Mike, I want to know the price and stock availability of an Ebco Urban 2",
+    "agent",
+    "38s",
+    "Ebco Urban2",
+    "LLM 0.312 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_job_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 28,
+      "booking_intent_to_first_hubtiger_seconds": 28
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hi Magic Mike, I want to know the price and stock availability of an Ebco Urban 2.\"",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

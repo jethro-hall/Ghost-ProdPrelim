@@ -1,0 +1,59 @@
+{
+  "name": "03_SUB_SANITISE_PROFILE",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a03trigger-sanitise",
+      "name": "When Executed by Core",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-240, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst input = { ...$input.first().json };\n\nconst inputPath = '/tmp/odoo_03_sanitise_input.json';\nfs.writeFileSync(inputPath, JSON.stringify(input), 'utf8');\n\nreturn [{\n  json: {\n    ok: true,\n    input_path: inputPath,\n    snapshot_id: input.snapshot_id,\n    message: 'Input JSON written for sanitise/profile stage',\n  },\n}];\n"
+      },
+      "id": "a03write-input-json",
+      "name": "Write sanitise input JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-16, 256]
+    },
+    {
+      "parameters": {
+        "command": "node /home/node/.n8n/scripts/03_sanitise_profile.js"
+      },
+      "id": "a03run-sanitise",
+      "name": "Run Sanitise Profile",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [208, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.exitCode !== undefined && Number(item.exitCode) !== 0) {\n  throw new Error(\n    `Sanitise/profile failed (exit ${item.exitCode}). stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst stdout = String(item.stdout || '').trim();\nif (!stdout) {\n  throw new Error(\n    `Sanitise/profile returned empty stdout. stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst lastLine = stdout.split(/\\r?\\n/).filter(Boolean).pop();\n\ntry {\n  return [{ json: JSON.parse(lastLine) }];\n} catch (e) {\n  throw new Error(\n    `Could not parse sanitise stdout as JSON: ${e.message}. stdout starts: ${stdout.slice(0, 500)}`,\n  );\n}\n"
+      },
+      "id": "a03parse-result",
+      "name": "Parse Sanitise Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 256]
+    }
+  ],
+  "connections": {
+    "When Executed by Core": {
+      "main": [[{ "node": "Write sanitise input JSON", "type": "main", "index": 0 }]]
+    },
+    "Write sanitise input JSON": {
+      "main": [[{ "node": "Run Sanitise Profile", "type": "main", "index": 0 }]]
+    },
+    "Run Sanitise Profile": {
+      "main": [[{ "node": "Parse Sanitise Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

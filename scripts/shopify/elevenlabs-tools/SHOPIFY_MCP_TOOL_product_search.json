@@ -1,0 +1,111 @@
+{
+  "type": "webhook",
+  "name": "SHOPIFY_MCP_TOOL_product_search",
+  "description": "Search products with optional category and quantity context.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/shopify/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use for product lookup. If caller reports stale response, include payload.cache_mode = bypass once.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "product_search",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Product search input object.",
+          "properties": [
+            {
+              "id": "search",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Search term from caller.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "category",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional: part, ebike, bike, scooter, all. bike is treated as ebike.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "first",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Optional number of products to return.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "cache_mode",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional bypass for one stale-data retry.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}

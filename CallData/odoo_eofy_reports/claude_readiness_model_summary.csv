@@ -1,0 +1,2 @@
+model,files,rows,parse_errors,pii_before_total,pii_after_total,personal_fields_redacted,bank_fields_redacted,description_fields_compacted
+"res.company",1,1,0,1,2,0,0,0

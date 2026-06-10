@@ -1,0 +1,147 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_customer_create",
+  "description": "Create a new Hubtiger customer when no matching customer exists.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute customer_create",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "customer_create",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Customer creation payload",
+          "properties": [
+            {
+              "id": "FirstName",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer first name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Surname",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer last name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "MobileNo",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Mobile number (+61 preferred).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Email",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer email address.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "AddressLine1",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Street address line 1.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "Suburb",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Suburb.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "State",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "State (e.g. QLD).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "PostCode",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Postcode.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

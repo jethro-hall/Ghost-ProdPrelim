@@ -1,0 +1,96 @@
+{
+  "name": "Brisbane EOFY \u2014 02 Sanitise Profile Claude Payload",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "4d2db307-2692-45a9-8fcd-9c530097654d",
+      "name": "Manual: Start Sanitise + Profile",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        240,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Sanitise + Claude readiness profile\nSet `snapshot_id` in the next node to match workflow 01 output.\nWrites sanitised JSONL + `claude_readiness_summary.json` + `claude_payload_all.jsonl`.",
+        "height": 180,
+        "width": 480,
+        "color": 4
+      },
+      "id": "748c644c-7e96-480c-92fe-190be08be3c2",
+      "name": "Note: ## Sanitise + Claude readiness profile\nS",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        200,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00cf84d8-b44e-4d2c-9183-128ef2d03a53",
+              "name": "snapshot_id",
+              "value": "eofy_brisbane_REPLACE_TIMESTAMP",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3060d792-740e-4111-9050-07254ab8ef0c",
+      "name": "Set snapshot_id",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        480,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\n\n/**\n * PII-safe sanitisation for EOFY audit exports before Claude analysis.\n */\n\nconst crypto = require('crypto');\n\nconst PERSONAL_FIELD_PATTERNS = [\n  /partner/i,\n  /email/i,\n  /phone/i,\n  /login/i,\n  /author/i,\n  /commercial_partner/i,\n  /acc_number/i,\n  /payment_ref/i,\n];\n\nconst BANK_FIELD_PATTERNS = [/acc_number/i, /bank_/i, /payment_ref/i];\n\nconst TEXT_COMPACT_FIELDS = ['name', 'ref', 'description', 'payment_ref', 'message'];\n\nfunction hashEntity(value) {\n  const raw = String(value ?? '').trim();\n  if (!raw) return raw;\n  const h = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12);\n  if (/^ENTITY_[a-f0-9]+$/i.test(raw)) return raw;\n  return `ENTITY_${h}`;\n}\n\nfunction compactText(value, maxLen = 64) {\n  const raw = String(value ?? '').trim();\n  if (!raw || raw === 'false') return raw;\n  if (raw.length <= maxLen) return raw;\n  const h = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12);\n  return `${raw.slice(0, maxLen - 30)}... [TEXT_TRUNCATED hash=${h} len=${raw.length}]`;\n}\n\nfunction matchesAny(field, patterns) {\n  return patterns.some((p) => p.test(field));\n}\n\nfunction sanitiseRecord(record, modelKey, policy, sourceFile) {\n  const out = { ...record };\n  let personal = 0;\n  let bank = 0;\n  let compacted = 0;\n\n  for (const [field, value] of Object.entries(out)) {\n    if (field === '_sanitisation' || field.endsWith('_id')) continue;\n\n    if (policy.partner_names_hashed && matchesAny(field, PERSONAL_FIELD_PATTERNS)) {\n      if (typeof value === 'string' && value && value !== 'false') {\n        out[field] = hashEntity(value);\n        personal += 1;\n      }\n    }\n\n    if (policy.bank_details_redacted && matchesAny(field, BANK_FIELD_PATTERNS)) {\n      if (typeof value === 'string' && value && value !== 'false') {\n        out[field] = '[REDACTED_BANK]';\n        bank += 1;\n      }\n    }\n\n    if (policy.descriptions_compacted && matchesAny(field, TEXT_COMPACT_FIELDS)) {\n      if (typeof value === 'string' && value.length > policy.text_compact_max_len) {\n        out[field] = compactText(value, policy.text_compact_max_len);\n        compacted += 1;\n      }\n    }\n\n    if (field.endsWith('_label') && policy.partner_names_hashed) {\n      if (typeof value === 'string' && value && value !== 'false') {\n        out[field] = hashEntity(value);\n        personal += 1;\n      }\n    }\n  }\n\n  out._sanitisation = {\n    model: modelKey,\n    source_file: sourceFile,\n    sanitised_at_utc: new Date().toISOString(),\n    personal_fields_redacted: personal,\n    bank_fields_redacted: bank,\n    compacted_text_fields: compacted,\n    policy: 'partner/user identities hashed; bank details redacted; descriptions compacted',\n  };\n\n  return out;\n}\n\nmodule.exports = {\n  sanitiseRecord,\n  hashEntity,\n  compactText,\n};\n\n/**\n * Profile sanitised JSONL exports for Claude readiness summary.\n */\n\nconst fs = require('fs');\nconst path = require('path');\n\nfunction profileJsonlFile(filePath, modelKey) {\n  const summary = {\n    model: modelKey,\n    files: 1,\n    rows: 0,\n    distinct_ids: 0,\n    field_count: 0,\n    fields: [],\n    min_date: null,\n    max_date: null,\n    debit_total: 0,\n    credit_total: 0,\n    balance_total: 0,\n    amount_total: 0,\n    pii_hits_after: 0,\n    personal_fields_redacted: 0,\n    bank_fields_redacted: 0,\n    compacted_text_fields: 0,\n  };\n\n  const ids = new Set();\n  const fields = new Set();\n  const dateCandidates = ['date', 'date_order', 'invoice_date', 'payment_date', 'create_date', 'start_at'];\n\n  if (!fs.existsSync(filePath)) return summary;\n\n  const content = fs.readFileSync(filePath, 'utf8');\n  const lines = content.split('\\n').filter((l) => l.trim());\n  for (const line of lines) {\n    try {\n      const row = JSON.parse(line);\n      summary.rows += 1;\n      if (row.id) ids.add(row.id);\n      Object.keys(row).forEach((k) => fields.add(k));\n      if (row.debit) summary.debit_total += Number(row.debit) || 0;\n      if (row.credit) summary.credit_total += Number(row.credit) || 0;\n      if (row.balance) summary.balance_total += Number(row.balance) || 0;\n      if (row.amount_total) summary.amount_total += Number(row.amount_total) || 0;\n      if (row._sanitisation) {\n        summary.personal_fields_redacted += row._sanitisation.personal_fields_redacted || 0;\n        summary.bank_fields_redacted += row._sanitisation.bank_fields_redacted || 0;\n        summary.compacted_text_fields += row._sanitisation.compacted_text_fields || 0;\n      }\n      for (const d of dateCandidates) {\n        const v = row[d];\n        if (v && v !== false && typeof v === 'string') {\n          if (!summary.min_date || v < summary.min_date) summary.min_date = v;\n          if (!summary.max_date || v > summary.max_date) summary.max_date = v;\n        }\n      }\n      const piiScan = JSON.stringify(row);\n      if (/@/.test(piiScan) || /\\b04\\d{8}\\b/.test(piiScan)) summary.pii_hits_after += 1;\n    } catch {\n      // skip bad lines\n    }\n  }\n\n  summary.distinct_ids = ids.size;\n  summary.fields = [...fields].sort();\n  summary.field_count = summary.fields.length;\n  return summary;\n}\n\nfunction buildReadinessSummary(snapshotId, paths, modelSummaries, manifests) {\n  const totalRows = modelSummaries.reduce((a, m) => a + m.rows, 0);\n  const piiAfter = modelSummaries.reduce((a, m) => a + m.pii_hits_after, 0);\n  const gaps = manifests.filter((m) => m.status !== 'written' && m.status !== 'empty');\n\n  return {\n    summary: {\n      ok: gaps.length === 0,\n      status: piiAfter > 0 ? 'REVIEW_PII_REMAINS' : 'READY_FOR_CLAUDE',\n      selected_snapshot_id: snapshotId,\n      raw_root: paths.raw_root,\n      sanitised_root: paths.sanitised_root,\n      report_root: paths.report_root,\n      files_profiled: modelSummaries.length,\n      models_profiled: modelSummaries.length,\n      total_rows: totalRows,\n      parse_errors: 0,\n      pii_after_total: piiAfter,\n      extraction_errors: gaps.length,\n      combined_payload_jsonl: path.join(paths.report_root, 'claude_payload_all.jsonl'),\n      generated_at_utc: new Date().toISOString(),\n    },\n    model_summaries: modelSummaries,\n    extraction_gaps: gaps.map((g) => ({\n      model: g.model || g.export_key,\n      status: g.status,\n      error: g.error?.data?.message || g.error?.message || g.message || 'unknown',\n    })),\n  };\n}\n\nmodule.exports = {\n  profileJsonlFile,\n  buildReadinessSummary,\n};\n\n\nconst scope = {\n  \"business\": \"Ride Electric Brisbane\",\n  \"company_id\": 4,\n  \"company_name\": \"Ride Electric Brisbane\",\n  \"financial_year_start\": \"2024-07-01\",\n  \"financial_year_end\": \"2025-06-30\",\n  \"timezone\": \"Australia/Brisbane\",\n  \"scope_note\": \"Brisbane pilot only (company_id 4). Do not generalise findings to other Ride Electric entities unless the data explicitly supports it.\",\n  \"n8n_server\": \"https://workflow.rideai.com.au\",\n  \"export_paths\": {\n    \"raw_root\": \"/home/node/.n8n/odoo_eofy_exports\",\n    \"sanitised_root\": \"/home/node/.n8n/odoo_eofy_exports_sanitised\",\n    \"report_root\": \"/home/node/.n8n/odoo_eofy_reports\"\n  },\n  \"export_defaults\": {\n    \"batch_size\": 500,\n    \"sample_limit_per_model\": null,\n    \"order\": \"id asc\",\n    \"sanitise\": {\n      \"partner_names_hashed\": true,\n      \"bank_details_redacted\": true,\n      \"descriptions_compacted\": true,\n      \"text_compact_max_len\": 64\n    }\n  },\n  \"handover_caveats\": [\n    \"This is Brisbane/company_id 4 only.\",\n    \"This is not group-wide unless explicitly expanded.\",\n    \"Missing data is an extraction gap, not proof of no issue.\",\n    \"Sanitised identifiers are stable for grouping but not re-identification.\",\n    \"Do not run financial conclusions without account_move_line.\",\n    \"Do not run POS conclusions without pos_order, pos_order_line, and pos_payment.\"\n  ]\n};\nconst input = $input.first().json;\nconst snapshotId = input.snapshot_id;\nif (!snapshotId) throw new Error('snapshot_id required \u2014 pass from workflow 01 output');\n\nconst rawRoot = scope.export_paths.raw_root;\nconst sanitisedRoot = path.join(scope.export_paths.sanitised_root, snapshotId);\nconst reportRoot = path.join(scope.export_paths.report_root, snapshotId);\nfs.mkdirSync(sanitisedRoot, { recursive: true });\nfs.mkdirSync(reportRoot, { recursive: true });\n\nconst policy = scope.export_defaults.sanitise;\nconst manifests = [];\nconst modelSummaries = [];\n\nconst rawFiles = fs.readdirSync(rawRoot).filter(f => f.startsWith(snapshotId) && f.endsWith('.jsonl'));\n\nfor (const file of rawFiles) {\n  const rawPath = path.join(rawRoot, file);\n  const sanitisedPath = path.join(sanitisedRoot, file.replace('.jsonl', '.sanitised.jsonl'));\n  const manifestPath = path.join(rawRoot, file.replace('.jsonl', '.manifest.json'));\n  let manifest = {};\n  if (fs.existsSync(manifestPath)) {\n    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));\n  }\n\n  const exportKey = manifest.export_key || file.split('__')[2] || 'unknown';\n  const lines = fs.readFileSync(rawPath, 'utf8').split('\\n').filter(l => l.trim());\n  const outLines = lines.map(line => {\n    const row = JSON.parse(line);\n    return JSON.stringify(sanitiseRecord(row, exportKey, policy, file));\n  });\n  fs.writeFileSync(sanitisedPath, outLines.join('\\n') + (outLines.length ? '\\n' : ''));\n  modelSummaries.push(profileJsonlFile(sanitisedPath, exportKey));\n  manifests.push(manifest);\n}\n\nconst summary = buildReadinessSummary(snapshotId, {\n  raw_root: rawRoot,\n  sanitised_root: sanitisedRoot,\n  report_root: reportRoot,\n}, modelSummaries, manifests);\n\nconst payloadPath = path.join(reportRoot, 'claude_payload_all.jsonl');\nconst payloadLines = [];\nfor (const file of fs.readdirSync(sanitisedRoot).filter(f => f.endsWith('.sanitised.jsonl'))) {\n  const content = fs.readFileSync(path.join(sanitisedRoot, file), 'utf8').split('\\n').filter(l => l.trim());\n  for (const line of content) {\n    payloadLines.push(line);\n  }\n}\nfs.writeFileSync(payloadPath, payloadLines.join('\\n') + (payloadLines.length ? '\\n' : ''));\n\nconst summaryPath = path.join(reportRoot, 'claude_readiness_summary.json');\nfs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));\n\nreturn [{\n  json: {\n    ok: true,\n    snapshot_id: snapshotId,\n    readiness_status: summary.summary.status,\n    summary_path: summaryPath,\n    payload_path: payloadPath,\n    extraction_errors: summary.extraction_gaps.length,\n    total_rows: summary.summary.total_rows,\n  }\n}];\n"
+      },
+      "id": "f9a05db3-ce42-4786-99f0-f66bf96f57f9",
+      "name": "Sanitise + profile + combine payload",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        760,
+        400
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Manual: Start Sanitise + Profile": {
+      "main": [
+        [
+          {
+            "node": "Set snapshot_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set snapshot_id": {
+      "main": [
+        [
+          {
+            "node": "Sanitise + profile + combine payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

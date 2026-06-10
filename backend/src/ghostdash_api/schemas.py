@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 ChatApiMode = Literal["responses", "chat_completions"]
 ConversationMode = Literal["quick", "board", "working_session"]
@@ -290,11 +290,101 @@ class HubTigerTestRequest(BaseModel):
     operation: Literal[
         "availability_lookup",
         "job_lookup",
+        "job_search",
+        "job_retrieve",
         "quote_preview",
+        "booking_slot_hold",
+        "booking_customer_search",
+        "booking_customer_confirm",
+        "booking_bike_list",
+        "booking_bike_confirm",
+        "booking_service_set",
+        "booking_submit",
+        "booking_finalize",
         "booking_create",
+        "booking_update",
         "quote_add_line_item",
     ]
     payload: dict = Field(default_factory=dict)
+
+
+class HubTigerCustomerIdentifier(BaseModel):
+    phone: str | None = Field(default=None, max_length=64)
+    first_name: str | None = Field(default=None, max_length=128)
+    last_name: str | None = Field(default=None, max_length=128)
+
+    @field_validator("phone", "first_name", "last_name", mode="before")
+    @classmethod
+    def _trim_optional_customer_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = str(value).strip()
+        return trimmed or None
+
+
+class ElevenLabsHubTigerToolRequest(BaseModel):
+    """Canonical ElevenLabs HubTiger input with backward-compatible legacy fields."""
+
+    function: str | None = Field(default=None, max_length=128)
+    operation: str | None = Field(default=None, max_length=128)
+    cache_mode: str | None = Field(default=None, max_length=32)
+    date: str | None = Field(default=None, max_length=64)
+    start_date: str | None = Field(default=None, max_length=64)
+    end_date: str | None = Field(default=None, max_length=64)
+    store: str | None = Field(default=None, max_length=128)
+    customer: HubTigerCustomerIdentifier | None = None
+    payload: dict = Field(default_factory=dict)
+
+    @field_validator("function", "operation", "cache_mode", "date", "start_date", "end_date", "store", mode="before")
+    @classmethod
+    def _trim_optional_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = str(value).strip()
+        return trimmed or None
+
+    @field_validator("payload", mode="before")
+    @classmethod
+    def _validate_payload_shape(cls, value: Any) -> dict[str, Any]:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise ValueError("`payload` must be an object.")
+        if len(value) > 24:
+            raise ValueError("`payload` has too many fields; keep it to 24 or fewer keys.")
+        for key, item in value.items():
+            if len(str(key)) > 64:
+                raise ValueError("`payload` keys must be <=64 chars.")
+            if isinstance(item, str) and len(item) > 512:
+                raise ValueError("`payload` string values must be <=512 chars.")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_selector(self) -> "ElevenLabsHubTigerToolRequest":
+        if not self.function and not self.operation:
+            raise ValueError("Either `function` or `operation` is required.")
+        return self
+
+
+class ElevenLabsHubTigerBookingAvailabilityRequest(BaseModel):
+    """Body for POST /api/elevenlabs/hubtiger/booking_availability — maps to MCP availability_lookup."""
+
+    store: str = Field(min_length=1, max_length=128)
+    start_date: str = Field(min_length=1, max_length=64)
+    limit: int = Field(default=4, ge=1, le=50)
+
+
+class HubTigerWriteReviewRejectRequest(BaseModel):
+    reason: str = Field(default="", max_length=512)
+
+
+class HubTigerWriteReviewListView(BaseModel):
+    review_id: str
+    created_at: str | None = None
+    operation: str | None = None
+    review_status: str
+    store: str | None = None
+    preflight_passed_at: str | None = None
 
 
 class HubTigerTestResponse(BaseModel):
@@ -315,6 +405,126 @@ class PublicToolResult(BaseModel):
     operation: str
     blocked: bool = False
     data: dict = Field(default_factory=dict)
+
+
+class HubTigerCustomerByPhoneResponse(BaseModel):
+    """Fast cyclist lookup by phone for voice/IVR surfaces."""
+
+    success: bool
+    found: bool
+    message: str
+    phone: str = ""
+    first_name: str | None = None
+    last_name: str | None = None
+    customer_id: str | None = None
+    model: str | None = None
+    jobcard: str | None = None
+    date_checked_in: str | None = None
+    location: str | None = None
+    # PascalCase duplicates for ElevenLabs dynamic variable assignment.
+    name: str | None = None
+    Name: str | None = None
+    Jobcard: str | None = None
+    Model: str | None = None
+    Workshop: str | None = None
+    Location: str | None = None
+    DateCheckedIn: str | None = None
+    error_code: str | None = None
+
+
+ElevenLabsConversationStatus = Literal["initiated", "in-progress", "processing", "done", "failed"]
+ElevenLabsCallOutcome = Literal["success", "failure", "unknown"]
+
+
+class ElevenLabsAnalysisConversationSummaryView(BaseModel):
+    id: str
+    title: str | None = None
+    started_at_unix_secs: int | None = None
+    status: ElevenLabsConversationStatus | str = "processing"
+    call_successful: ElevenLabsCallOutcome | str = "unknown"
+    duration_seconds: int | None = None
+    message_count: int | None = None
+    user_id: str | None = None
+    branch_id: str | None = None
+    main_language: str | None = None
+    channel: str | None = None
+    direction: str | None = None
+    rating: float | None = None
+    agent_id: str | None = None
+    agent_name: str | None = None
+
+
+class ElevenLabsAnalysisConversationsListView(BaseModel):
+    items: list[ElevenLabsAnalysisConversationSummaryView] = Field(default_factory=list)
+    next_cursor: str | None = None
+    has_more: bool = False
+    upstream_ready: bool = True
+    warning_code: str | None = None
+    warning_message: str | None = None
+    filters_applied: dict[str, Any] = Field(default_factory=dict)
+    source: Literal["elevenlabs"] = "elevenlabs"
+
+
+class ElevenLabsAnalysisConversationDetailView(BaseModel):
+    id: str
+    title: str | None = None
+    agent_id: str | None = None
+    agent_name: str | None = None
+    status: ElevenLabsConversationStatus | str = "processing"
+    user_id: str | None = None
+    branch_id: str | None = None
+    environment: str | None = None
+    text_only: bool = False
+    started_at_unix_secs: int | None = None
+    accepted_at_unix_secs: int | None = None
+    duration_seconds: int | None = None
+    cost: int | None = None
+    credits_llm: int | None = None
+    llm_cost: float | None = None
+    call_successful: ElevenLabsCallOutcome | str = "unknown"
+    call_status: str | None = None
+    call_summary_title: str | None = None
+    transcript_summary: str | None = None
+    termination_reason: str | None = None
+    main_language: str | None = None
+    has_audio: bool = False
+    has_user_audio: bool = False
+    has_response_audio: bool = False
+    visited_agents: list[dict[str, Any]] = Field(default_factory=list)
+    tag_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    analysis: dict[str, Any] = Field(default_factory=dict)
+    client_data: dict[str, Any] = Field(default_factory=dict)
+    source: Literal["elevenlabs"] = "elevenlabs"
+
+
+class ElevenLabsAnalysisTranscriptTurnView(BaseModel):
+    id: str
+    role: str
+    start_time_seconds: int | None = None
+    message: str | None = None
+    source_medium: str | None = None
+    interrupted: bool = False
+    metrics: dict[str, Any] | None = None
+    event_type: str | None = None
+    agent_metadata: dict[str, Any] = Field(default_factory=dict)
+    tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    tool_results: list[dict[str, Any]] = Field(default_factory=list)
+    llm_usage: dict[str, Any] | None = None
+
+
+class ElevenLabsAnalysisTranscriptView(BaseModel):
+    conversation_id: str
+    turns: list[ElevenLabsAnalysisTranscriptTurnView] = Field(default_factory=list)
+    turn_count: int = 0
+    source: Literal["elevenlabs"] = "elevenlabs"
+
+
+class ElevenLabsAnalysisAudioUnavailableView(BaseModel):
+    available: Literal[False] = False
+    code: str
+    message: str
+    retryable: bool = False
 
 
 class HubTigerRecentTraceView(BaseModel):
@@ -1066,6 +1276,11 @@ class ChatRequest(BaseModel):
     use_approved_web: bool = False
     tool_overrides: dict[str, bool] = Field(default_factory=dict)
     docx_mode: ChatDocxMode = Field(default_factory=ChatDocxMode)
+    system_prompt_override: str | None = Field(
+        default=None,
+        max_length=32000,
+        description="When set, replaces the agent runtime profile system prompt for this request only.",
+    )
     odoo_agentic: bool | None = Field(
         default=None,
         description="When true, odoo_specialist uses a multi-step chat.completions tool loop (odoo_execute). "

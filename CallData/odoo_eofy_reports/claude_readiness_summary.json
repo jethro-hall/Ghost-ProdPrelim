@@ -1,0 +1,30 @@
+{
+  "run_id": "chunk_review_2026-06-09T05-17-54-614Z",
+  "status": "REVIEW_PII_REMAINS",
+  "export_root": "/home/node/.n8n/odoo_eofy_exports",
+  "sanitised_root": "/home/node/.n8n/odoo_eofy_exports_sanitised",
+  "report_root": "/home/node/.n8n/odoo_eofy_reports",
+  "files_profiled": 1,
+  "models_profiled": 1,
+  "total_rows": 1,
+  "pii_before_total": 1,
+  "pii_after_total": 2,
+  "parse_errors": 0,
+  "model_summary": [
+    {
+      "model": "res.company",
+      "files": 1,
+      "rows": 1,
+      "parse_errors": 0,
+      "pii_before_total": 1,
+      "pii_after_total": 2,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "description_fields_compacted": 0,
+      "sanitised_files": [
+        "/home/node/.n8n/odoo_eofy_exports_sanitised/eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.sanitised.jsonl"
+      ]
+    }
+  ],
+  "generated_at_utc": "2026-06-09T05:17:58.709Z"
+}

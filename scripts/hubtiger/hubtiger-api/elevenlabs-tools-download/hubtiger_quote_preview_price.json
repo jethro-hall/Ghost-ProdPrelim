@@ -1,0 +1,133 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_quote_preview_price",
+  "description": "Preview quote line pricing for a service job without adding the line item.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use to preview price before committing quote changes.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "quote_preview",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional store slug.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "cache_mode",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional cache mode.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Quote preview payload.",
+          "properties": [
+            {
+              "id": "serviceId",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Service/job ID.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "search",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Part/template search phrase.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "quantity",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional quantity.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "dryRun",
+              "type": "string",
+              "value_type": "constant",
+              "description": "",
+              "dynamic_variable": "",
+              "constant_value": "true",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 25,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}

@@ -1,0 +1,4954 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Odoo Claude readiness report</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+h1, h2, h3 { margin-bottom: 8px; }
+.badge { display: inline-block; padding: 6px 10px; border-radius: 6px; font-weight: bold; }
+.ready { background: #e6ffed; color: #145a22; }
+.review { background: #fff4e5; color: #7a3b00; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0 24px; font-size: 13px; }
+th, td { border: 1px solid #ddd; padding: 6px 8px; vertical-align: top; }
+th { background: #f3f3f3; text-align: left; }
+pre { background: #f7f7f7; padding: 12px; border: 1px solid #ddd; overflow-x: auto; white-space: pre-wrap; }
+.small { color: #555; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>Odoo Claude readiness report</h1>
+<p><span class="badge review">REVIEW_PII_REMAINS</span></p>
+<table>
+<tr><th>Snapshot</th><td>eofy_accounting_sample_2026-06-09T06-10-56-254Z</td></tr>
+<tr><th>Raw root</th><td>/home/node/.n8n/odoo_eofy_exports</td></tr>
+<tr><th>Sanitised root</th><td>/home/node/.n8n/odoo_eofy_exports_sanitised/eofy_accounting_sample_2026-06-09T06-10-56-254Z</td></tr>
+<tr><th>Models</th><td>22</td></tr>
+<tr><th>Rows</th><td>3944</td></tr>
+<tr><th>Parse errors</th><td>0</td></tr>
+<tr><th>PII hits after</th><td>178</td></tr>
+<tr><th>Personal fields redacted</th><td>1902</td></tr>
+<tr><th>Bank fields redacted</th><td>0</td></tr>
+<tr><th>Compacted text fields</th><td>2000</td></tr>
+</table>
+
+<h2>Model summary</h2>
+<table>
+<tr>
+<th>Model</th><th>Rows</th><th>Files</th><th>Distinct IDs</th><th>Date range</th>
+<th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th>
+<th>PII hits after</th><th>Redacted</th><th>Compacted</th>
+</tr>
+<tr>
+<td>account_full_reconcile</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2022-09-05 02:39:01 to 2023-08-04 07:18:55</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_move</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2024-07-01 to 2024-07-17</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1500</td>
+</tr><tr>
+<td>account_partial_reconcile</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2023-07-04 00:20:02 to 2023-07-31 02:27:40</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>289199.93</td>
+<td>125</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_payment</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2024-07-03 to 2025-06-25</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1701733.43</td>
+<td>12</td>
+<td>0</td>
+<td>500</td>
+</tr><tr>
+<td>res_partner</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2022-07-22 02:34:29 to 2022-10-13 03:17:14</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1902</td>
+<td>0</td>
+</tr><tr>
+<td>product_product</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2022-10-19 06:30:24 to 2022-10-19 06:30:24</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>product_template</td>
+<td>500</td>
+<td>1</td>
+<td>500</td>
+<td>2022-10-19 06:30:24 to 2022-10-19 06:30:24</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>40</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>res_currency</td>
+<td>170</td>
+<td>1</td>
+<td>170</td>
+<td>2022-07-22 02:34:31 to 2024-09-18 09:05:58</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_account</td>
+<td>165</td>
+<td>1</td>
+<td>165</td>
+<td>2022-08-14 23:12:42 to 2026-05-25 02:16:09</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>product_category</td>
+<td>47</td>
+<td>1</td>
+<td>47</td>
+<td>2022-07-22 02:35:26 to 2025-11-25 03:40:29</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>uom_uom</td>
+<td>28</td>
+<td>1</td>
+<td>28</td>
+<td>2022-07-22 02:35:13 to 2024-09-18 08:56:42</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_journal</td>
+<td>17</td>
+<td>1</td>
+<td>17</td>
+<td>2022-08-14 23:12:42 to 2026-03-02 05:30:01</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_tax</td>
+<td>16</td>
+<td>1</td>
+<td>16</td>
+<td>2022-08-14 23:12:42 to 2022-08-14 23:12:42</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>100000100</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>res_company</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>2022-08-05 16:33:50 to 2022-08-05 16:33:50</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>account_move_line</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_category</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_config</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_order</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_order_line</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_payment</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_payment_method</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr><tr>
+<td>pos_session</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr></table>
+<h2>Sanitised samples</h2>
+<p class="small">These are sanitised samples only. Raw exports are not shown.</p>
+<h3>account_full_reconcile — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 1,
+  &quot;create_date&quot;: &quot;2022-09-05 02:39:01&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:39:01&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.319Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-09-05 02:43:09&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:43:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.319Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 3,
+  &quot;create_date&quot;: &quot;2022-09-05 02:44:29&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:44:29&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.319Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4,
+  &quot;create_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.319Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 5,
+  &quot;create_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.320Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6,
+  &quot;create_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.320Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 7,
+  &quot;create_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;write_date&quot;: &quot;2022-09-05 02:51:00&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.320Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 8,
+  &quot;create_date&quot;: &quot;2022-10-12 02:53:35&quot;,
+  &quot;write_date&quot;: &quot;2022-10-12 02:53:35&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_full_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_full_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.320Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_move — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 863688,
+  &quot;name&quot;: &quot;BILL/2024/0196&quot;,
+  &quot;ref&quot;: &quot;425760&quot;,
+  &quot;move_type&quot;: &quot;in_invoice&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-01&quot;,
+  &quot;invoice_date&quot;: &quot;2024-07-01&quot;,
+  &quot;invoice_date_due&quot;: &quot;2024-07-18&quot;,
+  &quot;journal_id_id&quot;: 36,
+  &quot;journal_id&quot;: [
+    36,
+    &quot;Vendor Bills&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Vendor Bills&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id_id&quot;: 5654,
+  &quot;partner_id&quot;: [
+    5654,
+    &quot;ENTITY_6406f08b0fc6&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Blue NRG Pty Ltd&quot;,
+  &quot;commercial_partner_id_id&quot;: 5654,
+  &quot;commercial_partner_id&quot;: [
+    5654,
+    &quot;ENTITY_01c72dedf2a6&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Blue NRG Pty Ltd&quot;,
+  &quot;payment_state&quot;: &quot;paid&quot;,
+  &quot;amount_untaxed&quot;: 717.16,
+  &quot;amount_tax&quot;: 71.72,
+  &quot;amount_total&quot;: 788.88,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 22,
+  &quot;create_uid&quot;: [
+    22,
+    &quot;Encar Lopez&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Encar Lopez&quot;,
+  &quot;create_date&quot;: &quot;2024-07-01 22:41:35&quot;,
+  &quot;write_uid_id&quot;: 1,
+  &quot;write_uid&quot;: [
+    1,
+    &quot;OdooBot&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;OdooBot&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.368Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 864076,
+  &quot;name&quot;: &quot;BRINV-0851&quot;,
+  &quot;ref&quot;: &quot;Birsbane Till #1/2871&quot;,
+  &quot;move_type&quot;: &quot;out_invoice&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date_due&quot;: &quot;2024-07-02&quot;,
+  &quot;journal_id_id&quot;: 35,
+  &quot;journal_id&quot;: [
+    35,
+    &quot;Customer Invoices&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Customer Invoices&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id_id&quot;: 6668,
+  &quot;partner_id&quot;: [
+    6668,
+    &quot;ENTITY_4509478f123f&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;commercial_partner_id_id&quot;: 6668,
+  &quot;commercial_partner_id&quot;: [
+    6668,
+    &quot;ENTITY_23729c535f4f&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;payment_state&quot;: &quot;paid&quot;,
+  &quot;amount_untaxed&quot;: 327.27,
+  &quot;amount_tax&quot;: 32.73,
+  &quot;amount_total&quot;: 360,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;Birsbane Till #1/2871&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-01 23:45:03&quot;,
+  &quot;write_uid_id&quot;: 1,
+  &quot;write_uid&quot;: [
+    1,
+    &quot;OdooBot&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;OdooBot&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.368Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 864077,
+  &quot;name&quot;: &quot;BRINV-0852&quot;,
+  &quot;ref&quot;: &quot;Invoice payment for Birsbane Till #1/2871 (BRINV... [TEXT_TRUNCATED hash=0fff78a098e4 len=65]&quot;,
+  &quot;move_type&quot;: &quot;entry&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: false,
+  &quot;invoice_date_due&quot;: false,
+  &quot;journal_id_id&quot;: 35,
+  &quot;journal_id&quot;: [
+    35,
+    &quot;Customer Invoices&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Customer Invoices&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id_id&quot;: 6668,
+  &quot;partner_id&quot;: [
+    6668,
+    &quot;ENTITY_4509478f123f&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;commercial_partner_id_id&quot;: 6668,
+  &quot;commercial_partner_id&quot;: [
+    6668,
+    &quot;ENTITY_23729c535f4f&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;payment_state&quot;: false,
+  &quot;amount_untaxed&quot;: 0,
+  &quot;amount_tax&quot;: 0,
+  &quot;amount_total&quot;: 360,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-01 23:45:03&quot;,
+  &quot;write_uid_id&quot;: 1,
+  &quot;write_uid&quot;: [
+    1,
+    &quot;OdooBot&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;OdooBot&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.369Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 864078,
+  &quot;name&quot;: &quot;CABA/2024/0706&quot;,
+  &quot;ref&quot;: &quot;BRINV-0851&quot;,
+  &quot;move_type&quot;: &quot;entry&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: false,
+  &quot;invoice_date_due&quot;: false,
+  &quot;journal_id_id&quot;: 39,
+  &quot;journal_id&quot;: [
+    39,
+    &quot;Cash Basis Taxes&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Cash Basis Taxes&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id_id&quot;: 6668,
+  &quot;partner_id&quot;: [
+    6668,
+    &quot;ENTITY_4509478f123f&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;commercial_partner_id_id&quot;: 6668,
+  &quot;commercial_partner_id&quot;: [
+    6668,
+    &quot;ENTITY_23729c535f4f&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Christine Ford&quot;,
+  &quot;payment_state&quot;: false,
+  &quot;amount_untaxed&quot;: 0,
+  &quot;amount_tax&quot;: 0,
+  &quot;amount_total&quot;: 360,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-01 23:45:03&quot;,
+  &quot;write_uid_id&quot;: 1,
+  &quot;write_uid&quot;: [
+    1,
+    &quot;OdooBot&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;OdooBot&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.369Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 866356,
+  &quot;name&quot;: &quot;STJ/2024/1891&quot;,
+  &quot;ref&quot;: &quot;Ride /POS/00677 - Inner Tube 10 x 2.125\&quot; 90° Ben... [TEXT_TRUNCATED hash=0c70c91cdb3e len=55]&quot;,
+  &quot;move_type&quot;: &quot;entry&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: false,
+  &quot;invoice_date_due&quot;: false,
+  &quot;journal_id_id&quot;: 40,
+  &quot;journal_id&quot;: [
+    40,
+    &quot;Inventory Valuation&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Inventory Valuation&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;commercial_partner_id&quot;: false,
+  &quot;payment_state&quot;: false,
+  &quot;amount_untaxed&quot;: 0,
+  &quot;amount_tax&quot;: 0,
+  &quot;amount_total&quot;: 15.75,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;write_uid_id&quot;: 31,
+  &quot;write_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;write_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.370Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 866357,
+  &quot;name&quot;: &quot;BRINV-0853&quot;,
+  &quot;ref&quot;: &quot;Birsbane Till #1/2876&quot;,
+  &quot;move_type&quot;: &quot;out_invoice&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date_due&quot;: &quot;2024-07-02&quot;,
+  &quot;journal_id_id&quot;: 35,
+  &quot;journal_id&quot;: [
+    35,
+    &quot;Customer Invoices&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Customer Invoices&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id_id&quot;: 13663,
+  &quot;partner_id&quot;: [
+    13663,
+    &quot;ENTITY_7246c39e778a&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Gerry Thompson&quot;,
+  &quot;commercial_partner_id_id&quot;: 13663,
+  &quot;commercial_partner_id&quot;: [
+    13663,
+    &quot;ENTITY_25e2ec843c06&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Gerry Thompson&quot;,
+  &quot;payment_state&quot;: &quot;paid&quot;,
+  &quot;amount_untaxed&quot;: 77.05,
+  &quot;amount_tax&quot;: 5.45,
+  &quot;amount_total&quot;: 82.5,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;Birsbane Till #1/2876&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;write_uid_id&quot;: 1,
+  &quot;write_uid&quot;: [
+    1,
+    &quot;OdooBot&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;OdooBot&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.370Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 866358,
+  &quot;name&quot;: &quot;BRINV-0854&quot;,
+  &quot;ref&quot;: &quot;Invoice payment for Birsbane Till #1/2876 (BRINV... [TEXT_TRUNCATED hash=3b30609cb9e1 len=65]&quot;,
+  &quot;move_type&quot;: &quot;entry&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: false,
+  &quot;invoice_date_due&quot;: false,
+  &quot;journal_id_id&quot;: 35,
+  &quot;journal_id&quot;: [
+    35,
+    &quot;Customer Invoices&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Customer Invoices&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;commercial_partner_id&quot;: false,
+  &quot;payment_state&quot;: false,
+  &quot;amount_untaxed&quot;: 0,
+  &quot;amount_tax&quot;: 0,
+  &quot;amount_total&quot;: 82.5,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;write_uid_id&quot;: 46,
+  &quot;write_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;write_date&quot;: &quot;2024-07-06 07:12:10&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.370Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 866359,
+  &quot;name&quot;: &quot;CABA/2024/0707&quot;,
+  &quot;ref&quot;: &quot;BRINV-0853&quot;,
+  &quot;move_type&quot;: &quot;entry&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;date&quot;: &quot;2024-07-02&quot;,
+  &quot;invoice_date&quot;: false,
+  &quot;invoice_date_due&quot;: false,
+  &quot;journal_id_id&quot;: 39,
+  &quot;journal_id&quot;: [
+    39,
+    &quot;Cash Basis Taxes&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Cash Basis Taxes&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;commercial_partner_id&quot;: false,
+  &quot;payment_state&quot;: false,
+  &quot;amount_untaxed&quot;: 0,
+  &quot;amount_tax&quot;: 0,
+  &quot;amount_total&quot;: 60,
+  &quot;amount_residual&quot;: 0,
+  &quot;invoice_origin&quot;: &quot;false&quot;,
+  &quot;fiscal_position_id&quot;: false,
+  &quot;invoice_payment_term_id&quot;: false,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;write_uid_id&quot;: 31,
+  &quot;write_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;write_date&quot;: &quot;2024-07-02 05:28:35&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_move&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_move__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.370Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 3,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_partial_reconcile — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 45,
+  &quot;debit_move_id_id&quot;: 12096,
+  &quot;debit_move_id&quot;: [
+    12096,
+    &quot;RTINV/2023/00001 (POS/00098) POS/00098 - Cash&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00001 (POS/00098) POS/00098 - Cash&quot;,
+  &quot;credit_move_id_id&quot;: 12095,
+  &quot;credit_move_id&quot;: [
+    12095,
+    &quot;CSH1/2023/07/0001 POS/00098&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;CSH1/2023/07/0001 POS/00098&quot;,
+  &quot;amount&quot;: 304.95,
+  &quot;debit_amount_currency&quot;: 304.95,
+  &quot;credit_amount_currency&quot;: 304.95,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 00:20:02&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 00:20:02&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.515Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 46,
+  &quot;debit_move_id_id&quot;: 12091,
+  &quot;debit_move_id&quot;: [
+    12091,
+    &quot;RTINV/2023/00001 (POS/00098) POS/00098 - Card&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00001 (POS/00098) POS/00098 - Card&quot;,
+  &quot;credit_move_id_id&quot;: 12093,
+  &quot;credit_move_id&quot;: [
+    12093,
+    &quot;RETT/2023/07/0001 (Combine Card POS payments from POS/00098) Customer Payment $ 1,733.45 - 04/07/2023&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;RETT/2023/07/0001 (Combine Card POS payments from ... [TEXT_TRUNCATED hash=c492a7a5 len=101]&quot;,
+  &quot;amount&quot;: 1733.45,
+  &quot;debit_amount_currency&quot;: 1733.45,
+  &quot;credit_amount_currency&quot;: 1733.45,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 00:20:02&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 00:20:02&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.515Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 47,
+  &quot;debit_move_id_id&quot;: 12113,
+  &quot;debit_move_id&quot;: [
+    12113,
+    &quot;RTINV/2023/00002 (POS/00103) POS/00103 - Cash&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00002 (POS/00103) POS/00103 - Cash&quot;,
+  &quot;credit_move_id_id&quot;: 12112,
+  &quot;credit_move_id&quot;: [
+    12112,
+    &quot;CSH1/2023/07/0003 POS/00103&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;CSH1/2023/07/0003 POS/00103&quot;,
+  &quot;amount&quot;: 290,
+  &quot;debit_amount_currency&quot;: 290,
+  &quot;credit_amount_currency&quot;: 290,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 00:20:15&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 00:20:15&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.516Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 48,
+  &quot;debit_move_id_id&quot;: 12108,
+  &quot;debit_move_id&quot;: [
+    12108,
+    &quot;RTINV/2023/00002 (POS/00103) POS/00103 - Card&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00002 (POS/00103) POS/00103 - Card&quot;,
+  &quot;credit_move_id_id&quot;: 12110,
+  &quot;credit_move_id&quot;: [
+    12110,
+    &quot;RETT/2023/07/0002 (Combine Card POS payments from POS/00103) Customer Payment $ 219.00 - 04/07/2023&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;RETT/2023/07/0002 (Combine Card POS payments from ... [TEXT_TRUNCATED hash=8263b462 len=99]&quot;,
+  &quot;amount&quot;: 219,
+  &quot;debit_amount_currency&quot;: 219,
+  &quot;credit_amount_currency&quot;: 219,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 00:20:15&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 00:20:15&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.516Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 49,
+  &quot;debit_move_id_id&quot;: 12136,
+  &quot;debit_move_id&quot;: [
+    12136,
+    &quot;RTINV/2023/00003 (SouthPort Till#1/0028) RTINV/2023/00003&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00003 (SouthPort Till#1/0028) RTINV/2023/00003&quot;,
+  &quot;credit_move_id_id&quot;: 12137,
+  &quot;credit_move_id&quot;: [
+    12137,
+    &quot;RTINV/2023/00004 (Invoice payment for SouthPort Till#1/0028 (RTINV/2023/00003) using Card)&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;RTINV/2023/00004 (Invoice payment for SouthPort Ti... [TEXT_TRUNCATED hash=[LONG_NUMBER_011bb0329a] len=90]&quot;,
+  &quot;amount&quot;: 250,
+  &quot;debit_amount_currency&quot;: 250,
+  &quot;credit_amount_currency&quot;: 250,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 02:14:38&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 02:14:38&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.516Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 50,
+  &quot;debit_move_id_id&quot;: 12190,
+  &quot;debit_move_id&quot;: [
+    12190,
+    &quot;RTINV/2023/00005 (POS/00104) POS/00104 - Cash&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00005 (POS/00104) POS/00104 - Cash&quot;,
+  &quot;credit_move_id_id&quot;: 12189,
+  &quot;credit_move_id&quot;: [
+    12189,
+    &quot;CSH1/2023/07/0004 POS/00104&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;CSH1/2023/07/0004 POS/00104&quot;,
+  &quot;amount&quot;: 22.5,
+  &quot;debit_amount_currency&quot;: 22.5,
+  &quot;credit_amount_currency&quot;: 22.5,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 05:09:40&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 05:09:40&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.516Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 51,
+  &quot;debit_move_id_id&quot;: 12185,
+  &quot;debit_move_id&quot;: [
+    12185,
+    &quot;RTINV/2023/00005 (POS/00104) POS/00104 - Card&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00005 (POS/00104) POS/00104 - Card&quot;,
+  &quot;credit_move_id_id&quot;: 12187,
+  &quot;credit_move_id&quot;: [
+    12187,
+    &quot;RETT/2023/07/0003 (Combine Card POS payments from POS/00104) Customer Payment $ 217.45 - 04/07/2023&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;RETT/2023/07/0003 (Combine Card POS payments from ... [TEXT_TRUNCATED hash=82efb2d3 len=99]&quot;,
+  &quot;amount&quot;: 217.45000000000002,
+  &quot;debit_amount_currency&quot;: 217.45000000000002,
+  &quot;credit_amount_currency&quot;: 217.45000000000002,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 05:09:40&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 05:09:40&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.517Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 52,
+  &quot;debit_move_id_id&quot;: 13129,
+  &quot;debit_move_id&quot;: [
+    13129,
+    &quot;RTINV/2023/00006 (SPT Shop2/0010) RTINV/2023/00006&quot;
+  ],
+  &quot;debit_move_id_label&quot;: &quot;RTINV/2023/00006 (SPT Shop2/0010) RTINV/2023/00006&quot;,
+  &quot;credit_move_id_id&quot;: 13132,
+  &quot;credit_move_id&quot;: [
+    13132,
+    &quot;RTINV/2023/00007 (Invoice payment for SPT Shop2/0010 (RTINV/2023/00006) using Card)&quot;
+  ],
+  &quot;credit_move_id_label&quot;: &quot;RTINV/2023/00007 (Invoice payment for SPT Shop2/00... [TEXT_TRUNCATED hash=6004b1b1 len=83]&quot;,
+  &quot;amount&quot;: 85,
+  &quot;debit_amount_currency&quot;: 85,
+  &quot;credit_amount_currency&quot;: 85,
+  &quot;max_date&quot;: &quot;2023-07-04&quot;,
+  &quot;create_date&quot;: &quot;2023-07-04 06:14:42&quot;,
+  &quot;write_date&quot;: &quot;2023-07-04 06:14:42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_partial_reconcile&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.517Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_payment — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 4552,
+  &quot;name&quot;: &quot;BNEQ/2024/0852&quot;,
+  &quot;date&quot;: &quot;2024-07-03&quot;,
+  &quot;amount&quot;: 775.01,
+  &quot;payment_type&quot;: &quot;outbound&quot;,
+  &quot;partner_type&quot;: &quot;supplier&quot;,
+  &quot;partner_id_id&quot;: 13666,
+  &quot;partner_id&quot;: [
+    13666,
+    &quot;ENTITY_785aa6145e56&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;MOJO MOTORCYCLES PTY LTD&quot;,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 20,
+  &quot;payment_method_line_id&quot;: [
+    20,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 873613,
+  &quot;move_id&quot;: [
+    873613,
+    &quot;BNEQ/2024/0852 (IN377052)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0852 (IN377052)&quot;,
+  &quot;create_uid_id&quot;: 16,
+  &quot;create_uid&quot;: [
+    16,
+    &quot;Chris Weatherall&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Chris Weatherall&quot;,
+  &quot;create_date&quot;: &quot;2024-07-03 00:26:28&quot;,
+  &quot;write_uid_id&quot;: 22,
+  &quot;write_uid&quot;: [
+    22,
+    &quot;Encar Lopez&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Encar Lopez&quot;,
+  &quot;write_date&quot;: &quot;2024-07-08 01:28:34&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.595Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4608,
+  &quot;name&quot;: &quot;BNEQ/2024/0864&quot;,
+  &quot;date&quot;: &quot;2024-07-06&quot;,
+  &quot;amount&quot;: 789.25,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 902982,
+  &quot;move_id&quot;: [
+    902982,
+    &quot;BNEQ/2024/0864 (Combine Card POS payments from POS/02100)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0864 (Combine Card POS payments from POS/02100)&quot;,
+  &quot;create_uid_id&quot;: 46,
+  &quot;create_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;create_date&quot;: &quot;2024-07-06 00:40:16&quot;,
+  &quot;write_uid_id&quot;: 46,
+  &quot;write_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;write_date&quot;: &quot;2024-07-06 00:40:16&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4611,
+  &quot;name&quot;: &quot;BNEQ/2024/0865&quot;,
+  &quot;date&quot;: &quot;2024-07-06&quot;,
+  &quot;amount&quot;: 46056.48,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 905919,
+  &quot;move_id&quot;: [
+    905919,
+    &quot;BNEQ/2024/0865 (Combine Card POS payments from POS/02097)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0865 (Combine Card POS payments from POS/02097)&quot;,
+  &quot;create_uid_id&quot;: 46,
+  &quot;create_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;create_date&quot;: &quot;2024-07-06 07:12:10&quot;,
+  &quot;write_uid_id&quot;: 46,
+  &quot;write_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;write_date&quot;: &quot;2024-07-06 07:12:10&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4612,
+  &quot;name&quot;: &quot;BNEQ/2024/0866&quot;,
+  &quot;date&quot;: &quot;2024-07-06&quot;,
+  &quot;amount&quot;: 862,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 905920,
+  &quot;move_id&quot;: [
+    905920,
+    &quot;BNEQ/2024/0866 (Combine Afterpay POS payments from POS/02097)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0866 (Combine Afterpay POS payments from POS/02097)&quot;,
+  &quot;create_uid_id&quot;: 46,
+  &quot;create_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;create_date&quot;: &quot;2024-07-06 07:12:10&quot;,
+  &quot;write_uid_id&quot;: 46,
+  &quot;write_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;write_date&quot;: &quot;2024-07-06 07:12:10&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4613,
+  &quot;name&quot;: &quot;BNEQ/2024/0867&quot;,
+  &quot;date&quot;: &quot;2024-07-06&quot;,
+  &quot;amount&quot;: 4078.24,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 905947,
+  &quot;move_id&quot;: [
+    905947,
+    &quot;BNEQ/2024/0867 (Combine Card POS payments from POS/02096 [...])&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0867 (Combine Card POS payments from POS/02096 [...])&quot;,
+  &quot;create_uid_id&quot;: 46,
+  &quot;create_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;create_date&quot;: &quot;2024-07-06 07:12:57&quot;,
+  &quot;write_uid_id&quot;: 46,
+  &quot;write_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;write_date&quot;: &quot;2024-07-06 07:12:57&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4639,
+  &quot;name&quot;: &quot;BNEQ/2024/0869&quot;,
+  &quot;date&quot;: &quot;2024-07-08&quot;,
+  &quot;amount&quot;: 409.9,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 925922,
+  &quot;move_id&quot;: [
+    925922,
+    &quot;BNEQ/2024/0869 (Combine Card POS payments from POS/02138)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0869 (Combine Card POS payments from POS/02138)&quot;,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-08 07:12:59&quot;,
+  &quot;write_uid_id&quot;: 31,
+  &quot;write_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;write_date&quot;: &quot;2024-07-08 07:12:59&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4640,
+  &quot;name&quot;: &quot;BNEQ/2024/0870&quot;,
+  &quot;date&quot;: &quot;2024-07-08&quot;,
+  &quot;amount&quot;: 124.95,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 925924,
+  &quot;move_id&quot;: [
+    925924,
+    &quot;BNEQ/2024/0870 (Combine Afterpay POS payments from POS/02138)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0870 (Combine Afterpay POS payments from POS/02138)&quot;,
+  &quot;create_uid_id&quot;: 31,
+  &quot;create_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;create_date&quot;: &quot;2024-07-08 07:12:59&quot;,
+  &quot;write_uid_id&quot;: 31,
+  &quot;write_uid&quot;: [
+    31,
+    &quot;Jack Lewis&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Jack Lewis&quot;,
+  &quot;write_date&quot;: &quot;2024-07-08 07:12:59&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.596Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4662,
+  &quot;name&quot;: &quot;BNEQ/2024/0871&quot;,
+  &quot;date&quot;: &quot;2024-07-09&quot;,
+  &quot;amount&quot;: 418,
+  &quot;payment_type&quot;: &quot;inbound&quot;,
+  &quot;partner_type&quot;: &quot;customer&quot;,
+  &quot;partner_id&quot;: false,
+  &quot;journal_id_id&quot;: 42,
+  &quot;journal_id&quot;: [
+    42,
+    &quot;Brisbane Cheque Acc (4188)&quot;
+  ],
+  &quot;journal_id_label&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;state&quot;: &quot;posted&quot;,
+  &quot;payment_method_line_id_id&quot;: 19,
+  &quot;payment_method_line_id&quot;: [
+    19,
+    &quot;Manual&quot;
+  ],
+  &quot;payment_method_line_id_label&quot;: &quot;Manual&quot;,
+  &quot;move_id_id&quot;: 935779,
+  &quot;move_id&quot;: [
+    935779,
+    &quot;BNEQ/2024/0871 (Combine Card POS payments from POS/02143)&quot;
+  ],
+  &quot;move_id_label&quot;: &quot;BNEQ/2024/0871 (Combine Card POS payments from POS/02143)&quot;,
+  &quot;create_uid_id&quot;: 46,
+  &quot;create_uid&quot;: [
+    46,
+    &quot;Juan Barrientos&quot;
+  ],
+  &quot;create_uid_label&quot;: &quot;Juan Barrientos&quot;,
+  &quot;create_date&quot;: &quot;2024-07-09 06:57:30&quot;,
+  &quot;write_uid_id&quot;: 22,
+  &quot;write_uid&quot;: [
+    22,
+    &quot;Encar Lopez&quot;
+  ],
+  &quot;write_uid_label&quot;: &quot;Encar Lopez&quot;,
+  &quot;write_date&quot;: &quot;2024-07-15 02:18:04&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_payment&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.597Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 1,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>res_partner — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;PARTNER_ff45ee4f57f8&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_ff45ee4f57f8&quot;,
+  &quot;commercial_partner_id_id&quot;: 1,
+  &quot;commercial_partner_id&quot;: [
+    1,
+    &quot;ENTITY_b16c36d966e1&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;EBD&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: true,
+  &quot;customer_rank&quot;: 1,
+  &quot;supplier_rank&quot;: 274,
+  &quot;country_id_id&quot;: 13,
+  &quot;country_id&quot;: [
+    13,
+    &quot;ENTITY_2ff5beb407c5&quot;
+  ],
+  &quot;country_id_label&quot;: &quot;Australia&quot;,
+  &quot;state_id_id&quot;: 4,
+  &quot;state_id&quot;: [
+    4,
+    &quot;ENTITY_d2d43e885fec&quot;
+  ],
+  &quot;state_id_label&quot;: &quot;Queensland (AU)&quot;,
+  &quot;vat&quot;: &quot;[PERSONAL_0b4f954bfd]&quot;,
+  &quot;email&quot;: &quot;[PERSONAL_1a19014e2b]&quot;,
+  &quot;phone&quot;: &quot;[PERSONAL_43e1534088]&quot;,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:29&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:48:09&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_340ca71c&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.695Z&quot;,
+    &quot;personal_fields_redacted&quot;: 5,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 2,
+  &quot;name&quot;: &quot;PARTNER_be98ed55a4dc&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_be98ed55a4dc&quot;,
+  &quot;commercial_partner_id_id&quot;: 2,
+  &quot;commercial_partner_id&quot;: [
+    2,
+    &quot;ENTITY_1a9dc023772f&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;OdooBot&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: false,
+  &quot;customer_rank&quot;: 0,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id&quot;: false,
+  &quot;state_id&quot;: false,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: &quot;[PERSONAL_1a19014e2b]&quot;,
+  &quot;phone&quot;: false,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2025-10-07 20:14:51&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_370cabd5&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.695Z&quot;,
+    &quot;personal_fields_redacted&quot;: 3,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;PARTNER_be632227f307&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_be632227f307&quot;,
+  &quot;commercial_partner_id_id&quot;: 3,
+  &quot;commercial_partner_id&quot;: [
+    3,
+    &quot;ENTITY_cbda42fd2966&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Administrator&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: false,
+  &quot;customer_rank&quot;: 0,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id_id&quot;: 170,
+  &quot;country_id&quot;: [
+    170,
+    &quot;ENTITY_c9b28895b327&quot;
+  ],
+  &quot;country_id_label&quot;: &quot;New Zealand&quot;,
+  &quot;state_id_id&quot;: 517,
+  &quot;state_id&quot;: [
+    517,
+    &quot;ENTITY_45895a292263&quot;
+  ],
+  &quot;state_id_label&quot;: &quot;Auckland (NZ)&quot;,
+  &quot;vat&quot;: &quot;&quot;,
+  &quot;email&quot;: &quot;[PERSONAL_1a19014e2b]&quot;,
+  &quot;phone&quot;: &quot;[PERSONAL_43e1534088]&quot;,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2025-10-07 19:50:42&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_360caa42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.695Z&quot;,
+    &quot;personal_fields_redacted&quot;: 4,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;PARTNER_7e62cd7e4b4a&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_7e62cd7e4b4a&quot;,
+  &quot;commercial_partner_id_id&quot;: 4,
+  &quot;commercial_partner_id&quot;: [
+    4,
+    &quot;ENTITY_f98a9b1e6fa6&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Public user&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: false,
+  &quot;customer_rank&quot;: 0,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id&quot;: false,
+  &quot;state_id&quot;: false,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: false,
+  &quot;phone&quot;: false,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2023-10-05 23:53:10&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_310ca263&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.695Z&quot;,
+    &quot;personal_fields_redacted&quot;: 2,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 5,
+  &quot;name&quot;: &quot;PARTNER_e86f8a7cbcdc&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_e86f8a7cbcdc&quot;,
+  &quot;commercial_partner_id_id&quot;: 5,
+  &quot;commercial_partner_id&quot;: [
+    5,
+    &quot;ENTITY_c523674c7aca&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Default User Template&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: false,
+  &quot;customer_rank&quot;: 0,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id&quot;: false,
+  &quot;state_id&quot;: false,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: false,
+  &quot;phone&quot;: false,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2025-06-25 22:48:12&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_300ca0d0&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.695Z&quot;,
+    &quot;personal_fields_redacted&quot;: 2,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6,
+  &quot;name&quot;: &quot;PARTNER_d70ee3f84d0a&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_d70ee3f84d0a&quot;,
+  &quot;commercial_partner_id_id&quot;: 6,
+  &quot;commercial_partner_id&quot;: [
+    6,
+    &quot;ENTITY_23f369f1e92c&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Portal User Template&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: false,
+  &quot;customer_rank&quot;: 0,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id&quot;: false,
+  &quot;state_id&quot;: false,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: false,
+  &quot;phone&quot;: false,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 21:45:19&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_330ca589&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.696Z&quot;,
+    &quot;personal_fields_redacted&quot;: 2,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 152,
+  &quot;name&quot;: &quot;PARTNER_007dd6607079&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_007dd6607079&quot;,
+  &quot;commercial_partner_id_id&quot;: 152,
+  &quot;commercial_partner_id&quot;: [
+    152,
+    &quot;ENTITY_e6f28f6d5619&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;99 Bikes Belmont&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: true,
+  &quot;customer_rank&quot;: 1,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id_id&quot;: 13,
+  &quot;country_id&quot;: [
+    13,
+    &quot;ENTITY_2ff5beb407c5&quot;
+  ],
+  &quot;country_id_label&quot;: &quot;Australia&quot;,
+  &quot;state_id_id&quot;: 8,
+  &quot;state_id&quot;: [
+    8,
+    &quot;ENTITY_f483b0848041&quot;
+  ],
+  &quot;state_id_label&quot;: &quot;Western Australia (AU)&quot;,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: &quot;[PERSONAL_1a19014e2b]&quot;,
+  &quot;phone&quot;: &quot;[PERSONAL_43e1534088]&quot;,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 04:18:15&quot;,
+  &quot;write_date&quot;: &quot;2022-10-18 06:36:31&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_f32c623b&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.696Z&quot;,
+    &quot;personal_fields_redacted&quot;: 4,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 153,
+  &quot;name&quot;: &quot;PARTNER_2bbc23e7e727&quot;,
+  &quot;display_name&quot;: &quot;PARTNER_2bbc23e7e727&quot;,
+  &quot;commercial_partner_id_id&quot;: 153,
+  &quot;commercial_partner_id&quot;: [
+    153,
+    &quot;ENTITY_4b9ee688a209&quot;
+  ],
+  &quot;commercial_partner_id_label&quot;: &quot;Adventure Tec&quot;,
+  &quot;company_id&quot;: false,
+  &quot;is_company&quot;: true,
+  &quot;customer_rank&quot;: 1,
+  &quot;supplier_rank&quot;: 0,
+  &quot;country_id_id&quot;: 13,
+  &quot;country_id&quot;: [
+    13,
+    &quot;ENTITY_2ff5beb407c5&quot;
+  ],
+  &quot;country_id_label&quot;: &quot;Australia&quot;,
+  &quot;state_id_id&quot;: 4,
+  &quot;state_id&quot;: [
+    4,
+    &quot;ENTITY_d2d43e885fec&quot;
+  ],
+  &quot;state_id_label&quot;: &quot;Queensland (AU)&quot;,
+  &quot;vat&quot;: false,
+  &quot;email&quot;: &quot;[PERSONAL_1a19014e2b]&quot;,
+  &quot;phone&quot;: &quot;[PERSONAL_43e1534088]&quot;,
+  &quot;mobile&quot;: false,
+  &quot;create_date&quot;: &quot;2022-07-22 04:18:15&quot;,
+  &quot;write_date&quot;: &quot;2022-10-18 06:36:31&quot;,
+  &quot;partner_hash&quot;: &quot;PARTNER_f22c60a8&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_partner&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_partner__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.696Z&quot;,
+    &quot;personal_fields_redacted&quot;: 4,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>product_product — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 16132,
+  &quot;display_name&quot;: &quot;[VS-SUSP-BASE] VSETT Suspension base&quot;,
+  &quot;default_code&quot;: &quot;VS-SUSP-BASE&quot;,
+  &quot;product_tmpl_id_id&quot;: 25059,
+  &quot;product_tmpl_id&quot;: [
+    25059,
+    &quot;[VS-SUSP-BASE] VSETT Suspension base&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-SUSP-BASE] VSETT Suspension base&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-21 04:32:51&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16133,
+  &quot;display_name&quot;: &quot;[VS-8-F-WHEEL] VSETT 8 Front Wheel (8.5 inches)&quot;,
+  &quot;default_code&quot;: &quot;VS-8-F-WHEEL&quot;,
+  &quot;product_tmpl_id_id&quot;: 25060,
+  &quot;product_tmpl_id&quot;: [
+    25060,
+    &quot;[VS-8-F-WHEEL] VSETT 8 Front Wheel (8.5 inches)&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-F-WHEEL] VSETT 8 Front Wheel (8.5 inches)&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-21 04:32:51&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16134,
+  &quot;display_name&quot;: &quot;[VS-8-F-SUSP] VSETT 8/8+ Front Suspension&quot;,
+  &quot;default_code&quot;: &quot;VS-8-F-SUSP&quot;,
+  &quot;product_tmpl_id_id&quot;: 25061,
+  &quot;product_tmpl_id&quot;: [
+    25061,
+    &quot;[VS-8-F-SUSP] VSETT 8/8+ Front Suspension&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-F-SUSP] VSETT 8/8+ Front Suspension&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-21 04:32:51&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16135,
+  &quot;display_name&quot;: &quot;[VS-8-R-SUSP] VSETT 8/8+ Rear Suspension&quot;,
+  &quot;default_code&quot;: &quot;VS-8-R-SUSP&quot;,
+  &quot;product_tmpl_id_id&quot;: 25062,
+  &quot;product_tmpl_id&quot;: [
+    25062,
+    &quot;[VS-8-R-SUSP] VSETT 8/8+ Rear Suspension&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-R-SUSP] VSETT 8/8+ Rear Suspension&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-21 04:32:51&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16136,
+  &quot;display_name&quot;: &quot;[VS-8-PNU-TYRE] VSETT 8 Pneumatic tyre&quot;,
+  &quot;default_code&quot;: &quot;VS-8-PNU-TYRE&quot;,
+  &quot;product_tmpl_id_id&quot;: 25063,
+  &quot;product_tmpl_id&quot;: [
+    25063,
+    &quot;[VS-8-PNU-TYRE] VSETT 8 Pneumatic tyre&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-PNU-TYRE] VSETT 8 Pneumatic tyre&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2023-06-21 06:48:34&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16137,
+  &quot;display_name&quot;: &quot;[VS-8-PNU-INR-TUBE] VSETT 8 Pneumatic inner tube&quot;,
+  &quot;default_code&quot;: &quot;VS-8-PNU-INR-TUBE&quot;,
+  &quot;product_tmpl_id_id&quot;: 25064,
+  &quot;product_tmpl_id&quot;: [
+    25064,
+    &quot;[VS-8-PNU-INR-TUBE] VSETT 8 Pneumatic inner tube&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-PNU-INR-TUBE] VSETT 8 Pneumatic inner tube&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2023-06-21 06:49:45&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16139,
+  &quot;display_name&quot;: &quot;[VS-8-MOTOR-VT8-42] VSETT 8 Motor&quot;,
+  &quot;default_code&quot;: &quot;VS-8-MOTOR-VT8-42&quot;,
+  &quot;product_tmpl_id_id&quot;: 25066,
+  &quot;product_tmpl_id&quot;: [
+    25066,
+    &quot;[VS-8-MOTOR-VT8-42] VSETT 8 Motor&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-MOTOR-VT8-42] VSETT 8 Motor&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-29 05:24:46&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 16140,
+  &quot;display_name&quot;: &quot;[VS-8-BRK-BREAK-WIRE] VSETT 8 Brake break wire/instrument extension cord&quot;,
+  &quot;default_code&quot;: &quot;VS-8-BRK-BREAK-WIRE&quot;,
+  &quot;product_tmpl_id_id&quot;: 25067,
+  &quot;product_tmpl_id&quot;: [
+    25067,
+    &quot;[VS-8-BRK-BREAK-WIRE] VSETT 8 Brake break wire/instrument extension cord&quot;
+  ],
+  &quot;product_tmpl_id_label&quot;: &quot;[VS-8-BRK-BREAK-WIRE] VSETT 8 Brake break wire/instrument extension cord&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-21 04:32:51&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_product&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_product__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.772Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>product_template — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 25059,
+  &quot;name&quot;: &quot;VSETT Suspension base&quot;,
+  &quot;default_code&quot;: &quot;VS-SUSP-BASE&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 15,
+  &quot;standard_price&quot;: 11.47,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-11-12 22:37:59&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25060,
+  &quot;name&quot;: &quot;VSETT 8 Front Wheel (8.5 inches)&quot;,
+  &quot;default_code&quot;: &quot;VS-8-F-WHEEL&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 60,
+  &quot;standard_price&quot;: 19.080000000000002,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 20:40:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25061,
+  &quot;name&quot;: &quot;VSETT 8/8+ Front Suspension&quot;,
+  &quot;default_code&quot;: &quot;VS-8-F-SUSP&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 21,
+  &quot;standard_price&quot;: 14.74,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 20:40:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25062,
+  &quot;name&quot;: &quot;VSETT 8/8+ Rear Suspension&quot;,
+  &quot;default_code&quot;: &quot;VS-8-R-SUSP&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 21,
+  &quot;standard_price&quot;: 14.74,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 20:40:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25063,
+  &quot;name&quot;: &quot;VSETT 8 Pneumatic tyre&quot;,
+  &quot;default_code&quot;: &quot;VS-8-PNU-TYRE&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 30,
+  &quot;standard_price&quot;: 0,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 20:40:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25064,
+  &quot;name&quot;: &quot;VSETT 8 Pneumatic inner tube&quot;,
+  &quot;default_code&quot;: &quot;VS-8-PNU-INR-TUBE&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 20,
+  &quot;standard_price&quot;: 0,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-09-18 20:40:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25065,
+  &quot;name&quot;: &quot;VSETT 8 Battery&quot;,
+  &quot;default_code&quot;: false,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 1302,
+  &quot;standard_price&quot;: 0,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2024-11-12 03:51:23&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 25066,
+  &quot;name&quot;: &quot;VSETT 8 Motor&quot;,
+  &quot;default_code&quot;: &quot;VS-8-MOTOR-VT8-42&quot;,
+  &quot;categ_id_id&quot;: 6794,
+  &quot;categ_id&quot;: [
+    6794,
+    &quot;VSETT PARTS&quot;
+  ],
+  &quot;categ_id_label&quot;: &quot;VSETT PARTS&quot;,
+  &quot;type&quot;: &quot;product&quot;,
+  &quot;uom_id_id&quot;: 1,
+  &quot;uom_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_id_label&quot;: &quot;Units&quot;,
+  &quot;uom_po_id_id&quot;: 1,
+  &quot;uom_po_id&quot;: [
+    1,
+    &quot;Units&quot;
+  ],
+  &quot;uom_po_id_label&quot;: &quot;Units&quot;,
+  &quot;list_price&quot;: 244,
+  &quot;standard_price&quot;: 201.79,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-10-19 06:30:24&quot;,
+  &quot;write_date&quot;: &quot;2025-12-29 05:24:39&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_template&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.806Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>res_currency — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;EUR&quot;,
+  &quot;symbol&quot;: &quot;€&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: false,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.679Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 2,
+  &quot;name&quot;: &quot;USD&quot;,
+  &quot;symbol&quot;: &quot;$&quot;,
+  &quot;active&quot;: true,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2024-12-18 21:04:56&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.680Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;VEF&quot;,
+  &quot;symbol&quot;: &quot;Bs.F&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.680Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;CAD&quot;,
+  &quot;symbol&quot;: &quot;$&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.680Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 5,
+  &quot;name&quot;: &quot;CHF&quot;,
+  &quot;symbol&quot;: &quot;CHF&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.680Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6,
+  &quot;name&quot;: &quot;BRL&quot;,
+  &quot;symbol&quot;: &quot;R$&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.680Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 7,
+  &quot;name&quot;: &quot;CNY&quot;,
+  &quot;symbol&quot;: &quot;¥&quot;,
+  &quot;active&quot;: true,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2025-08-13 17:48:11&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.681Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 8,
+  &quot;name&quot;: &quot;COP&quot;,
+  &quot;symbol&quot;: &quot;$&quot;,
+  &quot;active&quot;: false,
+  &quot;rounding&quot;: 0.01,
+  &quot;decimal_places&quot;: 2,
+  &quot;create_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:34:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_currency&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_currency__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.681Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_account — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 528,
+  &quot;code&quot;: &quot;100&quot;,
+  &quot;name&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;account_type&quot;: &quot;asset_cash&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-23 03:42:25&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.305Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 533,
+  &quot;code&quot;: &quot;610&quot;,
+  &quot;name&quot;: &quot;Accounts Receivable&quot;,
+  &quot;account_type&quot;: &quot;asset_receivable&quot;,
+  &quot;reconcile&quot;: true,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2022-09-22 07:08:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 534,
+  &quot;code&quot;: &quot;620&quot;,
+  &quot;name&quot;: &quot;Prepayments&quot;,
+  &quot;account_type&quot;: &quot;asset_prepayments&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:08:58&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 538,
+  &quot;code&quot;: &quot;630&quot;,
+  &quot;name&quot;: &quot;Inventory&quot;,
+  &quot;account_type&quot;: &quot;asset_current&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2022-09-22 07:08:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 552,
+  &quot;code&quot;: &quot;800&quot;,
+  &quot;name&quot;: &quot;Accounts Payable&quot;,
+  &quot;account_type&quot;: &quot;liability_payable&quot;,
+  &quot;reconcile&quot;: true,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2022-09-22 07:08:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 553,
+  &quot;code&quot;: &quot;865&quot;,
+  &quot;name&quot;: &quot;AP / Inventory Suspense&quot;,
+  &quot;account_type&quot;: &quot;liability_current&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2024-07-17 02:37:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 554,
+  &quot;code&quot;: &quot;820&quot;,
+  &quot;name&quot;: &quot;GST&quot;,
+  &quot;account_type&quot;: &quot;liability_current&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2022-09-22 07:08:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 570,
+  &quot;code&quot;: &quot;960&quot;,
+  &quot;name&quot;: &quot;Retained Earnings&quot;,
+  &quot;account_type&quot;: &quot;equity&quot;,
+  &quot;reconcile&quot;: false,
+  &quot;deprecated&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2022-09-22 07:08:55&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_account&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_account__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.306Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>product_category — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;All&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;All&quot;,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:26&quot;,
+  &quot;write_date&quot;: &quot;2022-12-06 20:46:27&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;Expenses&quot;,
+  &quot;parent_id_id&quot;: 1,
+  &quot;parent_id&quot;: [
+    1,
+    &quot;All&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;All&quot;,
+  &quot;complete_name&quot;: &quot;All / Expenses&quot;,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:26&quot;,
+  &quot;write_date&quot;: &quot;2022-12-06 20:46:27&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 563,
+  &quot;name&quot;: &quot;DUALTRON SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;DUALTRON SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-07-26 02:25:06&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:49:46&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6741,
+  &quot;name&quot;: &quot;VSETT SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;VSETT SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:34:01&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6745,
+  &quot;name&quot;: &quot;ZERO SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;ZERO SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:34:25&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6763,
+  &quot;name&quot;: &quot;SMARTMOTION BIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SMARTMOTION BIKES&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:33:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6768,
+  &quot;name&quot;: &quot;ACCESSORIES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;ACCESSORIES&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-14 02:03:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6780,
+  &quot;name&quot;: &quot;SERVICE/REPAIRS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SERVICE/REPAIRS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2025-07-10 04:17:08&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>uom_uom — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;Units&quot;,
+  &quot;category_id_id&quot;: 1,
+  &quot;category_id&quot;: [
+    1,
+    &quot;Unit&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Unit&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 2,
+  &quot;name&quot;: &quot;Dozens&quot;,
+  &quot;category_id_id&quot;: 1,
+  &quot;category_id&quot;: [
+    1,
+    &quot;Unit&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Unit&quot;,
+  &quot;factor&quot;: 0.08333333333333333,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;Days&quot;,
+  &quot;category_id_id&quot;: 3,
+  &quot;category_id&quot;: [
+    3,
+    &quot;Working Time&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Working Time&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:52:21&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;Hours&quot;,
+  &quot;category_id_id&quot;: 3,
+  &quot;category_id&quot;: [
+    3,
+    &quot;Working Time&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Working Time&quot;,
+  &quot;factor&quot;: 8,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2025-06-18 01:52:21&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 5,
+  &quot;name&quot;: &quot;m&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 1,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 6,
+  &quot;name&quot;: &quot;mm&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 1000,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 7,
+  &quot;name&quot;: &quot;km&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 0.001,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 8,
+  &quot;name&quot;: &quot;cm&quot;,
+  &quot;category_id_id&quot;: 4,
+  &quot;category_id&quot;: [
+    4,
+    &quot;Length / Distance&quot;
+  ],
+  &quot;category_id_label&quot;: &quot;Length / Distance&quot;,
+  &quot;factor&quot;: 100,
+  &quot;rounding&quot;: 0.01,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;write_date&quot;: &quot;2022-07-22 02:35:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;uom_uom&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__uom_uom__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.859Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_journal — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 35,
+  &quot;name&quot;: &quot;Customer Invoices&quot;,
+  &quot;code&quot;: &quot;BRINV&quot;,
+  &quot;type&quot;: &quot;sale&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 36,
+  &quot;name&quot;: &quot;Vendor Bills&quot;,
+  &quot;code&quot;: &quot;BILL&quot;,
+  &quot;type&quot;: &quot;purchase&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 37,
+  &quot;name&quot;: &quot;Miscellaneous Journals&quot;,
+  &quot;code&quot;: &quot;MISC&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 38,
+  &quot;name&quot;: &quot;Exchange Difference&quot;,
+  &quot;code&quot;: &quot;EXCH&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 39,
+  &quot;name&quot;: &quot;Cash Basis Taxes&quot;,
+  &quot;code&quot;: &quot;CABA&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 40,
+  &quot;name&quot;: &quot;Inventory Valuation&quot;,
+  &quot;code&quot;: &quot;STJ&quot;,
+  &quot;type&quot;: &quot;general&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 41,
+  &quot;name&quot;: &quot;Cash&quot;,
+  &quot;code&quot;: &quot;CSH1&quot;,
+  &quot;type&quot;: &quot;cash&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 42,
+  &quot;name&quot;: &quot;Brisbane Cheque Acc (4188)&quot;,
+  &quot;code&quot;: &quot;BNEQ&quot;,
+  &quot;type&quot;: &quot;bank&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: false,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2025-01-19 22:55:07&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_journal&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_journal__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.361Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_tax — 8 sample rows</h3><pre>{
+  &quot;id&quot;: 61,
+  &quot;name&quot;: &quot;GST Exclusive Income&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 62,
+  &quot;name&quot;: &quot;GST Inclusive Income&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 63,
+  &quot;name&quot;: &quot;Zero (Export) Sale&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 64,
+  &quot;name&quot;: &quot;BAS Excluded Income&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 67,
+  &quot;name&quot;: &quot;GST Exclusive Expense&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 68,
+  &quot;name&quot;: &quot;GST Free Income&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 70,
+  &quot;name&quot;: &quot;GST Inclusive Expense&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><pre>{
+  &quot;id&quot;: 71,
+  &quot;name&quot;: &quot;GST Free Expense&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>res_company — 1 sample rows</h3><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;partner_id_id&quot;: 360,
+  &quot;partner_id&quot;: [
+    360,
+    &quot;ENTITY_e0d43396ff04&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;create_date&quot;: &quot;2022-08-05 16:33:50&quot;,
+  &quot;write_date&quot;: &quot;2026-06-08 01:53:48&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_company&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_company__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.677Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre><h3>account_move_line — 0 sample rows</h3><h3>pos_category — 0 sample rows</h3><h3>pos_config — 0 sample rows</h3><h3>pos_order — 0 sample rows</h3><h3>pos_order_line — 0 sample rows</h3><h3>pos_payment — 0 sample rows</h3><h3>pos_payment_method — 0 sample rows</h3><h3>pos_session — 0 sample rows</h3><h2>Findings needing review</h2><table><tr><th>Severity</th><th>Model</th><th>File</th><th>Line</th><th>Issue</th><th>Hits</th></tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>7</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;45000000000002&quot;,
+      &quot;45000000000002&quot;,
+      &quot;45000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>82</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;7000000000003&quot;,
+      &quot;7000000000003&quot;,
+      &quot;7000000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>85</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;7599999999998&quot;,
+      &quot;7599999999998&quot;,
+      &quot;7599999999998&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>96</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;7600000000000002&quot;,
+      &quot;7600000000000002&quot;,
+      &quot;7600000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>106</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;980000000000004&quot;,
+      &quot;980000000000004&quot;,
+      &quot;980000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>131</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;2000000000003&quot;,
+      &quot;2000000000003&quot;,
+      &quot;2000000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>136</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;860000000001&quot;,
+      &quot;860000000001&quot;,
+      &quot;860000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>163</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;740000000000002&quot;,
+      &quot;740000000000002&quot;,
+      &quot;740000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>171</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;6899999999996&quot;,
+      &quot;6899999999996&quot;,
+      &quot;6899999999996&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>177</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;8500000000000005&quot;,
+      &quot;8500000000000005&quot;,
+      &quot;8500000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>180</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;159999999999997&quot;,
+      &quot;159999999999997&quot;,
+      &quot;159999999999997&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>195</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;240000000000002&quot;,
+      &quot;240000000000002&quot;,
+      &quot;240000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>232</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;34000000000003&quot;,
+      &quot;34000000000003&quot;,
+      &quot;34000000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>237</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;869999999999994&quot;,
+      &quot;869999999999994&quot;,
+      &quot;869999999999994&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>261</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;580000000000002&quot;,
+      &quot;580000000000002&quot;,
+      &quot;580000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>282</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;2999999999997&quot;,
+      &quot;2999999999997&quot;,
+      &quot;2999999999997&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>324</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;7300000000005&quot;,
+      &quot;7300000000005&quot;,
+      &quot;7300000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>335</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;980000000000004&quot;,
+      &quot;980000000000004&quot;,
+      &quot;980000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>343</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;9999999999984&quot;,
+      &quot;9999999999984&quot;,
+      &quot;9999999999984&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>344</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>356</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;9100000000000001&quot;,
+      &quot;9100000000000001&quot;,
+      &quot;9100000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>357</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;540000000000001&quot;,
+      &quot;540000000000001&quot;,
+      &quot;540000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>359</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>364</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;990000000000002&quot;,
+      &quot;990000000000002&quot;,
+      &quot;990000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>365</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>368</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;32000000000001&quot;,
+      &quot;32000000000001&quot;,
+      &quot;32000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>403</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>409</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;9499999999998&quot;,
+      &quot;9499999999998&quot;,
+      &quot;9499999999998&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>413</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;990000000000002&quot;,
+      &quot;990000000000002&quot;,
+      &quot;990000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>415</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;82000000000001&quot;,
+      &quot;82000000000001&quot;,
+      &quot;82000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>423</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;515084440&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>424</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;515084440&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>439</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;45000000000002&quot;,
+      &quot;45000000000002&quot;,
+      &quot;45000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>445</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;5700000000000003&quot;,
+      &quot;5700000000000003&quot;,
+      &quot;5700000000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>446</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;7700000000000005&quot;,
+      &quot;7700000000000005&quot;,
+      &quot;7700000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>448</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;,
+      &quot;700000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>458</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;9500000000003&quot;,
+      &quot;9500000000003&quot;,
+      &quot;9500000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>463</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;140000000000001&quot;,
+      &quot;140000000000001&quot;,
+      &quot;140000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>468</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;539999999999985&quot;,
+      &quot;539999999999985&quot;,
+      &quot;539999999999985&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>476</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;3500000000001&quot;,
+      &quot;3500000000001&quot;,
+      &quot;3500000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>482</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;060000000000002&quot;,
+      &quot;060000000000002&quot;,
+      &quot;060000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>483</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;,
+      &quot;730000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_partial_reconcile</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl</td>
+<td>498</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;040000000000001&quot;,
+      &quot;040000000000001&quot;,
+      &quot;040000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_payment</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl</td>
+<td>115</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;007502246&quot;,
+      &quot;007445635&quot;,
+      &quot;007510831&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_payment</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl</td>
+<td>155</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;007502246&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_payment</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl</td>
+<td>250</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;00000118&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_payment</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl</td>
+<td>302</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 3,
+    &quot;examples&quot;: [
+      &quot;970059905&quot;,
+      &quot;970061307&quot;,
+      &quot;970062703&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_payment</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl</td>
+<td>493</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 4,
+    &quot;examples&quot;: [
+      &quot;970064091&quot;,
+      &quot;970065443&quot;,
+      &quot;970066820&quot;,
+      &quot;970068187&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>account_tax</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl</td>
+<td>15</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;100000000&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>2</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;080000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>11</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;290000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>17</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;21000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>23</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;910000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>24</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;330000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>26</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;490000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>28</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;700000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>34</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;6500000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>39</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;800000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>45</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;3100000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>73</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;60000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>77</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;60000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>86</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;830000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>120</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;6000000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>126</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;95000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>139</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;870000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>140</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;990000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>143</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;560000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>151</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;740000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>159</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;5500000000000003&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>165</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;2700000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>166</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;980000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>196</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;64000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>205</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;040000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>219</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;550000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>231</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;490000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>258</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;73000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>269</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;450000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>273</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;7700000000000005&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>296</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;450000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>308</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;450000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>318</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;17000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>324</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;450000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>358</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;950000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>370</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;950000000000001&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>384</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;910000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>398</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;740000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>417</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;470000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>451</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;45000000000002&quot;
+    ]
+  }
+]</pre></td>
+</tr><tr>
+<td>review</td>
+<td>product_template</td>
+<td>eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl</td>
+<td>452</td>
+<td>Potential PII remains after sanitisation</td>
+<td><pre>[
+  {
+    &quot;kind&quot;: &quot;possible_bank_or_long_number&quot;,
+    &quot;count&quot;: 1,
+    &quot;examples&quot;: [
+      &quot;480000000000004&quot;
+    ]
+  }
+]</pre></td>
+</tr></table></body></html>

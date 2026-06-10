@@ -1,0 +1,740 @@
+{
+  "source_csv": "/var/llamaindex/ghoststack-rag/scripts/hubtiger/hubtiger-proxy/call-analysis-export-2026-05-20T05-03-46-963Z.csv",
+  "output_dir": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations",
+  "generated_count": 183,
+  "files": [
+    {
+      "conversation_id": "conv_5301ks1s2766e58a2enx3f88dvv5",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_and_Im_context_My_name_is_Jeff_Hall_and_Im_calling_about_booki&Scooter_Service_Booking_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4801ks1s1w2tfn5sekd0530w84zg",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Summary_couldnt_be_generated_for_this_call_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9801ks1qv046eart189pzzb1afwy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_the_old_one_context_Oh_this_is_the_old_one_What_the_fuck&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1801ks0v1v7kfertt8wz4fm3c3y3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_gonna_go_and_get_a_repair_in&Bike_Service_Booking_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4701krzq6x1ced3thwv1z35svqka",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking_to_booking_my_scooter_in&Scooter_Booking_Callback_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201krzq25vtebv8arcy1fte4ve6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Service_Booking_Attempt_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_going&Service_Availability_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2601krzpamkhec5860r579a1aejz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Service_Booking_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2101kryzfab6e18tjned2ndrwb20",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Service_Callback_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8801kryz2vvxfprb7t85rzkmh5p0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Service_Booking_Callback_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1101kryxwp1ce00v20khp6pzekx6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Service_Decline_Callback_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4701kryxnt46f6w8mgbmd4e11get",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Transfer_to_Agent_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8901kryxj76de3jrkjf1yycp3486",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Magic_Mike_Intro_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9001krx1kf2vf5wb6ze8bg6jnm69",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Product_Inquiry_VSETT_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9901krx1b9qjfm0tva4jwfr2zsgm",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Fatfish_OG_Price_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301krj5s4cpf6ybwm9mfspeq9ag",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Product_Stock_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4901krbxfy1pf5hrwb0vcsj9877z",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&11_Tyres_Availability_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5001krbxee28ez5awqyn71exwdh9",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&11_Inch_Tyres_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4501krbxbnhye1f803qegjyxebqb",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&12inch_Tyre_Availability_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3601kr8v048ye1hsjdkemjfxs1q3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking_for_a&Tire_Availability_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0101kr0gjqsnfk0ttxm11mkbtqr6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_agent_initiated_the_conversation_by_introducing_t&Ride_Electric_Intro_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6101kqxem3n7f11sg2b6f9mz1x1f",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Booking_Lookup_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8901kqvz7pwkfwzskg6zzjh18f79",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_Can_you_have_a_look_at_Just_check_on_my_scooter_at_the&Ebike_Stock_and_Repair_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301kqvee218ehb8m3degmp9cne0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initially_inquired_about_the_EBCO_Urban_2_ebi&Workshop_Job_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7601kqvcx14we3e8as1pd2x8vg2g",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Jeff_Hall_Workshop_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9601kqvcvxs9eq4bxy6zhewnexce",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Workshop_Help_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqvc84a0e5vreabv4809f1mv",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_how_Ive_said_that_context_So_because_it_was_a_bunch_of_um_cellular_iPads&Offtopic_User_Chat_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0101kqvbhd9ffg2tg7q68raeweaj",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Fatfish_Stock_Scooter_Repair_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8501kqvbg9dsfwtsqb57m7rh58se",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebike_Stock_Similar_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0501kqvb4rmte85t4h1pgntb68g8",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebike_Workshop_Scooter_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8801kqv73a84fertj8nf6afsv668",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Scooter_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0601kqv6gy1jfd2rn63zs90s6cpr",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebco_Urban_2_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3501kqv62pkve9kae3aabh15973h",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebco_Urban_2_Product_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0801kqv5rm2vf4v8jjrkytwwnzd2",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebco_Urban_2_Inquiry_conv_0801kqv5rm2vf4v8jjrkytwwnzd2_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4001kqv5bh97fdwsqzg8bgvj1e2q",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Job_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5301kqv56fvbe3ja02c0pma8dhf2",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Product_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqsn7ttsfpaaaat42620ksns",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_enquiring_about_electric_context_I_am_just_enquiring_about_electric&Ebike_Product_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0001kqsmdh73erx9r47vnkrxbd9r",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_inquired_about_job_15336_The_agent_retrieved_&Job_Status_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7601kqsm9jk3fxjbtxw4tnmpxa7k",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Job_Status_Check_conv_7601kqsm9jk3fxjbtxw4tnmpxa7k_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqrtp23pfbt9ptpkfzv3wnjz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_Hi_I_am_calling_about_my_scoote_rin_the_workshop_my_na&Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqrtj0r9fzkrrc958e4dcqy2",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_My_name_is_Jeff_Hall&Scooter_Workshop_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0801kqrtbzdqe8wbb2pgy4spn3bm",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_user_contacted_Magic_Mike_from_Ride_Electric_to_i&Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6901kqrgzc1nepg8mh828rc8zs5w",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ian_LeGarth_I_am_context_My_name_is_Ian_LeGarth_I_am_wondering_about_my_&Bike_Workshop_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9301kqrgc3ccfv98mab92pdqv6vb",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Booked_In_context_The_conversation_began_with_the_user_inquiring_about_t&Scooter__Helmets_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9001kqrg3xpvfzfsed6w7jrg86xs",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_and_I_context_Hi_my_name_is_Jeff_Hall_and_I_would_like_to_chec&Scooter_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301kqq9gfdyfzrrjsvfjzteq5zc",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ian_LeGarth_context_Hi_im_calling_about_my_scooter_at_Ride_Electric_work&Workshop_Repair_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5901kqq9afpvfdpsnkhhc8nscnm4",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_Hi_Just_calling_to_check_on_my_scoote_rin_the_workshop&Workshop_Job_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4001kqq96zgpfsvttdp08w4tmvdf",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_Hi_I_am_just_enquiring_about_my_scooter_in_the_worksho&Workshop_Job_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5901kqq946f8et985xq2k60nxj7f",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_inquired_about_the_status_of_their_scooter_in&Scooter_workshop_status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6801kqq2kzx0ea294a0pj4wehprx",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Skoda_Service_Booking_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqq2hckzez09bqjzddaa6px5",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Scooter_Workshop_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8001kqq0n0a9f4tar2qkrjckh92m",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_looking_just_wondering_about_the&Scooter_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301kqq0k06bf42bd9dpd5fc51gk",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_user_contacted_Magic_Mike_from_Ride_Electric_to_i&Workshop_Status_Check_conv_3301kqq0k06bf42bd9dpd5fc51gk_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqq0f4rkf3gbskg2nx4yn0sr",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Fox_Helmet_Stock_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2401kqp9vpapf89b5wcrq0vbevbe",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking_for_a_Fox_helmet&Fox_Helmet_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9001kqp9p10sfwcs5rfw57bn71n1",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Fatfish_Biggie_context_The_user_initiated_a_query_about_a_scooter_in_the&Scooter_Repair_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0201kqp9c5xaetetbt4ax427zzkx",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_enquirying_about_my_scooter_context_Hi_I_am_enquirying_about_my_scooter_&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5201kqkq1vdye97vevzmwhvb3vrb",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initially_inquired_about_tools_needed_to_chan&Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8101kqkq0e2qev4brahbmma724de",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Dr&Introductions_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4601kqkpz6t8ed9vv41cjevqsw17",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&User_Update_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3501kqkg3qmxf36afxr8jz9jsxhp",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Product_Controller_Alternative_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7101kqkdnv9heg3rmsapd4y8v3kc",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_a_human&Failed_Transfer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8401kqkd0k5kewcvywbfj3f07nn9",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Assistance_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9301kqkbzjfde8csvka8tphq3ydv",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Flat_Tire_Repair_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6201kqka81tgf6b8cnztqy92ntb6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_user_repeatedly_requested_to_speak_with_a_human_T&Transfer_to_Human_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4601kqka5d9cfp5bth9ksbq3aetm",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Escooter_Brake_Repair_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7601kqka350rewqazjke9a39ww2b",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Speak_to_Human_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7501kqk9z4ymezc90stq121jzfey",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Human_Request_Denied_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0501kqk9qtbjfhjs4nt718vs80za",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Intro_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8601kqk9nr0xfc0a29sea22c4vb9",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Speak_to_Human_conv_8601kqk9nr0xfc0a29sea22c4vb9_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3601kqk9cxvjfqsrak65cn6nnk9w",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Repair_Pickup_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2601kqk8cy4eea4a7vmtckq7hhaf",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Intro_conv_2601kqk8cy4eea4a7vmtckq7hhaf_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4201kqk8cj3zf56s0ddrmqh30y19",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Kevin_Kirby_context_tool_result_hubtiger_job_retrieve&Repair_Quote_Connection_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7001kqk88y4webab3p0cemz4r882",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_tell_Im_telling_them&Scooter_Service_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4201kqk81yvvewy8mwc72nnj1mg0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Brake_Repair_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1101kqk81mnxecytx2q5rmfb5wkz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Unavailable_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1701kqk801hfe088j95x0nqa01yw",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Repair_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0801kqk63dekesgv5jp7gydb59rq",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Help_Offer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0201kqk5v1dre338hs2ttw8krgrv",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Replacement_NFC_Card_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1901kqk5axt7f1mag0ym6rd2z371",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Booking_Repairs_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3001kqk3ehcqfevammefmffdpaax",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_user_initiated_a_conversation_with_Magic_Mike_fro&Service_Booking_Request_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3001kqk2weqff5j9x4q8h80vaab3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_processing_your_request&Human_Transfer_Failed_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7201kqk2jaw5fsd9pnspmbnjz9px",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Live_Agent_Request_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5001kqk2gb6qek98vdgvefx7kta3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Book_Service_Brisbane_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6001kqk2cwwwev1sxe2mxkt4gyba",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_still_here&AI_Transfer_Request_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0301kqk29r6qfb0vg3y1dggm7kms",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ride_Electric_context_The_user_initially_inquired_about_charging_a_port_&Human_Transfer_Failure_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6301kqk1vj6teh8btppnmn2xxn3d",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_the_most_frustrating_phone_context_This_is_the_most_frustrating_phone_ca&Brisbane_Transfer_Frustration_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4301kqk1kjsye1ztpzj526szh55f",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_trying_to_make_a_fucking_service&Brisbane_Service_Transfer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9601kqk1b2d3fwm97j4dgkreaaq0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Scooter_Job_Lookup_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0001kqk1arptfxvs5jc9mn4pkp3z",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_not_sure&Transfer_to_Agent_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0401kqk0syh0egtvp5tq0zm5m58j",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Sam_Felton_context_The_user_initiated_a_conversation_about_repairing_an_&Repair_Appointment_Booking_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0701kqk0rcjbf8mt1bk16zwpzhcy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_you&Repair_Job_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1501kqk0nz4af7pa0ngyhyvvntny",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Warranty_Serial_Number_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1301kqk091zrfnm8h3z2fqsdprtt",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_still_here&Failed_Agent_Transfer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0501kqjzxampfztbxv8c2gcznzqz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_sorry&Scooter_Repair_Transfer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5401kqjzhagse7kt28hf1ymhr2sz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ride_Electric_context_The_user_initially_inquired_about_the_Saturday_ope&Workshop_Opening_Hours_Confusion_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9801kqjxdtb1ehyas1x2p1md8zhd",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&FatFish_OG_Maintenance_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5801kqjx4nz7evkrbqfesa0gkc4d",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initiated_the_conversation_to_check_the_statu&Scooter_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2501kqjwf9d4eyg8fj1jcsbtn3bj",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Unavailable_conv_2501kqjwf9d4eyg8fj1jcsbtn3bj_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9001kqjw521hfqwbv177fkq7degy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initiated_a_conversation_to_inquire_about_the&Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301kqjvkgbgfwxtjw0bpfkt5ann",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_here&Scooter_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4101kqjv6gyhfrkr09bn1db6va1y",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Quad_Lock_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6401kqjv2hfeee3rgtmd7sznzpt3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initiated_contact_to_check_the_status_of_a_sc&Scooter_Repair_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7701kqjv1b1jerbbyasfdwrf4jee",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_user_contacted_Magic_Mike_from_Ride_Electric_to_i&Scooter_Workshop_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6801kqjtksxnfj29w7w8gpg0qgh4",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Booking_lookup_failure_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5101kqjs5b3zea9a9061zxsztxft",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Scooter_Service_Availability_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_looking_at_booking_in_my&Service_Booking_Visa11_Super_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2101kqjqes2gejxsgrwg7yk6f5gy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking_for&Scooter_Service_Booking_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3501kqjpnek7egy9w7mz3jb0pa6g",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_just_wanted_context_my_name_is_Jeff_Hall_just_wanted_to_check_&Workshop__Product_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3401kqjpfeb1e0a9f7a0y2j1jqyy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Job_Check_Failed_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3501kqjp1npmf5wa85fx1sbrh5tk",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&FatFish_OG2_Availability_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0001kqjnsy7nexf8d49e32t6e2gy",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1401kqjmybyqfhxvfj4mqhsg6aav",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ebco_Urban_context_The_user_inquired_about_the_price_of_the_Ebco_Urban_T&Ebco_Urban_Price_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8801kqjm7m5kefz9xm3tth2t2key",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_enquiring_about_the_EBCO_context_I_am_enquiring_about_the_EBCO_urban_bik&EBCO_Urban_Bike_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8301kqjkren5e5h8p5k9a2d1r17m",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ebco_Urban_context_The_user_inquired_about_the_price_of_an_Ebco_Urban_bi&Ebco_Urban_Price_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8101kqjhcj6ee98ag24m8xzc93ra",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&EBCO_Urban_Bike_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0501kqjhaj6yet6rv8s7aj90x6vp",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_conversation_began_with_the_agent_introducing_the&New_Conversation_Start_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8201kqhz0gbyembtz85p2agmf912",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebco_Urban_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7101kqhy1x9afj5aya552mpryv38",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ebco_Urban_context_The_user_inquired_about_the_stock_and_price_of_Ebco_U&Ebco_Urban_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1401kqhff7xjenkvztfbz0rsv3y6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_wondering_about_the&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6601kqhf3eqtfmgb4rgxe73zmsa0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebco_Urban_Price_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3801kqhewj34f6nakwg94n17jxx7",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_seeking_price_and_availabilitiy_context_enquiring_about_the_EBCO_Urban_2&EBCO_Urban_2_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2501kqhegpk3erwr6rpp2612d2gs",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_tool_result_hubtiger_job_search&Scooter_Job_Lookup_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4001kqhe8kz8fqf82c0pxavgm1zs",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_enquiring_about_my_scooter_context_Hi_i_am_enquiring_about_my_scooter_in&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2301kqhdahv9fqtb3r471qsqjhsz",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Ian_Legarth_context_Im_looking_to_book_my_um_bike_in_Or_actually_I_wanna&Workshop_Booking_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4301kqhd7yczefevth5m2nw3k9vd",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_after_the_price_of_a_EPCO&EPCO_Urban_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2201kqhd7t2secwrxajgbnjg8rap",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&User_Stuck_Help_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5101kqhc4gapf1ys59e6gd0hq479",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_calling_about_the&Ebsco_Urban_2_Stock_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3301kqhbeqqfe2dtdn844qwsjvm9",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Services_Offer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2801kqhbddp7fgcvgyzbar5tv338",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about_the_EBCO_Urban_bike&EBCO_Urban_Bike_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2701kqh8zkhweswtyygkh52baa2s",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about_the&FatFish_OG2_Price_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6201kqh8x48nemys7nznw7ekjv35",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_at_the_Edco&EBCO_Urban2_Price_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6801kqh8dc5eemxr92sgr7frw1bt",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about_the_EBCO&EBCO_Urban_Availability_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2401kqh89w9mfxjre44jpa4wr36q",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9901kqh89g0qfza882g5wsnvst19",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Service_Introduction_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2701kqh87hzqeq7t4qs5x75n9cf4",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_wondering_about_the_EBCO&EBCO_Bike_PriceStock_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2501kqh76yc4e9cr3644yvtj9nfj",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about&FatFish_OG_20_Pricing_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3501kqh6wmk4ex291smd08nxysny",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Fat_Fish_OG_20_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1801kqh6tr68fcts7hyt8fexxjbr",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_agent_Magic_Mike_from_Ride_Electric_introduced_it&Ride_Electric_Assistance_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&EBCO_Urban_Availability_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5901kqh4h9xgf8abqzvq6t2v24nt",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about_the&Product_Stock_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4301kqgznd4ffhh9cy9zy80ejad4",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_calling_about&EBCO_Urban_TT_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4101kqgzcxrdfrkajbh3908d32h1",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Scooter_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8601kqgz6nbnew58578c2eqgkfj6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Keith_McKnight_context_Hey_Magic_Mike_Im_just_calling_about_my_scooter_U&Scooter_Repair_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3801kqgyb6n1ergrxgdy8e478k0e",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Keith_McKnight_context_Hey_Magic_Im_just_calling_about_my_scooter_in_the&Scooter_Workshop_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1201kqgy59nbf5gs6j6pg3bmtdd0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_calling_about_a_scooter_in_the_workshop&Scooter_Workshop_Update_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1201kqgxr1b1ezqs94y53yxd1ay8",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking&Check_Booking_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2001kqgxfdm5ewxrke094tne4h0n",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_being_so_stupid&Check_Booking_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8501kqgxey6we7qa2s560wn011qs",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Quick_Signoff_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1401kqgtzr89ed794yyz7xk90mb0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Dragon_Predator_context_The_user_Keith_McKnight_inquired_about_his_scoot&Scooter_Repair_Update_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4001kqgswhcwem2ba5y3s4n5z4py",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_looking_at_the_EBCO_bike&EBCO_Bike_Features_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9301kqezf467fb1bncv1e6yjwdy7",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Biggie_Fat_Fish_context_The_user_initiated_the_conversation_by_asking_ab&Fatfish_Biggie_EBike_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5701kqezd4j6fbxavcfstn41e7xv",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Updates_Help_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5901kqetbaz5etmrnskazwvnwjpn",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Booking_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0601kqesn520fptb55tvnbpdvsy0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Workshop_Booking_Check_conv_0601kqesn520fptb55tvnbpdvsy0_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5501kqesev1bf9cb3qsg60hbpb2p",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ebike_Rules_Vsett_Settings_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1601kqerjmsxehfbytxgz884kcrv",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Job_Status_Transfer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8801kqerfy7bfmb8657gsa7cxg2e",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_tool_result_hubtiger_job_search&Workshop_Booking_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4301kqenag1vf388avmk9f7v12h0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Tyson_Johnson_context_Uh_my_name_is_Tyson_Johnson_Im_calling_about_my_bi&Workshop_bike_inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4901kqemy8w2f009fbdrqbsqqfg5",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_contacted_Ride_Electric_to_inquire_about_a_bi&Bike_Repair_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2801kqemx2see3tvx3jagmw48p4h",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Agent_Help_Offer_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8501kqemqbbae4kbphcp35y0eyhc",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_calling_about_the_job_number&Bike_Repair_Status_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5901kqempkzqezzrkzs7wpnx8th6",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Help_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4801kqempb83ftysbz9aaye7nr08",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Greeting_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1601kqemmxrsfjt9pktvvgf0845w",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Help_conv_1601kqemmxrsfjt9pktvvgf0845w_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0301kqek77vdfp49mwk4nsj1199s",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Workshop_Status_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7401kqek6rrjfws8pknb2jk7j3bf",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Intro_conv_7401kqek6rrjfws8pknb2jk7j3bf_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0101kqek5jgzfd992dmdak64r06r",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Magic_Mike_Intro_conv_0101kqek5jgzfd992dmdak64r06r_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4801kqejr60vecs9ga179g3d61mx",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_workshop_inquiry_failed_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5501kqejp0pwesdanrc8jvc0xwpk",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Workshop_Status_conv_5501kqejp0pwesdanrc8jvc0xwpk_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5401kqejd6cyf32t44225377vjc0",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just_looking_at&Bike_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2701kqejcyh2eypv9teaxb7ryqg8",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Summary_couldnt_be_generated_for_this_call_conv_2701kqejcyh2eypv9teaxb7ryqg8_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4201kqej9eqbetrvfwgnvtk3sjr4",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initiated_a_call_to_inquire_about_the_status_&Workshop_Job_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_9701kqej6gete5ztmjefrfax4z6j",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_just&Bike_Status_Search_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_0901kqej5pmrfgzv4y8g06ajbjth",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Ride_Electric_Assistance_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_1301kqej42y4ep3te9mmnf34b151",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Workshop_Status_Check_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5001kqej2pdbetcbzmfmnyq6jtse",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Magic_Mike_context_The_agent_Magic_Mike_from_Ride_Electric_initiated_the&Agent_Introduction_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_7401kqej21jyesz8aztzfksada75",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Initial_Greeting_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_2201kqej0y8qfcd8e0esqcbt78eg",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Agent_Introduction_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_3201kqehvww9edyawet2ywqdbd6r",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Jeff_Hall_context_The_user_initiated_a_request_to_check_on_their_bike_at&Bike_Repair_Job_Inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_5601kqehhva7fbg925kdkaes6ym3",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Workshop_Status_conv_5601kqehhva7fbg925kdkaes6ym3_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_4901kqeheyh2fcyrjjw0j131v8ds",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_workshop_inquiry_SIMULATION.json"
+    },
+    {
+      "conversation_id": "conv_8301kqehass0fxg8w7nh4bfgfav5",
+      "path": "/var/llamaindex/ghoststack-rag/artefacts/call-simulations/JSON_Unknown_User&Bike_Status_Transfer_SIMULATION.json"
+    }
+  ],
+  "errors": []
+}

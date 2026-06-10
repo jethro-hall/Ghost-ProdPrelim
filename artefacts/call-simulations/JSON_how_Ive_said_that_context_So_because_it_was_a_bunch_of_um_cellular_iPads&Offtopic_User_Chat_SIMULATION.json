@@ -1,0 +1,264 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_5201kqvc84a0e5vreabv4809f1mv",
+    "title": "Off-topic User Chat",
+    "status": "done",
+    "user": "how- I've said that (context: \"So, because it was a bunch of, um, cellular, iPads, whatever the hell she can get, right?It is. It absolutely is. Yea...\")",
+    "brief_summary": "Off-topic User Chat",
+    "duration_seconds": 174,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 370,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 11,
+      "text": "Daddy, save me. Give me some ice cream. What you want? I want some ice cream.",
+      "asr_ms": 59,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "I'm sorry, but I can't help with that request. I'm here to assist with Ride Electric workshop, repair, booking, or product inquiries. How can I help you with that?",
+      "asr_ms": null,
+      "llm_seconds": 0.074,
+      "workflow_route_seconds": null,
+      "tts_ms": 534,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 36,
+      "text": "I'm good.",
+      "asr_ms": 149,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 39,
+      "text": "[Patient]...",
+      "asr_ms": null,
+      "llm_seconds": 0.308,
+      "workflow_route_seconds": null,
+      "tts_ms": 324,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 39,
+      "text": "Yeah, they're gone, guys. Yeah, they're off. I'll let you in.",
+      "asr_ms": 81,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 54,
+      "text": "[Patient] I'm here to help with Ride Electric workshop, repair, booking, or product inquiries. How can I assist you with that?",
+      "asr_ms": null,
+      "llm_seconds": 0.296,
+      "workflow_route_seconds": null,
+      "tts_ms": 332,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 63,
+      "text": "So, because it was a bunch of, um, cellular, iPads, whatever the hell she can get, right?It is. It absolutely is. Yeah, I've got one. Yeah, it's me.He says to me, at all, he was fine all day, all afternoon, actually. Anyway, when he walked, when he walked out, he said the first time he said, he said it again. You know, because you don't address anything, bro. No, you don't come in here and talk to him. You don't address it. You left everything out there in the air. You don't know how you do that? No, you're not the fucking problem. You're- This all stinks. You've had to wait too long, the whole load. Bro, oh, the, the- The whole load, you need to rewash. It stinks, the whole load. No, you don'taddress it, you know that. This fucking stinks, bro. I can't fix it. You don't address anything. It leaves it open-ended. What? I can't drink that shit. Why? The glass tastes like banana. It's, you have the ice in the glass. Tastes like what? Banana. I just washed the glass. Tastes like freezer. So it, it's, it's really got to see that. Because last time I said the same thing. Let's put new ice in it. Address it with him, okay? Talk to him like an adult. I know, you need to clean the freezer. Talk to him. Tell him, Noah, listen to me. Yeah, um- Your house is here at home with me. Your dad has done the wrong thing by giving you an iPad and all this, but that'snot how life exists. You don't have that. This is how- I've said that, Jack. I've been doing the same thing.Well, don't do it then. You've got to change it. So what you need to do, I've been, I've been wrong as well. You need to, this is your, this is your routine. Put him in a routine and tell him and talk to him, he'll be fine.",
+      "asr_ms": 26,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 162,
+      "text": "[Patient] I'm here to help with Ride Electric workshop, repair, booking, or product inquiries. How can I assist you with that?",
+      "asr_ms": null,
+      "llm_seconds": 0.35,
+      "workflow_route_seconds": null,
+      "tts_ms": 392,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 370 ms",
+    "user",
+    "11s",
+    "Daddy, save me. Give me some ice cream. What you want? I want some ice cream.",
+    "ASR 59 ms",
+    "agent",
+    "19s",
+    "I'm sorry, but I can't help with that request. I'm here to assist with Ride Electric workshop, repair, booking, or product inquiries. How can I help you with that?",
+    "LLM 0.074 s",
+    "TTS 534 ms",
+    "user",
+    "36s",
+    "I'm good.",
+    "ASR 149 ms",
+    "agent",
+    "39s",
+    "[Patient]...",
+    "LLM 0.308 s",
+    "TTS 324 ms",
+    "user",
+    "39s",
+    "Yeah, they're gone, guys. Yeah, they're off. I'll let you in.",
+    "ASR 81 ms",
+    "agent",
+    "54s",
+    "[Patient] I'm here to help with Ride Electric workshop, repair, booking, or product inquiries. How can I assist you with that?",
+    "LLM 0.296 s",
+    "TTS 332 ms",
+    "user",
+    "63s",
+    "So, because it was a bunch of, um, cellular, iPads, whatever the hell she can get, right?It is. It absolutely is. Yeah, I've got one. Yeah, it's me.He says to me, at all, he was fine all day, all afternoon, actually. Anyway, when he walked, when he walked out, he said the first time he said, he said it again. You know, because you don't address anything, bro. No, you don't come in here and talk to him. You don't address it. You left everything out there in the air. You don't know how you do that? No, you're not the fucking problem. You're- This all stinks. You've had to wait too long, the whole load. Bro, oh, the, the- The whole load, you need to rewash. It stinks, the whole load. No, you don'taddress it, you know that. This fucking stinks, bro. I can't fix it. You don't address anything. It leaves it open-ended. What? I can't drink that shit. Why? The glass tastes like banana. It's, you have the ice in the glass. Tastes like what? Banana. I just washed the glass. Tastes like freezer. So it, it's, it's really got to see that. Because last time I said the same thing. Let's put new ice in it. Address it with him, okay? Talk to him like an adult. I know, you need to clean the freezer. Talk to him. Tell him, Noah, listen to me. Yeah, um- Your house is here at home with me. Your dad has done the wrong thing by giving you an iPad and all this, but that'snot how life exists. You don't have that. This is how- I've said that, Jack. I've been doing the same thing.Well, don't do it then. You've got to change it. So what you need to do, I've been, I've been wrong as well. You need to, this is your, this is your routine. Put him in a routine and tell him and talk to him, he'll be fine.",
+    "ASR 26 ms",
+    "agent",
+    "162s",
+    "[Patient] I'm here to help with Ride Electric workshop, repair, booking, or product inquiries. How can I assist you with that?",
+    "LLM 0.35 s",
+    "TTS 392 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 4,
+      "turns_before_first_tool": 9,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 27.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_5201kqvc84a0e5vreabv4809f1mv-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Daddy, save me. Give me some ice cream. What you want? I want some ice cream.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_5201kqvc84a0e5vreabv4809f1mv-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_5201kqvc84a0e5vreabv4809f1mv-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,467 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_2401kqp9vpapf89b5wcrq0vbevbe",
+    "title": "Fox Helmet Inquiry",
+    "status": "done",
+    "user": "looking for a Fox helmet",
+    "brief_summary": "Fox Helmet Inquiry",
+    "duration_seconds": 45,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 276,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 7,
+      "text": "I was calling about my, uh, about a product. I'm looking for a Fox helmet.",
+      "asr_ms": 137,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.51,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-7943d86835ed487e849e1a88040a1d5e",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-7943d86835ed487e849e1a88040a1d5e",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.666019231081009e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.0035257902927696705,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_4601kqp9w2jse0bbnac6cxk9kabs",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4601kqp9w2jse0bbnac6cxk9kabs",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.0001240503042936325,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "Checking product now",
+      "asr_ms": null,
+      "llm_seconds": 1.855,
+      "workflow_route_seconds": null,
+      "tts_ms": 280,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.855,
+      "workflow_route_seconds": null,
+      "tts_ms": 280,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-a7042cfc525c4c1abc6647d0b07f6a87",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "search": "Fox helmet",
+                "category": "part"
+              }
+            },
+            "system__message_to_speak": "Checking product now"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-a7042cfc525c4c1abc6647d0b07f6a87",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 7.684994488954544e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.002778969705104828,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_1501kqp9w4wmf8b97jdegw7xvmq1",
+                    "tool_name": "SHOPIFY_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_1501kqp9w4wmf8b97jdegw7xvmq1",
+                    "tool_name": "SHOPIFY_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0005349400453269482,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "[Patient] I can certainly help you with that. Could you please tell me the specific model of the Fox helmet you are looking for?",
+      "asr_ms": null,
+      "llm_seconds": 0.646,
+      "workflow_route_seconds": null,
+      "tts_ms": 277,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 23,
+      "text": "I'm not sure of the models. Can you tell me which ones you have?",
+      "asr_ms": 218,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "[Enthusiastically] I'll check what Fox helmets we have available for you right away.",
+      "asr_ms": null,
+      "llm_seconds": 0.332,
+      "workflow_route_seconds": null,
+      "tts_ms": 411,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 38,
+      "text": "...",
+      "asr_ms": 152,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 40,
+      "text": "Hey, are you still there? I'm ready to help you find the right Fox helmet.",
+      "asr_ms": null,
+      "llm_seconds": 0.404,
+      "workflow_route_seconds": null,
+      "tts_ms": 521,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions...",
+    "TTS 276 ms",
+    "user",
+    "7s",
+    "I was calling about my, uh, about a product. I'm looking for a Fox helmet.",
+    "ASR 137 ms",
+    "agent",
+    "12s",
+    "...",
+    "LLM 0.51 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "12s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "14s",
+    "Checking product now",
+    "LLM 1.855 s",
+    "TTS 280 ms",
+    "agent",
+    "14s",
+    "...",
+    "LLM 1.855 s",
+    "TTS 280 ms",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "14s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "16s",
+    "[Patient] I can certainly help you with that. Could you please tell me the specific model of the Fox helmet you are looking for?",
+    "LLM 0.646 s",
+    "TTS 277 ms",
+    "user",
+    "23s",
+    "I'm not sure of the models. Can you tell me which ones you have?",
+    "ASR 218 ms",
+    "agent",
+    "28s",
+    "[Enthusiastically] I'll check what Fox helmets we have available for you right away.",
+    "LLM 0.332 s",
+    "TTS 411 ms",
+    "user",
+    "38s",
+    "...",
+    "ASR 152 ms",
+    "agent",
+    "40s",
+    "Hey, are you still there? I'm ready to help you find the right Fox helmet.",
+    "LLM 0.404 s",
+    "TTS 521 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_2401kqp9vpapf89b5wcrq0vbevbe-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I was calling about my, uh, about a product. I'm looking for a Fox helmet.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_2401kqp9vpapf89b5wcrq0vbevbe-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_2401kqp9vpapf89b5wcrq0vbevbe-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

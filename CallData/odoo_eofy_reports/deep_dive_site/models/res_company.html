@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model: res_company</title>
+<style>
+:root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151; --accent:#38bdf8; --bad:#fb7185; --ok:#34d399; --warn:#fbbf24; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+header { padding:20px 28px; background:#020617; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+header h1 { margin:0 0 6px 0; font-size:22px; } header .sub { color:var(--muted); font-size:13px; }
+main { padding:24px 28px 60px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.metric { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.metric .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.metric .value { font-size:26px; font-weight:700; margin-top:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } th, td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; } th { text-align:left; color:#cbd5e1; background:#020617; position:sticky; top:77px; }
+.bad { color:var(--bad); font-weight:700; } .ok { color:var(--ok); font-weight:700; } .warn { color:var(--warn); font-weight:700; }
+pre { white-space:pre-wrap; overflow:auto; background:#020617; padding:12px; border-radius:10px; border:1px solid var(--line); color:#d1d5db; font-size:12px; }
+details { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:10px 0; background:#111827; } summary { cursor:pointer; color:#e2e8f0; }
+input { width:100%; max-width:520px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:#020617; color:var(--text); margin: 8px 0 14px; }
+small, .muted { color:var(--muted); }
+.pill { display:inline-block; border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin:2px; background:#020617; color:#cbd5e1; font-size:12px; }
+</style>
+
+</head>
+<body>
+<header><h1>Model: res_company</h1><div class="sub"><a href="../index.html">Index</a> · <a href="../source_files.html">Source files</a> · Generated 2026-06-09T06:12:02.522Z</div></header>
+<main>
+<div class="card"><a href="../index.html">← Back to index</a></div>
+<div class="grid">
+  <div class="metric"><div class="label">Rows</div><div class="value">1</div></div>
+  <div class="metric"><div class="label">Distinct Odoo IDs</div><div class="value">1</div></div>
+  <div class="metric"><div class="label">Raw PII-like hits</div><div class="value ok">0</div></div>
+  <div class="metric"><div class="label">Redaction tokens</div><div class="value">0</div></div>
+</div>
+<div class="card"><h2>Accounting totals</h2><table><tr><th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th><th>Date range</th></tr><tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td> → </td></tr></table></div>
+<div class="card"><h2>Field profile</h2><p class="muted">Raw PII-like hits should generally be zero before this data goes to Claude. Redaction tokens are expected in sanitised data.</p><table><thead><tr><th>Field</th><th>Present</th><th>%</th><th>Types</th><th>Raw PII hits</th><th>Redaction hits</th><th>Sensitive name hits</th><th>Examples</th></tr></thead><tbody><tr>
+<td><code>create_date</code></td><td>1</td><td>100.0%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-08-05 16:33:50</span></td></tr>
+<tr>
+<td><code>currency_id</code></td><td>1</td><td>100.0%</td><td>array:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[21,&quot;AUD&quot;]</span></td></tr>
+<tr>
+<td><code>currency_id_id</code></td><td>1</td><td>100.0%</td><td>number:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">21</span></td></tr>
+<tr>
+<td><code>currency_id_label</code></td><td>1</td><td>100.0%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">AUD</span></td></tr>
+<tr>
+<td><code>id</code></td><td>1</td><td>100.0%</td><td>number:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">4</span></td></tr>
+<tr>
+<td><code>name</code></td><td>1</td><td>100.0%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>1</td>
+<td><span class="pill">Ride Electric Brisbane</span></td></tr>
+<tr>
+<td><code>parent_id</code></td><td>1</td><td>100.0%</td><td>boolean:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">false</span></td></tr>
+<tr>
+<td><code>partner_id</code></td><td>1</td><td>100.0%</td><td>array:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[360,&quot;ENTITY_e0d43396ff04&quot;]</span></td></tr>
+<tr>
+<td><code>partner_id_id</code></td><td>1</td><td>100.0%</td><td>number:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">360</span></td></tr>
+<tr>
+<td><code>partner_id_label</code></td><td>1</td><td>100.0%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">Ride Electric Brisbane</span></td></tr>
+<tr>
+<td><code>write_date</code></td><td>1</td><td>100.0%</td><td>string:1</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2026-06-08 01:53:48</span></td></tr></tbody></table></div>
+<div class="card"><h2>Sample records</h2><input id="q" placeholder="Filter visible sample records..." oninput="filterRecords()"><p class="muted">Showing up to 500 records for this model.</p><details class="record" data-search="{&quot;id&quot;:4,&quot;name&quot;:&quot;ride electric brisbane&quot;,&quot;currency_id_id&quot;:21,&quot;currency_id&quot;:[21,&quot;aud&quot;],&quot;currency_id_label&quot;:&quot;aud&quot;,&quot;parent_id&quot;:false,&quot;partner_id_id&quot;:360,&quot;partner_id&quot;:[360,&quot;entity_e0d43396ff04&quot;],&quot;partner_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;create_date&quot;:&quot;2022-08-05 16:33:50&quot;,&quot;write_date&quot;:&quot;2026-06-08 01:53:48&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;res_company&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__master_data__res_company__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.677z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#4 | partner=Ride Electric Brisbane | Ride Electric Brisbane <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_company__000000000.sanitised.jsonl line 1</small></summary><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;partner_id_id&quot;: 360,
+  &quot;partner_id&quot;: [
+    360,
+    &quot;ENTITY_e0d43396ff04&quot;
+  ],
+  &quot;partner_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;create_date&quot;: &quot;2022-08-05 16:33:50&quot;,
+  &quot;write_date&quot;: &quot;2026-06-08 01:53:48&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res_company&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_company__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.677Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details></div>
+<script>
+function filterRecords(){ const q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.record').forEach(el=>{ el.style.display = el.dataset.search.includes(q) ? '' : 'none'; }); }
+</script></main>
+</body></html>

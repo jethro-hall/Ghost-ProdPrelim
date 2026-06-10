@@ -1,0 +1,343 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4001kqgswhcwem2ba5y3s4n5z4py",
+    "title": "EBCO Bike Features",
+    "status": "done",
+    "user": "looking at the EBCO bike",
+    "brief_summary": "EBCO Bike Features",
+    "duration_seconds": 46,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 1,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 284,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 12,
+      "text": "I'm looking at the EBCO bike.",
+      "asr_ms": 162,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.356,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-0dbc9d875ed248e1a9dbbf190ea9a6d7",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-0dbc9d875ed248e1a9dbbf190ea9a6d7",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.3029973059892654e-05,
+                "type": "edge",
+                "edge_id": "edge_identify_to_billing",
+                "target_node_id": "account_billing"
+              },
+              {
+                "step_latency_secs": 0.0033743688836693764,
+                "type": "nested_tools",
+                "node_id": "account_billing",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_6901kqgsx0geekmtqn4en1swtawv",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"account_billing\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6901kqgsx0geekmtqn4en1swtawv",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"account_billing\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00011143996380269527,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "account_billing",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its features or serviceability?",
+      "asr_ms": null,
+      "llm_seconds": 0.261,
+      "workflow_route_seconds": null,
+      "tts_ms": 369,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 25,
+      "text": "For purchase and questions about the bike itself.",
+      "asr_ms": 52,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its features or serviceability?",
+      "asr_ms": null,
+      "llm_seconds": 0.162,
+      "workflow_route_seconds": null,
+      "tts_ms": 331,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 38,
+      "text": "About the features.",
+      "asr_ms": 47,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 40,
+      "text": "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its...",
+      "asr_ms": null,
+      "llm_seconds": 0.228,
+      "workflow_route_seconds": null,
+      "tts_ms": 314,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "1s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+    "TTS 284 ms",
+    "user",
+    "12s",
+    "I'm looking at the EBCO bike.",
+    "ASR 162 ms",
+    "agent",
+    "15s",
+    "...",
+    "LLM 0.356 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "15s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "16s",
+    "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its features or serviceability?",
+    "LLM 0.261 s",
+    "TTS 369 ms",
+    "user",
+    "25s",
+    "For purchase and questions about the bike itself.",
+    "ASR 52 ms",
+    "agent",
+    "29s",
+    "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its features or serviceability?",
+    "LLM 0.162 s",
+    "TTS 331 ms",
+    "user",
+    "38s",
+    "About the features.",
+    "ASR 47 ms",
+    "agent",
+    "40s",
+    "I can help with that. Just to confirm, are you interested in the EBCO bike for purchase, or do you have a question about its...",
+    "LLM 0.228 s",
+    "TTS 314 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 1,
+      "tool_result_count": 1,
+      "tool_success_count": 1,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 3,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 3.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4001kqgswhcwem2ba5y3s4n5z4py-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I'm looking at the EBCO bike.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4001kqgswhcwem2ba5y3s4n5z4py-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4001kqgswhcwem2ba5y3s4n5z4py-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

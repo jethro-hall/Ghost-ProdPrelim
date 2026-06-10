@@ -1,0 +1,102 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_customer_by_phone",
+  "description": "Fast caller lookup by mobile: customer name plus latest active workshop job (model, jobcard, checked-in date, location). Call once when you have the caller's phone — before job_search for a quick greeting or context. Accepts 04xxxxxxxx, +614xxxxxxxx, or 614xxxxxxxx. Do not read customer_id aloud. If found is false, ask for their mobile again. If hubtiger_timeout, apologize briefly and retry once or continue without names. Never expose raw JSON, trace IDs, or backend errors.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/customer-by-phone",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Lookup Ride Electric / HubTiger customer by Australian mobile.\n\nProvide phone from caller ID, the conversation, or confirmed digits. Use 0412345678 or +61412345678 — server normalizes all AU formats.\n\nIf found is true: greet with first_name; you may reference model, jobcard, location, and date_checked_in when relevant to workshop status.\n\nDo not use for booking availability (hubtiger_booking_availability) or full job SMS/notes (hubtiger_job_search + hubtiger_job_retrieve).\n\nNever expose internal diagnostics.",
+      "properties": [
+        {
+          "id": "phone",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Caller mobile number. Australian formats: 04xxxxxxxx, +614xxxxxxxx, or 614xxxxxxxx.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        }
+      ],
+      "required": true,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [
+    {
+      "source": "response",
+      "dynamic_variable": "customer_first_name",
+      "value_path": "first_name"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "customer_last_name",
+      "value_path": "last_name"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "customer_name",
+      "value_path": "Name"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "workshop_jobcard",
+      "value_path": "Jobcard"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "vehicle_model",
+      "value_path": "Model"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "workshop_location",
+      "value_path": "Location"
+    },
+    {
+      "source": "response",
+      "dynamic_variable": "workshop_checked_in",
+      "value_path": "DateCheckedIn"
+    }
+  ],
+  "response_timeout_secs": 25,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {
+      "customer_first_name": "",
+      "customer_last_name": "",
+      "customer_name": "",
+      "workshop_jobcard": "",
+      "vehicle_model": "",
+      "workshop_location": "",
+      "workshop_checked_in": ""
+    }
+  },
+  "response_mocks": []
+}

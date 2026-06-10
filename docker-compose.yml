@@ -9,6 +9,10 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - default
+      - agentic_workflow_prod_default
+      - agentic_workflow_studio_default
     depends_on:
       control-api:
         condition: service_healthy
@@ -80,8 +84,12 @@ services:
       GENERIC_TIMEZONE: Australia/Sydney
       N8N_DIAGNOSTICS_ENABLED: "false"
       N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      NODE_FUNCTION_ALLOW_BUILTIN: "*"
+      NODES_EXCLUDE: '[]'
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - n8n_data:/home/node/.n8n
+      - /var/llamaindex/ghoststack-rag/CallData:/home/node/.n8n-files
     expose:
       - "5678"
     depends_on:
@@ -126,6 +134,107 @@ services:
       timeout: 5s
       retries: 15
       start_period: 300s
+    restart: unless-stopped
+
+  hubtiger-proxy:
+    build:
+      context: ./scripts/hubtiger/hubtiger-proxy
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      HUBTIGER_PROXY_PORT: 8095
+      HUBTIGER_BASE_URL: ${HUBTIGER_BASE_URL:-}
+      HUBTIGER_API_KEY: ${HUBTIGER_API_KEY:-}
+      HUBTIGER_AUTH_HEADER: ${HUBTIGER_AUTH_HEADER:-x-api-key}
+      HUBTIGER_AUTH_MODE: ${HUBTIGER_AUTH_MODE:-}
+      HUBTIGER_PORTAL_MODE: ${HUBTIGER_PORTAL_MODE:-}
+      HUBTIGER_SERVICES_URL: ${HUBTIGER_SERVICES_URL:-https://hubtigerservices.azurewebsites.net}
+      HUBTIGER_API_URL: ${HUBTIGER_API_URL:-https://hubtiger-api.azurewebsites.net}
+      HUBTIGER_POS_URL: ${HUBTIGER_POS_URL:-https://hubtiger-pos.azurewebsites.net}
+      HUBTIGER_PARTNER_ID: ${HUBTIGER_PARTNER_ID:-}
+      HUBTIGER_FUNCTION_CODE: ${HUBTIGER_FUNCTION_CODE:-}
+      HUBTIGER_API_CODE: ${HUBTIGER_API_CODE:-}
+      HUBTIGER_LEGACY_TOKEN: ${HUBTIGER_LEGACY_TOKEN:-}
+      HUBTIGER_PORTAL_USERNAME: ${HUBTIGER_PORTAL_USERNAME:-}
+      HUBTIGER_PORTAL_PASSWORD: ${HUBTIGER_PORTAL_PASSWORD:-}
+      HUBTIGER_USERNAME: ${HUBTIGER_USERNAME:-}
+      HUBTIGER_PASSWORD: ${HUBTIGER_PASSWORD:-}
+      HUBTIGER_CREATED_BY_USER_ID: ${HUBTIGER_CREATED_BY_USER_ID:-}
+      HUB_USER: ${HUB_USER:-}
+      HUB_PASS: ${HUB_PASS:-}
+      HUBTIGER_MAX_JOB_SEARCH_CHARS: ${HUBTIGER_MAX_JOB_SEARCH_CHARS:-96}
+      HUBTIGER_BRISBANE_AVAILABILITY_TECHNICIANS: ${HUBTIGER_BRISBANE_AVAILABILITY_TECHNICIANS:-2730,6744}
+      HUBTIGER_MAX_PRODUCT_SEARCH_CHARS: ${HUBTIGER_MAX_PRODUCT_SEARCH_CHARS:-96}
+      HUBTIGER_MAX_SEARCH_RESULTS: ${HUBTIGER_MAX_SEARCH_RESULTS:-25}
+      HUBTIGER_MAX_AVAILABILITY_ROWS: ${HUBTIGER_MAX_AVAILABILITY_ROWS:-25}
+    expose:
+      - "8095"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8095/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  hubtiger-mcp:
+    build:
+      context: ./services/hubtiger-mcp
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      HUBTIGER_MCP_PORT: 8096
+      HUBTIGER_PROXY_URL: http://hubtiger-proxy:8095
+      HUBTIGER_MCP_CACHE_TTL_SECONDS: ${HUBTIGER_MCP_CACHE_TTL_SECONDS:-20}
+      HUBTIGER_MCP_READ_TIMEOUT_MS: ${HUBTIGER_MCP_READ_TIMEOUT_MS:-8000}
+      HUBTIGER_MCP_MUTATION_TIMEOUT_MS: ${HUBTIGER_MCP_MUTATION_TIMEOUT_MS:-12000}
+      HUBTIGER_MCP_CIRCUIT_FAILS: ${HUBTIGER_MCP_CIRCUIT_FAILS:-3}
+      HUBTIGER_MCP_CIRCUIT_OPEN_MS: ${HUBTIGER_MCP_CIRCUIT_OPEN_MS:-60000}
+    expose:
+      - "8096"
+    depends_on:
+      hubtiger-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8096/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  shopify-mcp:
+    build:
+      context: ./services/shopify-mcp
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      SHOPIFY_MCP_PORT: 8097
+      SHOPIFY_API_VERSION: ${SHOPIFY_API_VERSION:-2025-01}
+      SHOPIFY_STORE_DOMAIN: ${SHOPIFY_STORE_DOMAIN:-}
+      SHOPIFY_ADMIN_API_ACCESS_TOKEN: ${SHOPIFY_ADMIN_API_ACCESS_TOKEN:-}
+      SHOPIFY_MCP_READ_TIMEOUT_MS: ${SHOPIFY_MCP_READ_TIMEOUT_MS:-12000}
+      SHOPIFY_MCP_MAX_PRODUCTS: ${SHOPIFY_MCP_MAX_PRODUCTS:-5}
+      SHOPIFY_MCP_MAX_VARIANTS_PER_PRODUCT: ${SHOPIFY_MCP_MAX_VARIANTS_PER_PRODUCT:-20}
+      SHOPIFY_SEARCH_FILTER_PART: ${SHOPIFY_SEARCH_FILTER_PART:-}
+      SHOPIFY_SEARCH_FILTER_EBIKE: ${SHOPIFY_SEARCH_FILTER_EBIKE:-}
+      SHOPIFY_SEARCH_FILTER_SCOOTER: ${SHOPIFY_SEARCH_FILTER_SCOOTER:-}
+      SHOPIFY_MCP_CATALOG_CACHE_TTL_SECONDS: ${SHOPIFY_MCP_CATALOG_CACHE_TTL_SECONDS:-60}
+      SHOPIFY_MCP_CATALOG_CACHE_MAX_ENTRIES: ${SHOPIFY_MCP_CATALOG_CACHE_MAX_ENTRIES:-200}
+      SHOPIFY_MCP_PING_CACHE_TTL_SECONDS: ${SHOPIFY_MCP_PING_CACHE_TTL_SECONDS:-15}
+      SHOPIFY_MCP_VARIANT_PRICING_CHUNK: ${SHOPIFY_MCP_VARIANT_PRICING_CHUNK:-80}
+      SHOPIFY_MCP_INVENTORY_LEVELS_FIRST: ${SHOPIFY_MCP_INVENTORY_LEVELS_FIRST:-50}
+    expose:
+      - "8097"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8097/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
   workflow-runtime:
@@ -193,8 +302,13 @@ services:
       APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/llama31-8b}
       APP_DEFAULT_EMBEDDING_MODEL: ${APP_DEFAULT_EMBEDDING_MODEL:-openai/intfloat/multilingual-e5-large-instruct}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+      SHOPIFY_MCP_URL: http://shopify-mcp:8097
+      HUBTIGER_ELEVENLABS_TOOL_DIR: /app/hubtiger-tools
     volumes:
       - app_data:/data
+      - ./artefacts/call-simulations:/data/call-simulations:ro
+      - ./artefacts/call-simulation-runs:/data/call-simulation-runs
+      - ./scripts/hubtiger:/app/hubtiger-tools:ro
     expose:
       - "8000"
     depends_on:
@@ -203,6 +317,10 @@ services:
       workflow-runtime:
         condition: service_healthy
       docx-templater:
+        condition: service_started
+      hubtiger-mcp:
+        condition: service_healthy
+      shopify-mcp:
         condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
@@ -235,6 +353,7 @@ services:
       APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/llama31-8b}
       APP_DEFAULT_EMBEDDING_MODEL: ${APP_DEFAULT_EMBEDDING_MODEL:-openai/intfloat/multilingual-e5-large-instruct}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+      SHOPIFY_MCP_URL: http://shopify-mcp:8097
     volumes:
       - app_data:/data
     expose:
@@ -245,6 +364,8 @@ services:
       workflow-runtime:
         condition: service_healthy
       docx-templater:
+        condition: service_started
+      shopify-mcp:
         condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health').read()"]
@@ -268,6 +389,9 @@ services:
       VITE_APRYSE_LICENSE_KEY: ${VITE_APRYSE_LICENSE_KEY:-}
     expose:
       - "4173"
+    networks:
+      - default
+      - agentic_workflow_prod_default
     depends_on:
       control-api:
         condition: service_healthy
@@ -293,7 +417,7 @@ services:
       context: ../../Ghost-chatUI
       dockerfile: Dockerfile
     expose:
-      - "3000"
+      - "3500"
     restart: unless-stopped
 
 volumes:
@@ -305,3 +429,10 @@ volumes:
   tei_cache:
   n8n_data:
   n8n_postgres_data:
+
+networks:
+  agentic_workflow_prod_default:
+    external: true
+  agentic_workflow_studio_default:
+    external: true
+    name: agentic-workflow-studio_default

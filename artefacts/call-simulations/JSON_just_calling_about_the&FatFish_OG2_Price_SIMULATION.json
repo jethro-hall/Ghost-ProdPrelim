@@ -1,0 +1,233 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_2701kqh8zkhweswtyygkh52baa2s",
+    "title": "FatFish OG2 Price",
+    "status": "done",
+    "user": "just calling about the",
+    "brief_summary": "FatFish OG2 Price",
+    "duration_seconds": 35,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 331,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 4,
+      "text": "I'm just calling about the, uh, FatFish OG2. Can you find me the price of that, please?",
+      "asr_ms": 62,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 13,
+      "text": "I can help you with that. Let me check the price and availability for the FatFish OG2.0 for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.274,
+      "workflow_route_seconds": null,
+      "tts_ms": 591,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 26,
+      "text": "...",
+      "asr_ms": 62,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "I'm here if you need help with the...",
+      "asr_ms": null,
+      "llm_seconds": 0.588,
+      "workflow_route_seconds": null,
+      "tts_ms": 338,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 29,
+      "text": "Okay.",
+      "asr_ms": 125,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 32,
+      "text": "I'm here to help with the FatFish OG2.0. ...",
+      "asr_ms": null,
+      "llm_seconds": 0.842,
+      "workflow_route_seconds": null,
+      "tts_ms": 583,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can...",
+    "TTS 331 ms",
+    "user",
+    "4s",
+    "I'm just calling about the, uh, FatFish OG2. Can you find me the price of that, please?",
+    "ASR 62 ms",
+    "agent",
+    "13s",
+    "I can help you with that. Let me check the price and availability for the FatFish OG2.0 for you.",
+    "LLM 0.274 s",
+    "TTS 591 ms",
+    "user",
+    "26s",
+    "...",
+    "ASR 62 ms",
+    "agent",
+    "28s",
+    "I'm here if you need help with the...",
+    "LLM 0.588 s",
+    "TTS 338 ms",
+    "user",
+    "29s",
+    "Okay.",
+    "ASR 125 ms",
+    "agent",
+    "32s",
+    "I'm here to help with the FatFish OG2.0. ...",
+    "LLM 0.842 s",
+    "TTS 583 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 0,
+      "turns_before_first_tool": 7,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.67,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_2701kqh8zkhweswtyygkh52baa2s-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I'm just calling about the, uh, FatFish OG2. Can you find me the price of that, please?",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_2701kqh8zkhweswtyygkh52baa2s-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_2701kqh8zkhweswtyygkh52baa2s-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

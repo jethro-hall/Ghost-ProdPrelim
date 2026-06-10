@@ -1,0 +1,166 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_availability_readonly",
+  "description": "Check HubTiger workshop booking availability for a Ride Electric store and date. Read-only availability lookup. If unavailable, offer callback or staff follow-up.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Use when the caller wants workshop booking times. Read-only — does not create a booking.\n\nRequired: store (southport, brisbane, burleigh).\n\nFor \"by [date]\" requests (e.g. birthday 2 June): set payload.deadline_date or end_date to YYYY-MM-DD and payload.scheduling_goal to before_deadline. Omit start_date to search from today through that date.\n\nResponse: data.recommended_slot (best fit), data.backup_slots (two alternatives closest to the best), data.first_slots (same three for voice). Read message field to the caller.\n\nIf slot_count is 0, do not invent times — offer another store/date or callback.\n\nNever expose raw JSON, trace IDs, or backend errors.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "booking_availability",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "store",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Description\nRequired. Ride Electric store slug. Use exactly one of: southport, brisbane, burleigh.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "start_date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional. Search start date YYYY-MM-DD. Leave blank when using payload.deadline_date (defaults to today).",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "end_date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional. End date in YYYY-MM-DD format if the caller gives a date range.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "cache_mode",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Optional cache mode. Use no_cache only when the caller says availability sounds stale or changed recently. Otherwise leave blank.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "enum": null,
+          "is_system_provided": false,
+          "required": false
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Optional. Use deadline_date (YYYY-MM-DD) when caller needs service BY a date (e.g. birthday 2 June). Use scheduling_goal before_deadline for that case. Include customer_request with their words.",
+          "properties": [
+            {
+              "id": "deadline_date",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Required for by-date requests. Last date the bike must be serviced by, YYYY-MM-DD (e.g. 2026-06-02 for 2 June birthday).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "scheduling_goal",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Use before_deadline when they need service by deadline_date. Use earliest if they want the soonest slot.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "customer_request",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Short summary of what the caller asked, e.g. serviced before my birthday on 2 June.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "service_notes",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional notes about the service or issue, such as flat tyre, brake pads, general service, warranty check.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "preferred_time",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional preferred time if the caller gives one, such as morning, afternoon, or 10am.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": false,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "type": "value",
+        "name": "X-Ghost-Voice-Key",
+        "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV"
+      }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "response_mocks": []
+}

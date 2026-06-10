@@ -1,0 +1,75 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_bike_confirm",
+  "description": "Step 2b: Confirm bike on file or add bike/scooter model.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "After bike_list. Pass bike_id from candidates OR create_new with vehicle_model (e.g. Fatfish OG).\n\nThen ask what service they want and call hubtiger_booking_finalize.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_bike_confirm",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "properties": [
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            },
+            {
+              "id": "bike_id",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "required": false
+            },
+            {
+              "id": "create_new",
+              "type": "boolean",
+              "value_type": "llm_prompt",
+              "required": false
+            },
+            {
+              "id": "vehicle_model",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Required when create_new is true.",
+              "required": false
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 30,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

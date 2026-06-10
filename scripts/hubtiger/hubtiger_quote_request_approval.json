@@ -1,0 +1,92 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_quote_request_approval",
+  "description": "Send quote approval request to customer after quote line items are prepared.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute quote_request_approval",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "quote_request_approval",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Approval payload",
+          "properties": [
+            {
+              "id": "userId",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer user ID from job/customer context",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Title",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Approval title",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "Message",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Approval message",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

@@ -1,0 +1,560 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_0001kqk1arptfxvs5jc9mn4pkp3z",
+    "title": "Transfer to Agent",
+    "status": "done",
+    "user": "not sure",
+    "brief_summary": "Transfer to Agent",
+    "duration_seconds": 124,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 358,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 12,
+      "text": "I need to speak to somebody.",
+      "asr_ms": 100,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "I'm here to help you right away. Could you please let me know what you need assistance with?",
+      "asr_ms": null,
+      "llm_seconds": 0.256,
+      "workflow_route_seconds": null,
+      "tts_ms": 364,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 20,
+      "text": "I need a spare key for an AC unit.",
+      "asr_ms": 43,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 24,
+      "text": "I'm sorry, but I can't assist with spare keys for AC units. I recommend contacting a local locksmith or the manufacturer for that. Let me know if you need help with anything else.",
+      "asr_ms": null,
+      "llm_seconds": 0.304,
+      "workflow_route_seconds": null,
+      "tts_ms": 331,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 35,
+      "text": "I'd like to speak to someone there to talk about ordering from the manufacturer.",
+      "asr_ms": 23,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 41,
+      "text": "I'm sorry, but I can't assist with ordering from the manufacturer. I recommend reaching out directly to the manufacturer for your order inquiries. Let me know if you need help with anything else.",
+      "asr_ms": null,
+      "llm_seconds": 0.262,
+      "workflow_route_seconds": null,
+      "tts_ms": 314,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 55,
+      "text": "I'd like to speak to someone, please.",
+      "asr_ms": 24,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 59,
+      "text": "I'm here to help you. Could you please let me know what you need assistance with?",
+      "asr_ms": null,
+      "llm_seconds": 0.289,
+      "workflow_route_seconds": null,
+      "tts_ms": 700,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 66,
+      "text": "I wanna speak to somebody.",
+      "asr_ms": 25,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 69,
+      "text": "I'm here to help you. Could you please let me know what you need assistance with?",
+      "asr_ms": null,
+      "llm_seconds": 0.144,
+      "workflow_route_seconds": null,
+      "tts_ms": 377,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 74,
+      "text": "I wanna buy a new bike.",
+      "asr_ms": 86,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 76,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.443,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-c1017b2f5d4f403dbb190c51e5a55510",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 76,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-c1017b2f5d4f403dbb190c51e5a55510",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 6.156973540782928e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.003189760260283947,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_4701kqk1d3y6ffr9gv6ss3hq47d6",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_4701kqk1d3y6ffr9gv6ss3hq47d6",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010616984218358994,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 77,
+      "text": "Great! Could you please let me know what type of bike you're interested in?",
+      "asr_ms": null,
+      "llm_seconds": 0.332,
+      "workflow_route_seconds": null,
+      "tts_ms": 316,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 82,
+      "text": "Uh, I'm not sure. I just wanna talk to someone about it.",
+      "asr_ms": 76,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 85,
+      "text": "I'm here to help you with that. Could you please let me know what type of bike you're interested in?",
+      "asr_ms": null,
+      "llm_seconds": 0.281,
+      "workflow_route_seconds": null,
+      "tts_ms": 443,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 93,
+      "text": "Electric.",
+      "asr_ms": 31,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 94,
+      "text": "Do you have a specific model or feature in mind for your electric bike?",
+      "asr_ms": null,
+      "llm_seconds": 0.26,
+      "workflow_route_seconds": null,
+      "tts_ms": 332,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 106,
+      "text": "No.",
+      "asr_ms": 28,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 108,
+      "text": "I can help you explore our electric bike options. Could you please let me know your preferred budget or any specific features you're looking for?",
+      "asr_ms": null,
+      "llm_seconds": 0.251,
+      "workflow_route_seconds": null,
+      "tts_ms": 356,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 116,
+      "text": "I wanna speak to a real person.",
+      "asr_ms": 96,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 119,
+      "text": "I'm here to help you with your electric bike inquiry. Could you please let me know your preferred budget or any specific...",
+      "asr_ms": null,
+      "llm_seconds": 0.271,
+      "workflow_route_seconds": null,
+      "tts_ms": 430,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 358 ms",
+    "user",
+    "12s",
+    "I need to speak to somebody.",
+    "ASR 100 ms",
+    "agent",
+    "15s",
+    "I'm here to help you right away. Could you please let me know what you need assistance with?",
+    "LLM 0.256 s",
+    "TTS 364 ms",
+    "user",
+    "20s",
+    "I need a spare key for an AC unit.",
+    "ASR 43 ms",
+    "agent",
+    "24s",
+    "I'm sorry, but I can't assist with spare keys for AC units. I recommend contacting a local locksmith or the manufacturer for that. Let me know if you need help with anything else.",
+    "LLM 0.304 s",
+    "TTS 331 ms",
+    "user",
+    "35s",
+    "I'd like to speak to someone there to talk about ordering from the manufacturer.",
+    "ASR 23 ms",
+    "agent",
+    "41s",
+    "I'm sorry, but I can't assist with ordering from the manufacturer. I recommend reaching out directly to the manufacturer for your order inquiries. Let me know if you need help with anything else.",
+    "LLM 0.262 s",
+    "TTS 314 ms",
+    "user",
+    "55s",
+    "I'd like to speak to someone, please.",
+    "ASR 24 ms",
+    "agent",
+    "59s",
+    "I'm here to help you. Could you please let me know what you need assistance with?",
+    "LLM 0.289 s",
+    "TTS 700 ms",
+    "user",
+    "66s",
+    "I wanna speak to somebody.",
+    "ASR 25 ms",
+    "agent",
+    "69s",
+    "I'm here to help you. Could you please let me know what you need assistance with?",
+    "LLM 0.144 s",
+    "TTS 377 ms",
+    "user",
+    "74s",
+    "I wanna buy a new bike.",
+    "ASR 86 ms",
+    "agent",
+    "76s",
+    "...",
+    "LLM 0.443 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "76s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 3 ms",
+    "Show result payload",
+    "agent",
+    "77s",
+    "Great! Could you please let me know what type of bike you're interested in?",
+    "LLM 0.332 s",
+    "TTS 316 ms",
+    "user",
+    "82s",
+    "Uh, I'm not sure. I just wanna talk to someone about it.",
+    "ASR 76 ms",
+    "agent",
+    "85s",
+    "I'm here to help you with that. Could you please let me know what type of bike you're interested in?",
+    "LLM 0.281 s",
+    "TTS 443 ms",
+    "user",
+    "93s",
+    "Electric.",
+    "ASR 31 ms",
+    "agent",
+    "94s",
+    "Do you have a specific model or feature in mind for your electric bike?",
+    "LLM 0.26 s",
+    "TTS 332 ms",
+    "user",
+    "106s",
+    "No.",
+    "ASR 28 ms",
+    "agent",
+    "108s",
+    "I can help you explore our electric bike options. Could you please let me know your preferred budget or any specific features you're looking for?",
+    "LLM 0.251 s",
+    "TTS 356 ms",
+    "user",
+    "116s",
+    "I wanna speak to a real person.",
+    "ASR 96 ms",
+    "agent",
+    "119s",
+    "I'm here to help you with your electric bike inquiry. Could you please let me know your preferred budget or any specific...",
+    "LLM 0.271 s",
+    "TTS 430 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 1,
+      "tool_result_count": 1,
+      "tool_success_count": 1,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 8,
+      "turns_before_first_tool": 12,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 3.1,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_0001kqk1arptfxvs5jc9mn4pkp3z-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I need to speak to somebody.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_0001kqk1arptfxvs5jc9mn4pkp3z-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_0001kqk1arptfxvs5jc9mn4pkp3z-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

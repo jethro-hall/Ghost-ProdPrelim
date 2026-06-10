@@ -1,0 +1,777 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_5001krbxee28ez5awqyn71exwdh9",
+    "title": "11 Inch Tyres",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "11 Inch Tyres",
+    "duration_seconds": 24,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. ...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 432,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 7,
+      "text": "Just calling about 11\" tyres",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 8,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.496,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-441505d4429f41849011e529f99d164f",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 8,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-441505d4429f41849011e529f99d164f",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 5.340995267033577e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.003827495966106653,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_8201krbxeq6ffrtbn7hkh09q0ksd",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_8201krbxeq6ffrtbn7hkh09q0ksd",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00012699910439550877,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 9,
+      "text": "Just a moment, checking stock for 11 inch tyres.",
+      "asr_ms": null,
+      "llm_seconds": 0.858,
+      "workflow_route_seconds": null,
+      "tts_ms": 471,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 10,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.858,
+      "workflow_route_seconds": null,
+      "tts_ms": 471,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-3d376089903845ce9d31b0f3b59588e3",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "product_search",
+            "payload": {
+              "search": "11 inch tyres",
+              "category": "part"
+            },
+            "system__message_to_speak": "Just a moment, checking stock for 11 inch tyres."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-3d376089903845ce9d31b0f3b59588e3",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 1531,
+          "result": {
+            "success": true,
+            "message": "Found 4 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/8207719170325",
+                  "title": "ZERO 11X Electric Scooter",
+                  "handle": "zero-11x-electric-scooter",
+                  "status": "ACTIVE",
+                  "vendor": "Falcon PEV Pte Ltd",
+                  "product_type": "ZERO SCOOTERS",
+                  "tags": [
+                    "Zero 11X Parts"
+                  ],
+                  "storefront_path": "/products/zero-11x-electric-scooter",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/products/Zero11X-escooter-01.png?v=1682309873",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688671080725",
+                      "title": "ZERO 11X Electric Scooter - with Off-road Tyre",
+                      "sku": "ZERO-11X-72V35-OFF-ROAD",
+                      "barcode": "6695416835274",
+                      "price": {
+                        "amount": "5500.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740192854293",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "with Off-road Tyre"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688671113493",
+                      "title": "ZERO 11X Electric Scooter - With Road Tyre",
+                      "sku": "ZERO-11X-72V35-ROAD",
+                      "barcode": "7736154894310",
+                      "price": {
+                        "amount": "5500.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740192887061",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "With Road Tyre"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207721365781",
+                  "title": "ZERO 8X Electric Scooter",
+                  "handle": "zero-8x-electric-scooter",
+                  "status": "DRAFT",
+                  "vendor": "Falcon PEV Pte Ltd",
+                  "product_type": "ZERO SCOOTERS",
+                  "tags": [
+                    "Zero 8X Parts"
+                  ],
+                  "storefront_path": "/products/zero-8x-electric-scooter",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/products/Zero8X-escooter-01.png?v=1682312303",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44688672817429",
+                      "title": "ZERO 8X Electric Scooter - 18AH",
+                      "sku": "ZERO-8X-52V18",
+                      "barcode": "8790715777428",
+                      "price": {
+                        "amount": "2299.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740194590997",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "18AH"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688672850197",
+                      "title": "ZERO 8X Electric Scooter - 18AH LG",
+                      "sku": "ZERO-8X-52V18-LG",
+                      "barcode": "7745435386604",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740194623765",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "18AH LG"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688672882965",
+                      "title": "ZERO 8X Electric Scooter - 26AH LG",
+                      "sku": "ZERO-8X-52V26-LG",
+                      "barcode": "6735964772437",
+                      "price": {
+                        "amount": "2799.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740194656533",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Model - Zero Scooters",
+                          "value": "26AH LG"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8207732277525",
+                  "title": "ZERO TYRES 11 Inch Series",
+                  "handle": "zero-tyre-11-inch-series",
+                  "status": "ARCHIVED",
+                  "vendor": "Ride Electric",
+                  "product_type": "ZERO PARTS",
+                  "tags": [],
+                  "storefront_path": "/products/zero-tyre-11-inch-series",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/zero-11-inch-tyre-off-road-01.png?v=1684719900",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/45317402853653",
+                      "title": "ZERO TYRES 11 Inch Series - 11\"100x65-6.5 Off Road",
+                      "sku": "ZER-TYRE-11\"-100-OFF-ROAD",
+                      "barcode": "",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=47370167648533",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Zero Tyres",
+                          "value": "11\"100x65-6.5 Off Road"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688685302037",
+                      "title": "ZERO TYRES 11 Inch Series - 11\" 90 x 65 - 6.5\" Off-Road",
+                      "sku": "ZER-TYRE-11\"-OFF-ROAD",
+                      "barcode": "",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 34,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740207075605",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 34
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Zero Tyres",
+                          "value": "11\" 90 x 65 - 6.5\" Off-Road"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688685334805",
+                      "title": "ZERO TYRES 11 Inch Series - 11\" 90 x 65 Road",
+                      "sku": "ZER-TYRE-11\"-ROAD",
+                      "barcode": "",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 23,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740207108373",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 23
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Zero Tyres",
+                          "value": "11\" 90 x 65 Road"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/44688685367573",
+                      "title": "ZERO TYRES 11 Inch Series - 11\" 90 x 65 -6.5 Urban Off Road",
+                      "sku": "ZER-TYRE-11\"-URBAN -OFF-ROAD",
+                      "barcode": "",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -3,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46740207141141",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -3
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Zero Tyres",
+                          "value": "11\" 90 x 65 -6.5 Urban Off Road"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 4,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 34,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "11\" 90 x 65 - 6.5\" Off-Road",
+                        "variant_title": "ZERO TYRES 11 Inch Series - 11\" 90 x 65 - 6.5\" Off-Road",
+                        "sku": "ZER-TYRE-11\"-OFF-ROAD"
+                      },
+                      {
+                        "quantity": 23,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "11\" 90 x 65 Road",
+                        "variant_title": "ZERO TYRES 11 Inch Series - 11\" 90 x 65 Road",
+                        "sku": "ZER-TYRE-11\"-ROAD"
+                      }
+                    ],
+                    "summary": "34x store · 11\" 90 x 65 - 6.5\" Off-Road; 23x store · 11\" 90 x 65 Road"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8274270290197",
+                  "title": "VSETT 11+ Tyres",
+                  "handle": "vsett-11-tyre-including-inner-tube",
+                  "status": "ARCHIVED",
+                  "vendor": "Ride Electric",
+                  "product_type": "VSETT PARTS",
+                  "tags": [],
+                  "storefront_path": "/products/vsett-11-tyre-including-inner-tube",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/vsett-11-plus-tyre-and-tube-01.png?v=1685516462",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/44924016656661",
+                      "title": "VSETT 11+ Tyres - Default Title",
+                      "sku": "VS-11+-TYRE",
+                      "barcode": "",
+                      "price": {
+                        "amount": "54.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 46,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=46976660373781",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 46
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Title",
+                          "value": "Default Title"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 1,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 46,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Default Title",
+                        "variant_title": "VSETT 11+ Tyres - Default Title",
+                        "sku": "VS-11+-TYRE"
+                      }
+                    ],
+                    "summary": "46x store · Default Title"
+                  }
+                }
+              ],
+              "count": 4,
+              "query": "11 inch tyres",
+              "shopify_query": "11 inch tyres",
+              "search_term": "11 inch tyres",
+              "category": "part",
+              "category_filter_applied": false,
+              "category_heuristic_applied": true,
+              "category_heuristic_filtered_out": 1,
+              "category_filter_note": "Category filter was requested but no Shopify fragment is configured. Set SHOPIFY_SEARCH_FILTER_PART, SHOPIFY_SEARCH_FILTER_EBIKE, or SHOPIFY_SEARCH_FILTER_SCOOTER on shopify-mcp to match this store product types—or pass payload.category_query.",
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 13,
+      "text": "I found a few 11 inch tyres available. There's a 11 inch 90 x 65 - 6.5\" Off-Road tyre priced at fifty four dollars and ninety five cents, with thirty four in stock. There's also a 11...",
+      "asr_ms": null,
+      "llm_seconds": 0.255,
+      "workflow_route_seconds": null,
+      "tts_ms": 384,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. ...",
+    "TTS 432 ms",
+    "user",
+    "7s",
+    "Just calling about 11\" tyres",
+    "agent",
+    "8s",
+    "...",
+    "LLM 0.496 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "8s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "9s",
+    "Just a moment, checking stock for 11 inch tyres.",
+    "LLM 0.858 s",
+    "TTS 471 ms",
+    "agent",
+    "10s",
+    "...",
+    "LLM 0.858 s",
+    "TTS 471 ms",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "12s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 1531 ms",
+    "Show result payload",
+    "agent",
+    "13s",
+    "I found a few 11 inch tyres available. There's a 11 inch 90 x 65 - 6.5\" Off-Road tyre priced at fifty four dollars and ninety five cents, with thirty four in stock. There's also a 11...",
+    "LLM 0.255 s",
+    "TTS 384 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 0,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 1.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_5001krbxee28ez5awqyn71exwdh9-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Just calling about 11\" tyres",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_5001krbxee28ez5awqyn71exwdh9-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_5001krbxee28ez5awqyn71exwdh9-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

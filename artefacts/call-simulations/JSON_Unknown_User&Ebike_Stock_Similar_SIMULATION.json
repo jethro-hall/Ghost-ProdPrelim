@@ -1,0 +1,840 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_8501kqvbg9dsfwtsqb57m7rh58se",
+    "title": "E-bike Stock, Similar",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "E-bike Stock, Similar",
+    "duration_seconds": 37,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 6,
+      "text": "Hi matic, fatfish og 2 how many you got?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.51,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-2c403e075c444698af053217f020289e",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-2c403e075c444698af053217f020289e",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.5670196413993835e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.0034614689648151398,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_7801kqvbggtzf0c9dge41f9apc7p",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_7801kqvbggtzf0c9dge41f9apc7p",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.0001062098890542984,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "Checking stock for you.",
+      "asr_ms": null,
+      "llm_seconds": 1.217,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 10,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.217,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "SHOPIFY_product_search_c7475e90beff4934956b6e1d80f1fb89",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "system__message_to_speak": "Checking stock for you.",
+            "payload": {
+              "search": "fatfish og 2"
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "SHOPIFY_product_search_c7475e90beff4934956b6e1d80f1fb89",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2600,
+          "result": {
+            "success": true,
+            "message": "Found 5 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/8986348519701",
+                  "title": "Fatfish OG Fat Tyre E-Bike",
+                  "handle": "fatfish-fat-tyre-e-bike-48v-17ah-1",
+                  "status": "ACTIVE",
+                  "vendor": "AVOCADO EBIKE",
+                  "product_type": "FATFISH BIKES (OG)",
+                  "tags": [],
+                  "storefront_path": "/products/fatfish-fat-tyre-e-bike-48v-17ah-1",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Fatfish-step-over-frame-black-01.png?v=1738203364",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/47865273123093",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Army Green",
+                      "sku": "FATFISH-OG-ARMYGREEN",
+                      "barcode": "9567591058472",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49841978343701",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Army Green"
+                        }
+                      ],
+                      "colour": "Army Green"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/47865273155861",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Black",
+                      "sku": "FATFISH-OG-BLACK",
+                      "barcode": "1265977151455",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -7,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49841978376469",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -7
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48931593027861",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Holographic Grey",
+                      "sku": "FATFISH-OG-HOLO-GREY",
+                      "barcode": "4717460307315",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -2,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50916333158677",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -2
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Holographic Grey"
+                        }
+                      ],
+                      "colour": "Holographic Grey"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/47883966152981",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Smoke grey",
+                      "sku": "FATFISH-OG-SMOKEGREY",
+                      "barcode": "6941727226554",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49860799004949",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Smoke grey"
+                        }
+                      ],
+                      "colour": "Smoke grey"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48931592995093",
+                      "title": "Fatfish OG Fat Tyre E-Bike - White",
+                      "sku": "FATFISH-OG-WHITE",
+                      "barcode": "5181618558031",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50916333191445",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "White"
+                        }
+                      ],
+                      "colour": "White"
+                    }
+                  ],
+                  "variant_count": 5,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9168052125973",
+                  "title": "Fatfish OG Disc Rotor",
+                  "handle": "fatfish-disc-rotor",
+                  "status": "ACTIVE",
+                  "vendor": "Ride Electric Wholesale",
+                  "product_type": "FATFISH PARTS (OG)",
+                  "tags": [
+                    "Fatfish Parts"
+                  ],
+                  "storefront_path": "/products/fatfish-disc-rotor",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Fatfish-Disc-Rotor-00.png?v=1720592342",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/48403773915413",
+                      "title": "Fatfish OG Disc Rotor - Default Title",
+                      "sku": "FATFISH-DISC-ROTOR",
+                      "barcode": "7199363832847",
+                      "price": {
+                        "amount": "24.95",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 40,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50385541628181",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 40
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Title",
+                          "value": "Default Title"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 1,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 40,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Default Title",
+                        "variant_title": "Fatfish OG Disc Rotor - Default Title",
+                        "sku": "FATFISH-DISC-ROTOR"
+                      }
+                    ],
+                    "summary": "40x store · Default Title"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9168052158741",
+                  "title": "Fatfish OG Axle Bolt Front",
+                  "handle": "fatfish-axle-bolt-front",
+                  "status": "ACTIVE",
+                  "vendor": "AVOCADO EBIKE, Colin",
+                  "product_type": "FATFISH PARTS (OG)",
+                  "tags": [
+                    "Fatfish Parts"
+                  ],
+                  "storefront_path": "/products/fatfish-axle-bolt-front",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Fatfish-Axle-Bolt-Front-01_e3679413-4234-44c4-b4c7-2fcff4aa7c48.png?v=1752067299",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/48403773948181",
+                      "title": "Fatfish OG Axle Bolt Front - Default Title",
+                      "sku": "FF-AXLE-BOLT-FRONT",
+                      "barcode": "9978463934204",
+                      "price": {
+                        "amount": "22.50",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 3,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50385541660949",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 3
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Title",
+                          "value": "Default Title"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 1,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 3,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Default Title",
+                        "variant_title": "Fatfish OG Axle Bolt Front - Default Title",
+                        "sku": "FF-AXLE-BOLT-FRONT"
+                      }
+                    ],
+                    "summary": "3x store · Default Title"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9168052289813",
+                  "title": "Fatfish OG Controller",
+                  "handle": "fatfish-controller",
+                  "status": "ACTIVE",
+                  "vendor": "AVOCADO EBIKE",
+                  "product_type": "FATFISH PARTS (OG)",
+                  "tags": [
+                    "Fatfish Parts"
+                  ],
+                  "storefront_path": "/products/fatfish-controller",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/fatfishog19e-controller.png?v=1772063298",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/49047489347861",
+                      "title": "Fatfish OG Controller - LSW1729-21E",
+                      "sku": "FATFSH-CNTRLLR-21E",
+                      "barcode": "5659398888162",
+                      "price": {
+                        "amount": "175.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51032434901269",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Type",
+                          "value": "LSW1729-21E"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49047489315093",
+                      "title": "Fatfish OG Controller - LSW1729-19E",
+                      "sku": "FATFSH-CNTRLLR-19E",
+                      "barcode": "7908396690641",
+                      "price": {
+                        "amount": "175.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51032434868501",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Type",
+                          "value": "LSW1729-19E"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9168052322581",
+                  "title": "Fatfish OG Crank Set",
+                  "handle": "fatfish-crank-set",
+                  "status": "ACTIVE",
+                  "vendor": "Ride Electric Wholesale",
+                  "product_type": "FATFISH PARTS (OG)",
+                  "tags": [
+                    "Fatfish Parts"
+                  ],
+                  "storefront_path": "/products/fatfish-crank-set",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Fatfish-Crank-Set-00.png?v=1720592181",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/48403774112021",
+                      "title": "Fatfish OG Crank Set - Default Title",
+                      "sku": "FTFSH-CRANK-SET",
+                      "barcode": "2644173306279",
+                      "price": {
+                        "amount": "70.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": null,
+                      "available_for_sale": true,
+                      "inventory_quantity": 25,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50385541824789",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 25
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Title",
+                          "value": "Default Title"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 1,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 25,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Default Title",
+                        "variant_title": "Fatfish OG Crank Set - Default Title",
+                        "sku": "FTFSH-CRANK-SET"
+                      }
+                    ],
+                    "summary": "25x store · Default Title"
+                  }
+                }
+              ],
+              "count": 5,
+              "query": "fatfish og 2",
+              "shopify_query": "fatfish og 2",
+              "search_term": "fatfish og 2",
+              "category": "all",
+              "category_filter_applied": false,
+              "category_heuristic_applied": false,
+              "category_heuristic_filtered_out": 0,
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "The Fatfish OG Fat Tyre E-Bike is currently out of stock in all colours. We have a few parts available if you're looking for replacements or upgrades. Let me know how I can assist further.",
+      "asr_ms": null,
+      "llm_seconds": 0.65,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 22,
+      "text": "What similar bike do you have?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "I’ll check for similar e-bikes you might like.",
+      "asr_ms": null,
+      "llm_seconds": 0.396,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "6s",
+    "Hi matic, fatfish og 2 how many you got?",
+    "agent",
+    "7s",
+    "...",
+    "LLM 0.51 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "7s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "7s",
+    "Checking stock for you.",
+    "LLM 1.217 s",
+    "agent",
+    "10s",
+    "...",
+    "LLM 1.217 s",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "12s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 2600 ms",
+    "Show result payload",
+    "agent",
+    "12s",
+    "The Fatfish OG Fat Tyre E-Bike is currently out of stock in all colours. We have a few parts available if you're looking for replacements or upgrades. Let me know how I can assist further.",
+    "LLM 0.65 s",
+    "user",
+    "22s",
+    "What similar bike do you have?",
+    "agent",
+    "22s",
+    "I’ll check for similar e-bikes you might like.",
+    "LLM 0.396 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_8501kqvbg9dsfwtsqb57m7rh58se-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hi matic, fatfish og 2 how many you got?",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_8501kqvbg9dsfwtsqb57m7rh58se-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_8501kqvbg9dsfwtsqb57m7rh58se-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

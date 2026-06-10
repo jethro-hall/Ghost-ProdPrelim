@@ -1,0 +1,644 @@
+{
+  "run_id": "simrun_1779436780_36867ce0",
+  "trace_id": "9245c87adf52417fb8c7422e73776773",
+  "status": "failed",
+  "latency_ms": 8561.594,
+  "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+  "upstream_endpoint": "/v1/convai/agents/agent_3701kq9fcmz1errsmhesm3j47rsg/simulate-conversation",
+  "elevenlabs_request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "Uh, my name is Tyson Johnson. I'm calling about my bike, uh, oh, that's in this workshop.",
+          "time_in_call_secs": 10
+        },
+        {
+          "role": "agent",
+          "message": "Can I grab your mobile number so I can check that for you?",
+          "time_in_call_secs": 16
+        },
+        {
+          "role": "user",
+          "message": "0435 185 134.",
+          "time_in_call_secs": 21
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 25
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 25
+        },
+        {
+          "role": "agent",
+          "message": "Bear with me a moment while I check that in the workshop system.",
+          "time_in_call_secs": 26
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 27
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 29
+        },
+        {
+          "role": "agent",
+          "message": "I couldn’t confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+          "time_in_call_secs": 30
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 1
+  },
+  "started_at": "2026-05-22T07:59:40.409201+00:00",
+  "call_successful": "failure",
+  "transcript_summary": "The user, Tyson Johnson, contacted Ride Electric regarding a bike in the workshop. The agent requested and received the user's mobile number to locate the record. However, the agent was unable to find the bike's details and offered to transfer the user to the store for direct assistance, after which the call concluded.",
+  "call_summary_title": "Bike workshop status check",
+  "evaluation_criteria_results": {
+    "ghostdash_success_criteria": {
+      "criteria_id": "ghostdash_success_criteria",
+      "result": "failure",
+      "rationale": "The agent was concise and customer-safe, offering a transfer when unable to find the record. However, the caller's request to get an update on their bike was not completed as the user ended the call before the agent could transfer them to the store."
+    }
+  },
+  "turns": [
+    {
+      "role": "agent",
+      "message": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "Uh, my name is Tyson Johnson. I'm calling about my bike, uh, oh, that's in this workshop.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Can I grab your mobile number so I can check that for you?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "0435 185 134.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Bear with me a moment while I check that in the workshop system.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "I couldn’t confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "==! END_CALL!==",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Thanks for calling  Ride Electric, Tyson .  If you need  help with anything  else, just give  us a ring .  Have a great  day!",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.16961529199033976
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.15995160187594593
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.31573184486478567
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "new_turns": [
+    {
+      "role": "user",
+      "message": "==! END_CALL!==",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Thanks for calling  Ride Electric, Tyson .  If you need  help with anything  else, just give  us a ring .  Have a great  day!",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.16961529199033976
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.15995160187594593
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.31573184486478567
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "turn_count": 12,
+  "message": "Simulation step completed.",
+  "file_name": "JSON_Tyson_Johnson_context_Uh_my_name_is_Tyson_Johnson_Im_calling_about_my_bi&Workshop_bike_inquiry_SIMULATION.json",
+  "step_mode": "agent",
+  "stop_index": 9,
+  "partial_turn_count": 10,
+  "request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "Uh, my name is Tyson Johnson. I'm calling about my bike, uh, oh, that's in this workshop.",
+          "time_in_call_secs": 10
+        },
+        {
+          "role": "agent",
+          "message": "Can I grab your mobile number so I can check that for you?",
+          "time_in_call_secs": 16
+        },
+        {
+          "role": "user",
+          "message": "0435 185 134.",
+          "time_in_call_secs": 21
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 25
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 25
+        },
+        {
+          "role": "agent",
+          "message": "Bear with me a moment while I check that in the workshop system.",
+          "time_in_call_secs": 26
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 27
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 29
+        },
+        {
+          "role": "agent",
+          "message": "I couldn’t confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+          "time_in_call_secs": 30
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 1
+  },
+  "upstream": {
+    "simulated_conversation": [
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 0,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "Uh, my name is Tyson Johnson. I'm calling about my bike, uh, oh, that's in this workshop.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 1,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Can I grab your mobile number so I can check that for you?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 2,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "0435 185 134.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 3,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 4,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 5,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Bear with me a moment while I check that in the workshop system.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 6,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 7,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 8,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "I couldn’t confidently find that record. Would you like me to put you through to the store so they can check it directly?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 9,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "==! END_CALL!==",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 10,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": {
+          "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+          "branch_id": null,
+          "workflow_node_id": null,
+          "version_id": null
+        },
+        "message": "Thanks for calling  Ride Electric, Tyson .  If you need  help with anything  else, just give  us a ring .  Have a great  day!",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": {
+          "metrics": {
+            "convai_llm_service_ttf_sentence": {
+              "elapsed_time": 0.16961529199033976
+            },
+            "convai_llm_service_ttfb": {
+              "elapsed_time": 0.15995160187594593
+            },
+            "convai_llm_service_tt_last_sentence": {
+              "elapsed_time": 0.31573184486478567
+            }
+          },
+          "convai_asr_provider": null,
+          "convai_tts_model": null,
+          "convai_tts_cascade": null
+        },
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 11,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      }
+    ],
+    "analysis": {
+      "evaluation_criteria_results": {
+        "ghostdash_success_criteria": {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent was concise and customer-safe, offering a transfer when unable to find the record. However, the caller's request to get an update on their bike was not completed as the user ended the call before the agent could transfer them to the store."
+        }
+      },
+      "data_collection_results": {},
+      "evaluation_criteria_results_list": [
+        {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent was concise and customer-safe, offering a transfer when unable to find the record. However, the caller's request to get an update on their bike was not completed as the user ended the call before the agent could transfer them to the store."
+        }
+      ],
+      "data_collection_results_list": [],
+      "call_successful": "failure",
+      "transcript_summary": "The user, Tyson Johnson, contacted Ride Electric regarding a bike in the workshop. The agent requested and received the user's mobile number to locate the record. However, the agent was unable to find the bike's details and offered to transfer the user to the store for direct assistance, after which the call concluded.",
+      "call_summary_title": "Bike workshop status check",
+      "scoped": []
+    },
+    "guardrails_result": {
+      "triggered": false
+    }
+  }
+}

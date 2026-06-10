@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model: account_tax</title>
+<style>
+:root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151; --accent:#38bdf8; --bad:#fb7185; --ok:#34d399; --warn:#fbbf24; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+header { padding:20px 28px; background:#020617; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+header h1 { margin:0 0 6px 0; font-size:22px; } header .sub { color:var(--muted); font-size:13px; }
+main { padding:24px 28px 60px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.metric { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.metric .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.metric .value { font-size:26px; font-weight:700; margin-top:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } th, td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; } th { text-align:left; color:#cbd5e1; background:#020617; position:sticky; top:77px; }
+.bad { color:var(--bad); font-weight:700; } .ok { color:var(--ok); font-weight:700; } .warn { color:var(--warn); font-weight:700; }
+pre { white-space:pre-wrap; overflow:auto; background:#020617; padding:12px; border-radius:10px; border:1px solid var(--line); color:#d1d5db; font-size:12px; }
+details { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:10px 0; background:#111827; } summary { cursor:pointer; color:#e2e8f0; }
+input { width:100%; max-width:520px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:#020617; color:var(--text); margin: 8px 0 14px; }
+small, .muted { color:var(--muted); }
+.pill { display:inline-block; border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin:2px; background:#020617; color:#cbd5e1; font-size:12px; }
+</style>
+
+</head>
+<body>
+<header><h1>Model: account_tax</h1><div class="sub"><a href="../index.html">Index</a> · <a href="../source_files.html">Source files</a> · Generated 2026-06-09T06:12:02.521Z</div></header>
+<main>
+<div class="card"><a href="../index.html">← Back to index</a></div>
+<div class="grid">
+  <div class="metric"><div class="label">Rows</div><div class="value">16</div></div>
+  <div class="metric"><div class="label">Distinct Odoo IDs</div><div class="value">16</div></div>
+  <div class="metric"><div class="label">Raw PII-like hits</div><div class="value bad">1</div></div>
+  <div class="metric"><div class="label">Redaction tokens</div><div class="value">0</div></div>
+</div>
+<div class="card"><h2>Accounting totals</h2><table><tr><th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th><th>Date range</th></tr><tr><td>0.00</td><td>0.00</td><td>0.00</td><td>100000100.00</td><td> → </td></tr></table></div>
+<div class="card"><h2>Field profile</h2><p class="muted">Raw PII-like hits should generally be zero before this data goes to Claude. Redaction tokens are expected in sanitised data.</p><table><thead><tr><th>Field</th><th>Present</th><th>%</th><th>Types</th><th>Raw PII hits</th><th>Redaction hits</th><th>Sensitive name hits</th><th>Examples</th></tr></thead><tbody><tr>
+<td><code>amount</code></td><td>16</td><td>100.0%</td><td>number:16</td>
+<td class="bad">1</td><td>0</td><td>0</td>
+<td><span class="pill">10</span> <span class="pill">0</span> <span class="pill">100000000</span></td></tr>
+<tr>
+<td><code>active</code></td><td>16</td><td>100.0%</td><td>boolean:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">true</span> <span class="pill">false</span></td></tr>
+<tr>
+<td><code>amount_type</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">percent</span></td></tr>
+<tr>
+<td><code>company_id</code></td><td>16</td><td>100.0%</td><td>array:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[4,&quot;Ride Electric Brisbane&quot;]</span></td></tr>
+<tr>
+<td><code>company_id_id</code></td><td>16</td><td>100.0%</td><td>number:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">4</span></td></tr>
+<tr>
+<td><code>company_id_label</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">Ride Electric Brisbane</span></td></tr>
+<tr>
+<td><code>create_date</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-08-14 23:12:42</span></td></tr>
+<tr>
+<td><code>id</code></td><td>16</td><td>100.0%</td><td>number:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">61</span> <span class="pill">62</span> <span class="pill">63</span> <span class="pill">64</span> <span class="pill">67</span></td></tr>
+<tr>
+<td><code>name</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>16</td>
+<td><span class="pill">GST Exclusive Income</span> <span class="pill">GST Inclusive Income</span> <span class="pill">Zero (Export) Sale</span> <span class="pill">BAS Excluded Income</span> <span class="pill">GST Exclusive Expense</span></td></tr>
+<tr>
+<td><code>tax_group_id</code></td><td>16</td><td>100.0%</td><td>array:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">[43,&quot;GST 10%&quot;]</span> <span class="pill">[42,&quot;GST 0%&quot;]</span> <span class="pill">[44,&quot;GST 100%&quot;]</span></td></tr>
+<tr>
+<td><code>tax_group_id_id</code></td><td>16</td><td>100.0%</td><td>number:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">43</span> <span class="pill">42</span> <span class="pill">44</span></td></tr>
+<tr>
+<td><code>tax_group_id_label</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">GST 10%</span> <span class="pill">GST 0%</span> <span class="pill">GST 100%</span></td></tr>
+<tr>
+<td><code>type_tax_use</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">sale</span> <span class="pill">purchase</span></td></tr>
+<tr>
+<td><code>write_date</code></td><td>16</td><td>100.0%</td><td>string:16</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2026-04-21 05:48:28</span> <span class="pill">2026-04-21 05:48:19</span></td></tr></tbody></table></div>
+<div class="card"><h2>Sample records</h2><input id="q" placeholder="Filter visible sample records..." oninput="filterRecords()"><p class="muted">Showing up to 500 records for this model.</p><details class="record" data-search="{&quot;id&quot;:61,&quot;name&quot;:&quot;gst exclusive income&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;sale&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:28&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#61 | amount=10 | GST Exclusive Income <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 1</small></summary><pre>{
+  &quot;id&quot;: 61,
+  &quot;name&quot;: &quot;GST Exclusive Income&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:62,&quot;name&quot;:&quot;gst inclusive income&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;sale&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#62 | amount=10 | GST Inclusive Income <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 2</small></summary><pre>{
+  &quot;id&quot;: 62,
+  &quot;name&quot;: &quot;GST Inclusive Income&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:63,&quot;name&quot;:&quot;zero (export) sale&quot;,&quot;amount&quot;:0,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;sale&quot;,&quot;tax_group_id_id&quot;:42,&quot;tax_group_id&quot;:[42,&quot;gst 0%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 0%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#63 | amount=0 | Zero (Export) Sale <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 3</small></summary><pre>{
+  &quot;id&quot;: 63,
+  &quot;name&quot;: &quot;Zero (Export) Sale&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:64,&quot;name&quot;:&quot;bas excluded income&quot;,&quot;amount&quot;:0,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;sale&quot;,&quot;tax_group_id_id&quot;:42,&quot;tax_group_id&quot;:[42,&quot;gst 0%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 0%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#64 | amount=0 | BAS Excluded Income <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 4</small></summary><pre>{
+  &quot;id&quot;: 64,
+  &quot;name&quot;: &quot;BAS Excluded Income&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:67,&quot;name&quot;:&quot;gst exclusive expense&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:28&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#67 | amount=10 | GST Exclusive Expense <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 5</small></summary><pre>{
+  &quot;id&quot;: 67,
+  &quot;name&quot;: &quot;GST Exclusive Expense&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:68,&quot;name&quot;:&quot;gst free income&quot;,&quot;amount&quot;:0,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;sale&quot;,&quot;tax_group_id_id&quot;:42,&quot;tax_group_id&quot;:[42,&quot;gst 0%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 0%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#68 | amount=0 | GST Free Income <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 6</small></summary><pre>{
+  &quot;id&quot;: 68,
+  &quot;name&quot;: &quot;GST Free Income&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;sale&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:70,&quot;name&quot;:&quot;gst inclusive expense&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#70 | amount=10 | GST Inclusive Expense <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 7</small></summary><pre>{
+  &quot;id&quot;: 70,
+  &quot;name&quot;: &quot;GST Inclusive Expense&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:71,&quot;name&quot;:&quot;gst free expense&quot;,&quot;amount&quot;:0,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:42,&quot;tax_group_id&quot;:[42,&quot;gst 0%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 0%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#71 | amount=0 | GST Free Expense <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 8</small></summary><pre>{
+  &quot;id&quot;: 71,
+  &quot;name&quot;: &quot;GST Free Expense&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:73,&quot;name&quot;:&quot;capital purchase&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#73 | amount=10 | Capital Purchase <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 9</small></summary><pre>{
+  &quot;id&quot;: 73,
+  &quot;name&quot;: &quot;Capital Purchase&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:74,&quot;name&quot;:&quot;capital (10.0%)&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#74 | amount=10 | Capital (10.0%) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 10</small></summary><pre>{
+  &quot;id&quot;: 74,
+  &quot;name&quot;: &quot;Capital (10.0%)&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:77,&quot;name&quot;:&quot;bas excluded expense&quot;,&quot;amount&quot;:0,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:42,&quot;tax_group_id&quot;:[42,&quot;gst 0%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 0%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:true,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#77 | amount=0 | BAS Excluded Expense <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 11</small></summary><pre>{
+  &quot;id&quot;: 77,
+  &quot;name&quot;: &quot;BAS Excluded Expense&quot;,
+  &quot;amount&quot;: 0,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 42,
+  &quot;tax_group_id&quot;: [
+    42,
+    &quot;GST 0%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 0%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: true,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:82,&quot;name&quot;:&quot;purch for input sales&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#82 | amount=10 | Purch for Input Sales <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 12</small></summary><pre>{
+  &quot;id&quot;: 82,
+  &quot;name&quot;: &quot;Purch for Input Sales&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:83,&quot;name&quot;:&quot;purch for input sales&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.676z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#83 | amount=10 | Purch for Input Sales <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 13</small></summary><pre>{
+  &quot;id&quot;: 83,
+  &quot;name&quot;: &quot;Purch for Input Sales&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.676Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:86,&quot;name&quot;:&quot;purch private (10%)&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.677z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#86 | amount=10 | Purch Private (10%) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 14</small></summary><pre>{
+  &quot;id&quot;: 86,
+  &quot;name&quot;: &quot;Purch Private (10%)&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.677Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:89,&quot;name&quot;:&quot;gst only on imports&quot;,&quot;amount&quot;:100000000,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:44,&quot;tax_group_id&quot;:[44,&quot;gst 100%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 100%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.677z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#89 | amount=100000000 | GST Only on Imports <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 15</small></summary><pre>{
+  &quot;id&quot;: 89,
+  &quot;name&quot;: &quot;GST Only on Imports&quot;,
+  &quot;amount&quot;: 100000000,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 44,
+  &quot;tax_group_id&quot;: [
+    44,
+    &quot;GST 100%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 100%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.677Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:92,&quot;name&quot;:&quot;purch adj (10%)&quot;,&quot;amount&quot;:10,&quot;amount_type&quot;:&quot;percent&quot;,&quot;type_tax_use&quot;:&quot;purchase&quot;,&quot;tax_group_id_id&quot;:43,&quot;tax_group_id&quot;:[43,&quot;gst 10%&quot;],&quot;tax_group_id_label&quot;:&quot;gst 10%&quot;,&quot;company_id_id&quot;:4,&quot;company_id&quot;:[4,&quot;ride electric brisbane&quot;],&quot;company_id_label&quot;:&quot;ride electric brisbane&quot;,&quot;active&quot;:false,&quot;create_date&quot;:&quot;2022-08-14 23:12:42&quot;,&quot;write_date&quot;:&quot;2026-04-21 05:48:19&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;account_tax&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__accounting_core__account_tax__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.677z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#92 | amount=10 | Purch Adj (10%) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.sanitised.jsonl line 16</small></summary><pre>{
+  &quot;id&quot;: 92,
+  &quot;name&quot;: &quot;Purch Adj (10%)&quot;,
+  &quot;amount&quot;: 10,
+  &quot;amount_type&quot;: &quot;percent&quot;,
+  &quot;type_tax_use&quot;: &quot;purchase&quot;,
+  &quot;tax_group_id_id&quot;: 43,
+  &quot;tax_group_id&quot;: [
+    43,
+    &quot;GST 10%&quot;
+  ],
+  &quot;tax_group_id_label&quot;: &quot;GST 10%&quot;,
+  &quot;company_id_id&quot;: 4,
+  &quot;company_id&quot;: [
+    4,
+    &quot;Ride Electric Brisbane&quot;
+  ],
+  &quot;company_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;active&quot;: false,
+  &quot;create_date&quot;: &quot;2022-08-14 23:12:42&quot;,
+  &quot;write_date&quot;: &quot;2026-04-21 05:48:19&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;account_tax&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.677Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details></div>
+<script>
+function filterRecords(){ const q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.record').forEach(el=>{ el.style.display = el.dataset.search.includes(q) ? '' : 'none'; }); }
+</script></main>
+</body></html>

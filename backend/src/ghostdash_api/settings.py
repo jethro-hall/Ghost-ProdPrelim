@@ -73,6 +73,8 @@ class Settings(BaseSettings):
     app_odoo_agentic_enabled: bool = True
     app_odoo_agentic_max_iterations: int = 8
     app_voice_ingress_secret: str | None = None
+    elevenlabs_hubtiger_webhook_secret: str | None = None
+    elevenlabs_shopify_webhook_secret: str | None = None
     app_voice_first_token_target_ms: int = 1500
     app_voice_max_output_tokens: int = 160
     app_voice_stream_guard_holdback_chars: int = 32
@@ -83,13 +85,32 @@ class Settings(BaseSettings):
     deepgram_api_key: str | None = None
     deepgram_model: str = "nova-2"
     hubtiger_mcp_url: str | None = None
+    shopify_mcp_url: str | None = None
+    shopify_mcp_health_timeout_ms: int = 4000
+    shopify_mcp_timeout_ms: int = 15000
     hubtiger_proxy_url: str | None = None
+    hubtiger_mcp_health_timeout_ms: int = 4000
     hubtiger_tool_access: str = "read_only"
-    hubtiger_read_timeout_ms: int = 8000
+    hubtiger_booking_auto_execute: bool = False
+    hubtiger_read_timeout_ms: int = 6000
+    hubtiger_customer_lookup_timeout_ms: int = 20000
     hubtiger_mutation_timeout_ms: int = 12000
+    hubtiger_max_search_chars: int = 96
+    hubtiger_max_rows: int = 25
+    hubtiger_max_matches: int = 15
+    hubtiger_max_field_chars: int = 512
+    hubtiger_max_payload_chars: int = 12000
+    hubtiger_enable_local_simple_llm: bool = True
+    hubtiger_simple_llm_timeout_ms: int = 1800
+    hubtiger_simple_llm_max_tokens: int = 24
     elevenlabs_api_key: str | None = None
     elevenlabs_default_voice_id: str | None = None
     elevenlabs_allowed_voice_ids: str | None = None
+    elevenlabs_analysis_timeout_ms: int = 15000
+    elevenlabs_convai_agent_id: str | None = None
+    elevenlabs_test_timeout_ms: int = 120000
+    hubtiger_elevenlabs_tool_dir: str | None = None
+    app_operator_admin_key: str | None = None
 
     @property
     def db_path(self) -> Path:

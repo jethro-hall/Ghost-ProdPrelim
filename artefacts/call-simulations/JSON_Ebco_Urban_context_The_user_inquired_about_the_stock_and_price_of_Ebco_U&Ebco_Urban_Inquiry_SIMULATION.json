@@ -1,0 +1,645 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_7101kqhy1x9afj5aya552mpryv38",
+    "title": "Ebco Urban Inquiry",
+    "status": "done",
+    "user": "Ebco Urban (context: \"The user inquired about the stock and price of \"Ebco Urban\" e-bikes. The agent attempted to use a product search tool, but it failed due ...\")",
+    "brief_summary": "Ebco Urban Inquiry",
+    "duration_seconds": 30,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 0,
+      "text": "HI, I was wondering if you have any Ebco urbans in stock and what price?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 1,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.734,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-7edb4b4edbbd4e9ba2b3f24f94c281c0",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 1,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-7edb4b4edbbd4e9ba2b3f24f94c281c0",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 5,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 6.492994725704193e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.0045012300834059715,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_7201kqhy1ysffq09gq7ykc7rmnsg",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_7201kqhy1ysffq09gq7ykc7rmnsg",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00011483998969197273,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 1,
+      "text": "Checking stock",
+      "asr_ms": null,
+      "llm_seconds": 1.099,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.099,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-f33ccdec40074497bd62a43492e957c5",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "query": "Ebco Urban",
+                "brand": "Ebco",
+                "model": "Urban",
+                "category": "ebike",
+                "max_results": 5
+              }
+            },
+            "system__message_to_speak": "Checking stock"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-f33ccdec40074497bd62a43492e957c5",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 6.593018770217896e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.002693799789994955,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_1301kqhy201tfs1sj21jb483ebjd",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_1301kqhy201tfs1sj21jb483ebjd",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0007666298188269138,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 2,
+      "text": "Checking stock",
+      "asr_ms": null,
+      "llm_seconds": 2.456,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 2.456,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-a1d518c979c9479daed99014e196d8f2",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "query": "Ebco Urban",
+                "brand": "Ebco",
+                "model": "Urban",
+                "category": "ebike",
+                "max_results": 5
+              }
+            },
+            "system__message_to_speak": "Checking stock"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-a1d518c979c9479daed99014e196d8f2",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 6.660027429461479e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.0027728001587092876,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_1601kqhy22maf6j9e9eca7wecq5y",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_1601kqhy22maf6j9e9eca7wecq5y",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0006120302714407444,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "Checking stock",
+      "asr_ms": null,
+      "llm_seconds": 2.572,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 2.572,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-27ee3906d073428b844ff8bbf638c52c",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "query": "Ebco Urban",
+                "brand": "Ebco",
+                "model": "Urban",
+                "category": "ebike",
+                "max_results": 5
+              }
+            },
+            "system__message_to_speak": "Checking stock"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-27ee3906d073428b844ff8bbf638c52c",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 0.000109110027551651,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.0025823991745710373,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_9001kqhy25adfg499z798v90ejwc",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_9001kqhy25adfg499z798v90ejwc",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0005747191607952118,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 7,
+      "text": "I'll check the stock and price for the Ebco Urban for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.32,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "0s",
+    "HI, I was wondering if you have any Ebco urbans in stock and what price?",
+    "agent",
+    "1s",
+    "...",
+    "LLM 0.734 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "1s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 5 ms",
+    "Show result payload",
+    "agent",
+    "1s",
+    "Checking stock",
+    "LLM 1.099 s",
+    "agent",
+    "2s",
+    "...",
+    "LLM 1.099 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "2s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "2s",
+    "Checking stock",
+    "LLM 2.456 s",
+    "agent",
+    "5s",
+    "...",
+    "LLM 2.456 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "5s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "5s",
+    "Checking stock",
+    "LLM 2.572 s",
+    "agent",
+    "7s",
+    "...",
+    "LLM 2.572 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "7s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "7s",
+    "I'll check the stock and price for the Ebco Urban for you.",
+    "LLM 0.32 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 4,
+      "tool_result_count": 4,
+      "tool_success_count": 4,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 3
+        },
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_7101kqhy1x9afj5aya552mpryv38-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: HI, I was wondering if you have any Ebco urbans in stock and what price?",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_7101kqhy1x9afj5aya552mpryv38-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_7101kqhy1x9afj5aya552mpryv38-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

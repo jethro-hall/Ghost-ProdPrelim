@@ -1,0 +1,448 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4301kqhd7yczefevth5m2nw3k9vd",
+    "title": "EPCO Urban Price",
+    "status": "done",
+    "user": "after the price of a EPCO",
+    "brief_summary": "EPCO Urban Price",
+    "duration_seconds": 42,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 259,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 12,
+      "text": "Uh, I'm after the price of a EPCO.Um, Ultra, uh, it's Urban.",
+      "asr_ms": 113,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "Just a moment, I'll check that for you.",
+      "asr_ms": null,
+      "llm_seconds": 1.471,
+      "workflow_route_seconds": null,
+      "tts_ms": 324,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.471,
+      "workflow_route_seconds": null,
+      "tts_ms": 324,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-84961941cf9c4992b946b5a240a1c28b",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "search": "EPCO Ultra Urban",
+                "category": "ebike"
+              }
+            },
+            "system__message_to_speak": "Just a moment, I'll check that for you."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-84961941cf9c4992b946b5a240a1c28b",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 0.00010701990686357021,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.0026413199957460165,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_9901kqhd8hftfwk9see4ht9trcfc",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_9901kqhd8hftfwk9see4ht9trcfc",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0006062900647521019,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "Just a moment, I'll check that for you.",
+      "asr_ms": null,
+      "llm_seconds": 2.588,
+      "workflow_route_seconds": null,
+      "tts_ms": 337,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 2.588,
+      "workflow_route_seconds": null,
+      "tts_ms": 337,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-f59e33d020d748488e4798b0bf1fb380",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "search": "EPCO Urban",
+                "category": "ebike",
+                "first": 15
+              }
+            },
+            "system__message_to_speak": "Just a moment, I'll check that for you."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-f59e33d020d748488e4798b0bf1fb380",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 8.143996819853783e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.002030889969319105,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_6201kqhd8ms2frav5pka1edpaphh",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6201kqhd8ms2frav5pka1edpaphh",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.00045050005428493023,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 23,
+      "text": "I'm checking the details for the Ebco Urban model for you. Just a moment.",
+      "asr_ms": null,
+      "llm_seconds": 0.326,
+      "workflow_route_seconds": null,
+      "tts_ms": 300,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 32,
+      "text": "Sorry, I'm just checking.",
+      "asr_ms": 146,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 37,
+      "text": "No problem at all. I'm on it. Just a moment while I look up the details for the Ebco Urban...",
+      "asr_ms": null,
+      "llm_seconds": 0.476,
+      "workflow_route_seconds": null,
+      "tts_ms": 301,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 259 ms",
+    "user",
+    "12s",
+    "Uh, I'm after the price of a EPCO.Um, Ultra, uh, it's Urban.",
+    "ASR 113 ms",
+    "agent",
+    "18s",
+    "Just a moment, I'll check that for you.",
+    "LLM 1.471 s",
+    "TTS 324 ms",
+    "agent",
+    "19s",
+    "...",
+    "LLM 1.471 s",
+    "TTS 324 ms",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "19s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "22s",
+    "Just a moment, I'll check that for you.",
+    "LLM 2.588 s",
+    "TTS 337 ms",
+    "agent",
+    "22s",
+    "...",
+    "LLM 2.588 s",
+    "TTS 337 ms",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "22s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 3 ms",
+    "Show result payload",
+    "agent",
+    "23s",
+    "I'm checking the details for the Ebco Urban model for you. Just a moment.",
+    "LLM 0.326 s",
+    "TTS 300 ms",
+    "user",
+    "32s",
+    "Sorry, I'm just checking.",
+    "ASR 146 ms",
+    "agent",
+    "37s",
+    "No problem at all. I'm on it. Just a moment while I look up the details for the Ebco Urban...",
+    "LLM 0.476 s",
+    "TTS 301 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 2
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 3,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 5.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4301kqhd7yczefevth5m2nw3k9vd-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Uh, I'm after the price of a EPCO.Um, Ultra, uh, it's Urban.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4301kqhd7yczefevth5m2nw3k9vd-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4301kqhd7yczefevth5m2nw3k9vd-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

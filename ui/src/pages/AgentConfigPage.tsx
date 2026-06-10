@@ -2201,9 +2201,8 @@ export default function AgentConfigPage() {
                     {[
                       "hubtiger_booking_availability",
                       "hubtiger_booking_create",
-                      "hubtiger_job_search",
-                      "hubtiger_job_get",
-                      "hubtiger_quote_preview_price",
+                      "hubtiger_job_lookup",
+                      "hubtiger_quote_preview",
                       "hubtiger_quote_add_line_item",
                     ].map((toolId) => (
                       <div key={toolId} className="contents">

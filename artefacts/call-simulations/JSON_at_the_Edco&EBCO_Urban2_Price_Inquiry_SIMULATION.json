@@ -1,0 +1,326 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_6201kqh8x48nemys7nznw7ekjv35",
+    "title": "EBCO Urban2 Price Inquiry",
+    "status": "done",
+    "user": "at the Edco",
+    "brief_summary": "EBCO Urban2 Price Inquiry",
+    "duration_seconds": 80,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 259,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 4,
+      "text": "I'm at the Edco 2, uh, Urban.",
+      "asr_ms": 156,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 9,
+      "text": "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+      "asr_ms": null,
+      "llm_seconds": 0.372,
+      "workflow_route_seconds": null,
+      "tts_ms": 314,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 16,
+      "text": "No, um, Mike, I'm, I'm, I'm calling about a product. I'm calling about the Urban 2 bike.",
+      "asr_ms": 183,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 25,
+      "text": "I can help with that. Let me check the details for the Urban2 bike for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.308,
+      "workflow_route_seconds": null,
+      "tts_ms": 374,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 37,
+      "text": "...",
+      "asr_ms": 183,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 39,
+      "text": "I'm here. Could you please confirm if you'd like information about the Urban2 bike, such as features, price, or availability?",
+      "asr_ms": null,
+      "llm_seconds": 0.36,
+      "workflow_route_seconds": null,
+      "tts_ms": 425,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 47,
+      "text": "Also know the price, please.",
+      "asr_ms": 145,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 49,
+      "text": "I'm checking the price and details for the Urban2 bike for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.254,
+      "workflow_route_seconds": null,
+      "tts_ms": 307,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 58,
+      "text": "It's the EBCO, EBCO Urban2.",
+      "asr_ms": 200,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 63,
+      "text": "I'm looking up the EBCO Urban2 bike details and price for you now.",
+      "asr_ms": null,
+      "llm_seconds": 0.618,
+      "workflow_route_seconds": null,
+      "tts_ms": 348,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 74,
+      "text": "...",
+      "asr_ms": 183,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 76,
+      "text": "I'm still here, just gathering the information about the EBCO Urban2 bike for...",
+      "asr_ms": null,
+      "llm_seconds": 0.268,
+      "workflow_route_seconds": null,
+      "tts_ms": 389,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with...",
+    "TTS 259 ms",
+    "user",
+    "4s",
+    "I'm at the Edco 2, uh, Urban.",
+    "ASR 156 ms",
+    "agent",
+    "9s",
+    "I found a few jobs under Jeff Hall. Is this for the Fatfish Biggie, or the VSETT Apex ten plus?",
+    "LLM 0.372 s",
+    "TTS 314 ms",
+    "user",
+    "16s",
+    "No, um, Mike, I'm, I'm, I'm calling about a product. I'm calling about the Urban 2 bike.",
+    "ASR 183 ms",
+    "agent",
+    "25s",
+    "I can help with that. Let me check the details for the Urban2 bike for you.",
+    "LLM 0.308 s",
+    "TTS 374 ms",
+    "user",
+    "37s",
+    "...",
+    "ASR 183 ms",
+    "agent",
+    "39s",
+    "I'm here. Could you please confirm if you'd like information about the Urban2 bike, such as features, price, or availability?",
+    "LLM 0.36 s",
+    "TTS 425 ms",
+    "user",
+    "47s",
+    "Also know the price, please.",
+    "ASR 145 ms",
+    "agent",
+    "49s",
+    "I'm checking the price and details for the Urban2 bike for you.",
+    "LLM 0.254 s",
+    "TTS 307 ms",
+    "user",
+    "58s",
+    "It's the EBCO, EBCO Urban2.",
+    "ASR 200 ms",
+    "agent",
+    "63s",
+    "I'm looking up the EBCO Urban2 bike details and price for you now.",
+    "LLM 0.618 s",
+    "TTS 348 ms",
+    "user",
+    "74s",
+    "...",
+    "ASR 183 ms",
+    "agent",
+    "76s",
+    "I'm still here, just gathering the information about the EBCO Urban2 bike for...",
+    "LLM 0.268 s",
+    "TTS 389 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 13,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.17,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_6201kqh8x48nemys7nznw7ekjv35-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I'm at the Edco 2, uh, Urban.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_6201kqh8x48nemys7nznw7ekjv35-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_6201kqh8x48nemys7nznw7ekjv35-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

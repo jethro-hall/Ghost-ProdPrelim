@@ -1,0 +1,103 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_cancel",
+  "description": "Cancel/close an existing booking after strict customer verification (name, mobile, booking/job ID).",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute booking_amend with cancellation update payload",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "booking_amend",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Cancellation payload. Confirm full name + mobile + booking/job ID before calling.",
+          "properties": [
+            {
+              "id": "ID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Service/booking ID to cancel.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "StatusID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Status code used by your workshop for cancelled/closed bookings.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "StatusDescription",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Cancellation status label, e.g. Cancelled by customer.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "Client_Notes",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Optional customer-facing cancellation note.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

@@ -1,0 +1,264 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4301kqgznd4ffhh9cy9zy80ejad4",
+    "title": "EBCO Urban TT Inquiry",
+    "status": "done",
+    "user": "just calling about",
+    "brief_summary": "EBCO Urban TT Inquiry",
+    "duration_seconds": 68,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 304,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 4,
+      "text": "Hey, Mike. I'm just calling about, um, EBCO bikes.",
+      "asr_ms": 36,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 8,
+      "text": "I can help with that. Are you interested in buying an EBCO bike, or do you have a question about a repair or service?",
+      "asr_ms": null,
+      "llm_seconds": 0.268,
+      "workflow_route_seconds": null,
+      "tts_ms": 321,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 15,
+      "text": "Um, I'm interested in an EBCO, uh, Urban, is it?TT.",
+      "asr_ms": 73,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "I can help you with information about the EBCO Urban TT. Would you like to know about its features, pricing, or availability?",
+      "asr_ms": null,
+      "llm_seconds": 0.209,
+      "workflow_route_seconds": null,
+      "tts_ms": 341,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 32,
+      "text": "Um, its features.",
+      "asr_ms": 123,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 34,
+      "text": "I can help with that. The EBCO Urban TT is designed for city commuting with a lightweight frame, efficient motor, and long-lasting battery. It has a top speed of25 km/h and a range of up to80 km on a single charge. It also includes integrated lights, a digital display, and a comfortable saddle. Would you like more details on any specific feature...",
+      "asr_ms": null,
+      "llm_seconds": 0.186,
+      "workflow_route_seconds": null,
+      "tts_ms": 314,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 55,
+      "text": "Yeah, Mike, that's great. What's the price for what electric is it for?",
+      "asr_ms": 80,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 59,
+      "text": "I can help with that. The EBCO Urban TT is priced at three thousand nine hundred dollars. Would you like to know about financing options or availability at a store near you...",
+      "asr_ms": null,
+      "llm_seconds": 0.173,
+      "workflow_route_seconds": null,
+      "tts_ms": 303,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop...",
+    "TTS 304 ms",
+    "user",
+    "4s",
+    "Hey, Mike. I'm just calling about, um, EBCO bikes.",
+    "ASR 36 ms",
+    "agent",
+    "8s",
+    "I can help with that. Are you interested in buying an EBCO bike, or do you have a question about a repair or service?",
+    "LLM 0.268 s",
+    "TTS 321 ms",
+    "user",
+    "15s",
+    "Um, I'm interested in an EBCO, uh, Urban, is it?TT.",
+    "ASR 73 ms",
+    "agent",
+    "22s",
+    "I can help you with information about the EBCO Urban TT. Would you like to know about its features, pricing, or availability?",
+    "LLM 0.209 s",
+    "TTS 341 ms",
+    "user",
+    "32s",
+    "Um, its features.",
+    "ASR 123 ms",
+    "agent",
+    "34s",
+    "I can help with that. The EBCO Urban TT is designed for city commuting with a lightweight frame, efficient motor, and long-lasting battery. It has a top speed of25 km/h and a range of up to80 km on a single charge. It also includes integrated lights, a digital display, and a comfortable saddle. Would you like more details on any specific feature...",
+    "LLM 0.186 s",
+    "TTS 314 ms",
+    "user",
+    "55s",
+    "Yeah, Mike, that's great. What's the price for what electric is it for?",
+    "ASR 80 ms",
+    "agent",
+    "59s",
+    "I can help with that. The EBCO Urban TT is priced at three thousand nine hundred dollars. Would you like to know about financing options or availability at a store near you...",
+    "LLM 0.173 s",
+    "TTS 303 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 9,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.25,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4301kqgznd4ffhh9cy9zy80ejad4-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hey, Mike. I'm just calling about, um, EBCO bikes.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4301kqgznd4ffhh9cy9zy80ejad4-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4301kqgznd4ffhh9cy9zy80ejad4-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

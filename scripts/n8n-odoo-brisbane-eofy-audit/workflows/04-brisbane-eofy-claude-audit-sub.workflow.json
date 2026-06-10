@@ -1,0 +1,98 @@
+{
+  "name": "04_SUB_CLAUDE_AUDIT",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a04trigger-claude",
+      "name": "When Executed by Core",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-480, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst input = { ...$input.first().json };\n\nconst inputPath = '/tmp/odoo_04_claude_input.json';\nfs.writeFileSync(inputPath, JSON.stringify(input), 'utf8');\n\nreturn [{\n  json: {\n    ok: true,\n    input_path: inputPath,\n    snapshot_id: input.snapshot_id,\n    message: 'Input JSON written for Claude audit prepare',\n  },\n}];\n"
+      },
+      "id": "a04write-input-json",
+      "name": "Write Claude input JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-256, 256]
+    },
+    {
+      "parameters": {
+        "command": "node /home/node/.n8n/scripts/04_claude_prepare.js"
+      },
+      "id": "a04run-prepare",
+      "name": "Run Claude Prepare",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-32, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.exitCode !== undefined && Number(item.exitCode) !== 0) {\n  throw new Error(\n    `Claude prepare failed (exit ${item.exitCode}). stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst stdout = String(item.stdout || '').trim();\nif (!stdout) {\n  throw new Error(\n    `Claude prepare returned empty stdout. stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst lastLine = stdout.split(/\\r?\\n/).filter(Boolean).pop();\n\ntry {\n  return [{ json: JSON.parse(lastLine) }];\n} catch (e) {\n  throw new Error(\n    `Could not parse Claude prepare stdout as JSON: ${e.message}. stdout starts: ${stdout.slice(0, 500)}`,\n  );\n}\n"
+      },
+      "id": "a04parse-prepare",
+      "name": "Parse Claude Prepare Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [192, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\n\nconst prep = $input.first().json;\nconst inputPath = '/tmp/odoo_04_claude_call_input.json';\n\nfs.writeFileSync(inputPath, JSON.stringify(prep), 'utf8');\n\nreturn [{\n  json: {\n    ok: true,\n    input_path: inputPath,\n    snapshot_id: prep.snapshot_id,\n    claude_model: prep.claude_model,\n  },\n}];\n"
+      },
+      "id": "a04write-call-input",
+      "name": "Write Claude call input JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [416, 256]
+    },
+    {
+      "parameters": {
+        "command": "node /home/node/.n8n/scripts/04_claude_call_api.js"
+      },
+      "id": "a04run-call-api",
+      "name": "Run Claude API Call",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [640, 256]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.exitCode !== undefined && Number(item.exitCode) !== 0) {\n  throw new Error(\n    `Claude API call failed (exit ${item.exitCode}). stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst stdout = String(item.stdout || '').trim();\nif (!stdout) {\n  throw new Error(\n    `Claude API call returned empty stdout. stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst lastLine = stdout.split(/\\r?\\n/).filter(Boolean).pop();\n\ntry {\n  return [{ json: JSON.parse(lastLine) }];\n} catch (e) {\n  throw new Error(\n    `Could not parse Claude API stdout as JSON: ${e.message}. stdout starts: ${stdout.slice(0, 500)}`,\n  );\n}\n"
+      },
+      "id": "a04parse-call",
+      "name": "Parse Claude API Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [864, 256]
+    }
+  ],
+  "connections": {
+    "When Executed by Core": {
+      "main": [[{ "node": "Write Claude input JSON", "type": "main", "index": 0 }]]
+    },
+    "Write Claude input JSON": {
+      "main": [[{ "node": "Run Claude Prepare", "type": "main", "index": 0 }]]
+    },
+    "Run Claude Prepare": {
+      "main": [[{ "node": "Parse Claude Prepare Result", "type": "main", "index": 0 }]]
+    },
+    "Parse Claude Prepare Result": {
+      "main": [[{ "node": "Write Claude call input JSON", "type": "main", "index": 0 }]]
+    },
+    "Write Claude call input JSON": {
+      "main": [[{ "node": "Run Claude API Call", "type": "main", "index": 0 }]]
+    },
+    "Run Claude API Call": {
+      "main": [[{ "node": "Parse Claude API Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

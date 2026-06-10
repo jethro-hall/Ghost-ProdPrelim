@@ -1,0 +1,415 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5",
+    "title": "Service Availability Check",
+    "status": "done",
+    "user": "going",
+    "brief_summary": "Service Availability Check",
+    "duration_seconds": 77,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 1,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 413,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 13,
+      "text": "Just want to check, uh, for service availability.",
+      "asr_ms": 195,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "[Patient] I can help you check service availability. Could you please confirm if you're looking to book a new service appointment for your bike or scooter?",
+      "asr_ms": null,
+      "llm_seconds": 0.199,
+      "workflow_route_seconds": null,
+      "tts_ms": 422,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 24,
+      "text": "For bike.",
+      "asr_ms": 94,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 26,
+      "text": "[Enthusiastically] Great, I’ll check availability for your bike service. Could you please share your preferred date or time range?",
+      "asr_ms": null,
+      "llm_seconds": 0.173,
+      "workflow_route_seconds": null,
+      "tts_ms": 475,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 35,
+      "text": "Uh, as soon as available.",
+      "asr_ms": 110,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 38,
+      "text": "[Enthusiastically] I’ll check for the...",
+      "asr_ms": null,
+      "llm_seconds": 0.104,
+      "workflow_route_seconds": null,
+      "tts_ms": 452,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 39,
+      "text": "For the past year.",
+      "asr_ms": 86,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 42,
+      "text": "[Patient] I...",
+      "asr_ms": null,
+      "llm_seconds": 0.076,
+      "workflow_route_seconds": null,
+      "tts_ms": 406,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 40,
+      "text": "I don't know if I've bought it. I think I have only one.So you didn't want any? I did. I said, \"Yeah.\" No, you said no. I said it's exactly, yeah. Okay.",
+      "asr_ms": 140,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 52,
+      "text": "[Patient] I'm here to help with your bike service availability. Could you please confirm if you'd like to book a service appointment for your bike?",
+      "asr_ms": null,
+      "llm_seconds": 0.079,
+      "workflow_route_seconds": null,
+      "tts_ms": 500,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 60,
+      "text": "I do, obviously, but I just want to park quickly. Oh, I don't have anything. Okay.",
+      "asr_ms": 54,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 65,
+      "text": "[Patient] I...",
+      "asr_ms": null,
+      "llm_seconds": 0.08,
+      "workflow_route_seconds": null,
+      "tts_ms": 436,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 64,
+      "text": "Sure, I can show you the bike.you want me to go. I'll go.",
+      "asr_ms": 127,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 70,
+      "text": "[Patient] I'm here to help you...",
+      "asr_ms": null,
+      "llm_seconds": 0.079,
+      "workflow_route_seconds": null,
+      "tts_ms": 447,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 71,
+      "text": "Fuck off, I'm going. Fuck off, I'm gonna go.",
+      "asr_ms": 187,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 75,
+      "text": "[Patient] I understand you're in a hurry...",
+      "asr_ms": null,
+      "llm_seconds": 0.253,
+      "workflow_route_seconds": null,
+      "tts_ms": 362,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "1s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 413 ms",
+    "user",
+    "13s",
+    "Just want to check, uh, for service availability.",
+    "ASR 195 ms",
+    "agent",
+    "16s",
+    "[Patient] I can help you check service availability. Could you please confirm if you're looking to book a new service appointment for your bike or scooter?",
+    "LLM 0.199 s",
+    "TTS 422 ms",
+    "user",
+    "24s",
+    "For bike.",
+    "ASR 94 ms",
+    "agent",
+    "26s",
+    "[Enthusiastically] Great, I’ll check availability for your bike service. Could you please share your preferred date or time range?",
+    "LLM 0.173 s",
+    "TTS 475 ms",
+    "user",
+    "35s",
+    "Uh, as soon as available.",
+    "ASR 110 ms",
+    "agent",
+    "38s",
+    "[Enthusiastically] I’ll check for the...",
+    "LLM 0.104 s",
+    "TTS 452 ms",
+    "user",
+    "39s",
+    "For the past year.",
+    "ASR 86 ms",
+    "agent",
+    "42s",
+    "[Patient] I...",
+    "LLM 0.076 s",
+    "TTS 406 ms",
+    "user",
+    "40s",
+    "I don't know if I've bought it. I think I have only one.So you didn't want any? I did. I said, \"Yeah.\" No, you said no. I said it's exactly, yeah. Okay.",
+    "ASR 140 ms",
+    "agent",
+    "52s",
+    "[Patient] I'm here to help with your bike service availability. Could you please confirm if you'd like to book a service appointment for your bike?",
+    "LLM 0.079 s",
+    "TTS 500 ms",
+    "user",
+    "60s",
+    "I do, obviously, but I just want to park quickly. Oh, I don't have anything. Okay.",
+    "ASR 54 ms",
+    "agent",
+    "65s",
+    "[Patient] I...",
+    "LLM 0.08 s",
+    "TTS 436 ms",
+    "user",
+    "64s",
+    "Sure, I can show you the bike.you want me to go. I'll go.",
+    "ASR 127 ms",
+    "agent",
+    "70s",
+    "[Patient] I'm here to help you...",
+    "LLM 0.079 s",
+    "TTS 447 ms",
+    "user",
+    "71s",
+    "Fuck off, I'm going. Fuck off, I'm gonna go.",
+    "ASR 187 ms",
+    "agent",
+    "75s",
+    "[Patient] I understand you're in a hurry...",
+    "LLM 0.253 s",
+    "TTS 362 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 4,
+      "turns_before_first_tool": 17,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 2.88,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Just want to check, uh, for service availability.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_7901krzpd2jsfvbv0h3hyrmhe2p5-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

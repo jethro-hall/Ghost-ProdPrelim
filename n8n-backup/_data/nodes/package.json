@@ -1,0 +1,7 @@
+{
+  "name": "installed-nodes",
+  "private": true,
+  "dependencies": {
+    "n8n-nodes-chat-data": "1.2.1"
+  }
+}

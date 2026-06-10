@@ -1,0 +1,336 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w",
+    "title": "Service Booking Visa11+ Super",
+    "status": "done",
+    "user": "just looking at booking in my",
+    "brief_summary": "Service Booking Visa11+ Super",
+    "duration_seconds": 63,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings,...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 351,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 6,
+      "text": "Hey, Mike, Mike, I'm just looking at booking in my, um, Visa 11+ Super, please.",
+      "asr_ms": 86,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "[Enthusiastically] I can help you with that. Are you looking to book a service or repair for your Visa11+ Super...",
+      "asr_ms": null,
+      "llm_seconds": 0.252,
+      "workflow_route_seconds": null,
+      "tts_ms": 427,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 16,
+      "text": "Yeah, services.",
+      "asr_ms": 70,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 19,
+      "text": "[Enthusiastically] Great, I'll get you set up with a service booking for your Visa11+ Super. Do you have a preferred date or time?",
+      "asr_ms": null,
+      "llm_seconds": 0.371,
+      "workflow_route_seconds": null,
+      "tts_ms": 375,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 27,
+      "text": "No, what's the availability like next week?",
+      "asr_ms": 25,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "[Patient] Let me check the availability for your Visa11+ Super next week. One moment please.",
+      "asr_ms": null,
+      "llm_seconds": 0.205,
+      "workflow_route_seconds": null,
+      "tts_ms": 347,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 43,
+      "text": "...",
+      "asr_ms": 57,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 45,
+      "text": "I'm checking the availability for your Visa11+ Super next week. Just a moment while I look that up for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.19,
+      "workflow_route_seconds": null,
+      "tts_ms": 398,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 58,
+      "text": "...",
+      "asr_ms": 57,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 59,
+      "text": "I'm...",
+      "asr_ms": null,
+      "llm_seconds": 0.236,
+      "workflow_route_seconds": null,
+      "tts_ms": 400,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 59,
+      "text": "Did you know we could not implement a change in the",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings,...",
+    "TTS 351 ms",
+    "user",
+    "6s",
+    "Hey, Mike, Mike, I'm just looking at booking in my, um, Visa 11+ Super, please.",
+    "ASR 86 ms",
+    "agent",
+    "12s",
+    "[Enthusiastically] I can help you with that. Are you looking to book a service or repair for your Visa11+ Super...",
+    "LLM 0.252 s",
+    "TTS 427 ms",
+    "user",
+    "16s",
+    "Yeah, services.",
+    "ASR 70 ms",
+    "agent",
+    "19s",
+    "[Enthusiastically] Great, I'll get you set up with a service booking for your Visa11+ Super. Do you have a preferred date or time?",
+    "LLM 0.371 s",
+    "TTS 375 ms",
+    "user",
+    "27s",
+    "No, what's the availability like next week?",
+    "ASR 25 ms",
+    "agent",
+    "31s",
+    "[Patient] Let me check the availability for your Visa11+ Super next week. One moment please.",
+    "LLM 0.205 s",
+    "TTS 347 ms",
+    "user",
+    "43s",
+    "...",
+    "ASR 57 ms",
+    "agent",
+    "45s",
+    "I'm checking the availability for your Visa11+ Super next week. Just a moment while I look that up for you.",
+    "LLM 0.19 s",
+    "TTS 398 ms",
+    "user",
+    "58s",
+    "...",
+    "ASR 57 ms",
+    "agent",
+    "59s",
+    "I'm...",
+    "LLM 0.236 s",
+    "TTS 400 ms",
+    "user",
+    "59s",
+    "Did you know we could not implement a change in the"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 12,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 2.67,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hey, Mike, Mike, I'm just looking at booking in my, um, Visa 11+ Super, please.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_0701kqjqrq6rf15r0jecbcjmpe9w-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

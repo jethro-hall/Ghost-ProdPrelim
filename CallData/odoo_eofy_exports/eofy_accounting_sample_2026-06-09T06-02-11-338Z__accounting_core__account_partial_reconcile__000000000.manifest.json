@@ -1,0 +1,22 @@
+{
+  "status": "written",
+  "snapshot_id": "eofy_accounting_sample_2026-06-09T06-02-11-338Z",
+  "model": "account.partial.reconcile",
+  "group": "accounting_core",
+  "offset": 0,
+  "limit": 500,
+  "exported_rows": 500,
+  "first_id": 45,
+  "last_id": 804,
+  "output_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-02-11-338Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+  "manifest_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-02-11-338Z__accounting_core__account_partial_reconcile__000000000.manifest.json",
+  "exported_at": "2026-06-09T06:10:16.607Z",
+  "source_company_context": [
+    4
+  ],
+  "sanitisation": {
+    "partner_names_hashed": false,
+    "bank_details_redacted": true,
+    "descriptions_compacted": true
+  }
+}

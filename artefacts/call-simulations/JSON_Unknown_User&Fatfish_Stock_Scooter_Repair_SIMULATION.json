@@ -1,0 +1,887 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_0101kqvbhd9ffg2tg7q68raeweaj",
+    "title": "Fatfish Stock, Scooter Repair",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Fatfish Stock, Scooter Repair",
+    "duration_seconds": 90,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 4,
+      "text": "Fatfish models ?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.347,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-07e8acae6b4e4e3e9a7ca329e592d1de",
+          "tool_name": "notify_condition_2_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-07e8acae6b4e4e3e9a7ca329e592d1de",
+          "tool_name": "notify_condition_2_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 4,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.6600005589425564e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhekv6nfzxv6hfd9h5awe9h",
+                "target_node_id": "node_01kqhejkddfzxv6hekz74k295w"
+              },
+              {
+                "step_latency_secs": 0.0036185889621265233,
+                "type": "nested_tools",
+                "node_id": "node_01kqhejkddfzxv6hekz74k295w",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_2601kqvbhjh3fvds26g3a0jyh3wb",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhejkddfzxv6hekz74k295w\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_2601kqvbhjh3fvds26g3a0jyh3wb",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhejkddfzxv6hekz74k295w\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010673998622223735,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhejkddfzxv6hekz74k295w",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 5,
+      "text": "I can help you find details on Fatfish e-bikes. Could you let me know which specific model you're interested in?",
+      "asr_ms": null,
+      "llm_seconds": 0.425,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 14,
+      "text": "any just wondering if you have much stokc?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "I'll check the current stock for Fatfish e-bikes for you. One moment please.",
+      "asr_ms": null,
+      "llm_seconds": 0.565,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 28,
+      "text": "also can you checkon my scooter repair in the workshop please?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "Checking stock now",
+      "asr_ms": null,
+      "llm_seconds": 1.24,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 30,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.24,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-f6fe8733d69b497d90ccde9e9b9b837b",
+          "tool_name": "SHOPIFY_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "product_search",
+            "payload": {
+              "search": "Fatfish",
+              "category": "ebike"
+            },
+            "system__message_to_speak": "Checking stock now"
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 33,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-f6fe8733d69b497d90ccde9e9b9b837b",
+          "tool_name": "SHOPIFY_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2568,
+          "result": {
+            "success": true,
+            "message": "Found 2 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/8950174613781",
+                  "title": "Fatfish Fat Tyre E-Bike 48V 17Ah (TO BE ARCHIVED)",
+                  "handle": "fatfish-fat-tyre-e-bike-48v-17ah",
+                  "status": "ARCHIVED",
+                  "vendor": "Ride Electric",
+                  "product_type": "OTHER BRAND BIKES",
+                  "tags": [],
+                  "storefront_path": "/products/fatfish-fat-tyre-e-bike-48v-17ah",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/fatfish-fat-tyre-ebike-01.png?v=1701150731",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/47723030577429",
+                      "title": "Fatfish Fat Tyre E-Bike 48V 17Ah (TO BE ARCHIVED) - Army Green",
+                      "sku": "FATFISH -ARMYGREEN",
+                      "barcode": "",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49699526803733",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Army Green"
+                        }
+                      ],
+                      "colour": "Army Green"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/47723030610197",
+                      "title": "Fatfish Fat Tyre E-Bike 48V 17Ah (TO BE ARCHIVED) - Black",
+                      "sku": "FATFISH-BLACK",
+                      "barcode": "",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49699526836501",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        }
+                      ],
+                      "colour": "Black"
+                    }
+                  ],
+                  "variant_count": 2,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/8986348519701",
+                  "title": "Fatfish OG Fat Tyre E-Bike",
+                  "handle": "fatfish-fat-tyre-e-bike-48v-17ah-1",
+                  "status": "ACTIVE",
+                  "vendor": "AVOCADO EBIKE",
+                  "product_type": "FATFISH BIKES (OG)",
+                  "tags": [],
+                  "storefront_path": "/products/fatfish-fat-tyre-e-bike-48v-17ah-1",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/Fatfish-step-over-frame-black-01.png?v=1738203364",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/47865273123093",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Army Green",
+                      "sku": "FATFISH-OG-ARMYGREEN",
+                      "barcode": "9567591058472",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49841978343701",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Army Green"
+                        }
+                      ],
+                      "colour": "Army Green"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/47865273155861",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Black",
+                      "sku": "FATFISH-OG-BLACK",
+                      "barcode": "1265977151455",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -7,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49841978376469",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -7
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Black"
+                        }
+                      ],
+                      "colour": "Black"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48931593027861",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Holographic Grey",
+                      "sku": "FATFISH-OG-HOLO-GREY",
+                      "barcode": "4717460307315",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -2,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50916333158677",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -2
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Holographic Grey"
+                        }
+                      ],
+                      "colour": "Holographic Grey"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/47883966152981",
+                      "title": "Fatfish OG Fat Tyre E-Bike - Smoke grey",
+                      "sku": "FATFISH-OG-SMOKEGREY",
+                      "barcode": "6941727226554",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=49860799004949",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "Smoke grey"
+                        }
+                      ],
+                      "colour": "Smoke grey"
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/48931592995093",
+                      "title": "Fatfish OG Fat Tyre E-Bike - White",
+                      "sku": "FATFISH-OG-WHITE",
+                      "barcode": "5181618558031",
+                      "price": {
+                        "amount": "2499.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "2999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": false,
+                      "inventory_quantity": -1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=50916333191445",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": -1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Colour",
+                          "value": "White"
+                        }
+                      ],
+                      "colour": "White"
+                    }
+                  ],
+                  "variant_count": 5,
+                  "inventory_display": {
+                    "lines": [],
+                    "summary": ""
+                  }
+                }
+              ],
+              "count": 2,
+              "query": "Fatfish",
+              "shopify_query": "Fatfish",
+              "search_term": "Fatfish",
+              "category": "ebike",
+              "category_filter_applied": false,
+              "category_heuristic_applied": true,
+              "category_heuristic_filtered_out": 3,
+              "category_filter_note": "Category filter was requested but no Shopify fragment is configured. Set SHOPIFY_SEARCH_FILTER_PART, SHOPIFY_SEARCH_FILTER_EBIKE, or SHOPIFY_SEARCH_FILTER_SCOOTER on shopify-mcp to match this store product types—or pass payload.category_query.",
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 33,
+      "text": "I've checked the stock for Fatfish e-bikes. The Fatfish OG Fat Tyre E-Bike is currently out of stock in all colours. The Fatfish Fat Tyre E-Bike48V17Ah is also archived and no longer available.Let me check on your scooter repair in the workshop now.",
+      "asr_ms": null,
+      "llm_seconds": 0.429,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 49,
+      "text": "My scooter inu the workshjop?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 49,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.703,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 51,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.703,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-09a6f292e89946a7b018059c350612a0",
+          "tool_name": "hubtiger_job_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "job_search",
+            "payload": {
+              "query": "scooter"
+            },
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 52,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-09a6f292e89946a7b018059c350612a0",
+          "tool_name": "hubtiger_job_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 639,
+          "result": {
+            "success": true,
+            "message": "Please provide one stronger identifier so I can match the correct case.",
+            "operation": "job_search",
+            "blocked": false,
+            "data": {
+              "truncated": false,
+              "operation": "job_search",
+              "count": 0,
+              "selection_required": true,
+              "identified_customer": null,
+              "assistant_prompt": "I found too many possible matches. Ask for surname, phone number, store, or job card number.",
+              "allowed_next_actions": [
+                "ask_for_last_name",
+                "ask_for_phone",
+                "ask_for_job_card",
+                "ask_for_store"
+              ],
+              "store_requested": "",
+              "store_matched": "",
+              "store_match": null,
+              "store_verification": "not_requested",
+              "identifier_type": "name_partial",
+              "identifier_confidence": "low",
+              "ambiguous_identifier": null,
+              "possible_identifier_types": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 52,
+      "text": "I found multiple possible matches for your scooter repair. Could you please provide your last name or phone number so I can locate the correct job?",
+      "asr_ms": null,
+      "llm_seconds": 0.382,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 58,
+      "text": "0435185134",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 58,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 0.529,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "user",
+    "4s",
+    "Fatfish models ?",
+    "agent",
+    "5s",
+    "...",
+    "LLM 0.347 s",
+    "Tool dispatch: notify_condition_2_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "5s",
+    "...",
+    "Tool succeeded: notify_condition_2_met",
+    "Result 4 ms",
+    "Show result payload",
+    "agent",
+    "5s",
+    "I can help you find details on Fatfish e-bikes. Could you let me know which specific model you're interested in?",
+    "LLM 0.425 s",
+    "user",
+    "14s",
+    "any just wondering if you have much stokc?",
+    "agent",
+    "14s",
+    "I'll check the current stock for Fatfish e-bikes for you. One moment please.",
+    "LLM 0.565 s",
+    "user",
+    "28s",
+    "also can you checkon my scooter repair in the workshop please?",
+    "agent",
+    "28s",
+    "Checking stock now",
+    "LLM 1.24 s",
+    "agent",
+    "30s",
+    "...",
+    "LLM 1.24 s",
+    "Tool dispatch: SHOPIFY_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "33s",
+    "...",
+    "Tool succeeded: SHOPIFY_product_search",
+    "Result 2568 ms",
+    "Show result payload",
+    "agent",
+    "33s",
+    "I've checked the stock for Fatfish e-bikes. The Fatfish OG Fat Tyre E-Bike is currently out of stock in all colours. The Fatfish Fat Tyre E-Bike48V17Ah is also archived and no longer available.Let me check on your scooter repair in the workshop now.",
+    "LLM 0.429 s",
+    "user",
+    "49s",
+    "My scooter inu the workshjop?",
+    "agent",
+    "49s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.703 s",
+    "agent",
+    "51s",
+    "...",
+    "LLM 1.703 s",
+    "Tool dispatch: hubtiger_job_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "52s",
+    "...",
+    "Tool succeeded: hubtiger_job_search",
+    "Result 639 ms",
+    "Show result payload",
+    "agent",
+    "52s",
+    "I found multiple possible matches for your scooter repair. Could you please provide your last name or phone number so I can locate the correct job?",
+    "LLM 0.382 s",
+    "user",
+    "58s",
+    "0435185134",
+    "agent",
+    "58s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 0.529 s"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 3,
+      "tool_result_count": 3,
+      "tool_success_count": 3,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_2_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_product_search",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_job_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 51,
+      "booking_intent_to_first_hubtiger_seconds": 23
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 3,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 0.2,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_0101kqvbhd9ffg2tg7q68raeweaj-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Fatfish models ?",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_0101kqvbhd9ffg2tg7q68raeweaj-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_0101kqvbhd9ffg2tg7q68raeweaj-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_0101kqvbhd9ffg2tg7q68raeweaj-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

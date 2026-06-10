@@ -1,0 +1,278 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_2701kqh87hzqeq7t4qs5x75n9cf4",
+    "title": "EBCO Bike Price/Stock",
+    "status": "done",
+    "user": "just wondering about the EBCO",
+    "brief_summary": "EBCO Bike Price/Stock",
+    "duration_seconds": 54,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. ...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 321,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 7,
+      "text": "Hey, Magic. I'm just wondering about the EBCO, uh, bike. I just want a price and stock.",
+      "asr_ms": 97,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "I can help you with that. Let me check the availability and pricing for the EBCO bike.",
+      "asr_ms": null,
+      "llm_seconds": 0.319,
+      "workflow_route_seconds": null,
+      "tts_ms": 338,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 25,
+      "text": "...",
+      "asr_ms": 44,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 26,
+      "text": "I'm checking the details for...",
+      "asr_ms": null,
+      "llm_seconds": 0.386,
+      "workflow_route_seconds": null,
+      "tts_ms": 312,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 27,
+      "text": "Oh, yeah, yeah.",
+      "asr_ms": 148,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "I'm checking the...",
+      "asr_ms": null,
+      "llm_seconds": 0.179,
+      "workflow_route_seconds": null,
+      "tts_ms": 373,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 29,
+      "text": "Oh, yeah.",
+      "asr_ms": 98,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 31,
+      "text": "I'm checking the details for the EBCO bike. Just a moment while I look that up for you.",
+      "asr_ms": null,
+      "llm_seconds": 0.219,
+      "workflow_route_seconds": null,
+      "tts_ms": 322,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 43,
+      "text": "Oh, all right. All right. I just changed all the pod databases actually.Um, you might need a refresh. Awesome. Yeah. Well, he's gonna need a refresh now 'cause I just did",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. ...",
+    "TTS 321 ms",
+    "user",
+    "7s",
+    "Hey, Magic. I'm just wondering about the EBCO, uh, bike. I just want a price and stock.",
+    "ASR 97 ms",
+    "agent",
+    "14s",
+    "I can help you with that. Let me check the availability and pricing for the EBCO bike.",
+    "LLM 0.319 s",
+    "TTS 338 ms",
+    "user",
+    "25s",
+    "...",
+    "ASR 44 ms",
+    "agent",
+    "26s",
+    "I'm checking the details for...",
+    "LLM 0.386 s",
+    "TTS 312 ms",
+    "user",
+    "27s",
+    "Oh, yeah, yeah.",
+    "ASR 148 ms",
+    "agent",
+    "29s",
+    "I'm checking the...",
+    "LLM 0.179 s",
+    "TTS 373 ms",
+    "user",
+    "29s",
+    "Oh, yeah.",
+    "ASR 98 ms",
+    "agent",
+    "31s",
+    "I'm checking the details for the EBCO bike. Just a moment while I look that up for you.",
+    "LLM 0.219 s",
+    "TTS 322 ms",
+    "user",
+    "43s",
+    "Oh, all right. All right. I just changed all the pod databases actually.Um, you might need a refresh. Awesome. Yeah. Well, he's gonna need a refresh now 'cause I just did"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 0,
+      "turns_before_first_tool": 10,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 2.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_2701kqh87hzqeq7t4qs5x75n9cf4-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hey, Magic. I'm just wondering about the EBCO, uh, bike. I just want a price and stock.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_2701kqh87hzqeq7t4qs5x75n9cf4-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_2701kqh87hzqeq7t4qs5x75n9cf4-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

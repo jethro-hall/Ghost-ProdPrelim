@@ -1,0 +1,398 @@
+{
+  "run_id": "simrun_1779436838_df2a33d4",
+  "trace_id": "92d1b6d418dc4f0f85d235059a556753",
+  "status": "failed",
+  "latency_ms": 4321.401,
+  "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+  "upstream_endpoint": "/v1/convai/agents/agent_3701kq9fcmz1errsmhesm3j47rsg/simulate-conversation",
+  "elevenlabs_request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, Magic Mike here from Ride Electric. I can help you with workshop...",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "Hey, mate. I'm just calling about, um, the, uh, FatFish OG 2.0. Calling about that one. I want to know the price.",
+          "time_in_call_secs": 4
+        },
+        {
+          "role": "agent",
+          "message": "Just a moment, I'll check that for you.",
+          "time_in_call_secs": 15
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 16
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 1
+  },
+  "started_at": "2026-05-22T08:00:38.829623+00:00",
+  "call_successful": "failure",
+  "transcript_summary": "The user inquired about the price of the \"FatFish OG 2.0\". The agent confirmed the request and is currently retrieving the pricing details for the specified product.",
+  "call_summary_title": "FatFish Price Inquiry",
+  "evaluation_criteria_results": {
+    "ghostdash_success_criteria": {
+      "criteria_id": "ghostdash_success_criteria",
+      "result": "failure",
+      "rationale": "The agent did not complete the caller's request to provide the price of the \"FatFish OG 2.0\". The conversation ended with the agent still looking up the details."
+    }
+  },
+  "turns": [
+    {
+      "role": "agent",
+      "message": "Hey, Magic Mike here from Ride Electric. I can help you with workshop...",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "Hey, mate. I'm just calling about, um, the, uh, FatFish OG 2.0. Calling about that one. I want to know the price.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "Just a moment, I'll check that for you.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "user",
+      "message": "Are you still there?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "I'm here, mate .  Just pulling up  the details on  the FatFish OG  2.0 for you .  One moment.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.1855051964521408
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.16999216750264168
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.31973434798419476
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "new_turns": [
+    {
+      "role": "user",
+      "message": "Are you still there?",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {},
+      "llm_override": null
+    },
+    {
+      "role": "agent",
+      "message": "I'm here, mate .  Just pulling up  the details on  the FatFish OG  2.0 for you .  One moment.",
+      "tool_calls": [],
+      "tool_results": [],
+      "latency_ms": null,
+      "llm_usage": {},
+      "metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.1855051964521408
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.16999216750264168
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.31973434798419476
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null
+      },
+      "llm_override": null
+    }
+  ],
+  "turn_count": 6,
+  "message": "Simulation step completed.",
+  "file_name": "JSON_just_calling_about&FatFish_OG_20_Pricing_SIMULATION.json",
+  "step_mode": "agent",
+  "stop_index": 3,
+  "partial_turn_count": 4,
+  "request": {
+    "simulation_specification": {
+      "simulated_user_config": {
+        "prompt": {
+          "prompt": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+          "llm": "gpt-4o-mini",
+          "temperature": 0.4
+        }
+      },
+      "partial_conversation_history": [
+        {
+          "role": "agent",
+          "message": "Hey, Magic Mike here from Ride Electric. I can help you with workshop...",
+          "time_in_call_secs": 0
+        },
+        {
+          "role": "user",
+          "message": "Hey, mate. I'm just calling about, um, the, uh, FatFish OG 2.0. Calling about that one. I want to know the price.",
+          "time_in_call_secs": 4
+        },
+        {
+          "role": "agent",
+          "message": "Just a moment, I'll check that for you.",
+          "time_in_call_secs": 15
+        },
+        {
+          "role": "agent",
+          "message": "",
+          "time_in_call_secs": 16
+        }
+      ]
+    },
+    "extra_evaluation_criteria": [
+      {
+        "id": "ghostdash_success_criteria",
+        "name": "GhostDASH success criteria",
+        "conversation_goal_prompt": "Agent remains concise, customer-safe, and completes the caller request.",
+        "use_knowledge_base": false
+      }
+    ],
+    "new_turns_limit": 1
+  },
+  "upstream": {
+    "simulated_conversation": [
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Hey, Magic Mike here from Ride Electric. I can help you with workshop...",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 0,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "Hey, mate. I'm just calling about, um, the, uh, FatFish OG 2.0. Calling about that one. I want to know the price.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 1,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": "Just a moment, I'll check that for you.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 2,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": null,
+        "message": null,
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 3,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "user",
+        "agent_metadata": null,
+        "message": "Are you still there?",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": null,
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 4,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      },
+      {
+        "role": "agent",
+        "agent_metadata": {
+          "agent_id": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+          "branch_id": null,
+          "workflow_node_id": null,
+          "version_id": null
+        },
+        "message": "I'm here, mate .  Just pulling up  the details on  the FatFish OG  2.0 for you .  One moment.",
+        "multivoice_message": null,
+        "tool_calls": [],
+        "tool_results": [],
+        "feedback": null,
+        "llm_override": null,
+        "time_in_call_secs": 0,
+        "conversation_turn_metrics": {
+          "metrics": {
+            "convai_llm_service_ttf_sentence": {
+              "elapsed_time": 0.1855051964521408
+            },
+            "convai_llm_service_ttfb": {
+              "elapsed_time": 0.16999216750264168
+            },
+            "convai_llm_service_tt_last_sentence": {
+              "elapsed_time": 0.31973434798419476
+            }
+          },
+          "convai_asr_provider": null,
+          "convai_tts_model": null,
+          "convai_tts_cascade": null
+        },
+        "rag_retrieval_info": null,
+        "llm_usage": null,
+        "interrupted": false,
+        "original_message": null,
+        "source_medium": null,
+        "source_event_id": 5,
+        "used_static_kb_document_ids": [],
+        "file_input": null,
+        "contextual_update_info": null
+      }
+    ],
+    "analysis": {
+      "evaluation_criteria_results": {
+        "ghostdash_success_criteria": {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent did not complete the caller's request to provide the price of the \"FatFish OG 2.0\". The conversation ended with the agent still looking up the details."
+        }
+      },
+      "data_collection_results": {},
+      "evaluation_criteria_results_list": [
+        {
+          "criteria_id": "ghostdash_success_criteria",
+          "result": "failure",
+          "rationale": "The agent did not complete the caller's request to provide the price of the \"FatFish OG 2.0\". The conversation ended with the agent still looking up the details."
+        }
+      ],
+      "data_collection_results_list": [],
+      "call_successful": "failure",
+      "transcript_summary": "The user inquired about the price of the \"FatFish OG 2.0\". The agent confirmed the request and is currently retrieving the pricing details for the specified product.",
+      "call_summary_title": "FatFish Price Inquiry",
+      "scoped": []
+    },
+    "guardrails_result": {
+      "triggered": false
+    }
+  }
+}

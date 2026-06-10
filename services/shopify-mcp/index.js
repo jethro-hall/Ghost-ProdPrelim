@@ -175,7 +175,6 @@ const QUERY_VARIANTS_VOLATILE = `#graphql
                 }
                 location {
                   id
-                  name
                 }
               }
             }
@@ -621,6 +620,35 @@ export function normalizeProductCategory(value) {
   return 'all';
 }
 
+function containsAnyToken(text, tokens) {
+  return tokens.some((token) => text.includes(token));
+}
+
+/**
+ * Fallback local category filter when store-specific env fragments are not configured.
+ * This prevents broad search leakage (e.g. bike search returning parts/accessories).
+ */
+export function productMatchesCategoryHeuristic(product, category) {
+  if (category === 'all') return true;
+  const title = String(product?.title || '').toLowerCase();
+  const productType = String(product?.product_type || '').toLowerCase();
+  const tags = Array.isArray(product?.tags) ? product.tags.map((t) => String(t || '').toLowerCase()) : [];
+  const blob = [title, productType, ...tags].join(' ');
+
+  const partTokens = ['part', 'parts', 'accessory', 'accessories', 'spare', 'spares'];
+  const ebikeTokens = ['ebike', 'e-bike', 'bike', 'bicycle'];
+  const scooterTokens = ['scooter'];
+
+  const isPart = containsAnyToken(blob, partTokens);
+  const isEbike = containsAnyToken(blob, ebikeTokens);
+  const isScooter = containsAnyToken(blob, scooterTokens);
+
+  if (category === 'part') return isPart;
+  if (category === 'ebike') return isEbike && !isPart;
+  if (category === 'scooter') return isScooter && !isPart;
+  return true;
+}
+
 function envCategoryFragment(category) {
   const key =
     category === 'part'
@@ -818,6 +846,16 @@ export async function runShopifyOperation(operation, payload, trace_id) {
     enrichProductsInventoryDisplay(products);
 
     const shaped = { products, count: products.length };
+    let categoryHeuristicApplied = false;
+    let categoryHeuristicFilteredOut = 0;
+    if (built.category !== 'all' && !built.category_filter_applied) {
+      categoryHeuristicApplied = true;
+      const before = shaped.products.length;
+      shaped.products = shaped.products.filter((product) => productMatchesCategoryHeuristic(product, built.category));
+      shaped.count = shaped.products.length;
+      categoryHeuristicFilteredOut = Math.max(0, before - shaped.count);
+    }
+
     return {
       ok: true,
       operation: 'product_search',
@@ -829,6 +867,8 @@ export async function runShopifyOperation(operation, payload, trace_id) {
         search_term: String(payload?.query ?? payload?.q ?? payload?.search ?? '').trim(),
         category: built.category,
         category_filter_applied: built.category_filter_applied,
+        category_heuristic_applied: categoryHeuristicApplied,
+        category_heuristic_filtered_out: categoryHeuristicFilteredOut,
         ...(built.category_filter_note ? { category_filter_note: built.category_filter_note } : {}),
         first,
         variants_first: variantsFirst,

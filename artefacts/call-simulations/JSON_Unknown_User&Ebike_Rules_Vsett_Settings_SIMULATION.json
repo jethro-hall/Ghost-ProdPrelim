@@ -1,0 +1,202 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_5501kqesev1bf9cb3qsg60hbpb2p",
+    "title": "E-bike Rules Vsett Settings",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "E-bike Rules Vsett Settings",
+    "duration_seconds": 81,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 391,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 10,
+      "text": "I'd like to, uh, know about the Queensland e-bike rules.",
+      "asr_ms": 63,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "I can help with that. Ride Electric's e-bikes in Queensland must comply with legal requirements, including a maximum motor power of250 watts and assistance up to25 km/h. You must always wear a helmet, follow bicycle rules, and not ride on motorways or where 'no bicycle' signs are posted. Let me know if you'd like details on specific rules.",
+      "asr_ms": null,
+      "llm_seconds": 0.246,
+      "workflow_route_seconds": null,
+      "tts_ms": 386,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 40,
+      "text": "I'd like to know about the, uh, V set P settings, please.",
+      "asr_ms": 57,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 43,
+      "text": "I can help with that. The P-settings on your Vsett scooter allow you to adjust display brightness, wheel diameter, speed measurement, and electronic regenerative braking. For example, P03 sets the voltage level—use48 for Vsett9+,60 for Vsett10+ or11+, and72 for Vsett11+ Super. P06 sets wheel diameter:8.5 for Vsett9+,9.8 for Vsett10+, and11 for Vsett11+. Would you like help with a specific setting?",
+      "asr_ms": null,
+      "llm_seconds": 0.232,
+      "workflow_route_seconds": null,
+      "tts_ms": 322,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+    "TTS 391 ms",
+    "user",
+    "10s",
+    "I'd like to, uh, know about the Queensland e-bike rules.",
+    "ASR 63 ms",
+    "agent",
+    "15s",
+    "I can help with that. Ride Electric's e-bikes in Queensland must comply with legal requirements, including a maximum motor power of250 watts and assistance up to25 km/h. You must always wear a helmet, follow bicycle rules, and not ride on motorways or where 'no bicycle' signs are posted. Let me know if you'd like details on specific rules.",
+    "LLM 0.246 s",
+    "TTS 386 ms",
+    "user",
+    "40s",
+    "I'd like to know about the, uh, V set P settings, please.",
+    "ASR 57 ms",
+    "agent",
+    "43s",
+    "I can help with that. The P-settings on your Vsett scooter allow you to adjust display brightness, wheel diameter, speed measurement, and electronic regenerative braking. For example, P03 sets the voltage level—use48 for Vsett9+,60 for Vsett10+ or11+, and72 for Vsett11+ Super. P06 sets wheel diameter:8.5 for Vsett9+,9.8 for Vsett10+, and11 for Vsett11+. Would you like help with a specific setting?",
+    "LLM 0.232 s",
+    "TTS 322 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 5,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_5501kqesev1bf9cb3qsg60hbpb2p-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I'd like to, uh, know about the Queensland e-bike rules.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_5501kqesev1bf9cb3qsg60hbpb2p-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_5501kqesev1bf9cb3qsg60hbpb2p-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2173 @@
+{
+  "summary": {
+    "ok": true,
+    "status": "REVIEW_PII_REMAINS",
+    "selected_snapshot_id": "eofy_accounting_sample_2026-06-09T06-10-56-254Z",
+    "raw_root": "/home/node/.n8n/odoo_eofy_exports",
+    "sanitised_root": "/home/node/.n8n/odoo_eofy_exports_sanitised/eofy_accounting_sample_2026-06-09T06-10-56-254Z",
+    "report_root": "/home/node/.n8n/odoo_eofy_reports/eofy_accounting_sample_2026-06-09T06-10-56-254Z",
+    "files_profiled": 22,
+    "models_profiled": 22,
+    "total_rows": 3944,
+    "parse_errors": 0,
+    "pii_after_total": 178,
+    "personal_fields_redacted": 1902,
+    "bank_fields_redacted": 0,
+    "compacted_text_fields": 2000,
+    "combined_payload_jsonl": "/home/node/.n8n/odoo_eofy_reports/eofy_accounting_sample_2026-06-09T06-10-56-254Z/claude_payload_all.jsonl",
+    "generated_at_utc": "2026-06-09T06:12:01.861Z"
+  },
+  "model_summaries": [
+    {
+      "model": "account_full_reconcile",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 4,
+      "fields": [
+        "_sanitisation",
+        "create_date",
+        "id",
+        "write_date"
+      ],
+      "min_date": "2022-09-05 02:39:01",
+      "max_date": "2023-08-04 07:18:55",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_move",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 42,
+      "fields": [
+        "_sanitisation",
+        "amount_residual",
+        "amount_tax",
+        "amount_total",
+        "amount_untaxed",
+        "commercial_partner_id",
+        "commercial_partner_id_id",
+        "commercial_partner_id_label",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "create_uid",
+        "create_uid_id",
+        "create_uid_label",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "date",
+        "fiscal_position_id",
+        "id",
+        "invoice_date",
+        "invoice_date_due",
+        "invoice_origin",
+        "invoice_payment_term_id",
+        "invoice_payment_term_id_id",
+        "invoice_payment_term_id_label",
+        "journal_id",
+        "journal_id_id",
+        "journal_id_label",
+        "move_type",
+        "name",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "payment_state",
+        "ref",
+        "state",
+        "write_date",
+        "write_uid",
+        "write_uid_id",
+        "write_uid_label"
+      ],
+      "min_date": "2024-07-01",
+      "max_date": "2024-07-17",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 1500
+    },
+    {
+      "model": "account_partial_reconcile",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 14,
+      "fields": [
+        "_sanitisation",
+        "amount",
+        "create_date",
+        "credit_amount_currency",
+        "credit_move_id",
+        "credit_move_id_id",
+        "credit_move_id_label",
+        "debit_amount_currency",
+        "debit_move_id",
+        "debit_move_id_id",
+        "debit_move_id_label",
+        "id",
+        "max_date",
+        "write_date"
+      ],
+      "min_date": "2023-07-04 00:20:02",
+      "max_date": "2023-07-31 02:27:40",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 289199.93,
+      "pii_hits_after": 125,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_payment",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 34,
+      "fields": [
+        "_sanitisation",
+        "amount",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "create_uid",
+        "create_uid_id",
+        "create_uid_label",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "date",
+        "id",
+        "journal_id",
+        "journal_id_id",
+        "journal_id_label",
+        "move_id",
+        "move_id_id",
+        "move_id_label",
+        "name",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "partner_type",
+        "payment_method_line_id",
+        "payment_method_line_id_id",
+        "payment_method_line_id_label",
+        "payment_type",
+        "state",
+        "write_date",
+        "write_uid",
+        "write_uid_id",
+        "write_uid_label"
+      ],
+      "min_date": "2024-07-03",
+      "max_date": "2025-06-25",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 1701733.43,
+      "pii_hits_after": 12,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 500
+    },
+    {
+      "model": "res_partner",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 24,
+      "fields": [
+        "_sanitisation",
+        "commercial_partner_id",
+        "commercial_partner_id_id",
+        "commercial_partner_id_label",
+        "company_id",
+        "country_id",
+        "country_id_id",
+        "country_id_label",
+        "create_date",
+        "customer_rank",
+        "display_name",
+        "email",
+        "id",
+        "is_company",
+        "mobile",
+        "name",
+        "partner_hash",
+        "phone",
+        "state_id",
+        "state_id_id",
+        "state_id_label",
+        "supplier_rank",
+        "vat",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:34:29",
+      "max_date": "2022-10-13 03:17:14",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 1902,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "product_product",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 10,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "create_date",
+        "default_code",
+        "display_name",
+        "id",
+        "product_tmpl_id",
+        "product_tmpl_id_id",
+        "product_tmpl_id_label",
+        "write_date"
+      ],
+      "min_date": "2022-10-19 06:30:24",
+      "max_date": "2022-10-19 06:30:24",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "product_template",
+      "files": 1,
+      "rows": 500,
+      "distinct_ids": 500,
+      "field_count": 19,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "categ_id",
+        "categ_id_id",
+        "categ_id_label",
+        "create_date",
+        "default_code",
+        "id",
+        "list_price",
+        "name",
+        "standard_price",
+        "type",
+        "uom_id",
+        "uom_id_id",
+        "uom_id_label",
+        "uom_po_id",
+        "uom_po_id_id",
+        "uom_po_id_label",
+        "write_date"
+      ],
+      "min_date": "2022-10-19 06:30:24",
+      "max_date": "2022-10-19 06:30:24",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 40,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "res_currency",
+      "files": 1,
+      "rows": 170,
+      "distinct_ids": 170,
+      "field_count": 9,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "create_date",
+        "decimal_places",
+        "id",
+        "name",
+        "rounding",
+        "symbol",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:34:31",
+      "max_date": "2024-09-18 09:05:58",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_account",
+      "files": 1,
+      "rows": 165,
+      "distinct_ids": 165,
+      "field_count": 9,
+      "fields": [
+        "_sanitisation",
+        "account_type",
+        "code",
+        "create_date",
+        "deprecated",
+        "id",
+        "name",
+        "reconcile",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2026-05-25 02:16:09",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "product_category",
+      "files": 1,
+      "rows": 47,
+      "distinct_ids": 47,
+      "field_count": 9,
+      "fields": [
+        "_sanitisation",
+        "complete_name",
+        "create_date",
+        "id",
+        "name",
+        "parent_id",
+        "parent_id_id",
+        "parent_id_label",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:35:26",
+      "max_date": "2025-11-25 03:40:29",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "uom_uom",
+      "files": 1,
+      "rows": 28,
+      "distinct_ids": 28,
+      "field_count": 11,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "category_id",
+        "category_id_id",
+        "category_id_label",
+        "create_date",
+        "factor",
+        "id",
+        "name",
+        "rounding",
+        "write_date"
+      ],
+      "min_date": "2022-07-22 02:35:13",
+      "max_date": "2024-09-18 08:56:42",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_journal",
+      "files": 1,
+      "rows": 17,
+      "distinct_ids": 17,
+      "field_count": 14,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "code",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "id",
+        "name",
+        "type",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2026-03-02 05:30:01",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_tax",
+      "files": 1,
+      "rows": 16,
+      "distinct_ids": 16,
+      "field_count": 15,
+      "fields": [
+        "_sanitisation",
+        "active",
+        "amount",
+        "amount_type",
+        "company_id",
+        "company_id_id",
+        "company_id_label",
+        "create_date",
+        "id",
+        "name",
+        "tax_group_id",
+        "tax_group_id_id",
+        "tax_group_id_label",
+        "type_tax_use",
+        "write_date"
+      ],
+      "min_date": "2022-08-14 23:12:42",
+      "max_date": "2022-08-14 23:12:42",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 100000100,
+      "pii_hits_after": 1,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "res_company",
+      "files": 1,
+      "rows": 1,
+      "distinct_ids": 1,
+      "field_count": 12,
+      "fields": [
+        "_sanitisation",
+        "create_date",
+        "currency_id",
+        "currency_id_id",
+        "currency_id_label",
+        "id",
+        "name",
+        "parent_id",
+        "partner_id",
+        "partner_id_id",
+        "partner_id_label",
+        "write_date"
+      ],
+      "min_date": "2022-08-05 16:33:50",
+      "max_date": "2022-08-05 16:33:50",
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "account_move_line",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_category",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_config",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_order",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_order_line",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_payment",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_payment_method",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    },
+    {
+      "model": "pos_session",
+      "files": 1,
+      "rows": 0,
+      "distinct_ids": 0,
+      "field_count": 0,
+      "fields": [],
+      "min_date": null,
+      "max_date": null,
+      "debit_total": 0,
+      "credit_total": 0,
+      "balance_total": 0,
+      "amount_total": 0,
+      "pii_hits_after": 0,
+      "personal_fields_redacted": 0,
+      "bank_fields_redacted": 0,
+      "compacted_text_fields": 0
+    }
+  ],
+  "findings": [
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 7,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "45000000000002",
+            "45000000000002",
+            "45000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 82,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7000000000003",
+            "7000000000003",
+            "7000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 85,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7599999999998",
+            "7599999999998",
+            "7599999999998"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 96,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7600000000000002",
+            "7600000000000002",
+            "7600000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 106,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "980000000000004",
+            "980000000000004",
+            "980000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 131,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "2000000000003",
+            "2000000000003",
+            "2000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 136,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "860000000001",
+            "860000000001",
+            "860000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 163,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "740000000000002",
+            "740000000000002",
+            "740000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 171,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "6899999999996",
+            "6899999999996",
+            "6899999999996"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 177,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "8500000000000005",
+            "8500000000000005",
+            "8500000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 180,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "159999999999997",
+            "159999999999997",
+            "159999999999997"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 195,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "240000000000002",
+            "240000000000002",
+            "240000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 232,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "34000000000003",
+            "34000000000003",
+            "34000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 237,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "869999999999994",
+            "869999999999994",
+            "869999999999994"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 261,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "580000000000002",
+            "580000000000002",
+            "580000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 282,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "2999999999997",
+            "2999999999997",
+            "2999999999997"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 324,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7300000000005",
+            "7300000000005",
+            "7300000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 335,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "980000000000004",
+            "980000000000004",
+            "980000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 343,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "9999999999984",
+            "9999999999984",
+            "9999999999984"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 344,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "730000000000004",
+            "730000000000004",
+            "730000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 356,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "9100000000000001",
+            "9100000000000001",
+            "9100000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 357,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "540000000000001",
+            "540000000000001",
+            "540000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 359,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "700000000000001",
+            "700000000000001",
+            "700000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 364,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "990000000000002",
+            "990000000000002",
+            "990000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 365,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "730000000000004",
+            "730000000000004",
+            "730000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 368,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "32000000000001",
+            "32000000000001",
+            "32000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 403,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "700000000000001",
+            "700000000000001",
+            "700000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 409,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "9499999999998",
+            "9499999999998",
+            "9499999999998"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 413,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "990000000000002",
+            "990000000000002",
+            "990000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 415,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "82000000000001",
+            "82000000000001",
+            "82000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 423,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "515084440"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 424,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "515084440"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 439,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "45000000000002",
+            "45000000000002",
+            "45000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 445,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "5700000000000003",
+            "5700000000000003",
+            "5700000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 446,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "7700000000000005",
+            "7700000000000005",
+            "7700000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 448,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "700000000000001",
+            "700000000000001",
+            "700000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 458,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "9500000000003",
+            "9500000000003",
+            "9500000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 463,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "140000000000001",
+            "140000000000001",
+            "140000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 468,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "539999999999985",
+            "539999999999985",
+            "539999999999985"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 476,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "3500000000001",
+            "3500000000001",
+            "3500000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 482,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "060000000000002",
+            "060000000000002",
+            "060000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 483,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "730000000000004",
+            "730000000000004",
+            "730000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_partial_reconcile",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_partial_reconcile__000000000.jsonl",
+      "line_no": 498,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "040000000000001",
+            "040000000000001",
+            "040000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 115,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "007502246",
+            "007445635",
+            "007510831"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 155,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "007502246"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 250,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "00000118"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 302,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 3,
+          "examples": [
+            "970059905",
+            "970061307",
+            "970062703"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_payment",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_payment__000000000.jsonl",
+      "line_no": 493,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 4,
+          "examples": [
+            "970064091",
+            "970065443",
+            "970066820",
+            "970068187"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "account_tax",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__accounting_core__account_tax__000000000.jsonl",
+      "line_no": 15,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "100000000"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 2,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "080000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 11,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "290000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 17,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "21000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 23,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "910000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 24,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "330000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 26,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "490000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 28,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "700000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 34,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "6500000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 39,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "800000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 45,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "3100000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 73,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "60000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 77,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "60000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 86,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "830000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 120,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "6000000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 126,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "95000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 139,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "870000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 140,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "990000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 143,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "560000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 151,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "740000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 159,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "5500000000000003"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 165,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "2700000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 166,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "980000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 196,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "64000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 205,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "040000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 219,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "550000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 231,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "490000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 258,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "73000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 269,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "450000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 273,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "7700000000000005"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 296,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "450000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 308,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "450000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 318,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "17000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 324,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "450000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 358,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "950000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 370,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "950000000000001"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 384,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "910000000000004"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 398,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "740000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 417,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "470000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 451,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "45000000000002"
+          ]
+        }
+      ]
+    },
+    {
+      "severity": "review",
+      "model": "product_template",
+      "source_file": "eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_template__000000000.jsonl",
+      "line_no": 452,
+      "issue": "Potential PII remains after sanitisation",
+      "hits": [
+        {
+          "kind": "possible_bank_or_long_number",
+          "count": 1,
+          "examples": [
+            "480000000000004"
+          ]
+        }
+      ]
+    }
+  ]
+}

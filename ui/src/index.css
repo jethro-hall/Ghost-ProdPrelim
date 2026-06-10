@@ -610,3 +610,46 @@ body {
 .ghost-textarea {
   resize: vertical;
 }
+
+/* Agent simulation slide-out (ElevenLabs-style) */
+.agent-simulation-panel {
+  --sim-panel-width: 420px;
+}
+
+.agent-simulation-chat {
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 40%);
+}
+
+.agent-simulation-widget-bg {
+  background-color: #f3f4f6;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(148, 163, 184, 0.08) 8px,
+    rgba(148, 163, 184, 0.08) 16px
+  );
+}
+
+.agent-simulation-orb {
+  position: absolute;
+  width: min(280px, 70vw);
+  height: min(280px, 70vw);
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #93c5fd 0%, #3b82f6 35%, #1d4ed8 70%, #1e3a8a 100%);
+  opacity: 0.85;
+  filter: blur(0.5px);
+  animation: agent-sim-orb-pulse 4s ease-in-out infinite;
+}
+
+@keyframes agent-sim-orb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.95;
+  }
+}

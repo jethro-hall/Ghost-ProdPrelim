@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Odoo Claude Readiness Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+    h1, h2 { margin-bottom: 8px; }
+    .cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
+    .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 16px; min-width: 180px; background: #f9fafb; }
+    .label { color: #6b7280; font-size: 12px; text-transform: uppercase; }
+    .value { font-size: 24px; font-weight: bold; margin-top: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+    th, td { border: 1px solid #d1d5db; padding: 8px; font-size: 13px; vertical-align: top; }
+    th { background: #f3f4f6; text-align: left; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .good { color: #166534; font-weight: bold; }
+    .bad { color: #991b1b; font-weight: bold; }
+    pre { white-space: pre-wrap; background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px; overflow-x: auto; }
+    details { margin: 10px 0; }
+    code { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Odoo Claude Readiness Report</h1>
+  <p><strong>Status:</strong> <span class="bad">REVIEW_PII_REMAINS</span></p>
+  <p><strong>Sanitised output:</strong> <code>/home/node/.n8n/odoo_eofy_exports_sanitised</code></p>
+  <p><strong>Report root:</strong> <code>/home/node/.n8n/odoo_eofy_reports</code></p>
+
+  <div class="cards">
+    <div class="card"><div class="label">Files profiled</div><div class="value">1</div></div>
+    <div class="card"><div class="label">Models</div><div class="value">1</div></div>
+    <div class="card"><div class="label">Rows</div><div class="value">1</div></div>
+    <div class="card"><div class="label">PII hits before</div><div class="value">1</div></div>
+    <div class="card"><div class="label">PII hits after</div><div class="value bad">2</div></div>
+    <div class="card"><div class="label">Parse errors</div><div class="value good">0</div></div>
+  </div>
+
+  <h2>Model summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th><th>Files</th><th>Rows</th><th>Parse errors</th><th>PII before</th><th>PII after</th>
+        <th>Personal fields redacted</th><th>Bank fields redacted</th><th>Descriptions compacted</th>
+      </tr>
+    </thead>
+    <tbody>
+<tr>
+  <td>res.company</td>
+  <td class="num">1</td>
+  <td class="num">1</td>
+  <td class="num">0</td>
+  <td class="num">1</td>
+  <td class="num bad">2</td>
+  <td class="num">0</td>
+  <td class="num">0</td>
+  <td class="num">0</td>
+</tr></tbody>
+  </table>
+
+  <h2>Sample sanitised rows</h2>
+  <p>Samples are from sanitised output only. Raw samples are intentionally not included.</p>
+  <details><summary>res.company — eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.jsonl — 1 rows</summary><pre>{
+  &quot;id&quot;: 4,
+  &quot;name&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id&quot;: [
+    21,
+    &quot;AUD&quot;
+  ],
+  &quot;parent_id&quot;: false,
+  &quot;partner_id&quot;: [
+    360,
+    &quot;PARTNER_48eca9bdd7d2&quot;
+  ],
+  &quot;create_date&quot;: &quot;2022-08-05 16:33:50&quot;,
+  &quot;write_date&quot;: &quot;2026-06-08 01:53:48&quot;,
+  &quot;partner_id_id&quot;: 360,
+  &quot;partner_id_label&quot;: &quot;Ride Electric Brisbane&quot;,
+  &quot;currency_id_id&quot;: 21,
+  &quot;currency_id_label&quot;: &quot;AUD&quot;,
+  &quot;_export&quot;: {
+    &quot;snapshot_id&quot;: &quot;[LONG_TOKEN_REDACTED]&quot;,
+    &quot;model&quot;: &quot;res.company&quot;,
+    &quot;group&quot;: &quot;master_data&quot;,
+    &quot;offset&quot;: 0,
+    &quot;limit&quot;: 10,
+    &quot;exported_at&quot;: &quot;2026-06-09T05:17:50.770Z&quot;,
+    &quot;source_company_context&quot;: [
+      4
+    ]
+  },
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;res.company&quot;,
+    &quot;source_file&quot;: &quot;eofy_2025_2026-06-09T05-17-48-425Z__master_data__res_company__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T05:17:54.661Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;description_policy&quot;: &quot;descriptions compacted/truncated with hash where required&quot;
+  }
+}</pre></details>
+</body>
+</html>

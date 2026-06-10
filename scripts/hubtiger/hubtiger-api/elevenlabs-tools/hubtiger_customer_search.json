@@ -1,0 +1,107 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_customer_search",
+  "description": "Find customer records by phone, email, or name before booking.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute customer_search",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "customer_search",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Customer search payload",
+          "properties": [
+            {
+              "id": "q",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Search value (mobile +61 preferred, email, or full name).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "type",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Search type.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": [
+                "phone",
+                "email",
+                "name"
+              ],
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "page",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Optional page number (default 0).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "limit",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Optional page size (default 20).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}

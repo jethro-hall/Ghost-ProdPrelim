@@ -239,6 +239,271 @@ export type VoiceProviderStatus = {
   message: string;
 };
 
+export type ElevenLabsAnalysisConversationSummary = {
+  id: string;
+  title: string | null;
+  started_at_unix_secs: number | null;
+  status: string;
+  call_successful: string;
+  duration_seconds: number | null;
+  message_count: number | null;
+  user_id: string | null;
+  branch_id: string | null;
+  main_language: string | null;
+  channel: string | null;
+  direction: string | null;
+  rating: number | null;
+  agent_id: string | null;
+  agent_name: string | null;
+};
+
+export type ElevenLabsAnalysisConversationsResponse = {
+  items: ElevenLabsAnalysisConversationSummary[];
+  next_cursor: string | null;
+  has_more: boolean;
+  upstream_ready: boolean;
+  warning_code: string | null;
+  warning_message: string | null;
+  filters_applied: Record<string, unknown>;
+  source: "elevenlabs";
+};
+
+export type ElevenLabsAnalysisConversationDetail = {
+  id: string;
+  title: string | null;
+  agent_id: string | null;
+  agent_name: string | null;
+  status: string;
+  user_id: string | null;
+  branch_id: string | null;
+  environment: string | null;
+  text_only: boolean;
+  started_at_unix_secs: number | null;
+  accepted_at_unix_secs: number | null;
+  duration_seconds: number | null;
+  cost: number | null;
+  credits_llm: number | null;
+  llm_cost: number | null;
+  call_successful: string;
+  call_status: string | null;
+  call_summary_title: string | null;
+  transcript_summary: string | null;
+  termination_reason: string | null;
+  main_language: string | null;
+  has_audio: boolean;
+  has_user_audio: boolean;
+  has_response_audio: boolean;
+  visited_agents: Array<Record<string, unknown>>;
+  tag_ids: string[];
+  metadata: Record<string, unknown>;
+  analysis: Record<string, unknown>;
+  client_data: Record<string, unknown>;
+  source: "elevenlabs";
+};
+
+export type ElevenLabsAnalysisTranscriptTurn = {
+  id: string;
+  role: string;
+  start_time_seconds: number | null;
+  message: string | null;
+  source_medium: string | null;
+  interrupted: boolean;
+  metrics: Record<string, unknown> | null;
+  event_type: string | null;
+  agent_metadata: Record<string, unknown>;
+  tool_calls: Array<Record<string, unknown>>;
+  tool_results: Array<Record<string, unknown>>;
+  llm_usage: Record<string, unknown> | null;
+};
+
+export type ElevenLabsAnalysisTranscript = {
+  conversation_id: string;
+  turns: ElevenLabsAnalysisTranscriptTurn[];
+  turn_count: number;
+  source: "elevenlabs";
+};
+
+export type ElevenLabsAnalysisHealth = {
+  ok: boolean;
+  service: string;
+  ready: boolean;
+  error_code?: string;
+  message: string;
+  timeout_ms: number;
+};
+
+export type ElevenLabsSimulationItem = {
+  file_name: string;
+  conversation_id: string;
+  user: string;
+  brief_summary: string;
+  title: string;
+  duration_seconds: number | null;
+  generated_path: string;
+};
+
+export type ElevenLabsSimulationListResponse = {
+  items: ElevenLabsSimulationItem[];
+  count: number;
+  source_dir: string;
+  ready: boolean;
+};
+
+export type ElevenLabsSimulationTestSummary = {
+  id: string;
+  name: string;
+  objective: string;
+  step_count: number;
+  assertion_count: number;
+};
+
+export type ElevenLabsSimulationDetailResponse = {
+  file_name: string;
+  simulation: Record<string, unknown>;
+  elevenlabs_test_payload: Record<string, unknown>;
+  elevenlabs_test_payload_pretty: string;
+  tests?: ElevenLabsSimulationTestSummary[];
+  execution?: {
+    next_reply: { runnable: boolean; phase: number };
+    tool_invocation: { runnable: boolean; phase: number };
+    simulation: { runnable: boolean; phase: number };
+    step_debugger?: { runnable: boolean; phase: number };
+  };
+};
+
+export type ElevenLabsTestTab = "next_reply" | "tool_invocation" | "simulation";
+
+export type ElevenLabsWorkbenchTurn = {
+  role: "agent" | "user";
+  message: string;
+  time_in_call_secs?: number;
+  tool_calls?: Array<Record<string, unknown>>;
+  tool_results?: Array<Record<string, unknown>>;
+  latency_ms?: number | null;
+  llm_override?: string | null;
+};
+
+export type ElevenLabsToolExecutionMode = "call_real_tools" | "mock_selected" | "mock_all";
+
+export type ElevenLabsWorkbenchTool = {
+  id: string;
+  name: string;
+  type: string;
+};
+
+export type ElevenLabsWorkbenchOptionsState = {
+  tool_execution_mode: ElevenLabsToolExecutionMode;
+  selected_tool_ids: string[];
+  agent_tool_ids_override: string[];
+  tool_direction_prompt: string;
+  simulated_user_llm: string;
+  simulated_user_temperature: number;
+  agent_llm: string;
+  agent_temperature: number | null;
+  simulation_environment: string;
+  evaluate_on_step: boolean;
+  extra_request_json: string;
+};
+
+export type ElevenLabsWorkbenchSimulateFields = {
+  agent_id?: string;
+  simulated_user_prompt?: string;
+  simulated_user_llm?: string;
+  simulated_user_temperature?: number;
+  agent_prompt_override?: string;
+  agent_llm?: string;
+  agent_temperature?: number | null;
+  dynamic_variables?: Record<string, string>;
+  tool_mock_config?: Record<string, unknown>;
+  tool_execution_mode?: ElevenLabsToolExecutionMode;
+  selected_tool_ids?: string[];
+  agent_tool_ids_override?: string[];
+  tool_direction_prompt?: string;
+  extra_evaluation_criteria?: Array<Record<string, unknown>>;
+  agent_config_override?: Record<string, unknown>;
+  conversation_config_override?: Record<string, unknown>;
+  simulation_specification_extra?: Record<string, unknown>;
+  elevenlabs_request_extra?: Record<string, unknown>;
+  simulation_environment?: string;
+  evaluate?: boolean;
+};
+
+export type ElevenLabsSimulationRunRequest = ElevenLabsWorkbenchSimulateFields & {
+  test_id?: string;
+  user_scenario?: string;
+  success_criteria?: string;
+  max_turns?: number;
+  partial_history?: ElevenLabsWorkbenchTurn[];
+};
+
+export type ElevenLabsStepRequest = ElevenLabsWorkbenchSimulateFields & {
+  history: ElevenLabsWorkbenchTurn[];
+  stop_index?: number;
+  step_mode?: "agent" | "user" | "both";
+  forced_user_message?: string;
+  new_turns_limit?: number;
+  success_criteria?: string;
+  expected_tool_name?: string;
+};
+
+export type ElevenLabsSimulationRunResponse = {
+  run_id: string | null;
+  trace_id: string;
+  status: "passed" | "failed" | "completed" | "error";
+  latency_ms: number;
+  file_name?: string;
+  test_id?: string;
+  test_name?: string;
+  agent_id?: string;
+  started_at?: string;
+  call_successful?: string;
+  transcript_summary?: string;
+  call_summary_title?: string;
+  evaluation_criteria_results?: Record<string, unknown>;
+  turns?: ElevenLabsWorkbenchTurn[];
+  new_turns?: ElevenLabsWorkbenchTurn[];
+  merged_history?: ElevenLabsWorkbenchTurn[];
+  turn_count?: number;
+  step_mode?: string;
+  stop_index?: number;
+  partial_turn_count?: number;
+  tool_check?: {
+    passed: boolean;
+    expected_tool_name: string;
+    observed_tool_names: string[];
+    message: string;
+  };
+  message: string;
+  error_code?: string;
+  artifact_path?: string;
+  upstream_endpoint?: string;
+  elevenlabs_request?: Record<string, unknown>;
+};
+
+export type ElevenLabsWorkbenchOptionsResponse = {
+  upstream: string;
+  endpoint_template: string;
+  tool_execution_modes: Array<{ id: string; label: string; tool_mock_config: Record<string, unknown> }>;
+  llm_models: string[];
+  step_modes: string[];
+};
+
+export type ElevenLabsWorkbenchToolsResponse = {
+  tools: ElevenLabsWorkbenchTool[];
+  count: number;
+  has_more?: boolean;
+};
+
+export type ElevenLabsWorkbenchAgentResponse = {
+  agent_id: string;
+  name: string;
+  voice_id?: string | null;
+  tool_ids: string[];
+  agent_prompt_excerpt: string;
+  agent_llm: string;
+  agent_temperature: number | null;
+};
+
 export type ElevenLabsApplyTextNormalization = "auto" | "on" | "off";
 
 export type ElevenLabsPronunciationDictionaryLocator = {
@@ -845,8 +1110,26 @@ export async function fetchHubTigerStatus() {
   return data;
 }
 
+export type HubTigerTestOperation =
+  | "availability_lookup"
+  | "job_lookup"
+  | "job_search"
+  | "job_retrieve"
+  | "quote_preview"
+  | "booking_slot_hold"
+  | "booking_customer_search"
+  | "booking_customer_confirm"
+  | "booking_bike_list"
+  | "booking_bike_confirm"
+  | "booking_service_set"
+  | "booking_submit"
+  | "booking_finalize"
+  | "booking_create"
+  | "booking_update"
+  | "quote_add_line_item";
+
 export async function runHubTigerTest(body: {
-  operation: "availability_lookup" | "job_lookup" | "quote_preview" | "booking_create" | "quote_add_line_item";
+  operation: HubTigerTestOperation;
   payload?: Record<string, unknown>;
 }) {
   const { data } = await api.post<HubTigerTestPayload>("/hubtiger/test", body);
@@ -1099,6 +1382,8 @@ export async function streamChat(args: {
   useApprovedWeb?: boolean;
   toolOverrides?: Record<string, boolean>;
   docxMode?: ChatDocxMode;
+  /** When set, replaces the agent profile system prompt for this request (simulator / workbench). */
+  systemPromptOverride?: string | null;
   signal?: AbortSignal;
   onStart?: (payload: {
     citations: unknown[];
@@ -1146,14 +1431,19 @@ export async function streamChat(args: {
       conversation_id: args.conversationId ?? null,
       use_approved_web: args.useApprovedWeb ?? false,
       tool_overrides: args.toolOverrides ?? {},
-      docx_mode: args.docxMode
+      ...(args.docxMode
         ? {
-            enabled: args.docxMode.enabled,
-            template_id: args.docxMode.template_id ?? null,
-            operation: args.docxMode.operation ?? "preview",
-            binding_overrides: args.docxMode.binding_overrides ?? {},
+            docx_mode: {
+              enabled: args.docxMode.enabled,
+              template_id: args.docxMode.template_id ?? null,
+              operation: args.docxMode.operation ?? "preview",
+              binding_overrides: args.docxMode.binding_overrides ?? {},
+            },
           }
-        : null,
+        : {}),
+      ...(args.systemPromptOverride?.trim()
+        ? { system_prompt_override: args.systemPromptOverride.trim() }
+        : {}),
     }),
     signal: args.signal,
   });
@@ -1323,4 +1613,209 @@ export function buildVoiceTtsStreamUrl(args: {
   }
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return url.toString();
+}
+
+export async function fetchElevenLabsAnalysisHealth() {
+  const { data } = await api.get<ElevenLabsAnalysisHealth>("/elevenlabs/analysis/health");
+  return data;
+}
+
+export async function fetchElevenLabsAnalysisConversations(args?: {
+  limit?: number;
+  cursor?: string | null;
+  search?: string | null;
+  status?: string | null;
+  conversation_status?: string | null;
+  date_after_unix?: number | null;
+  date_before_unix?: number | null;
+  user_id?: string | null;
+  branch_id?: string | null;
+}) {
+  const params: Record<string, string | number> = {};
+  if (args?.limit) params.limit = args.limit;
+  if (args?.cursor) params.cursor = args.cursor;
+  if (args?.search) params.search = args.search;
+  if (args?.status) params.status = args.status;
+  if (args?.conversation_status) params.conversation_status = args.conversation_status;
+  if (typeof args?.date_after_unix === "number") params.date_after_unix = args.date_after_unix;
+  if (typeof args?.date_before_unix === "number") params.date_before_unix = args.date_before_unix;
+  if (args?.user_id) params.user_id = args.user_id;
+  if (args?.branch_id) params.branch_id = args.branch_id;
+  const { data } = await api.get<ElevenLabsAnalysisConversationsResponse>("/elevenlabs/analysis/conversations", { params });
+  return data;
+}
+
+export async function fetchElevenLabsAnalysisConversation(conversationId: string) {
+  const { data } = await api.get<ElevenLabsAnalysisConversationDetail>(`/elevenlabs/analysis/conversations/${conversationId}`);
+  return data;
+}
+
+export async function fetchElevenLabsAnalysisTranscript(conversationId: string) {
+  const { data } = await api.get<ElevenLabsAnalysisTranscript>(`/elevenlabs/analysis/conversations/${conversationId}/transcript`);
+  return data;
+}
+
+export async function fetchElevenLabsSimulations(args?: { search?: string; limit?: number }) {
+  const params: Record<string, string | number> = {};
+  if (args?.search) params.search = args.search;
+  if (args?.limit) params.limit = args.limit;
+  const { data } = await api.get<ElevenLabsSimulationListResponse>("/elevenlabs/analysis/simulations", { params });
+  return data;
+}
+
+export async function fetchElevenLabsSimulation(fileName: string) {
+  const { data } = await api.get<ElevenLabsSimulationDetailResponse>(
+    `/elevenlabs/analysis/simulations/${encodeURIComponent(fileName)}`,
+  );
+  return data;
+}
+
+export async function fetchElevenLabsTestSimulations(args?: { search?: string; limit?: number }) {
+  const params: Record<string, string | number> = {};
+  if (args?.search) params.search = args.search;
+  if (args?.limit) params.limit = args.limit;
+  const { data } = await api.get<ElevenLabsSimulationListResponse>("/elevenlabs/tests/simulations", { params });
+  return data;
+}
+
+export async function fetchElevenLabsTestSimulation(fileName: string) {
+  const { data } = await api.get<ElevenLabsSimulationDetailResponse>(
+    `/elevenlabs/tests/simulations/${encodeURIComponent(fileName)}`,
+  );
+  return data;
+}
+
+export async function runElevenLabsTestSimulation(fileName: string, body: ElevenLabsSimulationRunRequest) {
+  const { data } = await api.post<ElevenLabsSimulationRunResponse>(
+    `/elevenlabs/tests/simulations/${encodeURIComponent(fileName)}/run`,
+    body,
+    { timeout: 180_000 },
+  );
+  return data;
+}
+
+export async function stepElevenLabsTestSimulation(fileName: string, body: ElevenLabsStepRequest) {
+  const { data } = await api.post<ElevenLabsSimulationRunResponse>(
+    `/elevenlabs/tests/simulations/${encodeURIComponent(fileName)}/step`,
+    body,
+    { timeout: 180_000 },
+  );
+  return data;
+}
+
+export async function fetchElevenLabsWorkbenchOptions() {
+  const { data } = await api.get<ElevenLabsWorkbenchOptionsResponse>("/elevenlabs/tests/options");
+  return data;
+}
+
+export async function fetchElevenLabsWorkbenchTools(args?: { search?: string; page_size?: number }) {
+  const params: Record<string, string | number> = { page_size: args?.page_size ?? 100 };
+  if (args?.search) params.search = args.search;
+  const { data } = await api.get<ElevenLabsWorkbenchToolsResponse>("/elevenlabs/tests/tools", { params });
+  return data;
+}
+
+export async function fetchElevenLabsWorkbenchAgent(agentId: string) {
+  const { data } = await api.get<ElevenLabsWorkbenchAgentResponse>(
+    `/elevenlabs/tests/agents/${encodeURIComponent(agentId)}`,
+  );
+  return data;
+}
+
+export type ElevenLabsOperatorHealth = {
+  ok: boolean;
+  service: string;
+  elevenlabs_api_configured: boolean;
+  elevenlabs_convai_agent_id: string | null;
+  repo_tool_count: number;
+  repo_tool_roots: string[];
+  ghostdash_webhook: string;
+  capabilities: Record<string, boolean>;
+};
+
+export type ElevenLabsRepoTool = {
+  file_name: string;
+  path: string;
+  tool_name: string;
+  api_function: string | null;
+  description: string;
+  timeout_secs?: number;
+  is_booking: boolean;
+  recommended_flow: string | null;
+};
+
+export async function fetchElevenLabsOperatorHealth() {
+  const { data } = await api.get<ElevenLabsOperatorHealth>("/elevenlabs/operator/health");
+  return data;
+}
+
+export async function fetchElevenLabsRepoTools() {
+  const { data } = await api.get<{ tools: ElevenLabsRepoTool[]; count: number }>("/elevenlabs/operator/tools");
+  return data;
+}
+
+export async function fetchElevenLabsRepoTool(fileName: string) {
+  const { data } = await api.get<{ file_name: string; path: string; tool: Record<string, unknown> }>(
+    `/elevenlabs/operator/tools/${encodeURIComponent(fileName)}`,
+  );
+  return data;
+}
+
+
+export type ElevenLabsSyncToolPreview = {
+  file_name: string;
+  tool_name: string;
+  action: "create" | "update" | "unchanged" | "error";
+  remote_tool_id?: string | null;
+  api_url?: string;
+  timeout_secs?: number | null;
+  message?: string;
+};
+
+export type ElevenLabsSyncPreviewResponse = {
+  dry_run: boolean;
+  tool_count: number;
+  remote_tool_count: number;
+  tools: ElevenLabsSyncToolPreview[];
+};
+
+export type ElevenLabsSyncRequest = {
+  dry_run?: boolean;
+  attach_to_agent?: boolean;
+  agent_id?: string | null;
+  confirm_agent_attachment?: boolean;
+  tool_files?: string[] | null;
+};
+
+function operatorAdminHeaders(adminKey: string) {
+  return { headers: { "X-Operator-Admin-Key": adminKey } };
+}
+
+export async function fetchElevenLabsSyncPreview(adminKey: string) {
+  const { data } = await api.get<ElevenLabsSyncPreviewResponse>(
+    "/elevenlabs/operator/tools/sync/preview",
+    operatorAdminHeaders(adminKey),
+  );
+  return data;
+}
+
+export async function runElevenLabsToolSync(adminKey: string, body: ElevenLabsSyncRequest) {
+  const { data } = await api.post<Record<string, unknown>>(
+    "/elevenlabs/operator/tools/sync",
+    body,
+    operatorAdminHeaders(adminKey),
+  );
+  return data;
+}
+
+export async function fetchElevenLabsWorkflowMap() {
+  const { data } = await api.get<Record<string, unknown>>("/elevenlabs/operator/workflow-map");
+  return data;
+}
+
+export function buildElevenLabsAnalysisAudioUrl(conversationId: string) {
+  const base = apiBaseUrl.startsWith("http")
+    ? apiBaseUrl
+    : `${window.location.origin}${apiBaseUrl.startsWith("/") ? apiBaseUrl : `/${apiBaseUrl}`}`;
+  return `${base.replace(/\/$/, "")}/elevenlabs/analysis/conversations/${encodeURIComponent(conversationId)}/audio`;
 }

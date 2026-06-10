@@ -1,0 +1,22 @@
+{
+  "status": "written",
+  "snapshot_id": "eofy_accounting_sample_2026-06-09T06-10-56-254Z",
+  "model": "res.company",
+  "group": "master_data",
+  "offset": 0,
+  "limit": 500,
+  "exported_rows": 1,
+  "first_id": 4,
+  "last_id": 4,
+  "output_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_company__000000000.jsonl",
+  "manifest_file_absolute": "/home/node/.n8n/odoo_eofy_exports/eofy_accounting_sample_2026-06-09T06-10-56-254Z__master_data__res_company__000000000.manifest.json",
+  "exported_at": "2026-06-09T06:12:00.278Z",
+  "source_company_context": [
+    4
+  ],
+  "sanitisation": {
+    "partner_names_hashed": false,
+    "bank_details_redacted": true,
+    "descriptions_compacted": true
+  }
+}

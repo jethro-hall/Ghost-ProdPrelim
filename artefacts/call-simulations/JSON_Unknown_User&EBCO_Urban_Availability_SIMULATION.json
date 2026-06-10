@@ -1,0 +1,749 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd",
+    "title": "EBCO Urban Availability",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "EBCO Urban Availability",
+    "duration_seconds": 48,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product ...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 268,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 7,
+      "text": "Hi, Magic. I was calling about the EBCO, the EBCO, um, uh, Urban, EBCO Urban.",
+      "asr_ms": 127,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "Just a moment while I check that for you.",
+      "asr_ms": null,
+      "llm_seconds": 1.51,
+      "workflow_route_seconds": null,
+      "tts_ms": 336,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.51,
+      "workflow_route_seconds": null,
+      "tts_ms": 336,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-1103e4a804584ef8b1f3aeed9787f633",
+          "tool_name": "notify_condition_3_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "function": "product_search",
+              "payload": {
+                "search": "EBCO Urban",
+                "category": "all",
+                "first": 10
+              }
+            },
+            "system__message_to_speak": "Just a moment while I check that for you."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-1103e4a804584ef8b1f3aeed9787f633",
+          "tool_name": "notify_condition_3_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 7,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 9.60200559347868e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh46w87feybh0ffq234mfcp",
+                "target_node_id": "node_01kqh46w85feybh0f47c2yfzcg"
+              },
+              {
+                "step_latency_secs": 0.0023260300513356924,
+                "type": "nested_tools",
+                "node_id": "node_01kqh46w85feybh0f47c2yfzcg",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_6701kqh4rb6rfn0veesq9pxxjj73",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "params_as_json": "{}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6701kqh4rb6rfn0veesq9pxxjj73",
+                    "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+                    "result_value": "Missing required parameter: payload",
+                    "is_error": true,
+                    "is_blocked": false,
+                    "tool_has_been_called": false,
+                    "tool_latency_secs": 0.0008334298618137836,
+                    "error_type": "customer_config",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": false
+              },
+              {
+                "step_latency_secs": 6.046006456017494e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqh48p3vfeybh0fzxv66y66q",
+                "target_node_id": "node_01kqh48p3sfeybh0fn0fjx97jd"
+              },
+              {
+                "step_latency_secs": 0.0029203000012785196,
+                "type": "nested_tools",
+                "node_id": "node_01kqh48p3sfeybh0fn0fjx97jd",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_5901kqh4rb6tf27vrmdeed1hy2t9",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqh48p3sfeybh0fn0fjx97jd\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_5901kqh4rb6tf27vrmdeed1hy2t9",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqh48p3sfeybh0fn0fjx97jd\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010201986879110336,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqh48p3sfeybh0fn0fjx97jd",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "[Patient] I can help you with that. What specifically would you like to know about the EBCO Urban?",
+      "asr_ms": null,
+      "llm_seconds": 0.711,
+      "workflow_route_seconds": null,
+      "tts_ms": 417,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 22,
+      "text": "The price and availability.",
+      "asr_ms": 81,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 27,
+      "text": "Just a moment while I check that for you...",
+      "asr_ms": null,
+      "llm_seconds": 1.146,
+      "workflow_route_seconds": null,
+      "tts_ms": 311,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 28,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.146,
+      "workflow_route_seconds": null,
+      "tts_ms": 311,
+      "tool_dispatch": [
+        {
+          "request_id": "SHOPIFY_MCP_TOOL_product_search_31715757b62c414d982adb8e65aa38e5",
+          "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+          "tool_type": "webhook",
+          "params": {
+            "system__message_to_speak": "Checking price and availability.",
+            "payload": {
+              "search": "EBCO Urban"
+            }
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 29,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "SHOPIFY_MCP_TOOL_product_search_31715757b62c414d982adb8e65aa38e5",
+          "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 1557,
+          "result": {
+            "success": true,
+            "message": "Found 2 product(s). Variants include price, colours/options, availability, and inventory when Shopify exposes it.",
+            "operation": "product_search",
+            "blocked": false,
+            "data": {
+              "products": [
+                {
+                  "id": "gid://shopify/Product/9505555546389",
+                  "title": "EBCO Urban 2R Roadster Electric Bike",
+                  "handle": "ebco-urban-2r-roadster-electric-bike",
+                  "status": "ACTIVE",
+                  "vendor": "TVS Motor (Singapore) Pte Limited - Australia Branch",
+                  "product_type": "OTHER BRAND BIKES",
+                  "tags": [],
+                  "storefront_path": "/products/ebco-urban-2r-roadster-electric-bike",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/ebco-urban-roadster-electric-city-bike.png?v=1775552667",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719383829",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Large",
+                      "sku": "EBCO-2R-LARGE",
+                      "barcode": "7512343683763",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 3,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338582805",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 3
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Large"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719416597",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Medium",
+                      "sku": "EBCO-2R-MEDIUM",
+                      "barcode": "3491471756560",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338615573",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Medium"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719449365",
+                      "title": "EBCO Urban 2R Roadster Electric Bike - Small",
+                      "sku": "EBCO-2R-SMALL",
+                      "barcode": "8577318373918",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338648341",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Small"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 3,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Large",
+                        "variant_title": "EBCO Urban 2R Roadster Electric Bike - Large",
+                        "sku": "EBCO-2R-LARGE"
+                      },
+                      {
+                        "quantity": 1,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Small",
+                        "variant_title": "EBCO Urban 2R Roadster Electric Bike - Small",
+                        "sku": "EBCO-2R-SMALL"
+                      }
+                    ],
+                    "summary": "3x store · Large; 1x store · Small"
+                  }
+                },
+                {
+                  "id": "gid://shopify/Product/9505555579157",
+                  "title": "EBCO Urban 2T Step-Over Electric Bike",
+                  "handle": "ebco-urban-2t-step-over-electric-bike",
+                  "status": "ACTIVE",
+                  "vendor": "TVS Motor (Singapore) Pte Limited - Australia Branch",
+                  "product_type": "OTHER BRAND BIKES",
+                  "tags": [],
+                  "storefront_path": "/products/ebco-urban-2t-step-over-electric-bike",
+                  "featured_image": {
+                    "url": "https://cdn.shopify.com/s/files/1/0690/6331/1637/files/ebco-urban-2t-electric-city-bike.png?v=1775552576",
+                    "alt_text": null
+                  },
+                  "variants": [
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719482133",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Large",
+                      "sku": "EBCO-2T-LARGE",
+                      "barcode": "7455181979837",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 0,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338681109",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 0
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Large"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719514901",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Medium",
+                      "sku": "EBCO-2T-MEDIUM",
+                      "barcode": "9804220669808",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 1,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338713877",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 1
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Medium"
+                        }
+                      ],
+                      "colour": null
+                    },
+                    {
+                      "id": "gid://shopify/ProductVariant/49858719547669",
+                      "title": "EBCO Urban 2T Step-Over Electric Bike - Small",
+                      "sku": "EBCO-2T-SMALL",
+                      "barcode": "1284715811635",
+                      "price": {
+                        "amount": "899.00",
+                        "currency_code": "AUD"
+                      },
+                      "compare_at_price": {
+                        "amount": "1999.00",
+                        "currency_code": "AUD"
+                      },
+                      "available_for_sale": true,
+                      "inventory_quantity": 4,
+                      "inventory_by_location": [
+                        {
+                          "inventory_level_id": "gid://shopify/InventoryLevel/111021818133?inventory_item_id=51882338746645",
+                          "location_id": "gid://shopify/Location/74642555157",
+                          "location_name": "",
+                          "available": 4
+                        }
+                      ],
+                      "options": [
+                        {
+                          "name": "Size",
+                          "value": "Small"
+                        }
+                      ],
+                      "colour": null
+                    }
+                  ],
+                  "variant_count": 3,
+                  "inventory_display": {
+                    "lines": [
+                      {
+                        "quantity": 1,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Medium",
+                        "variant_title": "EBCO Urban 2T Step-Over Electric Bike - Medium",
+                        "sku": "EBCO-2T-MEDIUM"
+                      },
+                      {
+                        "quantity": 4,
+                        "location_name": "",
+                        "colour": null,
+                        "descriptor": "Small",
+                        "variant_title": "EBCO Urban 2T Step-Over Electric Bike - Small",
+                        "sku": "EBCO-2T-SMALL"
+                      }
+                    ],
+                    "summary": "1x store · Medium; 4x store · Small"
+                  }
+                }
+              ],
+              "count": 2,
+              "query": "EBCO Urban",
+              "shopify_query": "EBCO Urban",
+              "search_term": "EBCO Urban",
+              "category": "all",
+              "category_filter_applied": false,
+              "category_heuristic_applied": false,
+              "category_heuristic_filtered_out": 0,
+              "first": 5,
+              "variants_first": 20,
+              "llm_evidence_rule": "Prefer product.inventory_display.summary and inventory_display.lines for stock-by-location-and-colour wording (e.g. 2x Brisbane · Army Green). Also variants[].price for price; do not invent stock if lines/summary are empty. Use payload.category part|ebike|scooter (with env filters) or payload.category_query to separate bikes from parts."
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product ...",
+    "TTS 268 ms",
+    "user",
+    "7s",
+    "Hi, Magic. I was calling about the EBCO, the EBCO, um, uh, Urban, EBCO Urban.",
+    "ASR 127 ms",
+    "agent",
+    "14s",
+    "Just a moment while I check that for you.",
+    "LLM 1.51 s",
+    "TTS 336 ms",
+    "agent",
+    "15s",
+    "...",
+    "LLM 1.51 s",
+    "TTS 336 ms",
+    "Tool dispatch: notify_condition_3_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "15s",
+    "...",
+    "Tool succeeded: notify_condition_3_met",
+    "Result 7 ms",
+    "Show result payload",
+    "agent",
+    "18s",
+    "[Patient] I can help you with that. What specifically would you like to know about the EBCO Urban?",
+    "LLM 0.711 s",
+    "TTS 417 ms",
+    "user",
+    "22s",
+    "The price and availability.",
+    "ASR 81 ms",
+    "agent",
+    "27s",
+    "Just a moment while I check that for you...",
+    "LLM 1.146 s",
+    "TTS 311 ms",
+    "agent",
+    "28s",
+    "...",
+    "LLM 1.146 s",
+    "TTS 311 ms",
+    "Tool dispatch: SHOPIFY_MCP_TOOL_product_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "29s",
+    "...",
+    "Tool succeeded: SHOPIFY_MCP_TOOL_product_search",
+    "Result 1557 ms",
+    "Show result payload"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_3_met",
+          "count": 1
+        },
+        {
+          "tool_name": "SHOPIFY_MCP_TOOL_product_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 3,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 6.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hi, Magic. I was calling about the EBCO, the EBCO, um, uh, Urban, EBCO Urban.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_6701kqh4qvt8ermrhmdwjey7tsyd-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "report_name": "Hubtiger latest availability and booking log extract",
+  "source": {
+    "containers_scanned": [
+      "ghoststack-rag-hubtiger-proxy-1",
+      "ghoststack-rag-control-api-1",
+      "ghoststack-rag-hubtiger-mcp-1",
+      "ghoststack-rag-agent-ingress-1"
+    ],
+    "note": "Booking and availability evidence was found in hubtiger-proxy logs. Control API logs confirm recent ElevenLabs Hubtiger tool calls."
+  },
+  "latest_booking_related_event": {
+    "service": "hubtiger-proxy",
+    "route": "POST /jobs/search",
+    "start_ts": "2026-05-01T21:21:22.625Z",
+    "end_ts": "2026-05-01T21:21:24.338Z",
+    "latency_ms": 1713,
+    "status": 200,
+    "upstream_path": "/api/ServiceRequest/JobCardSearch",
+    "upstream_status": 200,
+    "trace_id": "e30edb62-a330-4ae1-8d89-ec2a62c5262b",
+    "span_id": "00e93818-f916-4f46-b6e2-724ce46b8c8c"
+  },
+  "latest_availability_event": {
+    "service": "hubtiger-proxy",
+    "route": "GET /availability/technicians?store=brisbane&fromDate=2026-05-04&toDate=2026-05-10&requiredMinutes=60",
+    "start_ts": "2026-05-01T22:05:43.476Z",
+    "end_ts": "2026-05-01T22:05:45.442Z",
+    "latency_ms": 1966,
+    "status": 404,
+    "error": "404",
+    "upstream_path": "/availability/technicians?store=brisbane&fromDate=2026-05-04&toDate=2026-05-10&requiredMinutes=60",
+    "upstream_status": 404,
+    "trace_id": "26f6d0c1-bb2b-42d0-bd54-11dd0cdbb976",
+    "span_id": "26ed7e64-3a34-40b6-b2e4-b92788252248"
+  },
+  "latest_control_api_hubtiger_tool_call": {
+    "service": "control-api",
+    "route": "/api/elevenlabs/hubtiger/tool",
+    "start_ts_epoch": 1777673143.4165816,
+    "end_ts_epoch": 1777673145.4459047,
+    "latency_ms": 2029.323,
+    "status": 200,
+    "trace_id": "40a1a15ebb3d45c4ad70ed9c28ebb465",
+    "span_id": "851198a9b51144a6"
+  },
+  "elevenlabs_ready_tool_payloads": {
+    "job_search_latest_pattern": {
+      "function": "job_search",
+      "store": "brisbane",
+      "payload": {}
+    },
+    "booking_availability_latest_pattern": {
+      "function": "booking_availability",
+      "store": "brisbane",
+      "start_date": "2026-05-04",
+      "end_date": "2026-05-10",
+      "payload": {
+        "requiredMinutes": 60
+      }
+    }
+  },
+  "elevenlabs_voice_safe_line": "I checked the latest Hubtiger logs. The most recent booking search completed successfully, and the latest Brisbane technician availability lookup returned not found. I can run a fresh availability check now if you want."
+}

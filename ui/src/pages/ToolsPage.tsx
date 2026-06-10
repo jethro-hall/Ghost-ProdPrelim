@@ -6,9 +6,20 @@ import {
   runHubTigerTest,
   type HubTigerBinding,
   type HubTigerStatusPayload,
+  type HubTigerTestOperation,
   type HubTigerTestPayload,
   type HubTigerTrace,
 } from "../api";
+
+const HUBTIGER_WRITE_OPERATIONS: HubTigerTestOperation[] = [
+  "booking_create",
+  "booking_submit",
+  "booking_finalize",
+  "booking_customer_confirm",
+  "booking_bike_confirm",
+  "booking_update",
+  "quote_add_line_item",
+];
 
 const EMPTY_STATUS: HubTigerStatusPayload = {
   status: {
@@ -30,7 +41,7 @@ export default function ToolsPage() {
   const [testBusy, setTestBusy] = useState(false);
   const [testResult, setTestResult] = useState<HubTigerTestPayload | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
-  const [operation, setOperation] = useState<HubTigerTestPayload["operation"]>("availability_lookup");
+  const [operation, setOperation] = useState<HubTigerTestOperation>("availability_lookup");
   const [payloadText, setPayloadText] = useState('{"postcode":"4220"}');
 
   async function refresh() {
@@ -60,7 +71,8 @@ export default function ToolsPage() {
     return groups;
   }, [statusPayload.bindings]);
 
-  const writeDisabled = statusPayload.status.mode === "read_only" && (operation === "booking_create" || operation === "quote_add_line_item");
+  const writeDisabled =
+    statusPayload.status.mode === "read_only" && HUBTIGER_WRITE_OPERATIONS.includes(operation);
 
   async function handleRunTest() {
     setTestError(null);
@@ -144,19 +156,37 @@ export default function ToolsPage() {
       <section className="glass rounded-xl border border-slate-200 px-4 py-4">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">Test Console</p>
         <h3 className="mt-1 text-[0.95rem] font-semibold text-slate-900">Safe HubTiger operation test</h3>
+        <p className="mt-1 text-[0.72rem] text-slate-500">
+          For step-by-step booking simulation, use <span className="font-semibold">Agent test</span> in the header or the chat bubble (bottom-right).
+        </p>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           <label className="text-[0.74rem] text-slate-600">
             Operation
             <select
               className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-[0.78rem]"
               value={operation}
-              onChange={(event) => setOperation(event.target.value as HubTigerTestPayload["operation"])}
+              onChange={(event) => setOperation(event.target.value as HubTigerTestOperation)}
             >
-              <option value="availability_lookup">availability_lookup</option>
-              <option value="job_lookup">job_lookup</option>
-              <option value="quote_preview">quote_preview</option>
-              <option value="booking_create">booking_create</option>
-              <option value="quote_add_line_item">quote_add_line_item</option>
+              <optgroup label="Read">
+                <option value="availability_lookup">availability_lookup</option>
+                <option value="job_lookup">job_lookup</option>
+                <option value="job_search">job_search</option>
+                <option value="job_retrieve">job_retrieve</option>
+                <option value="quote_preview">quote_preview</option>
+                <option value="booking_slot_hold">booking_slot_hold</option>
+                <option value="booking_customer_search">booking_customer_search</option>
+                <option value="booking_bike_list">booking_bike_list</option>
+                <option value="booking_service_set">booking_service_set</option>
+              </optgroup>
+              <optgroup label="Write (guarded)">
+                <option value="booking_customer_confirm">booking_customer_confirm</option>
+                <option value="booking_bike_confirm">booking_bike_confirm</option>
+                <option value="booking_submit">booking_submit</option>
+                <option value="booking_finalize">booking_finalize</option>
+                <option value="booking_create">booking_create</option>
+                <option value="booking_update">booking_update</option>
+                <option value="quote_add_line_item">quote_add_line_item</option>
+              </optgroup>
             </select>
           </label>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[0.72rem] text-slate-600">

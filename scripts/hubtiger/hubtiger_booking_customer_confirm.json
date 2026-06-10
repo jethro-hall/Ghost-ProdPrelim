@@ -1,0 +1,70 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_booking_customer_confirm",
+  "description": "Step 1b confirm: Lock in the customer record before bike or service steps.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "After customer_search. Pass customer_id from candidates OR create_new true for a new profile.\n\nDo not proceed to bikes until customer_confirmed is true in the response.",
+      "properties": [
+        {
+          "id": "function",
+          "type": "string",
+          "value_type": "constant",
+          "constant_value": "booking_customer_confirm",
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "properties": [
+            {
+              "id": "booking_session_id",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "required": true
+            },
+            {
+              "id": "customer_id",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "From search candidates when customer confirms identity.",
+              "required": false
+            },
+            {
+              "id": "create_new",
+              "type": "boolean",
+              "value_type": "llm_prompt",
+              "description": "True when no match or customer wants a new profile.",
+              "required": false
+            }
+          ],
+          "required": true
+        }
+      ],
+      "required": false
+    },
+    "request_headers": [
+      { "type": "value", "name": "Content-Type", "value": "application/json" },
+      { "type": "value", "name": "X-Ghost-Voice-Key", "value": "SET_IN_ELEVENLABS_FROM_GHOSTDASH_ENV" }
+    ],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 30,
+  "dynamic_variables": { "dynamic_variable_placeholders": {} },
+  "response_mocks": []
+}

@@ -1,0 +1,295 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_1501kqk0nz4af7pa0ngyhyvvntny",
+    "title": "Warranty Serial Number",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Warranty Serial Number",
+    "duration_seconds": 86,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 263,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 12,
+      "text": "Other.",
+      "asr_ms": 46,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "[Patient] Okay, I'm here to help with anything else you need. Could you please let me know what you're looking for?",
+      "asr_ms": null,
+      "llm_seconds": 0.21,
+      "workflow_route_seconds": null,
+      "tts_ms": 305,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 21,
+      "text": "Uh, will you buy back an electric bike and warranty?",
+      "asr_ms": 109,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 26,
+      "text": "[Patient] We don’t offer a buy-back program for electric bikes or warranties. If you're looking to sell your bike, we recommend checking with local marketplaces or second-hand platforms. Let me know if you need help with anything else.",
+      "asr_ms": null,
+      "llm_seconds": 0.179,
+      "workflow_route_seconds": null,
+      "tts_ms": 300,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 40,
+      "text": "What about my warranty?",
+      "asr_ms": 57,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 43,
+      "text": "[Patient] Your warranty covers repairs and parts for defects in materials or workmanship, as outlined in your warranty terms. If you're having an issue, I can help you check the status or guide you on next steps. Could you please share your bike’s serial number or job reference?",
+      "asr_ms": null,
+      "llm_seconds": 0.19,
+      "workflow_route_seconds": null,
+      "tts_ms": 314,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 61,
+      "text": "Where is the serial number?",
+      "asr_ms": 63,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 63,
+      "text": "[Patient] The serial number is usually found imprinted on the handlebar stem of your bike. It’s a good idea to keep it handy for warranty registration or service inquiries. Let me know if you need help with anything else.",
+      "asr_ms": null,
+      "llm_seconds": 0.209,
+      "workflow_route_seconds": null,
+      "tts_ms": 298,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 76,
+      "text": "I’ll see if I can find it and call back.",
+      "asr_ms": 49,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 80,
+      "text": "[Enthusiastically] No problem at all! Take your time, and feel free to call back whenever you're ready. Have a great day...",
+      "asr_ms": null,
+      "llm_seconds": 0.293,
+      "workflow_route_seconds": null,
+      "tts_ms": 397,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 263 ms",
+    "user",
+    "12s",
+    "Other.",
+    "ASR 46 ms",
+    "agent",
+    "14s",
+    "[Patient] Okay, I'm here to help with anything else you need. Could you please let me know what you're looking for?",
+    "LLM 0.21 s",
+    "TTS 305 ms",
+    "user",
+    "21s",
+    "Uh, will you buy back an electric bike and warranty?",
+    "ASR 109 ms",
+    "agent",
+    "26s",
+    "[Patient] We don’t offer a buy-back program for electric bikes or warranties. If you're looking to sell your bike, we recommend checking with local marketplaces or second-hand platforms. Let me know if you need help with anything else.",
+    "LLM 0.179 s",
+    "TTS 300 ms",
+    "user",
+    "40s",
+    "What about my warranty?",
+    "ASR 57 ms",
+    "agent",
+    "43s",
+    "[Patient] Your warranty covers repairs and parts for defects in materials or workmanship, as outlined in your warranty terms. If you're having an issue, I can help you check the status or guide you on next steps. Could you please share your bike’s serial number or job reference?",
+    "LLM 0.19 s",
+    "TTS 314 ms",
+    "user",
+    "61s",
+    "Where is the serial number?",
+    "ASR 63 ms",
+    "agent",
+    "63s",
+    "[Patient] The serial number is usually found imprinted on the handlebar stem of your bike. It’s a good idea to keep it handy for warranty registration or service inquiries. Let me know if you need help with anything else.",
+    "LLM 0.209 s",
+    "TTS 298 ms",
+    "user",
+    "76s",
+    "I’ll see if I can find it and call back.",
+    "ASR 49 ms",
+    "agent",
+    "80s",
+    "[Enthusiastically] No problem at all! Take your time, and feel free to call back whenever you're ready. Have a great day...",
+    "LLM 0.293 s",
+    "TTS 397 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 3,
+      "turns_before_first_tool": 11,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 3.2,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_1501kqk0nz4af7pa0ngyhyvvntny-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Other.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_1501kqk0nz4af7pa0ngyhyvvntny-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_1501kqk0nz4af7pa0ngyhyvvntny-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

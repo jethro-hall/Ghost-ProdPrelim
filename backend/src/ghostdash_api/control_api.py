@@ -42,7 +42,18 @@ from .database import get_session
 from .database import SessionLocal
 from .finance_report_renderer import finance_report_file, load_finance_report
 from .ingest import extract_text_local
-from .hubtiger_mcp import call_hubtiger_mcp, to_hubtiger_test_response
+from .hubtiger_mcp import (
+    approve_hubtiger_write_review,
+    call_hubtiger_mcp,
+    reject_hubtiger_write_review,
+    to_hubtiger_test_response,
+)
+from .hubtiger_write_review import get_review_entry, list_pending_reviews
+from .integrations.elevenlabs_analysis import router as elevenlabs_analysis_router
+from .integrations.elevenlabs_simulations import router as elevenlabs_simulations_router
+from .integrations.elevenlabs_test_platform import router as elevenlabs_test_platform_router
+from .integrations.elevenlabs_operator import router as elevenlabs_operator_router
+from integrations.elevenlabs_hubtiger.router import run_elevenlabs_hubtiger_tool_request
 from .integrations.hubtiger_elevenlabs_tool import router as elevenlabs_hubtiger_router
 from .integrations.shopify_elevenlabs_tool import router as elevenlabs_shopify_router
 from .magic_mike import MAGIC_MIKE_AGENT_NAME
@@ -150,6 +161,10 @@ from .schemas import (
     HubTigerTestRequest,
     HubTigerTestResponse,
     ElevenLabsHubTigerBookingAvailabilityRequest,
+    ElevenLabsHubTigerToolRequest,
+    HubTigerWriteReviewListView,
+    HubTigerWriteReviewRejectRequest,
+    PublicToolResult,
     HubTigerToolBindingView,
     ToolPolicyPayload,
     ToolPolicyView,
@@ -212,6 +227,7 @@ HUBTIGER_BINDINGS = (
     ("hubtiger_job_lookup", "HubTiger Job Lookup (Legacy)", "jobs", False),
     ("hubtiger_quote_preview", "HubTiger Quote Preview", "quotes", False),
     ("hubtiger_booking_create", "HubTiger Booking Create", "booking", True),
+    ("hubtiger_booking_update", "HubTiger Booking Update", "booking", True),
     ("hubtiger_quote_add_line_item", "HubTiger Quote Add Line Item", "quotes", True),
 )
 HUBTIGER_RECENT_TRACES: deque[HubTigerRecentTraceView] = deque(maxlen=25)
@@ -1859,6 +1875,53 @@ def create_app() -> FastAPI:
         )
         return result
 
+    @app.post("/api/elevenlabs/hubtiger/booking_create", response_model=PublicToolResult)
+    async def api_elevenlabs_hubtiger_booking_create(
+        body: ElevenLabsHubTigerToolRequest,
+        request: Request,
+    ) -> PublicToolResult:
+        """Gated ElevenLabs write path for booking_create (preflight + staff review queue)."""
+        _check_hubtiger_voice_auth(request)
+        canonical = body.model_copy(update={"function": "booking_create"})
+        return await run_elevenlabs_hubtiger_tool_request(body=canonical, request=request)
+
+    @app.get("/api/hubtiger/write-reviews", response_model=list[HubTigerWriteReviewListView])
+    def api_hubtiger_write_reviews(
+        status: str = Query(default="pending"),
+        limit: int = Query(default=50, ge=1, le=200),
+    ) -> list[HubTigerWriteReviewListView]:
+        if status.strip().lower() != "pending":
+            return []
+        rows = list_pending_reviews(limit=limit)
+        return [HubTigerWriteReviewListView(**row) for row in rows]
+
+    @app.get("/api/hubtiger/write-reviews/{review_id}")
+    def api_hubtiger_write_review_detail(review_id: str) -> dict[str, Any]:
+        entry = get_review_entry(review_id)
+        if not entry:
+            raise HTTPException(status_code=404, detail="Write review entry not found.")
+        return entry
+
+    @app.post("/api/hubtiger/write-reviews/{review_id}/approve", response_model=HubTigerTestResponse)
+    async def api_hubtiger_write_review_approve(review_id: str, request: Request) -> HubTigerTestResponse:
+        trace_id = str(getattr(request.state, "trace_id", "") or "") or uuid4().hex
+        raw = await approve_hubtiger_write_review(review_id=review_id, trace_id=trace_id)
+        return to_hubtiger_test_response(raw)
+
+    @app.post("/api/hubtiger/write-reviews/{review_id}/reject", response_model=HubTigerTestResponse)
+    async def api_hubtiger_write_review_reject(
+        review_id: str,
+        body: HubTigerWriteReviewRejectRequest,
+        request: Request,
+    ) -> HubTigerTestResponse:
+        trace_id = str(getattr(request.state, "trace_id", "") or "") or uuid4().hex
+        raw = await reject_hubtiger_write_review(
+            review_id=review_id,
+            reason=str(body.reason or "").strip(),
+            trace_id=trace_id,
+        )
+        return to_hubtiger_test_response(raw)
+
     @app.get("/api/tools/catalog", response_model=list[ToolCatalogEntryView])
     def api_tool_catalog(session: Session = Depends(get_session)) -> list[ToolCatalogEntryView]:
         return list_tool_catalog(session)
@@ -2890,6 +2953,10 @@ def create_app() -> FastAPI:
 
     app.include_router(elevenlabs_hubtiger_router)
     app.include_router(elevenlabs_shopify_router)
+    app.include_router(elevenlabs_analysis_router)
+    app.include_router(elevenlabs_simulations_router)
+    app.include_router(elevenlabs_test_platform_router)
+    app.include_router(elevenlabs_operator_router)
 
     return app
 

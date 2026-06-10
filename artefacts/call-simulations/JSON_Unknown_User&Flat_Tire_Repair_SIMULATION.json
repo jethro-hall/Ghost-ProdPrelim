@@ -1,0 +1,326 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_9301kqkbzjfde8csvka8tphq3ydv",
+    "title": "Flat Tire Repair",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Flat Tire Repair",
+    "duration_seconds": 74,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 283,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 15,
+      "text": "Flat tire.",
+      "asr_ms": 167,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 17,
+      "text": "[Patient] I can help you with that. Is your bike already booked in for service, or are you looking to schedule a repair for the flat tire...",
+      "asr_ms": null,
+      "llm_seconds": 0.161,
+      "workflow_route_seconds": null,
+      "tts_ms": 400,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 22,
+      "text": "No.",
+      "asr_ms": 137,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 24,
+      "text": "[Enthusiastically] Got it. Let me connect you to the right team for a repair. One moment please.",
+      "asr_ms": null,
+      "llm_seconds": 0.174,
+      "workflow_route_seconds": null,
+      "tts_ms": 363,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 35,
+      "text": "...",
+      "asr_ms": 148,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 36,
+      "text": "Hey, just checking in — are you still there?",
+      "asr_ms": null,
+      "llm_seconds": 0.155,
+      "workflow_route_seconds": null,
+      "tts_ms": 376,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 40,
+      "text": "Yes.",
+      "asr_ms": 162,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 42,
+      "text": "[Enthusiastically] Great, thanks for confirming! I’m here to help you with your flat tire repair. Let me get you connected to the right team right away.",
+      "asr_ms": null,
+      "llm_seconds": 0.186,
+      "workflow_route_seconds": null,
+      "tts_ms": 359,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 51,
+      "text": "I don't know how it worked today.",
+      "asr_ms": 121,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 54,
+      "text": "[Patient] No worries at all. I’ll make sure you’re connected to the right team to sort out your flat tire. Just a moment while I route you through.",
+      "asr_ms": null,
+      "llm_seconds": 0.108,
+      "workflow_route_seconds": null,
+      "tts_ms": 391,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 68,
+      "text": "...",
+      "asr_ms": 193,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 69,
+      "text": "Hey, just checking in — are you still there?",
+      "asr_ms": null,
+      "llm_seconds": 0.116,
+      "workflow_route_seconds": null,
+      "tts_ms": 285,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 283 ms",
+    "user",
+    "15s",
+    "Flat tire.",
+    "ASR 167 ms",
+    "agent",
+    "17s",
+    "[Patient] I can help you with that. Is your bike already booked in for service, or are you looking to schedule a repair for the flat tire...",
+    "LLM 0.161 s",
+    "TTS 400 ms",
+    "user",
+    "22s",
+    "No.",
+    "ASR 137 ms",
+    "agent",
+    "24s",
+    "[Enthusiastically] Got it. Let me connect you to the right team for a repair. One moment please.",
+    "LLM 0.174 s",
+    "TTS 363 ms",
+    "user",
+    "35s",
+    "...",
+    "ASR 148 ms",
+    "agent",
+    "36s",
+    "Hey, just checking in — are you still there?",
+    "LLM 0.155 s",
+    "TTS 376 ms",
+    "user",
+    "40s",
+    "Yes.",
+    "ASR 162 ms",
+    "agent",
+    "42s",
+    "[Enthusiastically] Great, thanks for confirming! I’m here to help you with your flat tire repair. Let me get you connected to the right team right away.",
+    "LLM 0.186 s",
+    "TTS 359 ms",
+    "user",
+    "51s",
+    "I don't know how it worked today.",
+    "ASR 121 ms",
+    "agent",
+    "54s",
+    "[Patient] No worries at all. I’ll make sure you’re connected to the right team to sort out your flat tire. Just a moment while I route you through.",
+    "LLM 0.108 s",
+    "TTS 391 ms",
+    "user",
+    "68s",
+    "...",
+    "ASR 193 ms",
+    "agent",
+    "69s",
+    "Hey, just checking in — are you still there?",
+    "LLM 0.116 s",
+    "TTS 285 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 0,
+      "tool_result_count": 0,
+      "tool_success_count": 0,
+      "tool_failure_count": 0,
+      "tool_success_rate": null,
+      "top_tools": [],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 3,
+      "turns_before_first_tool": 13,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 1.83,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_9301kqkbzjfde8csvka8tphq3ydv-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Flat tire.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_9301kqkbzjfde8csvka8tphq3ydv-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_9301kqkbzjfde8csvka8tphq3ydv-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

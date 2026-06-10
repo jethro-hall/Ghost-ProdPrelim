@@ -1,0 +1,5 @@
+{
+  "name": "RideAI Hubtiger Proxy Dashboard",
+  "description": "A visual interface and documentation hub for the Hubtiger API Proxy project, outlining requirements, endpoints, and testing capabilities for the AI Agent integration.",
+  "requestFramePermissions": []
+}

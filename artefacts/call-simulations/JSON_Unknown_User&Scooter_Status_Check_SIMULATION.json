@@ -1,0 +1,401 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4101kqgzcxrdfrkajbh3908d32h1",
+    "title": "Scooter Status Check",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "Scooter Status Check",
+    "duration_seconds": 40,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings,...",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 336,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 5,
+      "text": "Hey, Mike. I just wanna check on my scooter. My name's Keith McKnight.",
+      "asr_ms": 152,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 12,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.644,
+      "workflow_route_seconds": null,
+      "tts_ms": 316,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 13,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.644,
+      "workflow_route_seconds": null,
+      "tts_ms": 316,
+      "tool_dispatch": [
+        {
+          "request_id": "notify_condition_3_met_e01e9b6f0f6b48ef938f9f55dc6a056f",
+          "tool_name": "notify_condition_3_met",
+          "tool_type": "workflow",
+          "params": {
+            "nested_tools": {
+              "hubtiger_job_search": {
+                "payload": {
+                  "query": "Keith McKnight"
+                },
+                "function": "job_search"
+              }
+            },
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 15,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_3_met_e01e9b6f0f6b48ef938f9f55dc6a056f",
+          "tool_name": "notify_condition_3_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2605,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 7.594004273414612e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgyefeze07rq8wfv3gy81f8",
+                "target_node_id": "node_01kqgyefexe07rq8w2qkk5ep0z"
+              },
+              {
+                "step_latency_secs": 2.60211234819144,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyefexe07rq8w2qkk5ep0z",
+                "requests": [
+                  {
+                    "type": "webhook",
+                    "request_id": "tlcal_2201kqgzday9f9st97dvyv2v81gx",
+                    "tool_name": "hubtiger_job_search",
+                    "params_as_json": "{\"payload\": {\"query\": \"Keith McKnight\"}, \"function\": \"job_search\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": {
+                      "type": "webhook",
+                      "method": "POST",
+                      "url": "https://ghoststack.rideai.com.au/api/elevenlabs/hubtiger/tool",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "X-Ghost-Voice-Key": "1YQ7fvTwC8sFOpQQdlvIJdO4z-2o8P8O"
+                      },
+                      "path_params": {},
+                      "query_params": {},
+                      "body": "{\"function\": \"job_search\", \"payload\": {\"query\": \"Keith McKnight\"}}"
+                    }
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_2201kqgzday9f9st97dvyv2v81gx",
+                    "tool_name": "hubtiger_job_search",
+                    "result_value": "{\"success\":true,\"message\":\"HubTiger call completed.\",\"operation\":\"job_search\",\"blocked\":false,\"data\":{\"ok\":true,\"matches\":[{\"id\":4216907,\"jobCardNo\":\"#35958\",\"customerName\":\"Keith McKnight\",\"bike\":\"Dragon predator \",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-02T09:40:00\",\"scheduledDate\":\"2026-05-02T09:40:00\",\"durationMinutes\":0},{\"id\":3479132,\"jobCardNo\":\"#27138\",\"customerName\":\"Keith McKnight\",\"bike\":\"Dragon predator \",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2025-09-20T10:00:00\",\"scheduledDate\":\"2025-09-20T10:00:00\",\"durationMinutes\":0}],\"results\":[{\"id\":4216907,\"jobCardNo\":\"#35958\",\"customerName\":\"Keith McKnight\",\"bike\":\"Dragon predator \",\"status\":\"15\",\"statusCode\":15,\"statusLabel\":null,\"lastUpdated\":\"2026-05-02T09:40:00\",\"scheduledDate\":\"2026-05-02T09:40:00\",\"durationMinutes\":0},{\"id\":3479132,\"jobCardNo\":\"#27138\",\"customerName\":\"Keith McKnight\",\"bike\":\"Dragon predator \",\"status\":\"Waiting - Parts\",\"statusCode\":50,\"statusLabel\":\"Waiting - Parts\",\"lastUpdated\":\"2025-09-20T10:00:00\",\"scheduledDate\":\"2025-09-20T10:00:00\",\"durationMinutes\":0}],\"count\":2,\"job_cards\":[{\"id\":4216907,\"job_card_no\":\"#35958\",\"customer_name\":\"Keith McKnight\",\"bike\":\"Dragon predator\",\"status\":\"15\",\"scheduled_date\":\"2026-05-02T09:40:00\",\"last_updated\":\"2026-05-02T09:40:00\",\"store_matched\":\"\",\"label\":\"Keith McKnight | #35958 | Dragon predator | 15\"},{\"id\":3479132,\"job_card_no\":\"#27138\",\"customer_name\":\"Keith McKnight\",\"bike\":\"Dragon predator\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2025-09-20T10:00:00\",\"last_updated\":\"2025-09-20T10:00:00\",\"store_matched\":\"\",\"label\":\"Keith McKnight | #27138 | Dragon predator | Waiting - Parts\"}],\"case_select\":{\"identified_customer\":\"Keith McKnight\",\"job_card_count\":2,\"selection_required\":true,\"assistant_prompt\":\"I found 2 job cards for Keith McKnight. Ask which job they are calling about.\",\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\",\"identifier_value\":\"Keith McKnight\",\"ambiguous_identifier\":null,\"possible_identifier_types\":[],\"allowed_next_actions\":[\"list_matching_cases\"],\"options\":[{\"id\":4216907,\"job_card_no\":\"#35958\",\"customer_name\":\"Keith McKnight\",\"bike\":\"Dragon predator\",\"status\":\"15\",\"scheduled_date\":\"2026-05-02T09:40:00\",\"last_updated\":\"2026-05-02T09:40:00\",\"store_matched\":\"\",\"label\":\"Keith McKnight | #35958 | Dragon predator | 15\"},{\"id\":3479132,\"job_card_no\":\"#27138\",\"customer_name\":\"Keith McKnight\",\"bike\":\"Dragon predator\",\"status\":\"Waiting - Parts\",\"scheduled_date\":\"2025-09-20T10:00:00\",\"last_updated\":\"2025-09-20T10:00:00\",\"store_matched\":\"\",\"label\":\"Keith McKnight | #27138 | Dragon predator | Waiting - Parts\"}]},\"identified_customer\":\"Keith McKnight\",\"job_card_count\":2,\"store_requested\":\"\",\"store_matched\":\"\",\"store_match\":null,\"store_verification\":\"not_requested\",\"selection_required\":true,\"identifier_type\":\"query_text\",\"identifier_confidence\":\"medium\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 2.6004664981737733,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "webhook"
+                  }
+                ],
+                "is_successful": true
+              },
+              {
+                "step_latency_secs": 7.261987775564194e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqgz0z0ne07rq90k4ws4qkbb",
+                "target_node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm"
+              },
+              {
+                "step_latency_secs": 0.0028671594336628914,
+                "type": "nested_tools",
+                "node_id": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_2901kqgzddfmef1bfk6r3bys3bf3",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqgyxf77e07rq8yjf4g1f6tm\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_2901kqgzddfmef1bfk6r3bys3bf3",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqgyxf77e07rq8yjf4g1f6tm\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00012029055505990982,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqgyxf77e07rq8yjf4g1f6tm",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 16,
+      "text": "I found two jobs under your name, Keith. One is for job card #35958, scheduled for2 May, and the other is #27138, currently waiting for parts. Which one are you asking about?",
+      "asr_ms": null,
+      "llm_seconds": 0.203,
+      "workflow_route_seconds": null,
+      "tts_ms": 309,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 29,
+      "text": "The latter one. What, what, uh, what product is it?",
+      "asr_ms": 37,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 34,
+      "text": "The job is for your Dragon predator scooter. It's currently waiting for parts to arrive.",
+      "asr_ms": null,
+      "llm_seconds": 0.192,
+      "workflow_route_seconds": null,
+      "tts_ms": 1032,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 38,
+      "text": "I've asked for-",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings,...",
+    "TTS 336 ms",
+    "user",
+    "5s",
+    "Hey, Mike. I just wanna check on my scooter. My name's Keith McKnight.",
+    "ASR 152 ms",
+    "agent",
+    "12s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.644 s",
+    "TTS 316 ms",
+    "agent",
+    "13s",
+    "...",
+    "LLM 1.644 s",
+    "TTS 316 ms",
+    "Tool dispatch: notify_condition_3_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "15s",
+    "...",
+    "Tool succeeded: notify_condition_3_met",
+    "Result 2605 ms",
+    "Show result payload",
+    "agent",
+    "16s",
+    "I found two jobs under your name, Keith. One is for job card #35958, scheduled for2 May, and the other is #27138, currently waiting for parts. Which one are you asking about?",
+    "LLM 0.203 s",
+    "TTS 309 ms",
+    "user",
+    "29s",
+    "The latter one. What, what, uh, what product is it?",
+    "ASR 37 ms",
+    "agent",
+    "34s",
+    "The job is for your Dragon predator scooter. It's currently waiting for parts to arrive.",
+    "LLM 0.192 s",
+    "TTS 1032 ms",
+    "user",
+    "38s",
+    "I've asked for-"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 1,
+      "tool_result_count": 1,
+      "tool_success_count": 1,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_3_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 1,
+      "turns_before_first_tool": 3,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 6.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": false,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4101kqgzcxrdfrkajbh3908d32h1-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Hey, Mike. I just wanna check on my scooter. My name's Keith McKnight.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4101kqgzcxrdfrkajbh3908d32h1-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4101kqgzcxrdfrkajbh3908d32h1-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

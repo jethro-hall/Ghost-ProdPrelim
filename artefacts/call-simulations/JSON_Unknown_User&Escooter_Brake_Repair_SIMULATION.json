@@ -1,0 +1,463 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_4601kqka5d9cfp5bth9ksbq3aetm",
+    "title": "E-scooter Brake Repair",
+    "status": "done",
+    "user": "Unknown_User",
+    "brief_summary": "E-scooter Brake Repair",
+    "duration_seconds": 78,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 296,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 11,
+      "text": "Replacing brake on G3 Max e-scooter.",
+      "asr_ms": 111,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 17,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.262,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-f14a9851a8594f54908a373ee61118f9",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 17,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-f14a9851a8594f54908a373ee61118f9",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.211021587252617e-05,
+                "type": "edge",
+                "edge_id": "edge_01kqhc9h67fvp96jv06b4n0smq",
+                "target_node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b"
+              },
+              {
+                "step_latency_secs": 0.0029576891101896763,
+                "type": "nested_tools",
+                "node_id": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_5901kqka5yrqe7pthr80b2kadw2k",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"node_01kqhc76b8fvp96jtwpp3a9b1b\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_5901kqka5yrqe7pthr80b2kadw2k",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"node_01kqhc76b8fvp96jtwpp3a9b1b\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010650977492332458,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "node_01kqhc76b8fvp96jtwpp3a9b1b",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 18,
+      "text": "[Patient] I can help you with that. Could you please provide your full name and phone number so I can check the details of your repair?",
+      "asr_ms": null,
+      "llm_seconds": 0.17,
+      "workflow_route_seconds": null,
+      "tts_ms": 357,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 26,
+      "text": "I want to get it repaired. I haven't booked it yet.",
+      "asr_ms": 79,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 30,
+      "text": "[Enthusiastically] Great, I can help you book that repair. Could you please provide your full name and phone number so I can get started?",
+      "asr_ms": null,
+      "llm_seconds": 0.16,
+      "workflow_route_seconds": null,
+      "tts_ms": 386,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 39,
+      "text": "Sherry Bowers.",
+      "asr_ms": 65,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 42,
+      "text": "[Enthusiastically] Thanks, Sherry. Could you please provide your phone number so I can proceed with booking your G3 Max e-scooter repair...",
+      "asr_ms": null,
+      "llm_seconds": 0.087,
+      "workflow_route_seconds": null,
+      "tts_ms": 443,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 47,
+      "text": "Oh, I can't share it.",
+      "asr_ms": 80,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 49,
+      "text": "[Patient] No problem, Sherry. I can still help you with your repair. Could you please confirm the model of your...",
+      "asr_ms": null,
+      "llm_seconds": 0.08,
+      "workflow_route_seconds": null,
+      "tts_ms": 626,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 53,
+      "text": "Okay, go, go for it.",
+      "asr_ms": 156,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 56,
+      "text": "[Patient] I understand you'd like to proceed with the repair for your G3 Max e-scooter. To help you further, could you please confirm the issue you're experiencing with the brakes?",
+      "asr_ms": null,
+      "llm_seconds": 0.123,
+      "workflow_route_seconds": null,
+      "tts_ms": 352,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 66,
+      "text": "Need new brake. No, it says reassemble.",
+      "asr_ms": 52,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 72,
+      "text": "[Patient] I see. You mentioned the brake needs replacing or reassembling. To help you better, could you please confirm if the brake is...",
+      "asr_ms": null,
+      "llm_seconds": 0.182,
+      "workflow_route_seconds": null,
+      "tts_ms": 338,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help you with workshop updates, bookings, repairs and product questions. So, What are you after today?",
+    "TTS 296 ms",
+    "user",
+    "11s",
+    "Replacing brake on G3 Max e-scooter.",
+    "ASR 111 ms",
+    "agent",
+    "17s",
+    "...",
+    "LLM 0.262 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "17s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 3 ms",
+    "Show result payload",
+    "agent",
+    "18s",
+    "[Patient] I can help you with that. Could you please provide your full name and phone number so I can check the details of your repair?",
+    "LLM 0.17 s",
+    "TTS 357 ms",
+    "user",
+    "26s",
+    "I want to get it repaired. I haven't booked it yet.",
+    "ASR 79 ms",
+    "agent",
+    "30s",
+    "[Enthusiastically] Great, I can help you book that repair. Could you please provide your full name and phone number so I can get started?",
+    "LLM 0.16 s",
+    "TTS 386 ms",
+    "user",
+    "39s",
+    "Sherry Bowers.",
+    "ASR 65 ms",
+    "agent",
+    "42s",
+    "[Enthusiastically] Thanks, Sherry. Could you please provide your phone number so I can proceed with booking your G3 Max e-scooter repair...",
+    "LLM 0.087 s",
+    "TTS 443 ms",
+    "user",
+    "47s",
+    "Oh, I can't share it.",
+    "ASR 80 ms",
+    "agent",
+    "49s",
+    "[Patient] No problem, Sherry. I can still help you with your repair. Could you please confirm the model of your...",
+    "LLM 0.08 s",
+    "TTS 626 ms",
+    "user",
+    "53s",
+    "Okay, go, go for it.",
+    "ASR 156 ms",
+    "agent",
+    "56s",
+    "[Patient] I understand you'd like to proceed with the repair for your G3 Max e-scooter. To help you further, could you please confirm the issue you're experiencing with the brakes?",
+    "LLM 0.123 s",
+    "TTS 352 ms",
+    "user",
+    "66s",
+    "Need new brake. No, it says reassemble.",
+    "ASR 52 ms",
+    "agent",
+    "72s",
+    "[Patient] I see. You mentioned the brake needs replacing or reassembling. To help you better, could you please confirm if the brake is...",
+    "LLM 0.182 s",
+    "TTS 338 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 1,
+      "tool_result_count": 1,
+      "tool_success_count": 1,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 0,
+      "first_hubtiger_dispatch_seconds": null,
+      "booking_intent_to_first_hubtiger_seconds": null
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 4,
+      "turns_before_first_tool": 2,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 4.0,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_4601kqka5d9cfp5bth9ksbq3aetm-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: Replacing brake on G3 Max e-scooter.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_4601kqka5d9cfp5bth9ksbq3aetm-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_4601kqka5d9cfp5bth9ksbq3aetm-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_4601kqka5d9cfp5bth9ksbq3aetm-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

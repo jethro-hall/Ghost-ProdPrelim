@@ -1,0 +1,166 @@
+{
+  "name": "Brisbane EOFY \u2014 03 Claude Anomaly Audit",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1fce679a-0503-4b0c-add5-42f0c6960e83",
+      "name": "Manual: Start Claude Audit",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        240,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Claude forensic anomaly scan\n1. Set snapshot_id from workflow 02.\n2. Attach Anthropic API credential to HTTP node.\n3. Output: `claude_anomaly_report.json` in report folder.",
+        "height": 160,
+        "width": 460,
+        "color": 4
+      },
+      "id": "f4c4425b-a3e6-44c6-85be-917e2dc92a9c",
+      "name": "Note: ## Claude forensic anomaly scan\n1. Set s",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        200,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4735f90b-1c63-4e45-b8ec-fbf06ea29c07",
+              "name": "snapshot_id",
+              "value": "eofy_brisbane_REPLACE_TIMESTAMP",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59063257-7197-4139-a199-be232f15fb06",
+      "name": "Set snapshot_id",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        480,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\n\nconst scope = {\n  \"business\": \"Ride Electric Brisbane\",\n  \"company_id\": 4,\n  \"company_name\": \"Ride Electric Brisbane\",\n  \"financial_year_start\": \"2024-07-01\",\n  \"financial_year_end\": \"2025-06-30\",\n  \"timezone\": \"Australia/Brisbane\",\n  \"scope_note\": \"Brisbane pilot only (company_id 4). Do not generalise findings to other Ride Electric entities unless the data explicitly supports it.\",\n  \"n8n_server\": \"https://workflow.rideai.com.au\",\n  \"export_paths\": {\n    \"raw_root\": \"/home/node/.n8n/odoo_eofy_exports\",\n    \"sanitised_root\": \"/home/node/.n8n/odoo_eofy_exports_sanitised\",\n    \"report_root\": \"/home/node/.n8n/odoo_eofy_reports\"\n  },\n  \"export_defaults\": {\n    \"batch_size\": 500,\n    \"sample_limit_per_model\": null,\n    \"order\": \"id asc\",\n    \"sanitise\": {\n      \"partner_names_hashed\": true,\n      \"bank_details_redacted\": true,\n      \"descriptions_compacted\": true,\n      \"text_compact_max_len\": 64\n    }\n  },\n  \"handover_caveats\": [\n    \"This is Brisbane/company_id 4 only.\",\n    \"This is not group-wide unless explicitly expanded.\",\n    \"Missing data is an extraction gap, not proof of no issue.\",\n    \"Sanitised identifiers are stable for grouping but not re-identification.\",\n    \"Do not run financial conclusions without account_move_line.\",\n    \"Do not run POS conclusions without pos_order, pos_order_line, and pos_payment.\"\n  ]\n};\nconst auditTests = {\n  \"completeness_tests\": [\n    \"Validate model presence against minimum dataset.\",\n    \"Validate expected row counts against Odoo search_count manifests.\",\n    \"Validate full FY date coverage for date-scoped models.\",\n    \"Validate no first-N cap unless sample_mode is explicitly enabled.\",\n    \"Validate no duplicate snapshots in the same scanned root.\",\n    \"Validate company_id = 4 scope on company-scoped records.\"\n  ],\n  \"accounting_integrity_tests\": [\n    \"debits equal credits by account_move\",\n    \"posted moves included; draft/cancelled moves separately identified\",\n    \"account totals by month\",\n    \"journal totals by month\",\n    \"receivable/payable residuals\",\n    \"manual journal outliers\",\n    \"late write_date changes after FY end\",\n    \"duplicate invoice names\",\n    \"credit note/reversal chains\"\n  ],\n  \"pos_revenue_tests\": [\n    \"pos_order total = sum(pos_order_line)\",\n    \"pos_order amount_paid = sum(pos_payment)\",\n    \"pos_order.account_move links to account_move\",\n    \"POS sales reconcile to revenue accounts\",\n    \"refunds are negative/reversed properly\",\n    \"discount outliers\",\n    \"session-level cash/payment imbalance\",\n    \"payment method anomalies\"\n  ],\n  \"bank_reconciliation_tests\": [\n    \"bank statement line matched to accounting move\",\n    \"payment matched to invoice/bill via account_partial_reconcile\",\n    \"unreconciled receivable/payable lines\",\n    \"duplicate payment amounts/dates/partners\",\n    \"suspense/write-off accounts\",\n    \"stale residual balances\"\n  ],\n  \"gst_tax_tests\": [\n    \"tax base lines support tax lines\",\n    \"amount_tax reconciles to tax move lines\",\n    \"tax use matches move_type\",\n    \"GST on unusual accounts\",\n    \"negative tax anomalies\",\n    \"manual tax adjustments\"\n  ],\n  \"product_stock_cogs_tests\": [\n    \"invoice/POS product lines link to products\",\n    \"product category has expected accounts\",\n    \"stock valuation links to stock moves and accounting moves\",\n    \"COGS exists for stockable products\",\n    \"negative quantity/value anomalies\",\n    \"zero quantity with non-zero value\",\n    \"unusual margin or discount patterns\"\n  ],\n  \"audit_trail_tests\": [\n    \"late write_date after FY end\",\n    \"high-value records changed late\",\n    \"unusual users creating/writing records\",\n    \"field tracking for payment state, amount, date, partner, account\",\n    \"attachments missing for supplier bills or imported bank records\"\n  ],\n  \"minimum_models_for_full_audit\": [\n    \"account_move\",\n    \"account_move_line\",\n    \"account_account\",\n    \"account_journal\",\n    \"account_payment\",\n    \"account_partial_reconcile\",\n    \"account_full_reconcile\",\n    \"account_tax\",\n    \"res_partner\",\n    \"res_company\",\n    \"res_currency\",\n    \"pos_order\",\n    \"pos_order_line\",\n    \"pos_payment\",\n    \"pos_payment_method\",\n    \"pos_session\",\n    \"pos_config\",\n    \"product_product\",\n    \"product_template\",\n    \"product_category\",\n    \"uom_uom\",\n    \"stock_move\",\n    \"stock_move_line\",\n    \"stock_picking\",\n    \"stock_valuation_layer\",\n    \"account_bank_statement\",\n    \"account_bank_statement_line\",\n    \"res_users\",\n    \"ir_attachment\",\n    \"mail_tracking_value\"\n  ]\n};\nconst joinKeys = {\n  \"description\": \"Exact join keys for audit agent graph reconstruction. Use _id flattened fields from sanitised exports.\",\n  \"joins\": [\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"move_id_id\",\n      \"to_model\": \"account_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"account_id_id\",\n      \"to_model\": \"account_account\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"journal_id_id\",\n      \"to_model\": \"account_journal\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"partner_id_id\",\n      \"to_model\": \"res_partner\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"product_id_id\",\n      \"to_model\": \"product_product\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_move_line\",\n      \"from_field\": \"full_reconcile_id_id\",\n      \"to_model\": \"account_full_reconcile\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_partial_reconcile\",\n      \"from_field\": \"debit_move_id_id\",\n      \"to_model\": \"account_move_line\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_partial_reconcile\",\n      \"from_field\": \"credit_move_id_id\",\n      \"to_model\": \"account_move_line\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"account_payment\",\n      \"from_field\": \"move_id_id\",\n      \"to_model\": \"account_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_order\",\n      \"from_field\": \"account_move_id\",\n      \"to_model\": \"account_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_order\",\n      \"from_field\": \"account_move_id_id\",\n      \"to_model\": \"account_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_order_line\",\n      \"from_field\": \"order_id_id\",\n      \"to_model\": \"pos_order\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_payment\",\n      \"from_field\": \"pos_order_id_id\",\n      \"to_model\": \"pos_order\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_payment\",\n      \"from_field\": \"payment_method_id_id\",\n      \"to_model\": \"pos_payment_method\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_order\",\n      \"from_field\": \"session_id_id\",\n      \"to_model\": \"pos_session\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"pos_session\",\n      \"from_field\": \"config_id_id\",\n      \"to_model\": \"pos_config\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"product_product\",\n      \"from_field\": \"product_tmpl_id_id\",\n      \"to_model\": \"product_template\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"product_template\",\n      \"from_field\": \"categ_id_id\",\n      \"to_model\": \"product_category\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"stock_valuation_layer\",\n      \"from_field\": \"stock_move_id_id\",\n      \"to_model\": \"stock_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"stock_valuation_layer\",\n      \"from_field\": \"account_move_id_id\",\n      \"to_model\": \"account_move\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"stock_move\",\n      \"from_field\": \"product_id_id\",\n      \"to_model\": \"product_product\",\n      \"to_field\": \"id\"\n    },\n    {\n      \"from_model\": \"stock_move\",\n      \"from_field\": \"picking_id_id\",\n      \"to_model\": \"stock_picking\",\n      \"to_field\": \"id\"\n    }\n  ],\n  \"missing_field_policy\": \"If a join field is absent in export, report it as an extraction limitation.\"\n};\nconst systemPrompt = \"You are a forensic Odoo accounting auditor for Ride Electric Brisbane EOFY preparation.\\n\\nSCOPE (mandatory)\\n- Business: Ride Electric Brisbane only\\n- Odoo company_id: 4\\n- Financial year: 2024-07-01 to 2025-06-30 (Australia/Brisbane)\\n- Do not generalise to other Ride Electric entities unless data explicitly supports it.\\n\\nMINDSET\\nOdoo accounting, POS, stock, products, payments, and reconciliation form a connected transaction graph. Reconstruct that graph, test completeness, and identify anomalies. Do not treat models as isolated tables.\\n\\nEVIDENCE RULES\\n- Missing exported model or zero rows = extraction gap, NOT proof of no issue.\\n- Do not run financial conclusions without account_move_line.\\n- Do not run POS conclusions without pos_order, pos_order_line, and pos_payment.\\n- Sanitised partner/user labels (ENTITY_*) are for grouping only, not re-identification.\\n- State uncertainty when data is insufficient.\\n\\nOUTPUT FORMAT (JSON only, no markdown fences)\\n{\\n  \\\"scope\\\": { \\\"company_id\\\": 4, \\\"fy_start\\\": \\\"2024-07-01\\\", \\\"fy_end\\\": \\\"2025-06-30\\\" },\\n  \\\"extraction_gaps\\\": [ { \\\"model\\\": \\\"\\\", \\\"impact\\\": \\\"\\\", \\\"blocks_tests\\\": [] } ],\\n  \\\"completeness\\\": [ { \\\"check\\\": \\\"\\\", \\\"status\\\": \\\"pass|fail|blocked\\\", \\\"evidence\\\": \\\"\\\", \\\"severity\\\": \\\"critical|high|medium|low\\\" } ],\\n  \\\"anomalies\\\": [\\n    {\\n      \\\"id\\\": \\\"A001\\\",\\n      \\\"category\\\": \\\"accounting|pos|bank|gst|stock|audit_trail|structure\\\",\\n      \\\"severity\\\": \\\"critical|high|medium|low\\\",\\n      \\\"title\\\": \\\"\\\",\\n      \\\"description\\\": \\\"\\\",\\n      \\\"models_involved\\\": [],\\n      \\\"sample_record_ids\\\": [],\\n      \\\"recommended_action\\\": \\\"\\\",\\n      \\\"eofy_impact\\\": \\\"\\\"\\n    }\\n  ],\\n  \\\"eofy_readiness\\\": {\\n    \\\"status\\\": \\\"ready|blocked|review_required\\\",\\n    \\\"summary\\\": \\\"\\\",\\n    \\\"priority_fixes_before_submission\\\": []\\n  }\\n}\\n\\nPrioritise anomalies that would block or misstate EOFY submission. Be specific with record IDs and amounts where present in the payload.\\n\";\n\nconst input = $input.first().json;\nconst snapshotId = input.snapshot_id;\nif (!snapshotId) throw new Error('snapshot_id required');\n\nconst reportRoot = path.join(scope.export_paths.report_root, snapshotId);\nconst summaryPath = path.join(reportRoot, 'claude_readiness_summary.json');\nconst payloadPath = path.join(reportRoot, 'claude_payload_all.jsonl');\n\nconst summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));\nconst payloadLines = fs.readFileSync(payloadPath, 'utf8').split('\\n').filter(l => l.trim());\n\n// Token budget: sample up to 800 records stratified by model\nconst byModel = {};\nfor (const line of payloadLines) {\n  const row = JSON.parse(line);\n  const key = row._sanitisation?.model || 'unknown';\n  if (!byModel[key]) byModel[key] = [];\n  if (byModel[key].length < 40) byModel[key].push(row);\n}\nconst samplePayload = Object.values(byModel).flat();\n\nconst userPayload = {\n  scope: {\n    company_id: scope.company_id,\n    business: scope.business,\n    fy_start: scope.financial_year_start,\n    fy_end: scope.financial_year_end,\n    caveats: scope.handover_caveats,\n  },\n  readiness_summary: summary.summary,\n  extraction_gaps: summary.extraction_gaps,\n  audit_tests: auditTests,\n  join_keys: joinKeys,\n  model_summaries: summary.model_summaries,\n  sample_records: samplePayload,\n  note: 'Full dataset on n8n server; this payload is a stratified sample for anomaly detection.',\n};\n\nreturn [{\n  json: {\n    snapshot_id: snapshotId,\n    report_root: reportRoot,\n    anthropic_body: {\n      model: 'claude-sonnet-4-20250514',\n      max_tokens: 8192,\n      system: systemPrompt,\n      messages: [{\n        role: 'user',\n        content: JSON.stringify(userPayload),\n      }],\n    },\n    user_payload_bytes: JSON.stringify(userPayload).length,\n  }\n}];\n"
+      },
+      "id": "6ea3b225-9cd7-4af1-9f6c-b9e28ac5ab27",
+      "name": "Prepare Claude audit request",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        720,
+        400
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.anthropic_body }}",
+        "options": {}
+      },
+      "id": "8f15bd1e-39e3-48a1-bbca-fe522930ca78",
+      "name": "Claude API \u2014 anomaly analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        960,
+        400
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ANTHROPIC_CREDENTIAL_ID",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst fs = require('fs');\nconst path = require('path');\n\nconst prep = $('Prepare Claude audit request').first().json;\nconst api = $input.first().json;\nconst reportRoot = prep.report_root;\n\nlet text = '';\nif (api.content && Array.isArray(api.content)) {\n  text = api.content.map(c => c.text || '').join('');\n} else if (typeof api.text === 'string') {\n  text = api.text;\n} else {\n  text = JSON.stringify(api);\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(text);\n} catch {\n  parsed = { raw_text: text, parse_error: true };\n}\n\nconst outPath = path.join(reportRoot, 'claude_anomaly_report.json');\nfs.writeFileSync(outPath, JSON.stringify({\n  snapshot_id: prep.snapshot_id,\n  generated_at_utc: new Date().toISOString(),\n  model: prep.anthropic_body.model,\n  report: parsed,\n}, null, 2));\n\nreturn [{\n  json: {\n    ok: true,\n    snapshot_id: prep.snapshot_id,\n    report_path: outPath,\n    eofy_status: parsed.eofy_readiness?.status || 'unknown',\n    anomaly_count: Array.isArray(parsed.anomalies) ? parsed.anomalies.length : 0,\n  }\n}];\n"
+      },
+      "id": "6581e55d-ceb3-4095-bc34-dfb963f7b9eb",
+      "name": "Save anomaly report JSON",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        400
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Manual: Start Claude Audit": {
+      "main": [
+        [
+          {
+            "node": "Set snapshot_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set snapshot_id": {
+      "main": [
+        [
+          {
+            "node": "Prepare Claude audit request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Claude audit request": {
+      "main": [
+        [
+          {
+            "node": "Claude API \u2014 anomaly analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API \u2014 anomaly analysis": {
+      "main": [
+        [
+          {
+            "node": "Save anomaly report JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

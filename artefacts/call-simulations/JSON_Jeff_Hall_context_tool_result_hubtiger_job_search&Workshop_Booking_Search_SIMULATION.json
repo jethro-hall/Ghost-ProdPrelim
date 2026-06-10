@@ -1,0 +1,602 @@
+{
+  "simulation_schema_version": "1.0",
+  "conversation": {
+    "id": "conv_8801kqerfy7bfmb8657gsa7cxg2e",
+    "title": "Workshop Booking Search",
+    "status": "done",
+    "user": "Jeff Hall (context: \"tool result: hubtiger_job_search\")",
+    "brief_summary": "Workshop Booking Search",
+    "duration_seconds": 31,
+    "source": "live_transcript_endpoint"
+  },
+  "full_transcript_playback": [
+    {
+      "role": "agent",
+      "at_seconds": 0,
+      "text": "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": 365,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 11,
+      "text": "I just want to look my, um, my bike in the workshop.",
+      "asr_ms": 107,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 14,
+      "text": "Can I grab your mobile number so I can check that for you?",
+      "asr_ms": null,
+      "llm_seconds": 0.143,
+      "workflow_route_seconds": null,
+      "tts_ms": 335,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "user",
+      "at_seconds": 18,
+      "text": "It's 0435185134.",
+      "asr_ms": 100,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 0.368,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-de5866a6366c4f3489517b3aa19a30da",
+          "tool_name": "notify_condition_1_met",
+          "tool_type": "workflow",
+          "params": "{}",
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 22,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-de5866a6366c4f3489517b3aa19a30da",
+          "tool_name": "notify_condition_1_met",
+          "type": "workflow",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 3,
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 4.67600766569376e-05,
+                "type": "edge",
+                "edge_id": "edge_identify_to_troubleshoot",
+                "target_node_id": "troubleshoot"
+              },
+              {
+                "step_latency_secs": 0.003069886937737465,
+                "type": "nested_tools",
+                "node_id": "troubleshoot",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_2601kqergs86fex9b9ng0mc45pgj",
+                    "tool_name": "transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"troubleshoot\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_2601kqergs86fex9b9ng0mc45pgj",
+                    "tool_name": "transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_3701kq9fcmz1errsmhesm3j47rsg\",\"to_agent\":\"troubleshoot\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.00010374910198152065,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_3701kq9fcmz1errsmhesm3j47rsg",
+                      "to_agent": "troubleshoot",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 23,
+      "text": "Bear with me a moment while I check that in the workshop system.",
+      "asr_ms": null,
+      "llm_seconds": 1.01,
+      "workflow_route_seconds": null,
+      "tts_ms": 387,
+      "tool_dispatch": [],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 24,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": 1.01,
+      "workflow_route_seconds": null,
+      "tts_ms": 387,
+      "tool_dispatch": [
+        {
+          "request_id": "chatcmpl-tool-dc91584426fa4ed991c5f039a0595542",
+          "tool_name": "hubtiger_job_search",
+          "tool_type": "webhook",
+          "params": {
+            "function": "job_search",
+            "payload": {
+              "query": "0435185134"
+            },
+            "system__message_to_speak": "Bear with me a moment while I check that in the workshop system."
+          },
+          "dispatch_observed": true,
+          "result_status": "succeeded"
+        }
+      ],
+      "tool_results": []
+    },
+    {
+      "role": "agent",
+      "at_seconds": 26,
+      "text": "",
+      "asr_ms": null,
+      "llm_seconds": null,
+      "workflow_route_seconds": null,
+      "tts_ms": null,
+      "tool_dispatch": [],
+      "tool_results": [
+        {
+          "request_id": "chatcmpl-tool-dc91584426fa4ed991c5f039a0595542",
+          "tool_name": "hubtiger_job_search",
+          "type": "webhook",
+          "is_error": false,
+          "is_blocked": false,
+          "latency_ms": 2283,
+          "result": {
+            "success": true,
+            "message": "HubTiger call completed.",
+            "operation": "job_search",
+            "blocked": false,
+            "data": {
+              "ok": true,
+              "matches": [
+                {
+                  "id": 4200325,
+                  "jobCardNo": "#35872",
+                  "customerName": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "statusCode": 20,
+                  "statusLabel": "Booked In",
+                  "lastUpdated": "2026-05-01T10:30:00",
+                  "scheduledDate": "2026-05-01T10:30:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4036225,
+                  "jobCardNo": "#34155",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "statusCode": 50,
+                  "statusLabel": "Waiting - Parts",
+                  "lastUpdated": "2026-03-23T10:00:00",
+                  "scheduledDate": "2026-03-23T10:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4041278,
+                  "jobCardNo": "#34249",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-03-13T14:30:00",
+                  "scheduledDate": "2026-03-13T14:30:00",
+                  "durationMinutes": 0
+                }
+              ],
+              "results": [
+                {
+                  "id": 4200325,
+                  "jobCardNo": "#35872",
+                  "customerName": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "statusCode": 20,
+                  "statusLabel": "Booked In",
+                  "lastUpdated": "2026-05-01T10:30:00",
+                  "scheduledDate": "2026-05-01T10:30:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4036225,
+                  "jobCardNo": "#34155",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "statusCode": 50,
+                  "statusLabel": "Waiting - Parts",
+                  "lastUpdated": "2026-03-23T10:00:00",
+                  "scheduledDate": "2026-03-23T10:00:00",
+                  "durationMinutes": 0
+                },
+                {
+                  "id": 4041278,
+                  "jobCardNo": "#34249",
+                  "customerName": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "statusCode": 15,
+                  "statusLabel": null,
+                  "lastUpdated": "2026-03-13T14:30:00",
+                  "scheduledDate": "2026-03-13T14:30:00",
+                  "durationMinutes": 0
+                }
+              ],
+              "count": 3,
+              "job_cards": [
+                {
+                  "id": 4200325,
+                  "job_card_no": "#35872",
+                  "customer_name": "Jeff Hall",
+                  "bike": "Fatfish Biggie",
+                  "status": "Booked In",
+                  "scheduled_date": "2026-05-01T10:30:00",
+                  "last_updated": "2026-05-01T10:30:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #35872 | Fatfish Biggie | Booked In"
+                },
+                {
+                  "id": 4036225,
+                  "job_card_no": "#34155",
+                  "customer_name": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "Waiting - Parts",
+                  "scheduled_date": "2026-03-23T10:00:00",
+                  "last_updated": "2026-03-23T10:00:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts"
+                },
+                {
+                  "id": 4041278,
+                  "job_card_no": "#34249",
+                  "customer_name": "Jeff Hall",
+                  "bike": "VSETT APEX 10+",
+                  "status": "15",
+                  "scheduled_date": "2026-03-13T14:30:00",
+                  "last_updated": "2026-03-13T14:30:00",
+                  "store_matched": "",
+                  "label": "Jeff Hall | #34249 | VSETT APEX 10+ | 15"
+                }
+              ],
+              "case_select": {
+                "identified_customer": "Jeff Hall",
+                "job_card_count": 3,
+                "selection_required": true,
+                "assistant_prompt": "I found 3 job cards for Jeff Hall. Ask which job they are calling about.",
+                "store_requested": "",
+                "store_matched": "",
+                "store_match": null,
+                "store_verification": "not_requested",
+                "identifier_type": "query_text",
+                "identifier_confidence": "medium",
+                "identifier_value": "0435185134",
+                "ambiguous_identifier": null,
+                "possible_identifier_types": [],
+                "allowed_next_actions": [
+                  "list_matching_cases"
+                ],
+                "options": [
+                  {
+                    "id": 4200325,
+                    "job_card_no": "#35872",
+                    "customer_name": "Jeff Hall",
+                    "bike": "Fatfish Biggie",
+                    "status": "Booked In",
+                    "scheduled_date": "2026-05-01T10:30:00",
+                    "last_updated": "2026-05-01T10:30:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #35872 | Fatfish Biggie | Booked In"
+                  },
+                  {
+                    "id": 4036225,
+                    "job_card_no": "#34155",
+                    "customer_name": "Jeff Hall",
+                    "bike": "VSETT APEX 10+",
+                    "status": "Waiting - Parts",
+                    "scheduled_date": "2026-03-23T10:00:00",
+                    "last_updated": "2026-03-23T10:00:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #34155 | VSETT APEX 10+ | Waiting - Parts"
+                  },
+                  {
+                    "id": 4041278,
+                    "job_card_no": "#34249",
+                    "customer_name": "Jeff Hall",
+                    "bike": "VSETT APEX 10+",
+                    "status": "15",
+                    "scheduled_date": "2026-03-13T14:30:00",
+                    "last_updated": "2026-03-13T14:30:00",
+                    "store_matched": "",
+                    "label": "Jeff Hall | #34249 | VSETT APEX 10+ | 15"
+                  }
+                ]
+              },
+              "identified_customer": "Jeff Hall",
+              "job_card_count": 3,
+              "store_requested": "",
+              "store_matched": "",
+              "store_match": null,
+              "store_verification": "not_requested",
+              "selection_required": true,
+              "identifier_type": "query_text",
+              "identifier_confidence": "medium"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "at_seconds": 27,
+      "text": "I found three job cards for Jeff Hall. Could you please confirm which one you're asking about...",
+      "asr_ms": null,
+      "llm_seconds": 0.182,
+      "workflow_route_seconds": null,
+      "tts_ms": 310,
+      "tool_dispatch": [],
+      "tool_results": []
+    }
+  ],
+  "full_transcript_render": [
+    "agent",
+    "0s",
+    "Hey, Magic Mike here from Ride Electric. I can help with workshop updates, bookings, repairs, or product questions. What can I help you with today?",
+    "TTS 365 ms",
+    "user",
+    "11s",
+    "I just want to look my, um, my bike in the workshop.",
+    "ASR 107 ms",
+    "agent",
+    "14s",
+    "Can I grab your mobile number so I can check that for you?",
+    "LLM 0.143 s",
+    "TTS 335 ms",
+    "user",
+    "18s",
+    "It's 0435185134.",
+    "ASR 100 ms",
+    "agent",
+    "22s",
+    "...",
+    "LLM 0.368 s",
+    "Tool dispatch: notify_condition_1_met",
+    "Type: workflow",
+    "Show request",
+    "agent",
+    "22s",
+    "...",
+    "Tool succeeded: notify_condition_1_met",
+    "Result 3 ms",
+    "Show result payload",
+    "agent",
+    "23s",
+    "Bear with me a moment while I check that in the workshop system.",
+    "LLM 1.01 s",
+    "TTS 387 ms",
+    "agent",
+    "24s",
+    "...",
+    "LLM 1.01 s",
+    "TTS 387 ms",
+    "Tool dispatch: hubtiger_job_search",
+    "Type: webhook",
+    "Show request",
+    "agent",
+    "26s",
+    "...",
+    "Tool succeeded: hubtiger_job_search",
+    "Result 2283 ms",
+    "Show result payload",
+    "agent",
+    "27s",
+    "I found three job cards for Jeff Hall. Could you please confirm which one you're asking about...",
+    "LLM 0.182 s",
+    "TTS 310 ms"
+  ],
+  "evaluation": {
+    "tools": {
+      "tool_dispatch_count": 2,
+      "tool_result_count": 2,
+      "tool_success_count": 2,
+      "tool_failure_count": 0,
+      "tool_success_rate": 100.0,
+      "top_tools": [
+        {
+          "tool_name": "notify_condition_1_met",
+          "count": 1
+        },
+        {
+          "tool_name": "hubtiger_job_search",
+          "count": 1
+        }
+      ],
+      "hubtiger_dispatch_count": 1,
+      "first_hubtiger_dispatch_seconds": 24,
+      "booking_intent_to_first_hubtiger_seconds": 13
+    },
+    "llm_reasoning": {
+      "clarification_questions_count": 2,
+      "turns_before_first_tool": 4,
+      "internal_leakage_detected": false,
+      "internal_leakage_examples": []
+    },
+    "user_experience": {
+      "opening_present": true,
+      "avg_user_to_agent_response_gap_seconds": 3.5,
+      "experience_summary": "Customer-safe and concise flow"
+    },
+    "hubtiger_booking_capability": {
+      "booking_intent_detected": true,
+      "booking_availability_tool_used": false,
+      "booking_write_tool_used": false,
+      "pending_human_review_observed": false,
+      "time_to_first_availability_check_seconds": null,
+      "time_to_booking_write_attempt_seconds": null,
+      "booking_capability_statement": "No booking tool evidence observed in this call."
+    }
+  },
+  "repeatable_real_world_tests": [
+    {
+      "id": "conv_8801kqerfy7bfmb8657gsa7cxg2e-replay",
+      "name": "Real call replay simulation",
+      "objective": "Re-run the exact intent progression and verify tool routing + voice response quality.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Start call with: I just want to look my, um, my bike in the workshop.",
+          "expected": "Agent greets and identifies intent."
+        },
+        {
+          "step": 2,
+          "action": "Provide identifiers exactly as in transcript.",
+          "expected": "Agent asks only missing required details."
+        },
+        {
+          "step": 3,
+          "action": "Observe all tool dispatches and result statuses.",
+          "expected": "No tool call is skipped or duplicated unexpectedly."
+        },
+        {
+          "step": 4,
+          "action": "Close call as user confirms/declines.",
+          "expected": "Agent gives clear next step and polite wrap-up."
+        }
+      ],
+      "assertions": [
+        "No internal diagnostics spoken to caller",
+        "Tool sequence matches transcript intent order",
+        "Agent remains concise and action-oriented"
+      ]
+    },
+    {
+      "id": "conv_8801kqerfy7bfmb8657gsa7cxg2e-stale-read",
+      "name": "Stale data retry path",
+      "objective": "Validate no_cache recovery behavior for read tools.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller says latest status/availability sounds outdated.",
+          "expected": "Agent acknowledges and retries once with cache_mode=no_cache."
+        },
+        {
+          "step": 2,
+          "action": "Return updated tool payload.",
+          "expected": "Agent presents refreshed answer without exposing raw payload."
+        }
+      ],
+      "assertions": [
+        "Exactly one no_cache retry",
+        "Fallback offered if still unavailable"
+      ]
+    },
+    {
+      "id": "conv_8801kqerfy7bfmb8657gsa7cxg2e-booking-flow",
+      "name": "Booking end-to-end capability",
+      "objective": "Assess practical booking ability and elapsed time to booking action.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Caller requests booking with store/date context.",
+          "expected": "Agent checks availability first."
+        },
+        {
+          "step": 2,
+          "action": "Caller selects offered slot.",
+          "expected": "Agent triggers booking create/update path."
+        },
+        {
+          "step": 3,
+          "action": "Observe write outcome.",
+          "expected": "Agent states pending staff review outcome when write gate is enabled."
+        }
+      ],
+      "assertions": [
+        "Availability checked before write attempt",
+        "Booking write path invoked when details are complete",
+        "Completion wording matches policy"
+      ]
+    },
+    {
+      "id": "conv_8801kqerfy7bfmb8657gsa7cxg2e-tool-failure",
+      "name": "Tool failure safety behavior",
+      "objective": "Verify UX quality when a required tool fails.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Simulate webhook/tool timeout.",
+          "expected": "Agent does not hallucinate result."
+        },
+        {
+          "step": 2,
+          "action": "Continue conversation.",
+          "expected": "Agent offers callback/handoff with one focused follow-up question."
+        }
+      ],
+      "assertions": [
+        "No fabricated booking/status confirmation",
+        "Clear safe fallback provided"
+      ]
+    }
+  ]
+}

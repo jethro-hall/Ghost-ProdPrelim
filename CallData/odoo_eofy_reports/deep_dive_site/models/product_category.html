@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model: product_category</title>
+<style>
+:root { --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --line:#374151; --accent:#38bdf8; --bad:#fb7185; --ok:#34d399; --warn:#fbbf24; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+header { padding:20px 28px; background:#020617; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+header h1 { margin:0 0 6px 0; font-size:22px; } header .sub { color:var(--muted); font-size:13px; }
+main { padding:24px 28px 60px; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.metric { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.metric .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.metric .value { font-size:26px; font-weight:700; margin-top:6px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } th, td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; } th { text-align:left; color:#cbd5e1; background:#020617; position:sticky; top:77px; }
+.bad { color:var(--bad); font-weight:700; } .ok { color:var(--ok); font-weight:700; } .warn { color:var(--warn); font-weight:700; }
+pre { white-space:pre-wrap; overflow:auto; background:#020617; padding:12px; border-radius:10px; border:1px solid var(--line); color:#d1d5db; font-size:12px; }
+details { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:10px 0; background:#111827; } summary { cursor:pointer; color:#e2e8f0; }
+input { width:100%; max-width:520px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:#020617; color:var(--text); margin: 8px 0 14px; }
+small, .muted { color:var(--muted); }
+.pill { display:inline-block; border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin:2px; background:#020617; color:#cbd5e1; font-size:12px; }
+</style>
+
+</head>
+<body>
+<header><h1>Model: product_category</h1><div class="sub"><a href="../index.html">Index</a> · <a href="../source_files.html">Source files</a> · Generated 2026-06-09T06:12:02.594Z</div></header>
+<main>
+<div class="card"><a href="../index.html">← Back to index</a></div>
+<div class="grid">
+  <div class="metric"><div class="label">Rows</div><div class="value">47</div></div>
+  <div class="metric"><div class="label">Distinct Odoo IDs</div><div class="value">47</div></div>
+  <div class="metric"><div class="label">Raw PII-like hits</div><div class="value ok">0</div></div>
+  <div class="metric"><div class="label">Redaction tokens</div><div class="value">0</div></div>
+</div>
+<div class="card"><h2>Accounting totals</h2><table><tr><th>Debit</th><th>Credit</th><th>Balance</th><th>Amount</th><th>Date range</th></tr><tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td> → </td></tr></table></div>
+<div class="card"><h2>Field profile</h2><p class="muted">Raw PII-like hits should generally be zero before this data goes to Claude. Redaction tokens are expected in sanitised data.</p><table><thead><tr><th>Field</th><th>Present</th><th>%</th><th>Types</th><th>Raw PII hits</th><th>Redaction hits</th><th>Sensitive name hits</th><th>Examples</th></tr></thead><tbody><tr>
+<td><code>complete_name</code></td><td>47</td><td>100.0%</td><td>string:47</td>
+<td class="ok">0</td><td>0</td><td>47</td>
+<td><span class="pill">All</span> <span class="pill">All / Expenses</span> <span class="pill">DUALTRON SCOOTERS</span> <span class="pill">VSETT SCOOTERS</span> <span class="pill">ZERO SCOOTERS</span></td></tr>
+<tr>
+<td><code>create_date</code></td><td>47</td><td>100.0%</td><td>string:47</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-07-22 02:35:26</span> <span class="pill">2022-07-26 02:25:06</span> <span class="pill">2022-08-01 22:00:23</span> <span class="pill">2022-10-17 23:34:35</span> <span class="pill">2022-10-17 23:34:56</span></td></tr>
+<tr>
+<td><code>id</code></td><td>47</td><td>100.0%</td><td>number:47</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">1</span> <span class="pill">3</span> <span class="pill">563</span> <span class="pill">6741</span> <span class="pill">6745</span></td></tr>
+<tr>
+<td><code>name</code></td><td>47</td><td>100.0%</td><td>string:47</td>
+<td class="ok">0</td><td>0</td><td>47</td>
+<td><span class="pill">All</span> <span class="pill">Expenses</span> <span class="pill">DUALTRON SCOOTERS</span> <span class="pill">VSETT SCOOTERS</span> <span class="pill">ZERO SCOOTERS</span></td></tr>
+<tr>
+<td><code>parent_id</code></td><td>47</td><td>100.0%</td><td>boolean:42, array:5</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">false</span> <span class="pill">[1,&quot;All&quot;]</span> <span class="pill">[6811,&quot;Shipping&quot;]</span> <span class="pill">[6809,&quot;All / Saleable&quot;]</span></td></tr>
+<tr>
+<td><code>parent_id_id</code></td><td>5</td><td>10.6%</td><td>number:5</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">1</span> <span class="pill">6811</span> <span class="pill">6809</span></td></tr>
+<tr>
+<td><code>parent_id_label</code></td><td>5</td><td>10.6%</td><td>string:5</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">All</span> <span class="pill">Shipping</span> <span class="pill">All / Saleable</span></td></tr>
+<tr>
+<td><code>write_date</code></td><td>47</td><td>100.0%</td><td>string:47</td>
+<td class="ok">0</td><td>0</td><td>0</td>
+<td><span class="pill">2022-12-06 20:46:27</span> <span class="pill">2024-03-13 04:49:46</span> <span class="pill">2024-03-21 05:34:01</span> <span class="pill">2024-03-21 05:34:25</span> <span class="pill">2024-03-21 05:33:12</span></td></tr></tbody></table></div>
+<div class="card"><h2>Sample records</h2><input id="q" placeholder="Filter visible sample records..." oninput="filterRecords()"><p class="muted">Showing up to 500 records for this model.</p><details class="record" data-search="{&quot;id&quot;:1,&quot;name&quot;:&quot;all&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;all&quot;,&quot;create_date&quot;:&quot;2022-07-22 02:35:26&quot;,&quot;write_date&quot;:&quot;2022-12-06 20:46:27&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#1 | All <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 1</small></summary><pre>{
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;All&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;All&quot;,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:26&quot;,
+  &quot;write_date&quot;: &quot;2022-12-06 20:46:27&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:3,&quot;name&quot;:&quot;expenses&quot;,&quot;parent_id_id&quot;:1,&quot;parent_id&quot;:[1,&quot;all&quot;],&quot;parent_id_label&quot;:&quot;all&quot;,&quot;complete_name&quot;:&quot;all / expenses&quot;,&quot;create_date&quot;:&quot;2022-07-22 02:35:26&quot;,&quot;write_date&quot;:&quot;2022-12-06 20:46:27&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#3 | Expenses <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 2</small></summary><pre>{
+  &quot;id&quot;: 3,
+  &quot;name&quot;: &quot;Expenses&quot;,
+  &quot;parent_id_id&quot;: 1,
+  &quot;parent_id&quot;: [
+    1,
+    &quot;All&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;All&quot;,
+  &quot;complete_name&quot;: &quot;All / Expenses&quot;,
+  &quot;create_date&quot;: &quot;2022-07-22 02:35:26&quot;,
+  &quot;write_date&quot;: &quot;2022-12-06 20:46:27&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:563,&quot;name&quot;:&quot;dualtron scooters&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;dualtron scooters&quot;,&quot;create_date&quot;:&quot;2022-07-26 02:25:06&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:49:46&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#563 | DUALTRON SCOOTERS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 3</small></summary><pre>{
+  &quot;id&quot;: 563,
+  &quot;name&quot;: &quot;DUALTRON SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;DUALTRON SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-07-26 02:25:06&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:49:46&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6741,&quot;name&quot;:&quot;vsett scooters&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;vsett scooters&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:34:01&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6741 | VSETT SCOOTERS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 4</small></summary><pre>{
+  &quot;id&quot;: 6741,
+  &quot;name&quot;: &quot;VSETT SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;VSETT SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:34:01&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6745,&quot;name&quot;:&quot;zero scooters&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;zero scooters&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:34:25&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6745 | ZERO SCOOTERS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 5</small></summary><pre>{
+  &quot;id&quot;: 6745,
+  &quot;name&quot;: &quot;ZERO SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;ZERO SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:34:25&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6763,&quot;name&quot;:&quot;smartmotion bikes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;smartmotion bikes&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:33:12&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6763 | SMARTMOTION BIKES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 6</small></summary><pre>{
+  &quot;id&quot;: 6763,
+  &quot;name&quot;: &quot;SMARTMOTION BIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SMARTMOTION BIKES&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:33:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6768,&quot;name&quot;:&quot;accessories&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;accessories&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-14 02:03:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6768 | ACCESSORIES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 7</small></summary><pre>{
+  &quot;id&quot;: 6768,
+  &quot;name&quot;: &quot;ACCESSORIES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;ACCESSORIES&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-14 02:03:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6780,&quot;name&quot;:&quot;service/repairs&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;service/repairs&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2025-07-10 04:17:08&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6780 | SERVICE/REPAIRS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 8</small></summary><pre>{
+  &quot;id&quot;: 6780,
+  &quot;name&quot;: &quot;SERVICE/REPAIRS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SERVICE/REPAIRS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2025-07-10 04:17:08&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6781,&quot;name&quot;:&quot;dualtron parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;dualtron parts&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:49:20&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6781 | DUALTRON PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 9</small></summary><pre>{
+  &quot;id&quot;: 6781,
+  &quot;name&quot;: &quot;DUALTRON PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;DUALTRON PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:49:20&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6784,&quot;name&quot;:&quot;zero parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;zero parts&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:34:13&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6784 | ZERO PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 10</small></summary><pre>{
+  &quot;id&quot;: 6784,
+  &quot;name&quot;: &quot;ZERO PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;ZERO PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:34:13&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6786,&quot;name&quot;:&quot;smartmotion parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;smartmotion parts&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:33:25&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6786 | SMARTMOTION PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 11</small></summary><pre>{
+  &quot;id&quot;: 6786,
+  &quot;name&quot;: &quot;SMARTMOTION PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SMARTMOTION PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:33:25&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6787,&quot;name&quot;:&quot;nami scooters&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;nami scooters&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:27:39&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6787 | NAMI SCOOTERS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 12</small></summary><pre>{
+  &quot;id&quot;: 6787,
+  &quot;name&quot;: &quot;NAMI SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;NAMI SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:27:39&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6789,&quot;name&quot;:&quot;other brand bike parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;other brand bike parts&quot;,&quot;create_date&quot;:&quot;2022-08-01 22:00:23&quot;,&quot;write_date&quot;:&quot;2024-03-14 02:07:20&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6789 | OTHER BRAND BIKE PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 13</small></summary><pre>{
+  &quot;id&quot;: 6789,
+  &quot;name&quot;: &quot;OTHER BRAND BIKE PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;OTHER BRAND BIKE PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-08-01 22:00:23&quot;,
+  &quot;write_date&quot;: &quot;2024-03-14 02:07:20&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6793,&quot;name&quot;:&quot;other brand bikes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;other brand bikes&quot;,&quot;create_date&quot;:&quot;2022-10-17 23:34:35&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:53:28&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.769z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6793 | OTHER BRAND BIKES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 14</small></summary><pre>{
+  &quot;id&quot;: 6793,
+  &quot;name&quot;: &quot;OTHER BRAND BIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;OTHER BRAND BIKES&quot;,
+  &quot;create_date&quot;: &quot;2022-10-17 23:34:35&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:53:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.769Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6794,&quot;name&quot;:&quot;vsett parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;vsett parts&quot;,&quot;create_date&quot;:&quot;2022-10-17 23:34:56&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:33:42&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6794 | VSETT PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 15</small></summary><pre>{
+  &quot;id&quot;: 6794,
+  &quot;name&quot;: &quot;VSETT PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;VSETT PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-10-17 23:34:56&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:33:42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6795,&quot;name&quot;:&quot;nami parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;nami parts&quot;,&quot;create_date&quot;:&quot;2022-10-17 23:36:06&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:52:29&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6795 | NAMI PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 16</small></summary><pre>{
+  &quot;id&quot;: 6795,
+  &quot;name&quot;: &quot;NAMI PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;NAMI PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-10-17 23:36:06&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:52:29&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6801,&quot;name&quot;:&quot;other brand scooters&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;other brand scooters&quot;,&quot;create_date&quot;:&quot;2022-11-30 02:10:57&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:54:09&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6801 | OTHER BRAND SCOOTERS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 17</small></summary><pre>{
+  &quot;id&quot;: 6801,
+  &quot;name&quot;: &quot;OTHER BRAND SCOOTERS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;OTHER BRAND SCOOTERS&quot;,
+  &quot;create_date&quot;: &quot;2022-11-30 02:10:57&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:54:09&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6802,&quot;name&quot;:&quot;other brand scooter parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;other brand scooter parts&quot;,&quot;create_date&quot;:&quot;2022-11-30 02:11:29&quot;,&quot;write_date&quot;:&quot;2024-03-13 04:53:45&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6802 | OTHER BRAND SCOOTER PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 18</small></summary><pre>{
+  &quot;id&quot;: 6802,
+  &quot;name&quot;: &quot;OTHER BRAND SCOOTER PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;OTHER BRAND SCOOTER PARTS&quot;,
+  &quot;create_date&quot;: &quot;2022-11-30 02:11:29&quot;,
+  &quot;write_date&quot;: &quot;2024-03-13 04:53:45&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6803,&quot;name&quot;:&quot;helmets&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;helmets&quot;,&quot;create_date&quot;:&quot;2022-12-06 01:08:06&quot;,&quot;write_date&quot;:&quot;2024-03-21 05:32:54&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6803 | HELMETS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 19</small></summary><pre>{
+  &quot;id&quot;: 6803,
+  &quot;name&quot;: &quot;HELMETS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;HELMETS&quot;,
+  &quot;create_date&quot;: &quot;2022-12-06 01:08:06&quot;,
+  &quot;write_date&quot;: &quot;2024-03-21 05:32:54&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6808,&quot;name&quot;:&quot;deliveries&quot;,&quot;parent_id_id&quot;:6811,&quot;parent_id&quot;:[6811,&quot;shipping&quot;],&quot;parent_id_label&quot;:&quot;shipping&quot;,&quot;complete_name&quot;:&quot;shipping / deliveries&quot;,&quot;create_date&quot;:&quot;2022-12-22 23:36:37&quot;,&quot;write_date&quot;:&quot;2025-03-18 07:22:42&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6808 | Deliveries <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 20</small></summary><pre>{
+  &quot;id&quot;: 6808,
+  &quot;name&quot;: &quot;Deliveries&quot;,
+  &quot;parent_id_id&quot;: 6811,
+  &quot;parent_id&quot;: [
+    6811,
+    &quot;Shipping&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;Shipping&quot;,
+  &quot;complete_name&quot;: &quot;Shipping / Deliveries&quot;,
+  &quot;create_date&quot;: &quot;2022-12-22 23:36:37&quot;,
+  &quot;write_date&quot;: &quot;2025-03-18 07:22:42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6809,&quot;name&quot;:&quot;saleable&quot;,&quot;parent_id_id&quot;:1,&quot;parent_id&quot;:[1,&quot;all&quot;],&quot;parent_id_label&quot;:&quot;all&quot;,&quot;complete_name&quot;:&quot;all / saleable&quot;,&quot;create_date&quot;:&quot;2023-02-28 20:43:48&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:25:11&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6809 | Saleable <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 21</small></summary><pre>{
+  &quot;id&quot;: 6809,
+  &quot;name&quot;: &quot;Saleable&quot;,
+  &quot;parent_id_id&quot;: 1,
+  &quot;parent_id&quot;: [
+    1,
+    &quot;All&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;All&quot;,
+  &quot;complete_name&quot;: &quot;All / Saleable&quot;,
+  &quot;create_date&quot;: &quot;2023-02-28 20:43:48&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:25:11&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6810,&quot;name&quot;:&quot;pos&quot;,&quot;parent_id_id&quot;:6809,&quot;parent_id&quot;:[6809,&quot;all / saleable&quot;],&quot;parent_id_label&quot;:&quot;all / saleable&quot;,&quot;complete_name&quot;:&quot;all / saleable / pos&quot;,&quot;create_date&quot;:&quot;2023-02-28 20:44:48&quot;,&quot;write_date&quot;:&quot;2024-03-14 02:03:35&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6810 | PoS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 22</small></summary><pre>{
+  &quot;id&quot;: 6810,
+  &quot;name&quot;: &quot;PoS&quot;,
+  &quot;parent_id_id&quot;: 6809,
+  &quot;parent_id&quot;: [
+    6809,
+    &quot;All / Saleable&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;All / Saleable&quot;,
+  &quot;complete_name&quot;: &quot;All / Saleable / PoS&quot;,
+  &quot;create_date&quot;: &quot;2023-02-28 20:44:48&quot;,
+  &quot;write_date&quot;: &quot;2024-03-14 02:03:35&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6811,&quot;name&quot;:&quot;shipping&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;shipping&quot;,&quot;create_date&quot;:&quot;2023-03-06 19:58:39&quot;,&quot;write_date&quot;:&quot;2025-03-18 07:22:42&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6811 | Shipping <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 23</small></summary><pre>{
+  &quot;id&quot;: 6811,
+  &quot;name&quot;: &quot;Shipping&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;Shipping&quot;,
+  &quot;create_date&quot;: &quot;2023-03-06 19:58:39&quot;,
+  &quot;write_date&quot;: &quot;2025-03-18 07:22:42&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6815,&quot;name&quot;:&quot;fatfish bikes (og)  (dnu)&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish bikes (og)  (dnu)&quot;,&quot;create_date&quot;:&quot;2023-12-04 02:01:09&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:57:52&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6815 | FATFISH BIKES (OG)  (DNU) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 24</small></summary><pre>{
+  &quot;id&quot;: 6815,
+  &quot;name&quot;: &quot;FATFISH BIKES (OG)  (DNU)&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH BIKES (OG)  (DNU)&quot;,
+  &quot;create_date&quot;: &quot;2023-12-04 02:01:09&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:57:52&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6817,&quot;name&quot;:&quot;deposits/downpayments&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;deposits/downpayments&quot;,&quot;create_date&quot;:&quot;2024-01-08 04:27:11&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:21:26&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6817 | DEPOSITS/DOWNPAYMENTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 25</small></summary><pre>{
+  &quot;id&quot;: 6817,
+  &quot;name&quot;: &quot;DEPOSITS/DOWNPAYMENTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;DEPOSITS/DOWNPAYMENTS&quot;,
+  &quot;create_date&quot;: &quot;2024-01-08 04:27:11&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:21:26&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6820,&quot;name&quot;:&quot;discount&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;discount&quot;,&quot;create_date&quot;:&quot;2024-01-15 02:29:45&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:21:35&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6820 | DISCOUNT <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 26</small></summary><pre>{
+  &quot;id&quot;: 6820,
+  &quot;name&quot;: &quot;DISCOUNT&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;DISCOUNT&quot;,
+  &quot;create_date&quot;: &quot;2024-01-15 02:29:45&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:21:35&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6821,&quot;name&quot;:&quot;shopify discount&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;shopify discount&quot;,&quot;create_date&quot;:&quot;2024-01-15 02:52:01&quot;,&quot;write_date&quot;:&quot;2025-07-09 03:10:12&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6821 | SHOPIFY DISCOUNT <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 27</small></summary><pre>{
+  &quot;id&quot;: 6821,
+  &quot;name&quot;: &quot;SHOPIFY DISCOUNT&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SHOPIFY DISCOUNT&quot;,
+  &quot;create_date&quot;: &quot;2024-01-15 02:52:01&quot;,
+  &quot;write_date&quot;: &quot;2025-07-09 03:10:12&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6822,&quot;name&quot;:&quot;fatfish parts (og)&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish parts (og)&quot;,&quot;create_date&quot;:&quot;2024-01-16 00:51:47&quot;,&quot;write_date&quot;:&quot;2025-09-25 06:30:03&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6822 | FATFISH PARTS (OG) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 28</small></summary><pre>{
+  &quot;id&quot;: 6822,
+  &quot;name&quot;: &quot;FATFISH PARTS (OG)&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH PARTS (OG)&quot;,
+  &quot;create_date&quot;: &quot;2024-01-16 00:51:47&quot;,
+  &quot;write_date&quot;: &quot;2025-09-25 06:30:03&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6823,&quot;name&quot;:&quot;surron parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;surron parts&quot;,&quot;create_date&quot;:&quot;2024-02-07 02:31:08&quot;,&quot;write_date&quot;:&quot;2024-08-20 03:52:57&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6823 | SURRON PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 29</small></summary><pre>{
+  &quot;id&quot;: 6823,
+  &quot;name&quot;: &quot;SURRON PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SURRON PARTS&quot;,
+  &quot;create_date&quot;: &quot;2024-02-07 02:31:08&quot;,
+  &quot;write_date&quot;: &quot;2024-08-20 03:52:57&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6826,&quot;name&quot;:&quot;parts to be classified&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;parts to be classified&quot;,&quot;create_date&quot;:&quot;2024-02-14 00:55:29&quot;,&quot;write_date&quot;:&quot;2024-08-15 04:16:37&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6826 | PARTS TO BE CLASSIFIED <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 30</small></summary><pre>{
+  &quot;id&quot;: 6826,
+  &quot;name&quot;: &quot;PARTS TO BE CLASSIFIED&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;PARTS TO BE CLASSIFIED&quot;,
+  &quot;create_date&quot;: &quot;2024-02-14 00:55:29&quot;,
+  &quot;write_date&quot;: &quot;2024-08-15 04:16:37&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6827,&quot;name&quot;:&quot;bike tyres&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;bike tyres&quot;,&quot;create_date&quot;:&quot;2024-02-16 05:06:36&quot;,&quot;write_date&quot;:&quot;2024-08-13 05:15:03&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6827 | BIKE TYRES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 31</small></summary><pre>{
+  &quot;id&quot;: 6827,
+  &quot;name&quot;: &quot;BIKE TYRES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;BIKE TYRES&quot;,
+  &quot;create_date&quot;: &quot;2024-02-16 05:06:36&quot;,
+  &quot;write_date&quot;: &quot;2024-08-13 05:15:03&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6828,&quot;name&quot;:&quot;brake and brake parts&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;brake and brake parts&quot;,&quot;create_date&quot;:&quot;2024-03-25 02:51:41&quot;,&quot;write_date&quot;:&quot;2024-08-20 03:48:45&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6828 | BRAKE AND BRAKE PARTS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 32</small></summary><pre>{
+  &quot;id&quot;: 6828,
+  &quot;name&quot;: &quot;BRAKE AND BRAKE PARTS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;BRAKE AND BRAKE PARTS&quot;,
+  &quot;create_date&quot;: &quot;2024-03-25 02:51:41&quot;,
+  &quot;write_date&quot;: &quot;2024-08-20 03:48:45&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6829,&quot;name&quot;:&quot;scooter tyres&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;scooter tyres&quot;,&quot;create_date&quot;:&quot;2024-04-08 01:18:25&quot;,&quot;write_date&quot;:&quot;2024-08-13 05:16:10&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6829 | SCOOTER TYRES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 33</small></summary><pre>{
+  &quot;id&quot;: 6829,
+  &quot;name&quot;: &quot;SCOOTER TYRES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SCOOTER TYRES&quot;,
+  &quot;create_date&quot;: &quot;2024-04-08 01:18:25&quot;,
+  &quot;write_date&quot;: &quot;2024-08-13 05:16:10&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6831,&quot;name&quot;:&quot;products for assessment/validation&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;products for assessment/validation&quot;,&quot;create_date&quot;:&quot;2024-05-20 01:59:14&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:32:36&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6831 | Products for Assessment/Validation <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 34</small></summary><pre>{
+  &quot;id&quot;: 6831,
+  &quot;name&quot;: &quot;Products for Assessment/Validation&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;Products for Assessment/Validation&quot;,
+  &quot;create_date&quot;: &quot;2024-05-20 01:59:14&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:32:36&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6832,&quot;name&quot;:&quot;bike inner tubes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;bike inner tubes&quot;,&quot;create_date&quot;:&quot;2024-08-13 05:11:19&quot;,&quot;write_date&quot;:&quot;2024-08-20 03:50:11&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.770z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6832 | BIKE INNER TUBES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 35</small></summary><pre>{
+  &quot;id&quot;: 6832,
+  &quot;name&quot;: &quot;BIKE INNER TUBES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;BIKE INNER TUBES&quot;,
+  &quot;create_date&quot;: &quot;2024-08-13 05:11:19&quot;,
+  &quot;write_date&quot;: &quot;2024-08-20 03:50:11&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.770Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6833,&quot;name&quot;:&quot;scooter inner tubes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;scooter inner tubes&quot;,&quot;create_date&quot;:&quot;2024-08-13 05:15:18&quot;,&quot;write_date&quot;:&quot;2024-08-20 03:51:45&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6833 | SCOOTER INNER TUBES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 36</small></summary><pre>{
+  &quot;id&quot;: 6833,
+  &quot;name&quot;: &quot;SCOOTER INNER TUBES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SCOOTER INNER TUBES&quot;,
+  &quot;create_date&quot;: &quot;2024-08-13 05:15:18&quot;,
+  &quot;write_date&quot;: &quot;2024-08-20 03:51:45&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6834,&quot;name&quot;:&quot;scooter tyres and inner tubes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;scooter tyres and inner tubes&quot;,&quot;create_date&quot;:&quot;2024-11-18 04:11:49&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:28:18&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6834 | SCOOTER TYRES and INNER TUBES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 37</small></summary><pre>{
+  &quot;id&quot;: 6834,
+  &quot;name&quot;: &quot;SCOOTER TYRES and INNER TUBES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;SCOOTER TYRES and INNER TUBES&quot;,
+  &quot;create_date&quot;: &quot;2024-11-18 04:11:49&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:28:18&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6836,&quot;name&quot;:&quot;fatfish merchandise&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish merchandise&quot;,&quot;create_date&quot;:&quot;2024-11-21 06:26:55&quot;,&quot;write_date&quot;:&quot;2025-07-08 05:22:31&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6836 | FATFISH MERCHANDISE <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 38</small></summary><pre>{
+  &quot;id&quot;: 6836,
+  &quot;name&quot;: &quot;FATFISH MERCHANDISE&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH MERCHANDISE&quot;,
+  &quot;create_date&quot;: &quot;2024-11-21 06:26:55&quot;,
+  &quot;write_date&quot;: &quot;2025-07-08 05:22:31&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6837,&quot;name&quot;:&quot;fatboy bikes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatboy bikes&quot;,&quot;create_date&quot;:&quot;2024-12-23 01:42:37&quot;,&quot;write_date&quot;:&quot;2025-01-22 04:17:37&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6837 | FATBOY BIKES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 39</small></summary><pre>{
+  &quot;id&quot;: 6837,
+  &quot;name&quot;: &quot;FATBOY BIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATBOY BIKES&quot;,
+  &quot;create_date&quot;: &quot;2024-12-23 01:42:37&quot;,
+  &quot;write_date&quot;: &quot;2025-01-22 04:17:37&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6838,&quot;name&quot;:&quot;fatfish bikes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish bikes&quot;,&quot;create_date&quot;:&quot;2025-02-04 05:51:10&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:53:28&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6838 | FATFISH BIKES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 40</small></summary><pre>{
+  &quot;id&quot;: 6838,
+  &quot;name&quot;: &quot;FATFISH BIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH BIKES&quot;,
+  &quot;create_date&quot;: &quot;2025-02-04 05:51:10&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:53:28&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6839,&quot;name&quot;:&quot;fatfish parts (sm)&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish parts (sm)&quot;,&quot;create_date&quot;:&quot;2025-02-04 05:51:47&quot;,&quot;write_date&quot;:&quot;2026-03-18 00:44:52&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6839 | FATFISH PARTS (SM) <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 41</small></summary><pre>{
+  &quot;id&quot;: 6839,
+  &quot;name&quot;: &quot;FATFISH PARTS (SM)&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH PARTS (SM)&quot;,
+  &quot;create_date&quot;: &quot;2025-02-04 05:51:47&quot;,
+  &quot;write_date&quot;: &quot;2026-03-18 00:44:52&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6840,&quot;name&quot;:&quot;booking fees&quot;,&quot;parent_id_id&quot;:6809,&quot;parent_id&quot;:[6809,&quot;all / saleable&quot;],&quot;parent_id_label&quot;:&quot;all / saleable&quot;,&quot;complete_name&quot;:&quot;all / saleable / booking fees&quot;,&quot;create_date&quot;:&quot;2025-06-18 01:52:37&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:31:05&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6840 | Booking Fees <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 42</small></summary><pre>{
+  &quot;id&quot;: 6840,
+  &quot;name&quot;: &quot;Booking Fees&quot;,
+  &quot;parent_id_id&quot;: 6809,
+  &quot;parent_id&quot;: [
+    6809,
+    &quot;All / Saleable&quot;
+  ],
+  &quot;parent_id_label&quot;: &quot;All / Saleable&quot;,
+  &quot;complete_name&quot;: &quot;All / Saleable / Booking Fees&quot;,
+  &quot;create_date&quot;: &quot;2025-06-18 01:52:37&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:31:05&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6841,&quot;name&quot;:&quot;warranty&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;warranty&quot;,&quot;create_date&quot;:&quot;2025-07-10 04:16:21&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:34:02&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6841 | WARRANTY <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 43</small></summary><pre>{
+  &quot;id&quot;: 6841,
+  &quot;name&quot;: &quot;WARRANTY&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;WARRANTY&quot;,
+  &quot;create_date&quot;: &quot;2025-07-10 04:16:21&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:34:02&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6843,&quot;name&quot;:&quot;locks&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;locks&quot;,&quot;create_date&quot;:&quot;2025-07-17 01:12:02&quot;,&quot;write_date&quot;:&quot;2025-07-17 01:24:54&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6843 | LOCKS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 44</small></summary><pre>{
+  &quot;id&quot;: 6843,
+  &quot;name&quot;: &quot;LOCKS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;LOCKS&quot;,
+  &quot;create_date&quot;: &quot;2025-07-17 01:12:02&quot;,
+  &quot;write_date&quot;: &quot;2025-07-17 01:24:54&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6844,&quot;name&quot;:&quot;gps&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;gps&quot;,&quot;create_date&quot;:&quot;2025-07-17 01:23:51&quot;,&quot;write_date&quot;:&quot;2025-07-17 01:28:44&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6844 | GPS <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 45</small></summary><pre>{
+  &quot;id&quot;: 6844,
+  &quot;name&quot;: &quot;GPS&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;GPS&quot;,
+  &quot;create_date&quot;: &quot;2025-07-17 01:23:51&quot;,
+  &quot;write_date&quot;: &quot;2025-07-17 01:28:44&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6846,&quot;name&quot;:&quot;fatfish accessories&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;fatfish accessories&quot;,&quot;create_date&quot;:&quot;2025-11-05 23:18:29&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:16:37&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6846 | FATFISH ACCESSORIES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 46</small></summary><pre>{
+  &quot;id&quot;: 6846,
+  &quot;name&quot;: &quot;FATFISH ACCESSORIES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;FATFISH ACCESSORIES&quot;,
+  &quot;create_date&quot;: &quot;2025-11-05 23:18:29&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:16:37&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details>
+<details class="record" data-search="{&quot;id&quot;:6847,&quot;name&quot;:&quot;vsett ebikes&quot;,&quot;parent_id&quot;:false,&quot;complete_name&quot;:&quot;vsett ebikes&quot;,&quot;create_date&quot;:&quot;2025-11-25 03:40:29&quot;,&quot;write_date&quot;:&quot;2026-05-25 02:25:08&quot;,&quot;_sanitisation&quot;:{&quot;model&quot;:&quot;product_category&quot;,&quot;source_file&quot;:&quot;eofy_accounting_sample_2026-06-09t06-10-56-254z__product_context__product_category__000000000.jsonl&quot;,&quot;sanitised_at_utc&quot;:&quot;2026-06-09t06:12:01.771z&quot;,&quot;personal_fields_redacted&quot;:0,&quot;bank_fields_redacted&quot;:0,&quot;compacted_text_fields&quot;:0,&quot;policy&quot;:&quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;}}"><summary>#6847 | VSETT EBIKES <small>source eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.sanitised.jsonl line 47</small></summary><pre>{
+  &quot;id&quot;: 6847,
+  &quot;name&quot;: &quot;VSETT EBIKES&quot;,
+  &quot;parent_id&quot;: false,
+  &quot;complete_name&quot;: &quot;VSETT EBIKES&quot;,
+  &quot;create_date&quot;: &quot;2025-11-25 03:40:29&quot;,
+  &quot;write_date&quot;: &quot;2026-05-25 02:25:08&quot;,
+  &quot;_sanitisation&quot;: {
+    &quot;model&quot;: &quot;product_category&quot;,
+    &quot;source_file&quot;: &quot;eofy_accounting_sample_2026-06-09T06-10-56-254Z__product_context__product_category__000000000.jsonl&quot;,
+    &quot;sanitised_at_utc&quot;: &quot;2026-06-09T06:12:01.771Z&quot;,
+    &quot;personal_fields_redacted&quot;: 0,
+    &quot;bank_fields_redacted&quot;: 0,
+    &quot;compacted_text_fields&quot;: 0,
+    &quot;policy&quot;: &quot;partner/user identities hashed; bank details redacted; bank transaction descriptions compacted&quot;
+  }
+}</pre></details></div>
+<script>
+function filterRecords(){ const q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.record').forEach(el=>{ el.style.display = el.dataset.search.includes(q) ? '' : 'none'; }); }
+</script></main>
+</body></html>

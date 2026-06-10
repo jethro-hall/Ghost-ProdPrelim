@@ -1,0 +1,313 @@
+{
+  "schema_version": "workflow.editor.v2.friendly",
+  "kind": "workflow_definition",
+  "id": "workshop_job_booking_workflow_v1",
+  "name": "Workshop Job Booking",
+  "version": "1.0.0",
+  "description": "Manual booking request -> validate -> customer search/create -> availability -> human review -> booking create dry-run -> confirmation.",
+  "runtime": {
+    "mode": "graph",
+    "entry_node": "manual_input"
+  },
+  "metadata": {
+    "purpose": "Generic operational proof workflow for booking a workshop/service job.",
+    "requires_engine_feature": "BOOKING-1 booking node/provider/executor. If booking node is not implemented yet, import will fail until BOOKING-1 is completed.",
+    "write_action_policy": "booking_create must be dry_run or approved by human_review before actual booking creation."
+  },
+  "nodes": [
+    {
+      "id": "manual_input",
+      "type": "manual_trigger",
+      "label": "Manual Input",
+      "position": {
+        "x": 80,
+        "y": 180
+      },
+      "config": {
+        "description": "Load or paste booking request JSON."
+      }
+    },
+    {
+      "id": "validate_booking_request",
+      "type": "validator",
+      "label": "Validate Booking Request",
+      "position": {
+        "x": 380,
+        "y": 180
+      },
+      "config": {
+        "on_failure": "terminate",
+        "checks": [
+          {
+            "path": "$.customer",
+            "operator": "exists",
+            "message": "customer is required."
+          },
+          {
+            "path": "$.customer.name",
+            "operator": "exists",
+            "message": "customer.name is required."
+          },
+          {
+            "path": "$.customer.phone",
+            "operator": "exists",
+            "message": "customer.phone is required."
+          },
+          {
+            "path": "$.asset",
+            "operator": "exists",
+            "message": "asset is required."
+          },
+          {
+            "path": "$.asset.type",
+            "operator": "exists",
+            "message": "asset.type is required."
+          },
+          {
+            "path": "$.serviceType",
+            "operator": "exists",
+            "message": "serviceType is required."
+          },
+          {
+            "path": "$.issueDescription",
+            "operator": "exists",
+            "message": "issueDescription is required."
+          },
+          {
+            "path": "$.workshopLocation",
+            "operator": "exists",
+            "message": "workshopLocation is required."
+          },
+          {
+            "path": "$.urgency",
+            "operator": "exists",
+            "message": "urgency is required."
+          }
+        ]
+      }
+    },
+    {
+      "id": "search_customer",
+      "type": "booking",
+      "label": "Search Customer",
+      "position": {
+        "x": 700,
+        "y": 180
+      },
+      "config": {
+        "operation": "customer_search",
+        "provider_ref": "default",
+        "query": {
+          "name": "{{ input.customer.name }}",
+          "phone": "{{ input.customer.phone }}",
+          "email": "{{ input.customer.email }}"
+        },
+        "allow_create_if_missing": true
+      }
+    },
+    {
+      "id": "create_customer_if_missing",
+      "type": "booking",
+      "label": "Create Customer If Missing",
+      "position": {
+        "x": 1020,
+        "y": 180
+      },
+      "config": {
+        "operation": "customer_create",
+        "provider_ref": "default",
+        "dry_run": "{{ input.dry_run }}",
+        "customer": "{{ input.customer }}",
+        "skip_if_existing_customer": "{{ nodes.search_customer.best_match }}"
+      }
+    },
+    {
+      "id": "find_availability",
+      "type": "booking",
+      "label": "Find Availability",
+      "position": {
+        "x": 1340,
+        "y": 180
+      },
+      "config": {
+        "operation": "availability_find",
+        "provider_ref": "default",
+        "location": "{{ input.workshopLocation }}",
+        "serviceType": "{{ input.serviceType }}",
+        "preferredDate": "{{ input.preferredDate }}",
+        "preferredTimeWindow": "{{ input.preferredTimeWindow }}",
+        "urgency": "{{ input.urgency }}",
+        "asset": "{{ input.asset }}",
+        "limit": 5
+      }
+    },
+    {
+      "id": "select_booking_slot",
+      "type": "code",
+      "label": "Select Booking Slot",
+      "position": {
+        "x": 1660,
+        "y": 180
+      },
+      "config": {
+        "language": "javascript",
+        "code": "\nconst request = $state?.workflow_input ?? $input?.workflow_input ?? $input ?? {};\nconst availability = $input ?? {};\nconst slots = availability.slots ?? availability.available_slots ?? availability.results ?? [];\n\nif (!Array.isArray(slots) || slots.length === 0) {\n  throw new Error(\"No available booking slots were returned.\");\n}\n\nconst selectedSlot = slots[0];\nconst existingCustomer = $state?.nodes?.search_customer?.best_match ?? null;\nconst createdCustomer = $state?.nodes?.create_customer_if_missing?.customer ?? null;\n\nreturn {\n  customer: existingCustomer ?? createdCustomer ?? request.customer,\n  asset: request.asset,\n  serviceType: request.serviceType,\n  issueDescription: request.issueDescription,\n  selectedSlot,\n  location: selectedSlot.location ?? request.workshopLocation,\n  urgency: request.urgency,\n  internalNotes: request.internalNotes ?? \"\",\n  customerVisibleNotes: request.customerVisibleNotes ?? \"\",\n  dry_run: request.dry_run !== false,\n  confirmed: Boolean(request.confirmed),\n  booking_summary: {\n    customer: request.customer,\n    asset: request.asset,\n    serviceType: request.serviceType,\n    issueDescription: request.issueDescription,\n    selectedSlot,\n    location: selectedSlot.location ?? request.workshopLocation,\n    dry_run: request.dry_run !== false\n  }\n};\n"
+      }
+    },
+    {
+      "id": "review_booking",
+      "type": "human_review",
+      "label": "Review Booking",
+      "position": {
+        "x": 1980,
+        "y": 180
+      },
+      "config": {
+        "instructions": "Review the booking details before the booking_create write action. Approve only if customer, asset, service, slot, location and dry-run/actual mode are correct.",
+        "review_payload": {
+          "customer": "{{ nodes.select_booking_slot.customer }}",
+          "asset": "{{ nodes.select_booking_slot.asset }}",
+          "serviceType": "{{ nodes.select_booking_slot.serviceType }}",
+          "issueDescription": "{{ nodes.select_booking_slot.issueDescription }}",
+          "selectedSlot": "{{ nodes.select_booking_slot.selectedSlot }}",
+          "location": "{{ nodes.select_booking_slot.location }}",
+          "urgency": "{{ nodes.select_booking_slot.urgency }}",
+          "internalNotes": "{{ nodes.select_booking_slot.internalNotes }}",
+          "customerVisibleNotes": "{{ nodes.select_booking_slot.customerVisibleNotes }}",
+          "dry_run": "{{ nodes.select_booking_slot.dry_run }}"
+        }
+      }
+    },
+    {
+      "id": "create_booking",
+      "type": "booking",
+      "label": "Create Booking",
+      "position": {
+        "x": 2300,
+        "y": 180
+      },
+      "config": {
+        "operation": "booking_create",
+        "provider_ref": "default",
+        "dry_run": "{{ nodes.select_booking_slot.dry_run }}",
+        "confirmed": "{{ input.confirmed }}",
+        "requires_human_review": true,
+        "customer": "{{ nodes.select_booking_slot.customer }}",
+        "asset": "{{ nodes.select_booking_slot.asset }}",
+        "selectedSlot": "{{ nodes.select_booking_slot.selectedSlot }}",
+        "serviceType": "{{ nodes.select_booking_slot.serviceType }}",
+        "issueDescription": "{{ nodes.select_booking_slot.issueDescription }}",
+        "internalNotes": "{{ nodes.select_booking_slot.internalNotes }}",
+        "customerVisibleNotes": "{{ nodes.select_booking_slot.customerVisibleNotes }}"
+      }
+    },
+    {
+      "id": "build_confirmation",
+      "type": "transformer",
+      "label": "Build Confirmation",
+      "position": {
+        "x": 2620,
+        "y": 180
+      },
+      "config": {
+        "subject_template": "Workshop booking {{ nodes.create_booking.status }} \u2014 {{ nodes.create_booking.bookingId }}",
+        "text_template": "Booking status: {{ nodes.create_booking.status }}\\nBooking ID: {{ nodes.create_booking.bookingId }}\\nJob ID: {{ nodes.create_booking.jobId }}\\nStarts: {{ nodes.create_booking.startsAt }}\\nLocation: {{ nodes.create_booking.location }}\\nConfirmation: {{ nodes.create_booking.confirmationText }}\\nDry run: {{ nodes.create_booking.dry_run }}",
+        "html_template": "<div style='font-family:Arial;padding:20px'><h1>Workshop booking {{ nodes.create_booking.status }}</h1><p><strong>Booking ID:</strong> {{ nodes.create_booking.bookingId }}</p><p><strong>Job ID:</strong> {{ nodes.create_booking.jobId }}</p><p><strong>Starts:</strong> {{ nodes.create_booking.startsAt }}</p><p><strong>Location:</strong> {{ nodes.create_booking.location }}</p><p>{{ nodes.create_booking.confirmationText }}</p><p><strong>Dry run:</strong> {{ nodes.create_booking.dry_run }}</p></div>"
+      }
+    },
+    {
+      "id": "done",
+      "type": "transformer",
+      "label": "Done",
+      "position": {
+        "x": 2940,
+        "y": 180
+      },
+      "config": {
+        "subject_template": "Booking workflow complete",
+        "text_template": "Booking workflow completed. Booking ID: {{ nodes.create_booking.bookingId }}. Status: {{ nodes.create_booking.status }}.",
+        "html_template": "<p>Booking workflow completed.</p>"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "manual_input",
+      "target": "validate_booking_request",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_2",
+      "source": "validate_booking_request",
+      "target": "search_customer",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_3",
+      "source": "search_customer",
+      "target": "create_customer_if_missing",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_4",
+      "source": "create_customer_if_missing",
+      "target": "find_availability",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_5",
+      "source": "find_availability",
+      "target": "select_booking_slot",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_6",
+      "source": "select_booking_slot",
+      "target": "review_booking",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_7",
+      "source": "review_booking",
+      "target": "create_booking",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_8",
+      "source": "create_booking",
+      "target": "build_confirmation",
+      "type": "bezier"
+    },
+    {
+      "id": "edge_9",
+      "source": "build_confirmation",
+      "target": "done",
+      "type": "bezier"
+    }
+  ],
+  "example_payload": {
+    "customer": {
+      "name": "Test Customer",
+      "phone": "0400000000",
+      "email": "test@example.com"
+    },
+    "asset": {
+      "type": "e-bike",
+      "brand": "Demo",
+      "model": "Demo Model",
+      "serial": "",
+      "notes": "Customer says bike intermittently cuts power."
+    },
+    "serviceType": "General service",
+    "issueDescription": "Customer reports intermittent power cut-out while riding.",
+    "preferredDate": "next_available",
+    "preferredTimeWindow": "morning",
+    "workshopLocation": "Main Workshop",
+    "urgency": "normal",
+    "internalNotes": "Dry-run proof booking. Confirm real slot before live use.",
+    "customerVisibleNotes": "Please bring charger, battery key and any error photos.",
+    "confirmed": false,
+    "dry_run": true
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "type": "webhook",
+  "name": "hubtiger_service_job_submit",
+  "description": "LEGACY alias for booking submit. Do NOT use when booking_create is available.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "force",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "execution_mode": "immediate",
+  "api_schema": {
+    "url": "https://ghost.rideai.com.au/api/tools/a1824fdc-d81b-4874-b60f-2c7240f66c09/execute",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Execute booking_create",
+      "properties": [
+        {
+          "id": "operation",
+          "type": "string",
+          "value_type": "constant",
+          "description": "",
+          "dynamic_variable": "",
+          "constant_value": "booking_create",
+          "enum": null,
+          "is_system_provided": false,
+          "required": true
+        },
+        {
+          "id": "payload",
+          "type": "object",
+          "description": "Booking payload",
+          "properties": [
+            {
+              "id": "ID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Partner ID for Ride Electric (use 2186).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "BikeID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Bike/scooter ID to book. Must come from existing records or bike_create.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "store",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Required canonical store: southport | burleigh | brisbane (map newstead->brisbane).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": [
+                "southport",
+                "burleigh",
+                "brisbane"
+              ],
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "firstName",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer first name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "lastName",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer last name.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "mobile",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer mobile in +61 format.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "address",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer address.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "vehicleModel",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Exact bike/scooter model.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "isFirstService",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Whether this booking is first service (FREE).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "serviceDate",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Confirmed slot start datetime from availability tool, e.g. 2026-03-13T14:00:00.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "ServiceType",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Required Hubtiger service type ID. For first service, use the configured first-service type (Ride Electric commonly uses 32693).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "TechnicianID",
+              "type": "number",
+              "value_type": "llm_prompt",
+              "description": "Confirmed technicianId from availability result.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": true
+            },
+            {
+              "id": "quoteRequested",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Whether customer asked for a quote (non-first-service only).",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "is_system_provided": false,
+              "required": false
+            },
+            {
+              "id": "quoteWorkRequested",
+              "type": "string",
+              "value_type": "llm_prompt",
+              "description": "Customer-described work to quote.",
+              "dynamic_variable": "",
+              "constant_value": "",
+              "enum": null,
+              "is_system_provided": false,
+              "required": false
+            }
+          ],
+          "required": true,
+          "value_type": "llm_prompt"
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [
+      {
+        "type": "value",
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "auth_connection": null
+  },
+  "assignments": [],
+  "response_timeout_secs": 25,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
+}
