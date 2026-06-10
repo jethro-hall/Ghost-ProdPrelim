@@ -59,10 +59,119 @@ function collectFile(localPath, repoRelPath) {
   return { localPath, repoPath: `${repoPrefix}/${repoRelPath}` };
 }
 
-const filesToPush = [
-  // Prepared audit payload (samples + system prompt assembled by prepare step)
-  collectFile(anthropicBodyPath, 'audit_payload.json'),
+// ── Build structured audit_payload.json ───────────────────────────────────────
+function buildAuditPayload() {
+  function safe(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
+  function r2(v) { return Math.round((Number(v)||0)*100)/100; }
 
+  const m01 = safe(path.join(snapshotRoot, '01_account_ledger/metrics/account_ledger_metric_pack.json'));
+  const a01 = safe(path.join(snapshotRoot, '01_account_ledger/anomalies/account_ledger_anomaly_pack.json'));
+  const m02 = safe(path.join(snapshotRoot, '02_pos_retail/metrics/pos_retail_metric_pack.json'));
+  const a02 = safe(path.join(snapshotRoot, '02_pos_retail/anomalies/pos_retail_anomaly_pack.json'));
+  const m05 = safe(path.join(snapshotRoot, '05_master_data/metrics/master_data_metric_pack.json'));
+  const a05 = safe(path.join(snapshotRoot, '05_master_data/anomalies/master_data_anomaly_pack.json'));
+  const ready = safe(path.join(snapshotRoot, '03_sanitise_profile/manifests/claude_readiness_summary.json'));
+
+  return {
+    _schema: 'ghoststack-audit-orientation/v2',
+    snapshot_id: snapshotId,
+    generated_at: new Date().toISOString(),
+    scope: {
+      company: 'Ride Electric Brisbane', company_id: 4,
+      fy_start: '2024-07-01', fy_end: '2025-06-30',
+      timezone: 'Australia/Brisbane', currency: 'AUD',
+      note: 'Brisbane entity only. Do not extrapolate to other Ride Electric entities.',
+    },
+    mcp_server: {
+      endpoint: 'https://workflow.rideai.com.au/webhook/odoo-eofy-forensic-mcp-v3',
+      auth: 'Bearer token — provided separately',
+      entry_tool: 'odoo_audit_init — call first to initialise session with live snapshot context',
+      primary_query_tool: 'odoo_query — filter any model by any field with full pagination',
+      tools_count: 25,
+    },
+    readiness_summary: ready ? {
+      overall_status: ready.readiness_status || ready.overall_status || 'ready',
+      sanitised_models: ready.sanitised_model_count || null,
+      pii_fields_removed: ready.pii_fields_removed || null,
+      audit_blockers: ready.audit_blockers || [],
+      warnings: ready.warnings || [],
+    } : { overall_status: 'unknown' },
+    stages: {
+      stage_01_account_ledger: m01 ? {
+        status: 'complete',
+        ledger: {
+          total_debit: r2(m01.ledger?.total_debit),
+          total_credit: r2(m01.ledger?.total_credit),
+          net_balance: r2(m01.ledger?.net_balance),
+          balanced: Math.abs(r2(m01.ledger?.net_balance)) < 0.01,
+          account_count: Object.keys(m01.ledger?.by_account || {}).length,
+          months_covered: Object.keys(m01.ledger?.by_month || {}).sort(),
+        },
+        moves: m01.moves || {},
+        reconciliation: m01.reconciliation || {},
+        anomalies: {
+          total: a01?.total_anomalies || 0,
+          types: a01?.anomaly_counts || {},
+          sample_10: (a01?.anomalies || []).slice(0, 10),
+          note: 'line_modified_after_period_end (37k) is a known mass Odoo operation after FY close — low severity unless tied to specific entries. Focus on non_posted_move_line_in_period for material risk.',
+        },
+      } : { status: 'missing' },
+      stage_02_pos_retail: m02 ? {
+        status: 'complete',
+        pos: m02.pos || {},
+        integrity: m02.integrity || {},
+        anomalies: { total: a02?.total_anomalies || 0, types: a02?.anomaly_counts || {}, sample_10: (a02?.anomalies || []).slice(0, 10) },
+      } : { status: 'missing' },
+      stage_03_sanitise: ready ? { status: 'complete', sanitised_model_count: ready.sanitised_model_count || null, readiness_status: ready.readiness_status || ready.overall_status || null } : { status: 'missing' },
+      stage_05_master_data: m05 ? {
+        status: 'complete',
+        model_counts: m05.model_counts || {},
+        totals: {
+          total_records: m05.model_counts ? Object.values(m05.model_counts).reduce((a, b) => a + b, 0) : null,
+          partners: m05.model_counts?.['res.partner'] || 0,
+          products: m05.model_counts?.['product.product'] || 0,
+          stock_moves: m05.model_counts?.['stock.move'] || 0,
+          sale_orders: m05.model_counts?.['sale.order'] || 0,
+          purchase_orders: m05.model_counts?.['purchase.order'] || 0,
+          attachments: m05.model_counts?.['ir.attachment'] || 0,
+        },
+        stock: m05.stock || {},
+        attachment_by_model: m05.attachment?.count_by_res_model || {},
+        cross_ref: m05.cross_ref || {},
+        anomalies: { total: a05?.total_anomalies || 0, types: a05?.anomaly_counts || {}, sample_10: (a05?.anomalies || []).slice(0, 10) },
+      } : { status: 'missing — Stage 05 did not complete before GitHub push' },
+    },
+    audit_test_battery: [
+      { id: 'T01', area: 'Ledger integrity',    test: 'Verify total_debit == total_credit.', result: m01 ? (Math.abs(r2(m01.ledger?.net_balance)) < 0.01 ? 'PASS' : 'FAIL') : 'UNKNOWN' },
+      { id: 'T02', area: 'Unreconciled AR',      test: 'Count unreconciled receivable lines > 0 balance.', tool: 'odoo_unreconciled' },
+      { id: 'T03', area: 'Unreconciled AP',      test: 'Count unreconciled payable lines > 0 balance.', tool: 'odoo_unreconciled' },
+      { id: 'T04', area: 'Unposted moves in FY', test: 'Find account.move with state != posted and date in FY range.', tool: 'odoo_query', risk: 'Revenue recognition gap' },
+      { id: 'T05', area: 'Stock valuation',      test: 'Verify stock.valuation.layer closing balance matches inventory account (630).', tool: 'odoo_query + odoo_precomputed_metrics' },
+      { id: 'T06', area: 'GST reconciliation',   test: 'Sum tax lines on posted invoices vs account.tax reported totals.', tool: 'odoo_aggregate on account.move.line' },
+      { id: 'T07', area: 'POS vs ledger',        test: 'Sum POS payments by journal and compare to journal entries.', tool: 'odoo_pos_integrity + odoo_query' },
+      { id: 'T08', area: 'Unbilled revenue',     test: 'Find sale.order with invoice_status=to invoice at FY end.', tool: 'odoo_query on sale.order' },
+      { id: 'T09', area: 'Accrued payables',     test: 'Find purchase.order with billing_status=to bill at FY end.', tool: 'odoo_query on purchase.order' },
+      { id: 'T10', area: 'Late journal entries', test: 'Identify account.move with date <= 2025-06-30 but write_date > 2025-08-31.', tool: 'odoo_late_writes' },
+      { id: 'T11', area: 'Negative stock',       test: 'Find product.product with qty_available < 0.', tool: 'odoo_query on product.product' },
+      { id: 'T12', area: 'Top customer balances', test: 'Top 20 customer outstanding balances from AR account group.', tool: 'odoo_query on account.move.line' },
+    ],
+    extraction_gaps: [
+      'mail.message / mail.tracking.value: not extracted — audit trail unavailable via MCP',
+      'stock.valuation.layer: extracted but valuation_total=0 — check product costing method',
+      'account.analytic.line: not extracted — cost allocation details unavailable',
+      'hr.payslip: not extracted — payroll source documents unavailable (journal entries present in ledger)',
+    ],
+    how_to_use: {
+      step1: 'Call odoo_audit_init via MCP for live snapshot context, field index, and anomaly leads',
+      step2: 'Run audit_test_battery tests T01-T12 using odoo_query, odoo_aggregate, odoo_precomputed_* tools',
+      step3: 'Use odoo_schema to check field availability before querying any model',
+      step4: 'Cross-reference stock.move ↔ account.move.line for COGS validation',
+      step5: 'Flag discrepancies with specific record IDs and amounts — do not generalise from sample',
+    },
+  };
+}
+
+const filesToPush = [
   // Stage 01 — Account Ledger
   collectFile(path.join(snapshotRoot, '01_account_ledger/metrics/account_ledger_metric_pack.json'), '01_account_ledger/metric_pack.json'),
   collectFile(path.join(snapshotRoot, '01_account_ledger/anomalies/account_ledger_anomaly_pack.json'), '01_account_ledger/anomaly_pack.json'),
@@ -157,6 +266,12 @@ function buildManifest(pushedFiles, errors) {
 (async () => {
   const pushed = [];
   const errors = [];
+
+  // Build and write structured audit_payload.json (replaces raw Anthropic API body)
+  const auditPayloadPath = '/tmp/odoo_04_audit_payload.json';
+  const auditPayload = buildAuditPayload();
+  fs.writeFileSync(auditPayloadPath, JSON.stringify(auditPayload, null, 2), 'utf8');
+  filesToPush.unshift({ localPath: auditPayloadPath, repoPath: `${repoPrefix}/audit_payload.json` });
 
   process.stderr.write(`[04_github_push] snapshot=${snapshotId} files_to_push=${filesToPush.length}\n`);
 
