@@ -479,11 +479,8 @@ const MODEL_REGISTRY = [
     },
   },
   {
-    // guarded: stock.valuation.layer requires Inventory/Administrator group.
-    // Access failures are non-fatal — logged to api_errors.json.
-    // If extraction succeeds the valuation cross-reference anomalies will be computed.
     model: 'stock.valuation.layer',
-    guarded: true,
+    guarded: false,
     fields: ['id', 'product_id', 'quantity', 'unit_cost', 'value',
              'stock_move_id', 'account_move_id', 'company_id',
              'description', 'create_date'],
