@@ -24,6 +24,7 @@ https://github.com/jethro-hall/ghoststack-rag
 | Stage 03 sanitise + profile | `lib/03_sanitise_profile.js`, `lib/sanitise-core.js`, `lib/profile-core.js` |
 | Stage 04 audit payload prepare | `lib/04_claude_prepare.js` |
 | Stage 04 GitHub audit package push | `lib/04_github_push.js` |
+| MCP server (live Code node in n8n) | `lib/mcp_server.js` — **authoritative source; changes must be applied to both repo file AND the n8n DB Code node via the workflow history chain** |
 | Stage 05 master data exporter | `lib/05_master_data_exporter.js` |
 | MCP server (tool definitions) | `lib/mcp_server.js` |
 | Audit config (scope, tests, join keys) | `lib/eofy-audit-config/` |
