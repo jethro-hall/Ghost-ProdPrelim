@@ -22,8 +22,8 @@ https://github.com/jethro-hall/ghoststack-rag
 | Stage 01 account ledger exporter | `lib/01_account_ledger_exporter.js` _(embedded in n8n workflow)_ |
 | Stage 02 POS retail exporter | `lib/02_pos_retail_exporter.js` |
 | Stage 03 sanitise + profile | `lib/03_sanitise_profile.js`, `lib/sanitise-core.js`, `lib/profile-core.js` |
-| Stage 04 Claude audit prepare | `lib/04_claude_prepare.js` |
-| Stage 04 Claude API call | `lib/04_claude_call_api.js` |
+| Stage 04 audit payload prepare | `lib/04_claude_prepare.js` |
+| Stage 04 GitHub audit package push | `lib/04_github_push.js` |
 | Stage 05 master data exporter | `lib/05_master_data_exporter.js` |
 | MCP server (tool definitions) | `lib/mcp_server.js` |
 | Audit config (scope, tests, join keys) | `lib/eofy-audit-config/` |
@@ -37,17 +37,21 @@ https://github.com/jethro-hall/ghoststack-rag
 - Domain filters applied at extraction time (read `buildDomain()` in each exporter)
 - Sanitisation transforms applied (read `sanitise-core.js` — partner names are hashed to `ENTITY_*`, bank details redacted)
 - Which models are guarded (extraction continues on access error) vs required (extraction halts)
-- The full `audit-tests.json` test battery sent to Claude in Stage 04
+- The full `audit-tests.json` test battery (use this to frame your audit analysis)
 - The `join-keys.json` cross-reference map for building queries
-- The `claude-audit-system-prompt.txt` system prompt that governs Stage 04 output format
+- The `claude-audit-system-prompt.txt` system prompt (describes the expected output structure)
+- The audit package committed by Stage 04 at `audit-exports/{snapshot_id}/` — **this is your primary starting point for each audit session**
 
 **How to use repo access during an audit session:**
 
-1. Before calling `odoo_audit_init`, read `mcp_server.js` → `toolAuditInit` to understand exactly what the init response contains.
-2. Before calling `odoo_query` on a model, read the relevant exporter to confirm which fields are present and what sanitisation was applied.
-3. If a query returns unexpected results, read `sanitise-core.js` to understand how values were transformed.
-4. Use `audit-tests.json` to align your analysis with the pre-defined test battery rather than inventing ad-hoc tests.
-5. Use `join-keys.json` to confirm cross-model join paths before writing aggregation queries.
+1. **Start here first:** read `audit-exports/{snapshot_id}/audit_package_manifest.json` — it lists every file pushed to the repo and gives the direct URL to `audit_payload.json` (the prepared sample data + readiness summary assembled for this snapshot).
+2. Read `audit-exports/{snapshot_id}/audit_payload.json` to see the stratified sample records, readiness summary, extraction gaps, and audit test battery in one place — before touching any MCP tool.
+3. Read stage packs (`01_account_ledger/stage_pack.json`, `02_pos_retail/stage_pack.json`, etc.) to understand row counts, field coverage, and any API errors per stage.
+4. Before calling `odoo_audit_init`, read `mcp_server.js` → `toolAuditInit` to understand exactly what the init response contains.
+5. Before calling `odoo_query` on a model, read the relevant exporter to confirm which fields are present and what sanitisation was applied.
+6. If a query returns unexpected results, read `sanitise-core.js` to understand how values were transformed.
+7. Use `audit-tests.json` to align your analysis with the pre-defined test battery rather than inventing ad-hoc tests.
+8. Use `join-keys.json` to confirm cross-model join paths before writing aggregation queries.
 
 > **Note:** The repo reflects the current deployed state. If you observe behaviour that contradicts the repo code, raise it as an anomaly — it may indicate a deployment drift or an undocumented override in the running container.
 
