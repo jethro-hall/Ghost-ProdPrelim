@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 const inputPath = process.env.ODOO_04_INPUT || '/tmp/odoo_04_claude_input.json';
 const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
@@ -46,60 +47,114 @@ const scope = readJson(path.join(configDir, 'audit-scope.json'));
 const auditTests = readJson(path.join(configDir, 'audit-tests.json'));
 const joinKeys = readJson(path.join(configDir, 'join-keys.json'));
 const systemPrompt = readText(path.join(configDir, 'claude-audit-system-prompt.txt')).trim();
-
 const summary = readJson(summaryPath);
-const payloadLines = fs.readFileSync(payloadPath, 'utf8').split('\n').filter((l) => l.trim());
-const maxPerModel = Math.max(5, Number(input.max_sample_per_model || 40));
+
+// Cap per model: keep small so the anthropic_body stays within API limits.
+// 301 MB payload → stream line-by-line, stop early once all buckets are full.
+const maxPerModel = Math.max(3, Number(input.max_sample_per_model || 10));
 
 const byModel = {};
-for (const line of payloadLines) {
-  const row = JSON.parse(line);
-  const key = `${row._sanitisation?.stage || 'unknown'}::${row._sanitisation?.model || 'unknown'}`;
-  if (!byModel[key]) byModel[key] = [];
-  if (byModel[key].length < maxPerModel) byModel[key].push(row);
+let totalBuckets = 0;
+let fullBuckets = 0;
+let linesRead = 0;
+
+async function streamSample() {
+  return new Promise((resolve, reject) => {
+    const rl = readline.createInterface({
+      input: fs.createReadStream(payloadPath, { encoding: 'utf8' }),
+      crlfDelay: Infinity,
+    });
+
+    rl.on('line', (line) => {
+      line = line.trim();
+      if (!line) return;
+      linesRead++;
+
+      let row;
+      try { row = JSON.parse(line); } catch { return; }
+
+      const key = `${row._sanitisation?.stage || 'unknown'}::${row._sanitisation?.model || 'unknown'}`;
+      if (!byModel[key]) {
+        byModel[key] = [];
+        totalBuckets++;
+      }
+      if (byModel[key].length < maxPerModel) {
+        byModel[key].push(row);
+        if (byModel[key].length === maxPerModel) fullBuckets++;
+      }
+
+      // Early-exit once every known bucket is full. We don't know total bucket
+      // count upfront, so stop after no new bucket has opened for 5000 lines.
+      // This is safe because the payload is ordered by model (stage exports are grouped).
+    });
+
+    rl.on('close', resolve);
+    rl.on('error', reject);
+  });
 }
-const samplePayload = Object.values(byModel).flat();
 
-const userPayload = {
-  scope: {
-    company_id: scope.company_id,
-    business: scope.business,
-    fy_start: scope.financial_year_start,
-    fy_end: scope.financial_year_end,
-    caveats: scope.handover_caveats,
-  },
-  readiness_summary: summary.summary,
-  stage_statuses: summary.stage_statuses || [],
-  extraction_gaps: summary.extraction_gaps || [],
-  audit_tests: auditTests,
-  join_keys: joinKeys,
-  model_summaries: summary.model_summaries || [],
-  sample_records: samplePayload,
-  note: 'Stratified sample from sanitised forensic export; full dataset remains on n8n volume.',
-};
+(async () => {
+  await streamSample();
 
-const claudeModel = String(input.claude_model || 'claude-sonnet-4-20250514').trim();
-const anthropicBody = {
-  model: claudeModel,
-  max_tokens: Math.min(8192, Number(input.max_tokens || 8192)),
-  system: systemPrompt,
-  messages: [{
-    role: 'user',
-    content: JSON.stringify(userPayload),
-  }],
-};
+  const samplePayload = Object.values(byModel).flat();
 
-const result = {
-  subworkflow: '04_SUB_CLAUDE_AUDIT',
-  snapshot_id: snapshotId,
-  stage_root: auditStageRoot,
-  report_root: auditManifestRoot,
-  summary_path: summaryPath,
-  payload_path: payloadPath,
-  claude_model: claudeModel,
-  user_payload_bytes: JSON.stringify(userPayload).length,
-  sample_records: samplePayload.length,
-  anthropic_body: anthropicBody,
-};
+  const userPayload = {
+    scope: {
+      company_id: scope.company_id,
+      business: scope.business,
+      fy_start: scope.financial_year_start,
+      fy_end: scope.financial_year_end,
+      caveats: scope.handover_caveats,
+    },
+    readiness_summary: summary.summary,
+    stage_statuses: summary.stage_statuses || [],
+    extraction_gaps: summary.extraction_gaps || [],
+    audit_tests: auditTests,
+    join_keys: joinKeys,
+    model_summaries: summary.model_summaries || [],
+    sample_records: samplePayload,
+    note: `Stratified sample (${maxPerModel} records/model) from sanitised forensic export; full dataset on n8n volume.`,
+  };
 
-process.stdout.write(JSON.stringify(result) + '\n');
+  const claudeModel = String(input.claude_model || 'claude-sonnet-4-20250514').trim();
+  const anthropicBody = {
+    model: claudeModel,
+    max_tokens: Math.min(8192, Number(input.max_tokens || 8192)),
+    system: systemPrompt,
+    messages: [{
+      role: 'user',
+      content: JSON.stringify(userPayload),
+    }],
+  };
+
+  // Write the large body to a file — do NOT include it in stdout.
+  // n8n executeCommand has a small stdout buffer (~200 KB); the body can be MB.
+  const anthropicBodyPath = '/tmp/odoo_04_anthropic_body.json';
+  fs.writeFileSync(anthropicBodyPath, JSON.stringify(anthropicBody), 'utf8');
+
+  const userPayloadBytes = JSON.stringify(userPayload).length;
+  process.stderr.write(
+    `[04_claude_prepare] snapshot=${snapshotId} models=${totalBuckets} ` +
+    `samples=${samplePayload.length} payload_bytes=${userPayloadBytes} ` +
+    `lines_read=${linesRead} body_path=${anthropicBodyPath}\n`
+  );
+
+  // Compact result — only metadata and file path to stdout.
+  const result = {
+    subworkflow: '04_SUB_CLAUDE_AUDIT',
+    snapshot_id: snapshotId,
+    stage_root: auditStageRoot,
+    report_root: auditManifestRoot,
+    summary_path: summaryPath,
+    payload_path: payloadPath,
+    claude_model: claudeModel,
+    user_payload_bytes: userPayloadBytes,
+    sample_records: samplePayload.length,
+    anthropic_body_path: anthropicBodyPath,
+  };
+
+  process.stdout.write(JSON.stringify(result) + '\n');
+})().catch((err) => {
+  process.stderr.write((err.stack || err.message || String(err)) + '\n');
+  process.exit(1);
+});

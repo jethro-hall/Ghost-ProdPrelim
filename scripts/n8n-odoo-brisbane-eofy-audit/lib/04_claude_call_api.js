@@ -37,11 +37,17 @@ if (!apiKey.startsWith('sk-ant-')) {
 const snapshotId = String(req(input, 'snapshot_id')).trim();
 const reportRoot = String(req(input, 'report_root')).trim();
 const stageRoot = String(input.stage_root || path.join(reportRoot, '..')).trim();
-const claudeModel = String(input.claude_model || input.anthropic_body?.model || 'claude-sonnet-4-20250514');
-const anthropicBody = input.anthropic_body;
+
+// anthropic_body may be passed inline (legacy) or via a file path to avoid
+// blowing the n8n executeCommand stdout buffer.
+let anthropicBody = input.anthropic_body;
+if (!anthropicBody && input.anthropic_body_path) {
+  anthropicBody = JSON.parse(fs.readFileSync(input.anthropic_body_path, 'utf8'));
+}
 if (!anthropicBody || !anthropicBody.messages) {
   throw new Error('Missing anthropic_body in call input — run Claude prepare first');
 }
+const claudeModel = String(input.claude_model || anthropicBody.model || 'claude-sonnet-4-20250514');
 
 (async () => {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
