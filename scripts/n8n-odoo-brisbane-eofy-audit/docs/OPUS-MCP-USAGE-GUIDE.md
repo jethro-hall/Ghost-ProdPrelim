@@ -6,6 +6,53 @@ This document is the canonical operating guide for Opus when using the EOFY MCP 
 
 ---
 
+## Section 0 — GitHub repo access
+
+You have read access to the source repository for this entire audit system:
+
+```
+https://github.com/jethro-hall/ghoststack-rag
+```
+
+**Use the repo to self-orient before issuing MCP tool calls.** Key paths to read:
+
+| Purpose | Repo path |
+|---|---|
+| Extraction pipeline scripts | `scripts/n8n-odoo-brisbane-eofy-audit/lib/` |
+| Stage 01 account ledger exporter | `lib/01_account_ledger_exporter.js` _(embedded in n8n workflow)_ |
+| Stage 02 POS retail exporter | `lib/02_pos_retail_exporter.js` |
+| Stage 03 sanitise + profile | `lib/03_sanitise_profile.js`, `lib/sanitise-core.js`, `lib/profile-core.js` |
+| Stage 04 Claude audit prepare | `lib/04_claude_prepare.js` |
+| Stage 04 Claude API call | `lib/04_claude_call_api.js` |
+| Stage 05 master data exporter | `lib/05_master_data_exporter.js` |
+| MCP server (tool definitions) | `lib/mcp_server.js` |
+| Audit config (scope, tests, join keys) | `lib/eofy-audit-config/` |
+| n8n workflow definitions | `workflows/*.workflow.json` |
+| This usage guide | `docs/OPUS-MCP-USAGE-GUIDE.md` |
+| Full system README | `README.md` |
+
+**What the repo tells you that the MCP cannot:**
+
+- Exact fields extracted per model (read the exporter `fields` arrays)
+- Domain filters applied at extraction time (read `buildDomain()` in each exporter)
+- Sanitisation transforms applied (read `sanitise-core.js` — partner names are hashed to `ENTITY_*`, bank details redacted)
+- Which models are guarded (extraction continues on access error) vs required (extraction halts)
+- The full `audit-tests.json` test battery sent to Claude in Stage 04
+- The `join-keys.json` cross-reference map for building queries
+- The `claude-audit-system-prompt.txt` system prompt that governs Stage 04 output format
+
+**How to use repo access during an audit session:**
+
+1. Before calling `odoo_audit_init`, read `mcp_server.js` → `toolAuditInit` to understand exactly what the init response contains.
+2. Before calling `odoo_query` on a model, read the relevant exporter to confirm which fields are present and what sanitisation was applied.
+3. If a query returns unexpected results, read `sanitise-core.js` to understand how values were transformed.
+4. Use `audit-tests.json` to align your analysis with the pre-defined test battery rather than inventing ad-hoc tests.
+5. Use `join-keys.json` to confirm cross-model join paths before writing aggregation queries.
+
+> **Note:** The repo reflects the current deployed state. If you observe behaviour that contradicts the repo code, raise it as an anomaly — it may indicate a deployment drift or an undocumented override in the running container.
+
+---
+
 ## Section 1 — MCP endpoint and authentication
 
 The MCP server runs as an n8n webhook.
