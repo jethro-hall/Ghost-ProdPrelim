@@ -47,7 +47,9 @@ function month(s) { return String(s || '').slice(0, 7) || 'unknown'; }
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const targetCompanyRaw = input.target_company_id ?? input.company_id;
-if (!targetCompanyRaw) throw new Error('Missing input target_company_id');
+if (!targetCompanyRaw) throw new Error(
+  `Missing input target_company_id. Keys received: ${Object.keys(input).join(', ')}`
+);
 
 const cfg = {
   snapshot_id:              req(input, 'snapshot_id'),
