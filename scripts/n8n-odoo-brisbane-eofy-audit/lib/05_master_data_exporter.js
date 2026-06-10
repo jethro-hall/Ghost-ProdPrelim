@@ -101,6 +101,7 @@ const xref = {
   product_ids:  new Set(),
   user_ids:     new Set(),
   tmpl_ids:     new Set(),
+  picking_ids:  new Set(), // harvested from stock.picking — used to expand stock.move domain
 };
 
 // Stage 05 metrics
@@ -428,6 +429,22 @@ const MODEL_REGISTRY = [
     },
   },
   // ── Priority 2: Stock / COGS ─────────────────────────────────────────────────
+  // stock.picking MUST come before stock.move so picking IDs are available for
+  // cross-reference domain expansion on stock.move.
+  {
+    model: 'stock.picking',
+    guarded: false,
+    fields: ['id', 'name', 'picking_type_id', 'partner_id', 'origin',
+             'state', 'date_done', 'scheduled_date', 'company_id',
+             'location_id', 'location_dest_id',
+             'create_uid', 'create_date', 'write_date'],
+    domainFn: (available) => {
+      const d = strictCompanyDomain(available);
+      const fy = fyDomain('date_done')(available);
+      return [...d, ...fy];
+    },
+    onRecord: (row) => { xref.picking_ids.add(row.id); },
+  },
   {
     model: 'stock.move',
     guarded: false,
@@ -436,10 +453,17 @@ const MODEL_REGISTRY = [
              'location_id', 'location_dest_id', 'state', 'company_id',
              'account_move_ids', 'price_unit',
              'create_uid', 'create_date', 'write_date'],
+    // Extend beyond simple FY date filter: also include all moves belonging to
+    // FY pickings (picking_id in harvested picking IDs) to capture moves whose
+    // own date falls slightly outside the FY window (backdated / adjusted moves).
     domainFn: (available) => {
       const d = strictCompanyDomain(available);
-      const fy = fyDomain('date')(available);
-      return [...d, ...fy];
+      const fyMoves = fyDomain('date')(available);
+      if (xref.picking_ids.size > 0 && available.has('picking_id')) {
+        // OR: date in FY OR picking_id in extracted_picking_ids
+        return [...d, '|', ...fyMoves, ['picking_id', 'in', [...xref.picking_ids]]];
+      }
+      return [...d, ...fyMoves];
     },
   },
   {
@@ -455,27 +479,17 @@ const MODEL_REGISTRY = [
     },
   },
   {
+    // guarded: stock.valuation.layer requires Inventory/Administrator group.
+    // Access failures are non-fatal — logged to api_errors.json.
+    // If extraction succeeds the valuation cross-reference anomalies will be computed.
     model: 'stock.valuation.layer',
-    guarded: false,
+    guarded: true,
     fields: ['id', 'product_id', 'quantity', 'unit_cost', 'value',
              'stock_move_id', 'account_move_id', 'company_id',
              'description', 'create_date'],
     domainFn: (available) => {
       const d = strictCompanyDomain(available);
       const fy = fyDomain('create_date')(available);
-      return [...d, ...fy];
-    },
-  },
-  {
-    model: 'stock.picking',
-    guarded: false,
-    fields: ['id', 'name', 'picking_type_id', 'partner_id', 'origin',
-             'state', 'date_done', 'scheduled_date', 'company_id',
-             'location_id', 'location_dest_id',
-             'create_uid', 'create_date', 'write_date'],
-    domainFn: (available) => {
-      const d = strictCompanyDomain(available);
-      const fy = fyDomain('date_done')(available);
       return [...d, ...fy];
     },
   },
@@ -539,27 +553,29 @@ const MODEL_REGISTRY = [
   },
   // ── Priority 3: Audit trail ──────────────────────────────────────────────────
   {
+    // mail.message: res_model is stored but NOT searchable as a domain field on all
+    // Odoo versions (raises "Invalid field" error). Scope by date only and filter
+    // by model at analysis time. guarded=true because some Odoo setups restrict
+    // mail.message reads to specific groups.
     model: 'mail.message',
-    guarded: false,
+    guarded: true,
     fields: ['id', 'res_id', 'res_model', 'message_type', 'subtype_id',
              'author_id', 'partner_ids', 'body',
              'date', 'create_date', 'write_date'],
     domainFn: (available) => {
-      const auditModels = [
-        'account.move', 'account.payment', 'account.bank.statement.line',
-        'pos.order', 'sale.order', 'purchase.order',
-        'stock.picking', 'res.partner', 'product.template',
-      ];
-      const d = [['res_model', 'in', auditModels]];
       if (available.has('date')) {
-        d.push(['date', '>=', cfg.date_start], ['date', '<=', cfg.date_end]);
+        return [['date', '>=', cfg.date_start], ['date', '<=', cfg.date_end]];
       }
-      return d;
+      if (available.has('create_date')) {
+        return [['create_date', '>=', cfg.date_start], ['create_date', '<=', cfg.date_end]];
+      }
+      return [];
     },
   },
   {
+    // mail.tracking.value requires Administration/Settings group — guarded.
     model: 'mail.tracking.value',
-    guarded: false,
+    guarded: true,
     fields: ['id', 'mail_message_id', 'field_id', 'field_desc', 'field_type',
              'old_value_char', 'new_value_char',
              'old_value_integer', 'new_value_integer',
@@ -794,13 +810,14 @@ async function exportModel(uid, mc) {
       appendJsonl(rawFile, enriched);
       if (!outputFiles.includes(rawFile)) outputFiles.push(rawFile);
 
-      // Per-record metric tracking
+      // Per-record metric tracking + optional model-level onRecord hook
       for (const row of enriched) {
         if (mc.model === 'stock.move')              trackStockMove(row);
         if (mc.model === 'stock.valuation.layer')   trackValuationLayer(row);
         if (mc.model === 'mail.message')            trackMailMessage(row);
         if (mc.model === 'mail.tracking.value')     trackTrackingValue(row);
         if (mc.model === 'ir.attachment')           trackAttachment(row);
+        if (mc.onRecord) mc.onRecord(row);
       }
 
       // Harvest product template IDs from product.product so product.template domain is precise
