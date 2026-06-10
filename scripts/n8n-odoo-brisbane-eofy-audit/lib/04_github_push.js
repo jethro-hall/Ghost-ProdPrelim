@@ -28,7 +28,7 @@ const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
 
 const GITHUB_PAT = process.env.GITHUB_PAT || '';
 const GITHUB_OWNER = 'jethro-hall';
-const GITHUB_REPO = 'ghoststack-rag';
+const GITHUB_REPO = 'Claudeopus_Odoo_Audit';
 const GITHUB_BRANCH = 'main';
 const GITHUB_API = 'https://api.github.com';
 
@@ -50,8 +50,8 @@ const outputRoot = String(input.output_root || '/home/node/.n8n/odoo_forensic_ex
 const snapshotRoot = path.join(outputRoot, snapshotId);
 const anthropicBodyPath = input.anthropic_body_path || '/tmp/odoo_04_anthropic_body.json';
 
-// Destination prefix in the repo
-const repoPrefix = `scripts/n8n-odoo-brisbane-eofy-audit/audit-exports/${snapshotId}`;
+// Destination prefix in the audit repo — files land at root/snapshots/{id}/
+const repoPrefix = `snapshots/${snapshotId}`;
 
 // ── Collect files to push ──────────────────────────────────────────────────────
 function collectFile(localPath, repoRelPath) {
