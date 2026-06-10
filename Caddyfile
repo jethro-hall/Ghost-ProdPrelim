@@ -94,7 +94,11 @@ ghoststack.rideai.com.au {
 
 workflow.rideai.com.au {
 	encode gzip
-	reverse_proxy n8n:5678
+	@mcp_webhook path /webhook/*
+	header @mcp_webhook Cache-Control "no-store, no-cache, must-revalidate"
+	reverse_proxy n8n:5678 {
+		flush_interval -1
+	}
 }
 
 protean.rideai.com.au {
