@@ -1365,6 +1365,21 @@ function toolAuditInit(args) {
     blocked_by: posAnomalies?.blocked_metrics || [],
   } : null;
 
+  const masterDataSummary = masterDataMetrics ? {
+    total_records: masterDataMetrics.model_counts
+      ? Object.values(masterDataMetrics.model_counts).reduce((a, b) => a + b, 0) : null,
+    model_counts: masterDataMetrics.model_counts || {},
+    stock_valuation_total: r2(masterDataMetrics.stock?.valuation_total),
+    stock_move_count: masterDataMetrics.stock?.move_count || 0,
+    mail_message_count: masterDataMetrics.mail?.message_count_by_model
+      ? Object.values(masterDataMetrics.mail.message_count_by_model).reduce((a, b) => a + b, 0) : 0,
+    attachment_count: masterDataMetrics.attachment?.count_by_res_model
+      ? Object.values(masterDataMetrics.attachment.count_by_res_model).reduce((a, b) => a + b, 0) : 0,
+    partner_ids_harvested: masterDataMetrics.cross_ref?.partner_ids_harvested || 0,
+    product_ids_harvested: masterDataMetrics.cross_ref?.product_ids_harvested || 0,
+    blocked_by: masterDataAnomalies?.blocked_metrics || [],
+  } : null;
+
   return {
     ok: true,
     audit_session_init: true,
@@ -1381,11 +1396,15 @@ function toolAuditInit(args) {
       'pos.order.line': quickFields('pos.order.line'),
       'pos.payment': quickFields('pos.payment'),
       'account.bank.statement.line': quickFields('account.bank.statement.line'),
+      'res.partner': quickFields('res.partner'),
+      'product.product': quickFields('product.product'),
+      'stock.valuation.layer': quickFields('stock.valuation.layer'),
     },
 
     orientation: {
       ledger: ledgerSummary,
       pos: posSummary,
+      master_data: masterDataSummary,
     },
 
     anomaly_leads: {
@@ -1398,6 +1417,11 @@ function toolAuditInit(args) {
         counts: posAnomalies.anomaly_counts,
         sample: (posAnomalies.anomalies || []).slice(0, 10),
         blocked: posAnomalies.blocked_metrics || [],
+      } : null,
+      master_data: masterDataAnomalies ? {
+        counts: masterDataAnomalies.anomaly_counts,
+        sample: (masterDataAnomalies.anomalies || []).slice(0, 10),
+        blocked: masterDataAnomalies.blocked_metrics || [],
       } : null,
     },
 
