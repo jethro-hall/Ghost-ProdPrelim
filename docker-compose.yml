@@ -87,6 +87,7 @@ services:
       NODE_FUNCTION_ALLOW_BUILTIN: "*"
       NODES_EXCLUDE: '[]'
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GITHUB_PAT: ${GITHUB_PAT:-}
     volumes:
       - n8n_data:/home/node/.n8n
       - /var/llamaindex/ghoststack-rag/CallData:/home/node/.n8n-files
