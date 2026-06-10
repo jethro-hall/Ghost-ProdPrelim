@@ -1425,7 +1425,31 @@ function toolAuditInit(args) {
       } : null,
     },
 
+    github_audit_package: {
+      repo: 'https://github.com/jethro-hall/Claudeopus_Odoo_Audit',
+      branch: 'main',
+      snapshot_path: `snapshots/${snapshotId}`,
+      audit_package_url: `https://github.com/jethro-hall/Claudeopus_Odoo_Audit/tree/main/snapshots/${snapshotId}`,
+      entry_point: `https://github.com/jethro-hall/Claudeopus_Odoo_Audit/blob/main/snapshots/${snapshotId}/audit_payload.json`,
+      manifest: `https://github.com/jethro-hall/Claudeopus_Odoo_Audit/blob/main/snapshots/${snapshotId}/audit_package_manifest.json`,
+      note: 'Read audit_payload.json first — it contains stratified sample records, readiness summary, extraction gaps, and audit test battery. Read audit_package_manifest.json to see all pushed files. Stage packs and metric/anomaly packs are in subdirectories by stage number.',
+      available_files: [
+        `snapshots/${snapshotId}/audit_payload.json`,
+        `snapshots/${snapshotId}/audit_package_manifest.json`,
+        `snapshots/${snapshotId}/01_account_ledger/metric_pack.json`,
+        `snapshots/${snapshotId}/01_account_ledger/anomaly_pack.json`,
+        `snapshots/${snapshotId}/01_account_ledger/stage_pack.json`,
+        `snapshots/${snapshotId}/02_pos_retail/metric_pack.json`,
+        `snapshots/${snapshotId}/02_pos_retail/anomaly_pack.json`,
+        `snapshots/${snapshotId}/02_pos_retail/stage_pack.json`,
+        `snapshots/${snapshotId}/03_sanitise_profile/readiness_summary.json`,
+        `snapshots/${snapshotId}/05_master_data/metric_pack.json`,
+        `snapshots/${snapshotId}/05_master_data/anomaly_pack.json`,
+      ],
+    },
+
     tool_guide: {
+      session_start: 'READ GITHUB FIRST: fetch audit_payload.json from github_audit_package.entry_point before any MCP tool call. It contains sample records, readiness summary, and the audit test battery in one file.',
       primary_data_access: 'odoo_query — filter any model by any field, sort, paginate. This is your main data retrieval tool.',
       aggregation: 'odoo_aggregate — GROUP BY any field with COUNT/SUM/MIN/MAX. Zero raw row cost.',
       schema: 'odoo_schema — field types, completeness, sample values for any model.',
@@ -1435,7 +1459,7 @@ function toolAuditInit(args) {
       leads: 'odoo_precomputed_anomalies — extraction-script-detected signals to investigate (not conclusions).',
     },
 
-    audit_principle: 'You have direct, unrestricted access to all data via odoo_query. Use anomaly_leads as starting hypotheses, not conclusions. Derive your own findings from the raw records.',
+    audit_principle: 'Start with the GitHub audit package (github_audit_package.entry_point) to orient the session before issuing MCP queries. You have direct, unrestricted access to all data via odoo_query. Use anomaly_leads as starting hypotheses, not conclusions. Derive your own findings from the raw records.',
   };
 }
 
@@ -1613,9 +1637,16 @@ function toolHelp() {
       'Use odoo_model_rows with offset/limit to page through complete datasets for targeted models.',
       'State limitations explicitly when models are missing or samples are used instead of complete data.',
     ],
+    github_audit_package: {
+      repo: 'https://github.com/jethro-hall/Claudeopus_Odoo_Audit',
+      entry_point: 'Read audit_payload.json first — it has sample records, readiness summary, and audit test battery.',
+      manifest: 'Read audit_package_manifest.json for a full index of all pushed files.',
+      note: 'Stage 04 of every pipeline run commits the full audit package here. Start your session by reading these files from GitHub before touching any MCP tool.',
+    },
     token_strategy: [
-      'RECOMMENDED AUDIT START: call odoo_audit_init — one call gives you everything to orient the session.',
-      '1. odoo_audit_init → scope, all models, field index, pre-computed orientation, anomaly leads (FIRST call)',
+      'RECOMMENDED AUDIT START: (1) read audit_payload.json from github_audit_package.entry_point, then (2) call odoo_audit_init.',
+      '0. GitHub first: fetch snapshots/{snapshot_id}/audit_payload.json from Claudeopus_Odoo_Audit repo',
+      '1. odoo_audit_init → scope, all models, field index, pre-computed orientation, anomaly leads, GitHub package URLs',
       '2. odoo_schema(model) → inspect field types and completeness before querying',
       '3. odoo_aggregate(model, group_by, metrics) → GROUP BY any field with zero raw row cost (pattern detection)',
       '4. odoo_query(model, filters, fields, limit) → pull exactly the rows you need with server-side filtering',
