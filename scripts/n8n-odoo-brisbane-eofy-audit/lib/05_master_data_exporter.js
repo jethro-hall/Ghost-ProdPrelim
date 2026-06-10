@@ -459,9 +459,11 @@ const MODEL_REGISTRY = [
     domainFn: (available) => {
       const d = strictCompanyDomain(available);
       const fyMoves = fyDomain('date')(available);
-      if (xref.picking_ids.size > 0 && available.has('picking_id')) {
-        // OR: date in FY OR picking_id in extracted_picking_ids
-        return [...d, '|', ...fyMoves, ['picking_id', 'in', [...xref.picking_ids]]];
+      if (xref.picking_ids.size > 0 && available.has('picking_id') && fyMoves.length === 2) {
+        // Odoo prefix OR: '|' takes next 2 expressions.
+        // '&' groups both FY date conditions into a single OR operand.
+        // Result: company=4 AND ((date>=start AND date<=end) OR picking_id in ids)
+        return [...d, '|', '&', ...fyMoves, ['picking_id', 'in', [...xref.picking_ids]]];
       }
       return [...d, ...fyMoves];
     },
