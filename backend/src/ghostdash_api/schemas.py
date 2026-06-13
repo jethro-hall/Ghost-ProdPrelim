@@ -147,6 +147,23 @@ class ConnectionTestResponse(BaseModel):
     output: str
 
 
+class BedrockModelItem(BaseModel):
+    model_id: str
+    model_name: str
+    provider: str
+    kind: str  # "foundation_model" | "inference_profile"
+    input_modalities: list[str] = Field(default_factory=list)
+    output_modalities: list[str] = Field(default_factory=list)
+    status: str = "ACTIVE"
+
+
+class BedrockModelsResponse(BaseModel):
+    models: list[BedrockModelItem]
+    region: str
+    count: int
+    error: str | None = None
+
+
 class CapabilityStatus(BaseModel):
     available: bool
     configured: bool

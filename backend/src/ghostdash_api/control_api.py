@@ -86,6 +86,7 @@ from .models import (
 from .runtime import (
     delete_connection,
     get_active_connection,
+    list_bedrock_available_models,
     list_connections,
     save_connection,
     seed_default_connections,
@@ -123,6 +124,8 @@ from .schemas import (
     ConnectionPayload,
     ConnectionTestPayload,
     ConnectionTestResponse,
+    BedrockModelsResponse,
+    BedrockModelItem,
     OdooEvidenceMirrorCreatePayload,
     OdooEvidenceMirrorView,
     ConnectionView,
@@ -1840,6 +1843,64 @@ def create_app() -> FastAPI:
             status_code, detail = _map_connection_test_exception(exc)
             raise HTTPException(status_code, detail) from exc
         return ConnectionTestResponse(ok=True, **result)
+
+    @app.get("/api/connections/bedrock-models", response_model=BedrockModelsResponse)
+    def api_list_bedrock_models(
+        provider: str | None = Query(default=None, description="Provider slug to read credentials from (e.g. amazon-bedrock)"),
+        aws_access_key_id: str | None = Query(default=None, alias="access_key_id"),
+        aws_secret_access_key: str | None = Query(default=None, alias="secret_access_key"),
+        aws_region: str | None = Query(default=None),
+        session: Session = Depends(get_session),
+    ) -> BedrockModelsResponse:
+        """List Bedrock foundation models + inference profiles for the given credentials.
+
+        Credentials are resolved in this order:
+        1. Explicit query params (access_key_id / secret_access_key / aws_region)
+        2. The saved connection record identified by `provider` (e.g. amazon-bedrock)
+        3. Global AWS env vars (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_DEFAULT_REGION)
+        """
+        resolved_key = aws_access_key_id
+        resolved_secret = aws_secret_access_key
+        resolved_region = aws_region
+
+        if provider and (not resolved_key or not resolved_secret):
+            try:
+                record = get_active_connection(session, provider)
+                resolved_key = resolved_key or record.auth_header_name  # key stored in auth_header_name
+                resolved_secret = resolved_secret or record.api_key
+                resolved_region = resolved_region or getattr(record, "aws_region", None)
+            except ValueError:
+                pass
+
+        try:
+            raw = list_bedrock_available_models(
+                access_key_id=resolved_key or None,
+                secret_access_key=resolved_secret or None,
+                region=resolved_region or None,
+            )
+        except Exception as exc:
+            effective_region = (resolved_region or settings.aws_default_region or "us-east-1")
+            return BedrockModelsResponse(
+                models=[],
+                region=effective_region,
+                count=0,
+                error=str(exc),
+            )
+
+        items = [
+            BedrockModelItem(
+                model_id=m["model_id"],
+                model_name=m["model_name"],
+                provider=m["provider"],
+                kind=m["kind"],
+                input_modalities=m.get("input_modalities", []),
+                output_modalities=m.get("output_modalities", []),
+                status=m.get("status", "ACTIVE"),
+            )
+            for m in raw
+        ]
+        effective_region = (resolved_region or settings.aws_default_region or "us-east-1")
+        return BedrockModelsResponse(models=items, region=effective_region, count=len(items))
 
     @app.get("/api/hubtiger")
     def api_hubtiger_root() -> RedirectResponse:

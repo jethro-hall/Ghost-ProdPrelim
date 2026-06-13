@@ -1298,6 +1298,33 @@ export async function deleteConnection(connectionId: string, confirmationToken: 
   return data;
 }
 
+export type BedrockModelItem = {
+  model_id: string;
+  model_name: string;
+  provider: string;
+  kind: "foundation_model" | "inference_profile";
+  input_modalities: string[];
+  output_modalities: string[];
+  status: string;
+};
+
+export type BedrockModelsResponse = {
+  models: BedrockModelItem[];
+  region: string;
+  count: number;
+  error?: string | null;
+};
+
+export async function listBedrockModels(params: {
+  provider?: string;
+  access_key_id?: string;
+  secret_access_key?: string;
+  aws_region?: string;
+}) {
+  const { data } = await api.get<BedrockModelsResponse>("/connections/bedrock-models", { params });
+  return data;
+}
+
 export async function uploadFile(file: File, corpus?: string, policyLane?: RequestedLane, relativePath?: string) {
   const form = new FormData();
   const uploadName = relativePath || file.webkitRelativePath || file.name;

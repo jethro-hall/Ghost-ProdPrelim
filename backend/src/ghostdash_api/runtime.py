@@ -289,6 +289,88 @@ def _bedrock_client(connection: ProviderConnectionConfig):
     return boto3.client("bedrock-runtime", **kwargs)
 
 
+def _bedrock_control_client(
+    *,
+    access_key_id: str | None = None,
+    secret_access_key: str | None = None,
+    region: str | None = None,
+):
+    """Build a boto3 bedrock (control-plane) client for listing models / profiles."""
+    import boto3  # local import
+    resolved_region = (region or "").strip() or settings.aws_default_region
+    resolved_key = (access_key_id or "").strip() or settings.aws_access_key_id
+    resolved_secret = (secret_access_key or "").strip() or settings.aws_secret_access_key
+    kwargs: dict = {"region_name": resolved_region}
+    if resolved_key:
+        kwargs["aws_access_key_id"] = resolved_key
+    if resolved_secret:
+        kwargs["aws_secret_access_key"] = resolved_secret
+    return boto3.client("bedrock", **kwargs)
+
+
+def list_bedrock_available_models(
+    *,
+    access_key_id: str | None = None,
+    secret_access_key: str | None = None,
+    region: str | None = None,
+) -> list[dict]:
+    """
+    Return merged list of enabled foundation models + inference profiles from Bedrock.
+    Each item: {model_id, model_name, provider, kind, status}
+    """
+    client = _bedrock_control_client(
+        access_key_id=access_key_id,
+        secret_access_key=secret_access_key,
+        region=region,
+    )
+    results: list[dict] = []
+
+    # Foundation models that the account has access to.
+    try:
+        paginator = client.get_paginator("list_foundation_models")
+        for page in paginator.paginate():
+            for m in page.get("modelSummaries", []):
+                model_id = m.get("modelId", "")
+                if not model_id:
+                    continue
+                results.append({
+                    "model_id": model_id,
+                    "model_name": m.get("modelName", model_id),
+                    "provider": m.get("providerName", ""),
+                    "kind": "foundation_model",
+                    "input_modalities": m.get("inputModalities", []),
+                    "output_modalities": m.get("outputModalities", []),
+                    "status": "ACTIVE",
+                })
+    except Exception:  # noqa: BLE001
+        pass  # may not have bedrock:ListFoundationModels permission
+
+    # System-defined cross-region inference profiles (us.*, ap.*, eu.* prefixes).
+    # Custom inference profiles created by the account.
+    try:
+        paginator = client.get_paginator("list_inference_profiles")
+        for page in paginator.paginate():
+            for p in page.get("inferenceProfileSummaries", []):
+                profile_id = p.get("inferenceProfileId", "") or p.get("inferenceProfileArn", "")
+                if not profile_id:
+                    continue
+                results.append({
+                    "model_id": profile_id,
+                    "model_name": p.get("inferenceProfileName", profile_id),
+                    "provider": p.get("type", ""),
+                    "kind": "inference_profile",
+                    "input_modalities": [],
+                    "output_modalities": [],
+                    "status": p.get("status", "ACTIVE"),
+                })
+    except Exception:  # noqa: BLE001
+        pass  # older SDK / permissions gap — profiles were added in boto3 1.34
+
+    # Stable sort: inference profiles first (more likely what operator wants), then foundation models.
+    results.sort(key=lambda item: (0 if item["kind"] == "inference_profile" else 1, item.get("model_name", "")))
+    return results
+
+
 def _bedrock_converse_result(
     connection: ProviderConnectionConfig,
     *,

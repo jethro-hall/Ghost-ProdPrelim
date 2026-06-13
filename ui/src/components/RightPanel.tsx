@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import type {
+  BedrockModelItem,
   ChatApiMode,
   Connection,
   ConnectionAuthStrategy,
@@ -10,7 +11,7 @@ import type {
   ProviderKind,
   RuntimeDefaults,
 } from "../api";
-import { fetchConnectionDeletionPreview, testConnection } from "../api";
+import { fetchConnectionDeletionPreview, listBedrockModels, testConnection } from "../api";
 import { defaultModelIdForProviderKind, PRESET_MODEL_IDS_BY_KIND } from "../lib/modelIdMemory";
 import { CloseIcon } from "./ReferenceIcons";
 
@@ -56,6 +57,11 @@ export default function RightPanel({
   const [baseUrl, setBaseUrl] = useState("https://api.openai.com/v1");
   const [awsRegion, setAwsRegion] = useState("us-east-1");
   const [enabled, setEnabled] = useState(true);
+  const [bedrockBrowseOpen, setBedrockBrowseOpen] = useState(false);
+  const [bedrockBrowseModels, setBedrockBrowseModels] = useState<BedrockModelItem[]>([]);
+  const [bedrockBrowseLoading, setBedrockBrowseLoading] = useState(false);
+  const [bedrockBrowseError, setBedrockBrowseError] = useState<string | null>(null);
+  const [bedrockBrowseSearch, setBedrockBrowseSearch] = useState("");
   const [testModelId, setTestModelId] = useState("");
   const [isNewConnection, setIsNewConnection] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -595,6 +601,120 @@ export default function RightPanel({
                   <div className="rounded border border-sky-200 bg-sky-50 px-2 py-1 text-[0.66rem] text-sky-800">
                     Amazon Bedrock — no Base URL needed. Set <strong>Auth header name</strong> to your AWS Access Key ID and <strong>API key</strong> to your AWS Secret Access Key. Model id must be a Bedrock inference profile ID such as <code>us.anthropic.claude-sonnet-4-5-20251101-v1:0</code>.
                   </div>
+                  <button
+                    type="button"
+                    className="ghost-button mt-1"
+                    disabled={bedrockBrowseLoading}
+                    onClick={async () => {
+                      setBedrockBrowseOpen(true);
+                      setBedrockBrowseLoading(true);
+                      setBedrockBrowseError(null);
+                      setBedrockBrowseSearch("");
+                      try {
+                        const resp = await listBedrockModels({
+                          provider: normalizeProvider(provider),
+                          access_key_id: authHeaderName || undefined,
+                          secret_access_key: apiKey || undefined,
+                          aws_region: awsRegion || undefined,
+                        });
+                        if (resp.error) {
+                          setBedrockBrowseError(resp.error);
+                          setBedrockBrowseModels([]);
+                        } else {
+                          setBedrockBrowseModels(resp.models);
+                        }
+                      } catch (error) {
+                        setBedrockBrowseError(
+                          error instanceof Error ? error.message : "Failed to list Bedrock models",
+                        );
+                        setBedrockBrowseModels([]);
+                      } finally {
+                        setBedrockBrowseLoading(false);
+                      }
+                    }}
+                  >
+                    {bedrockBrowseLoading ? "Loading…" : "Browse my inference models"}
+                  </button>
+
+                  <AnimatePresence>
+                    {bedrockBrowseOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="rounded-lg border border-sky-200 bg-white/95 p-3 shadow-md"
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-[0.76rem] font-semibold text-slate-800">
+                            Available models — click to use
+                          </span>
+                          <button
+                            type="button"
+                            className="text-slate-400 hover:text-slate-700"
+                            onClick={() => setBedrockBrowseOpen(false)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {bedrockBrowseError && (
+                          <div className="mb-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-[0.66rem] text-red-800">
+                            {bedrockBrowseError}
+                          </div>
+                        )}
+                        {!bedrockBrowseLoading && bedrockBrowseModels.length > 0 && (
+                          <input
+                            className="ghost-input mb-2 text-[0.72rem]"
+                            placeholder="Filter models…"
+                            value={bedrockBrowseSearch}
+                            onChange={(event) => setBedrockBrowseSearch(event.target.value)}
+                          />
+                        )}
+                        {bedrockBrowseLoading && (
+                          <div className="py-4 text-center text-[0.72rem] text-slate-500">
+                            Loading from AWS…
+                          </div>
+                        )}
+                        {!bedrockBrowseLoading && bedrockBrowseModels.length === 0 && !bedrockBrowseError && (
+                          <div className="py-2 text-[0.72rem] text-slate-500">
+                            No models found. Check credentials and region.
+                          </div>
+                        )}
+                        {!bedrockBrowseLoading && (
+                          <div className="max-h-64 overflow-y-auto space-y-0.5">
+                            {bedrockBrowseModels
+                              .filter((m) => {
+                                const q = bedrockBrowseSearch.toLowerCase();
+                                return (
+                                  !q ||
+                                  m.model_id.toLowerCase().includes(q) ||
+                                  m.model_name.toLowerCase().includes(q) ||
+                                  m.provider.toLowerCase().includes(q)
+                                );
+                              })
+                              .map((m) => (
+                                <button
+                                  key={m.model_id}
+                                  type="button"
+                                  className="flex w-full flex-col rounded px-2 py-1 text-left hover:bg-sky-50 focus:bg-sky-50"
+                                  onClick={() => {
+                                    setTestModelId(m.model_id);
+                                    setBedrockBrowseOpen(false);
+                                  }}
+                                >
+                                  <span className="font-mono text-[0.68rem] text-sky-700">{m.model_id}</span>
+                                  <span className="text-[0.63rem] text-slate-500">
+                                    {m.model_name}
+                                    {m.kind === "inference_profile" && (
+                                      <span className="ml-1 rounded bg-emerald-100 px-1 text-emerald-700">profile</span>
+                                    )}
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </>
               )}
               {isLikelyOllamaBaseUrl(baseUrl) && (
