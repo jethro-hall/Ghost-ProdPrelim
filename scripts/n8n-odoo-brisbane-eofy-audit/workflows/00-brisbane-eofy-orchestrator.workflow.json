@@ -1,0 +1,868 @@
+{
+    "id": "jYFaI5YUWM8KhwTY",
+    "name": "00_START_HERE_SINGLE_LEDGER_CLEAN",
+    "nodes": [
+        {
+            "id": "67309958-3b86-46fc-8f7c-30c61c04aec3",
+            "name": "README - Core Only",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -1168,
+                -400
+            ],
+            "parameters": {
+                "color": "#359BE9",
+                "width": 3100,
+                "height": 424,
+                "content": "## 00_CORE_ORCHESTRATOR_CLEAN\n\nRun this workflow only.\n\nSub-workflows (already wired):\n- 01 Account Ledger: `1HXbApqBqDVNVbCa`\n- 02 POS Retail: `ZPOS02Brisbane01`\n\nChain: Run 01 \u2192 Run 02 \u2192 Return Core Result.\n\nPress **Execute Workflow** here."
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "04584e1c-74b0-44d3-9dd3-e99d06fd4114",
+            "name": "Core Run Config",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -960,
+                -160
+            ],
+            "parameters": {
+                "options": {},
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "odoo_base_url",
+                            "name": "odoo_base_url",
+                            "type": "string",
+                            "value": "https://rid002-17-dev.black.wedoo.co.nz"
+                        },
+                        {
+                            "id": "odoo_db",
+                            "name": "odoo_db",
+                            "type": "string",
+                            "value": "RE-Staging-2026-01-08"
+                        },
+                        {
+                            "id": "odoo_username",
+                            "name": "odoo_username",
+                            "type": "string",
+                            "value": "research@rideelectric.com.au"
+                        },
+                        {
+                            "id": "odoo_api_key_or_password",
+                            "name": "odoo_api_key_or_password",
+                            "type": "string",
+                            "value": " Sky33line!!"
+                        },
+                        {
+                            "id": "output_root",
+                            "name": "output_root",
+                            "type": "string",
+                            "value": "/home/node/.n8n/odoo_forensic_exports"
+                        },
+                        {
+                            "id": "page_limit",
+                            "name": "page_limit",
+                            "type": "number",
+                            "value": 1000
+                        },
+                        {
+                            "id": "subworkflow_01_account_ledger_id",
+                            "name": "subworkflow_01_account_ledger_id",
+                            "type": "string",
+                            "value": "1HXbApqBqDVNVbCa"
+                        },
+                        {
+                            "id": "max_anomaly_evidence_rows",
+                            "name": "max_anomaly_evidence_rows",
+                            "type": "number",
+                            "value": 500
+                        },
+                        {
+                            "id": "max_claude_evidence_rows",
+                            "name": "max_claude_evidence_rows",
+                            "type": "number",
+                            "value": 50
+                        },
+                        {
+                            "id": "subworkflow_02_pos_retail_id",
+                            "name": "subworkflow_02_pos_retail_id",
+                            "type": "string",
+                            "value": "ZPOS02Brisbane01"
+                        },
+                        {
+                            "id": "subworkflow_03_sanitise_profile_id",
+                            "name": "subworkflow_03_sanitise_profile_id",
+                            "type": "string",
+                            "value": "ZSAN03Brisbane01"
+                        },
+                        {
+                            "id": "subworkflow_04_claude_audit_id",
+                            "name": "subworkflow_04_claude_audit_id",
+                            "type": "string",
+                            "value": "ZCLA04Brisbane01"
+                        },
+                        {
+                            "id": "claude_model",
+                            "name": "claude_model",
+                            "type": "string",
+                            "value": "claude-sonnet-4-20250514"
+                        },
+                        {
+                            "id": "subworkflow_06_raw_github_push_id",
+                            "name": "subworkflow_06_raw_github_push_id",
+                            "type": "string",
+                            "value": "ZRAW06Brisbane01"
+                        },
+                        {
+                            "id": "target_company_id",
+                            "name": "target_company_id",
+                            "type": "number",
+                            "value": 4
+                        },
+                        {
+                            "id": "target_company_name",
+                            "name": "target_company_name",
+                            "type": "string",
+                            "value": "Ride Electric Brisbane"
+                        },
+                        {
+                            "id": "company_context_ids",
+                            "name": "company_context_ids",
+                            "type": "number",
+                            "value": 4
+                        },
+                        {
+                            "id": "timezone",
+                            "name": "timezone",
+                            "type": "string",
+                            "value": "Australia/Brisbane"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "3851a0e3-38a0-4c33-9a0a-bd00536068b7",
+            "name": "Build Snapshot Context",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -352,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "// Paste into orchestrator Code node: \"Build Snapshot Context\"\n// Runs after Confirm Period \u2014 Wait. Creates snapshot_id, writes snapshot_run_context.json.\n\nconst fs = require('fs');\nconst path = require('path');\n\nconst cfg = $input.first().json;\n\nfunction required(name) {\n  if (\n    cfg[name] === undefined ||\n    cfg[name] === null ||\n    String(cfg[name]).trim() === '' ||\n    String(cfg[name]).startsWith('PUT_') ||\n    String(cfg[name]).startsWith('PASTE_')\n  ) {\n    throw new Error(`Missing required core config: ${name}`);\n  }\n  return cfg[name];\n}\n\nfunction parseIds(v) {\n  if (Array.isArray(v)) return v.map(Number).filter(Number.isFinite);\n  return String(v).split(',').map(x => Number(String(x).trim())).filter(Number.isFinite);\n}\n\nconst now = new Date().toISOString();\nconst dateStart = String(required('date_start')).trim();\nconst dateEnd = String(required('date_end')).trim();\nconst fyEndYear = dateEnd.slice(0, 4);\n\nconst snapshotId = cfg.snapshot_id && String(cfg.snapshot_id).trim()\n  ? String(cfg.snapshot_id).trim()\n  : `eofy_${fyEndYear}_brisbane_${now.replace(/[:.]/g, '-')}`;\n\nconst targetCompanyId = Number(required('target_company_id'));\nconst companyContextIds = parseIds(required('company_context_ids'));\nif (!companyContextIds.includes(targetCompanyId)) companyContextIds.unshift(targetCompanyId);\n\nconst outputRoot = String(cfg.output_root || '/home/node/.n8n/odoo_forensic_exports').replace(/\\/$/, '');\nconst snapRoot = path.join(outputRoot, snapshotId);\n\nfs.mkdirSync(snapRoot, { recursive: true });\n\nconst runContext = {\n  snapshot_id: snapshotId,\n  date_start: dateStart,\n  date_end: dateEnd,\n  period_label: cfg.period_label ? String(cfg.period_label).trim() : null,\n  company_id: targetCompanyId,\n  company_name: cfg.target_company_name || 'Ride Electric Brisbane',\n  timezone: cfg.timezone || 'Australia/Brisbane',\n  created_at: now,\n};\n\nfs.writeFileSync(\n  path.join(snapRoot, 'snapshot_run_context.json'),\n  JSON.stringify(runContext, null, 2),\n  'utf8',\n);\n\nreturn [{\n  json: {\n    snapshot_id: snapshotId,\n    timezone: cfg.timezone || 'Australia/Brisbane',\n\n    odoo_base_url: String(required('odoo_base_url')).replace(/\\/$/, ''),\n    odoo_db: required('odoo_db'),\n    odoo_username: required('odoo_username'),\n    odoo_api_key_or_password: required('odoo_api_key_or_password'),\n\n    target_company_id: targetCompanyId,\n    target_company_name: cfg.target_company_name || 'Ride Electric Brisbane',\n    company_context_ids: companyContextIds,\n\n    date_start: dateStart,\n    date_end: dateEnd,\n    period_label: runContext.period_label,\n\n    output_root: outputRoot,\n    page_limit: Number(cfg.page_limit || 500),\n\n    subworkflow_01_account_ledger_id: required('subworkflow_01_account_ledger_id'),\n    subworkflow_02_pos_retail_id: cfg.subworkflow_02_pos_retail_id || required('subworkflow_02_pos_retail_id'),\n\n    subworkflow_03_sanitise_profile_id: cfg.subworkflow_03_sanitise_profile_id || required('subworkflow_03_sanitise_profile_id'),\n    subworkflow_04_claude_audit_id: cfg.subworkflow_04_claude_audit_id || required('subworkflow_04_claude_audit_id'),\n    claude_model: cfg.claude_model || 'claude-sonnet-4-20250514',\n\n    max_anomaly_evidence_rows: Number(cfg.max_anomaly_evidence_rows || 500),\n    max_claude_evidence_rows: Number(cfg.max_claude_evidence_rows || 50),\n\n    snapshot_run_context_path: path.join(snapRoot, 'snapshot_run_context.json'),\n    period_preview: cfg.period_preview || null,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "6a468ef1-233d-4c49-8487-4afdcdba608c",
+            "name": "Run 01 Sub - Account Ledger",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                -192,
+                -256
+            ],
+            "parameters": {
+                "options": {
+                    "waitForSubWorkflow": true
+                },
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "1HXbApqBqDVNVbCa",
+                    "cachedResultUrl": "/workflow/1HXbApqBqDVNVbCa",
+                    "cachedResultName": "01_SUB_ACCOUNT_LEDGER"
+                },
+                "workflowInputs": {
+                    "value": {
+                        "odoo_db": "={{$json.odoo_db}}",
+                        "date_end": "={{$json.date_end}}",
+                        "timezone": "={{$json.timezone}}",
+                        "date_start": "={{$json.date_start}}",
+                        "page_limit": "={{$json.page_limit}}",
+                        "output_root": "={{$json.output_root}}",
+                        "snapshot_id": "={{$json.snapshot_id}}",
+                        "odoo_base_url": "={{$json.odoo_base_url}}",
+                        "odoo_username": "={{$json.odoo_username}}",
+                        "target_company_id": "={{$json.target_company_id}}",
+                        "company_context_ids": "={{$json.company_context_ids}}",
+                        "target_company_name": "={{$json.target_company_name}}",
+                        "max_claude_evidence_rows": "={{$json.max_claude_evidence_rows}}",
+                        "odoo_api_key_or_password": "={{$json.odoo_api_key_or_password}}",
+                        "max_anomaly_evidence_rows": "={{$json.max_anomaly_evidence_rows}}"
+                    },
+                    "schema": [],
+                    "mappingMode": "defineBelow",
+                    "matchingColumns": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "typeVersion": 1.3
+        },
+        {
+            "id": "08ccd735-03d6-4601-ba7e-5ebdca6fd7e4",
+            "name": "Return Core Result",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1728,
+                -288
+            ],
+            "parameters": {
+                "jsCode": "const ledger = $('Run 01 Sub - Account Ledger').first().json;\nconst pos = $('Run 02 Sub - POS Retail').first().json;\nconst sanitise = $('Run 03 Sub - Sanitise Profile').first().json;\nconst masterData = $('Run 05 Sub - Master Data').first().json;\nconst githubPush = $('Run 04 Sub - Claude Audit').first().json;\nconst rawPush = $input.first().json;\n\nconst snapshotId =\n  rawPush.snapshot_id ||\n  githubPush.snapshot_id ||\n  masterData.snapshot_id ||\n  sanitise.snapshot_id ||\n  pos.snapshot_id ||\n  ledger.snapshot_id;\n\nreturn [{\n  json: {\n    snapshot_id: snapshotId,\n    stage_01_account_ledger: ledger,\n    stage_02_pos_retail: pos,\n    stage_03_sanitise_profile: sanitise,\n    stage_05_master_data: masterData,\n    stage_04_github_push: githubPush,\n    stage_06_raw_github_push: rawPush,\n    core_completed_at: new Date().toISOString(),\n    readiness_status: sanitise.readiness_status || null,\n    github_audit_package_url: githubPush.audit_exports_url || null,\n    opus_entry_point: githubPush.opus_entry_point || null,\n    github_raw_data_url: rawPush.raw_data_url || null,\n    raw_files_pushed: rawPush.files_pushed || null,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b02run-pos-retail-sub",
+            "name": "Run 02 Sub - POS Retail",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                96,
+                -256
+            ],
+            "parameters": {
+                "options": {
+                    "waitForSubWorkflow": true
+                },
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "ZPOS02Brisbane01",
+                    "cachedResultUrl": "/workflow/ZPOS02Brisbane01",
+                    "cachedResultName": "02_SUB_POS_RETAIL"
+                },
+                "workflowInputs": {
+                    "value": {
+                        "odoo_db": "={{$json.odoo_db}}",
+                        "date_end": "={{$json.date_end}}",
+                        "timezone": "={{$json.timezone}}",
+                        "date_start": "={{$json.date_start}}",
+                        "page_limit": "={{$json.page_limit}}",
+                        "output_root": "={{$json.output_root}}",
+                        "snapshot_id": "={{$json.snapshot_id}}",
+                        "odoo_base_url": "={{$json.odoo_base_url}}",
+                        "odoo_username": "={{$json.odoo_username}}",
+                        "target_company_id": "={{$json.target_company_id}}",
+                        "company_context_ids": "={{$json.company_context_ids}}",
+                        "target_company_name": "={{$json.target_company_name}}",
+                        "max_claude_evidence_rows": "={{$json.max_claude_evidence_rows}}",
+                        "odoo_api_key_or_password": "={{$json.odoo_api_key_or_password}}",
+                        "max_anomaly_evidence_rows": "={{$json.max_anomaly_evidence_rows}}"
+                    },
+                    "schema": [],
+                    "mappingMode": "defineBelow",
+                    "matchingColumns": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "typeVersion": 1.3
+        },
+        {
+            "id": "b02merge-context-pos",
+            "name": "Merge Context for POS",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -64,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "const ctx = $('Build Snapshot Context').first().json;\nconst ledger = $('Run 01 Sub - Account Ledger').first().json;\nreturn [{\n  json: {\n    ...ctx,\n    snapshot_id: ledger.snapshot_id || ctx.snapshot_id,\n    stage_01_ledger_summary: ledger.summary || null,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b03merge-sanitise",
+            "name": "Merge Context for Sanitise",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                272,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "const ctx = $('Build Snapshot Context').first().json;\nconst ledger = $('Run 01 Sub - Account Ledger').first().json;\nconst pos = $('Run 02 Sub - POS Retail').first().json;\n\nreturn [{\n  json: {\n    ...ctx,\n    snapshot_id: pos.snapshot_id || ledger.snapshot_id || ctx.snapshot_id,\n    stage_01_summary: ledger,\n    stage_02_summary: pos,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b03run-sanitise-sub",
+            "name": "Run 03 Sub - Sanitise Profile",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                464,
+                -256
+            ],
+            "parameters": {
+                "options": {
+                    "waitForSubWorkflow": true
+                },
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "ZSAN03Brisbane01",
+                    "cachedResultUrl": "/workflow/ZSAN03Brisbane01",
+                    "cachedResultName": "03_SUB_SANITISE_PROFILE"
+                },
+                "workflowInputs": {
+                    "value": {
+                        "output_root": "={{$json.output_root}}",
+                        "snapshot_id": "={{$json.snapshot_id}}"
+                    },
+                    "schema": [],
+                    "mappingMode": "defineBelow",
+                    "matchingColumns": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "typeVersion": 1.3
+        },
+        {
+            "id": "b04merge-claude",
+            "name": "Merge Context for Claude",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                944,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "const ctx = $('Build Snapshot Context').first().json;\nconst sanitise = $('Run 03 Sub - Sanitise Profile').first().json;\n\nreturn [{\n  json: {\n    snapshot_id: sanitise.snapshot_id || ctx.snapshot_id,\n    output_root: ctx.output_root,\n    claude_model: ctx.claude_model || 'claude-sonnet-4-20250514',\n    max_sample_per_model: Number(ctx.max_claude_evidence_rows || 40),\n    readiness_status: sanitise.readiness_status || null,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b04run-claude-sub",
+            "name": "Run 04 Sub - Claude Audit",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                1072,
+                -272
+            ],
+            "parameters": {
+                "options": {
+                    "waitForSubWorkflow": true
+                },
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "ZCLA04Brisbane01",
+                    "cachedResultUrl": "/workflow/ZCLA04Brisbane01",
+                    "cachedResultName": "04_SUB_CLAUDE_AUDIT"
+                },
+                "workflowInputs": {
+                    "value": {
+                        "output_root": "={{$json.output_root}}",
+                        "snapshot_id": "={{$json.snapshot_id}}",
+                        "claude_model": "={{$json.claude_model}}",
+                        "max_sample_per_model": "={{$json.max_sample_per_model}}"
+                    },
+                    "schema": [],
+                    "mappingMode": "defineBelow",
+                    "matchingColumns": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "typeVersion": 1.3
+        },
+        {
+            "id": "b05merge-master-data",
+            "name": "Merge Context for Master Data",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                640,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "const ctx = $('Build Snapshot Context').first().json;\nconst sanitise = $('Run 03 Sub - Sanitise Profile').first().json;\n\nreturn [{\n  json: {\n    ...ctx,\n    snapshot_id: sanitise.snapshot_id || ctx.snapshot_id,\n    stage_01_summary: $('Run 01 Sub - Account Ledger').first().json || null,\n    stage_02_summary: $('Run 02 Sub - POS Retail').first().json || null,\n    stage_03_summary: sanitise || null,\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b05run-master-data-sub",
+            "name": "Run 05 Sub - Master Data",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                816,
+                -256
+            ],
+            "parameters": {
+                "options": {},
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "EFsI0LxP80vcl0jk"
+                }
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "form-trigger-simple-gate",
+            "name": "Start Audit Run",
+            "type": "n8n-nodes-base.formTrigger",
+            "position": [
+                -1328,
+                -160
+            ],
+            "webhookId": "6e4a806d-8396-4c10-aa18-10265f99af49",
+            "parameters": {
+                "options": {},
+                "formTitle": "Odoo Audit Run",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldType": "dropdown",
+                            "fieldLabel": "Business",
+                            "fieldOptions": {
+                                "values": [
+                                    {
+                                        "option": "Ride Electric Brisbane"
+                                    },
+                                    {
+                                        "option": "Ride Electric Gold Coast"
+                                    },
+                                    {
+                                        "option": "Ride Electric Adelaide"
+                                    },
+                                    {
+                                        "option": "Ride Electric Sydney"
+                                    }
+                                ]
+                            },
+                            "requiredField": true
+                        },
+                        {
+                            "fieldType": "dropdown",
+                            "fieldLabel": "Financial Year",
+                            "defaultValue": "FY 2024-25 (1 Jul 2024 \u2013 30 Jun 2025)",
+                            "fieldOptions": {
+                                "values": [
+                                    {
+                                        "option": "FY 2024-25 (1 Jul 2024 \u2013 30 Jun 2025)"
+                                    },
+                                    {
+                                        "option": "FY 2023-24 (1 Jul 2023 \u2013 30 Jun 2024)"
+                                    },
+                                    {
+                                        "option": "FY 2022-23 (1 Jul 2022 \u2013 30 Jun 2023)"
+                                    },
+                                    {
+                                        "option": "Custom \u2014 use Date From / Date To below"
+                                    }
+                                ]
+                            },
+                            "requiredField": true
+                        },
+                        {
+                            "fieldType": "date",
+                            "fieldLabel": "Date From"
+                        },
+                        {
+                            "fieldType": "date",
+                            "fieldLabel": "Date To"
+                        }
+                    ]
+                },
+                "responseMode": "lastNode",
+                "formDescription": "Pick a business and period, then click Submit to start extraction."
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "map-form-values",
+            "name": "Map Form Values",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -1136,
+                -160
+            ],
+            "parameters": {
+                "jsCode": "// Map Form Trigger output -> complete pipeline config (form values + static config)\nconst staticCfg = {\"odoo_base_url\": \"https://rid002-17-dev.black.wedoo.co.nz\", \"odoo_db\": \"RE-Staging-2026-01-08\", \"odoo_username\": \"research@rideelectric.com.au\", \"odoo_api_key_or_password\": \" Sky33line!!\", \"output_root\": \"/home/node/.n8n/odoo_forensic_exports\", \"page_limit\": 1000, \"subworkflow_01_account_ledger_id\": \"1HXbApqBqDVNVbCa\", \"max_anomaly_evidence_rows\": 500, \"max_claude_evidence_rows\": 50, \"subworkflow_02_pos_retail_id\": \"ZPOS02Brisbane01\", \"subworkflow_03_sanitise_profile_id\": \"ZSAN03Brisbane01\", \"subworkflow_04_claude_audit_id\": \"ZCLA04Brisbane01\", \"claude_model\": \"claude-sonnet-4-20250514\"};\nconst companyMap = {\"Ride Electric Brisbane\": {\"id\": 4, \"timezone\": \"Australia/Brisbane\"}, \"Ride Electric Gold Coast\": {\"id\": 5, \"timezone\": \"Australia/Brisbane\"}, \"Ride Electric Adelaide\": {\"id\": 6, \"timezone\": \"Australia/Adelaide\"}, \"Ride Electric Sydney\": {\"id\": 7, \"timezone\": \"Australia/Sydney\"}};\nconst fyMap = {\"FY 2024-25 (1 Jul 2024 \\u2013 30 Jun 2025)\": {\"start\": \"2024-07-01\", \"end\": \"2025-06-30\"}, \"FY 2023-24 (1 Jul 2023 \\u2013 30 Jun 2024)\": {\"start\": \"2023-07-01\", \"end\": \"2024-06-30\"}, \"FY 2022-23 (1 Jul 2022 \\u2013 30 Jun 2023)\": {\"start\": \"2022-07-01\", \"end\": \"2023-06-30\"}, \"Custom \\u2014 use Date From / Date To below\": {\"start\": \"\", \"end\": \"\"}};\n\nconst input = $input.first().json;\n\nconst companyLabel = String(input['Business'] || '').trim();\nconst fyLabel      = String(input['Financial Year'] || '').trim();\nconst customStart  = String(input['Date From'] || '').trim();\nconst customEnd    = String(input['Date To']   || '').trim();\n\nif (!companyMap[companyLabel]) {\n  throw new Error('Unknown business: ' + companyLabel + '. Options: ' + Object.keys(companyMap).join(', '));\n}\nconst company = companyMap[companyLabel];\n\nlet dateStart, dateEnd;\nif (fyLabel.startsWith('Custom')) {\n  dateStart = customStart;\n  dateEnd   = customEnd;\n  if (!dateStart || !dateEnd) throw new Error('Custom period selected but Date From / Date To are empty.');\n} else {\n  const fy = fyMap[fyLabel];\n  if (!fy) throw new Error('Unknown FY preset: ' + fyLabel);\n  dateStart = fy.start;\n  dateEnd   = fy.end;\n}\n\nconst isoRe = /^\\d{4}-\\d{2}-\\d{2}$/;\nif (!isoRe.test(dateStart) || !isoRe.test(dateEnd)) throw new Error('Dates must be YYYY-MM-DD. Got: ' + dateStart + ' / ' + dateEnd);\nif (dateStart >= dateEnd) throw new Error('Date From must be before Date To.');\n\nreturn [{ json: {\n  ...staticCfg,\n  target_company_id:   company.id,\n  target_company_name: companyLabel,\n  company_context_ids: company.id,\n  timezone:            company.timezone,\n  date_start:          dateStart,\n  date_end:            dateEnd,\n  period_label:        fyLabel.startsWith('Custom') ? dateStart + ' to ' + dateEnd : fyLabel,\n  snapshot_id:         '',\n} }];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "llm-hub-webhook",
+            "name": "LLM Hub \u2014 Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -1552,
+                48
+            ],
+            "webhookId": "8ee90be3-6ca5-4858-bc1a-71f46d6081f0",
+            "parameters": {
+                "path": "eofy-audit-llm",
+                "options": {},
+                "httpMethod": "POST",
+                "responseMode": "lastNode"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "llm-extract-params",
+            "name": "Qwen \u2014 Extract Audit Params",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+            "position": [
+                -1216,
+                64
+            ],
+            "parameters": {
+                "model": "qwen2.5:latest",
+                "options": {
+                    "temperature": 0
+                }
+            },
+            "credentials": {
+                "ollamaApi": {
+                    "id": "3zSJa9gcI0mC9iGV",
+                    "name": "Ollama account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "llm-map-params",
+            "name": "Map LLM Params",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -992,
+                64
+            ],
+            "parameters": {
+                "jsCode": "// Parse Qwen JSON output and produce complete pipeline config\nconst staticCfg = {\"odoo_base_url\": \"https://rid002-17-dev.black.wedoo.co.nz\", \"odoo_db\": \"RE-Staging-2026-01-08\", \"odoo_username\": \"research@rideelectric.com.au\", \"odoo_api_key_or_password\": \" Sky33line!!\", \"output_root\": \"/home/node/.n8n/odoo_forensic_exports\", \"page_limit\": 1000, \"subworkflow_01_account_ledger_id\": \"1HXbApqBqDVNVbCa\", \"max_anomaly_evidence_rows\": 500, \"max_claude_evidence_rows\": 50, \"subworkflow_02_pos_retail_id\": \"ZPOS02Brisbane01\", \"subworkflow_03_sanitise_profile_id\": \"ZSAN03Brisbane01\", \"subworkflow_04_claude_audit_id\": \"ZCLA04Brisbane01\", \"claude_model\": \"claude-sonnet-4-20250514\"};\nconst companyMap = {\"Ride Electric Brisbane\": {\"id\": 4, \"timezone\": \"Australia/Brisbane\"}, \"Ride Electric Gold Coast\": {\"id\": 5, \"timezone\": \"Australia/Brisbane\"}, \"Ride Electric Adelaide\": {\"id\": 6, \"timezone\": \"Australia/Adelaide\"}, \"Ride Electric Sydney\": {\"id\": 7, \"timezone\": \"Australia/Sydney\"}};\nconst raw = $input.first().json;\n\nlet parsed;\ntry {\n  const text = (raw.text || raw.message || raw.response || JSON.stringify(raw)).replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(text);\n} catch (e) {\n  throw new Error('Qwen did not return valid JSON: ' + e.message);\n}\n\nconst companyLabel = String(parsed.company_name || 'Ride Electric Brisbane').trim();\nconst dateStart    = String(parsed.date_start || '').trim();\nconst dateEnd      = String(parsed.date_end   || '').trim();\n\nif (!companyMap[companyLabel]) throw new Error('Unknown company from Qwen: ' + companyLabel);\nconst company = companyMap[companyLabel];\n\nreturn [{ json: {\n  ...staticCfg,\n  target_company_id:   company.id,\n  target_company_name: companyLabel,\n  company_context_ids: company.id,\n  timezone:            company.timezone,\n  date_start:          dateStart,\n  date_end:            dateEnd,\n  period_label:        dateStart + ' to ' + dateEnd,\n  snapshot_id:         '',\n} }];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b00select-audit-period",
+            "name": "Select Audit Period",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -800,
+                -320
+            ],
+            "parameters": {
+                "options": {
+                    "includeOtherFields": true
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "date_start",
+                            "name": "date_start",
+                            "type": "string",
+                            "value": "2024-07-01"
+                        },
+                        {
+                            "id": "date_end",
+                            "name": "date_end",
+                            "type": "string",
+                            "value": "2025-06-30"
+                        },
+                        {
+                            "id": "period_label",
+                            "name": "period_label",
+                            "type": "string",
+                            "value": ""
+                        },
+                        {
+                            "id": "snapshot_id",
+                            "name": "snapshot_id",
+                            "type": "string",
+                            "value": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "b00validate-period",
+            "name": "Validate And Preview Period",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -640,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "// Paste into orchestrator Code node: \"Validate And Preview Period\"\n// Runs after Select Audit Period \u2014 validates dates and outputs a human-readable preview.\n// Fail closed before the Wait gate if dates are invalid.\n\nconst cfg = { ...$input.first().json };\n\nfunction required(name) {\n  if (\n    cfg[name] === undefined ||\n    cfg[name] === null ||\n    String(cfg[name]).trim() === '' ||\n    String(cfg[name]).startsWith('PUT_') ||\n    String(cfg[name]).startsWith('PASTE_')\n  ) {\n    throw new Error(`Missing required period field: ${name}`);\n  }\n  return String(cfg[name]).trim();\n}\n\nfunction isIsoDate(s) {\n  return /^\\d{4}-\\d{2}-\\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));\n}\n\nconst dateStart = required('date_start');\nconst dateEnd = required('date_end');\n\nif (!isIsoDate(dateStart)) throw new Error(`date_start must be YYYY-MM-DD, got: ${dateStart}`);\nif (!isIsoDate(dateEnd)) throw new Error(`date_end must be YYYY-MM-DD, got: ${dateEnd}`);\nif (dateStart >= dateEnd) throw new Error(`date_start (${dateStart}) must be before date_end (${dateEnd})`);\n\nconst periodLabel = cfg.period_label ? String(cfg.period_label).trim() : '';\nconst snapshotOverride = cfg.snapshot_id ? String(cfg.snapshot_id).trim() : '';\nconst fyEndYear = dateEnd.slice(0, 4);\nconst now = new Date().toISOString();\nconst plannedSnapshotId = snapshotOverride || `eofy_${fyEndYear}_brisbane_${now.replace(/[:.]/g, '-')}`;\n\nreturn [{\n  json: {\n    ...cfg,\n    date_start: dateStart,\n    date_end: dateEnd,\n    period_label: periodLabel,\n    snapshot_id: snapshotOverride,\n    period_preview: {\n      date_start: dateStart,\n      date_end: dateEnd,\n      period_label: periodLabel || null,\n      fy_end_year: fyEndYear,\n      planned_snapshot_id: plannedSnapshotId,\n      company_id: cfg.target_company_id,\n      company_name: cfg.target_company_name || 'Ride Electric Brisbane',\n      message: 'Review period_preview, then Resume this execution to start Odoo extraction.',\n      resume_hint: 'Click Resume in the n8n execution panel, or call $execution.resumeUrl',\n    },\n  },\n}];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b06merge-raw-push",
+            "name": "Merge Context for Raw Push",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1248,
+                -144
+            ],
+            "parameters": {
+                "jsCode": "const ctx = $('Build Snapshot Context').first().json;\nconst githubPush = $('Run 04 Sub - Claude Audit').first().json;\nreturn [{ json: {\n  snapshot_id: githubPush.snapshot_id || ctx.snapshot_id,\n  output_root: ctx.output_root || '/home/node/.n8n/odoo_forensic_exports',\n} }];\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "b06run-raw-push-sub",
+            "name": "Run 06 Sub - Raw GitHub Push",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                1408,
+                -288
+            ],
+            "parameters": {
+                "options": {
+                    "waitForSubWorkflow": true
+                },
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "ZRAW06Brisbane01",
+                    "cachedResultName": "06_SUB_RAW_GITHUB_PUSH"
+                },
+                "workflowInputs": {
+                    "value": {
+                        "output_root": "={{$json.output_root}}",
+                        "snapshot_id": "={{$json.snapshot_id}}"
+                    },
+                    "schema": [],
+                    "mappingMode": "defineBelow",
+                    "matchingColumns": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                }
+            },
+            "typeVersion": 1.3
+        },
+        {
+            "id": "b00sticky-period-gate",
+            "name": "README - Period Gate",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -1152,
+                -704
+            ],
+            "parameters": {
+                "color": 4,
+                "width": 420,
+                "height": 280,
+                "content": "## Period Gate\n\n1. Edit **Select Audit Period** before Execute:\n   - FY24/25: `2024-07-01` \u2192 `2025-06-30`\n   - FY23/24: `2023-07-01` \u2192 `2024-06-30`\n2. Execute workflow\n3. Review **Validate And Preview Period** output\n4. Click **Resume** on **Confirm Period \u2014 Wait**\n5. Extraction starts only after Resume"
+            },
+            "typeVersion": 1
+        }
+    ],
+    "connections": {
+        "Manual Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Core Run Config",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Map LLM Params": {
+            "main": [
+                [
+                    {
+                        "node": "Build Snapshot Context",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Core Run Config": {
+            "main": [
+                [
+                    {
+                        "node": "Select Audit Period",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Map Form Values": {
+            "main": [
+                [
+                    {
+                        "node": "Build Snapshot Context",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start Audit Run": {
+            "main": [
+                [
+                    {
+                        "node": "Map Form Values",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Select Audit Period": {
+            "main": [
+                [
+                    {
+                        "node": "Validate And Preview Period",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Context for POS": {
+            "main": [
+                [
+                    {
+                        "node": "Run 02 Sub - POS Retail",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build Snapshot Context": {
+            "main": [
+                [
+                    {
+                        "node": "Run 01 Sub - Account Ledger",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 02 Sub - POS Retail": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Context for Sanitise",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Context for Claude": {
+            "main": [
+                [
+                    {
+                        "node": "Run 04 Sub - Claude Audit",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 05 Sub - Master Data": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Context for Claude",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 04 Sub - Claude Audit": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Context for Raw Push",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Context for Raw Push": {
+            "main": [
+                [
+                    {
+                        "node": "Run 06 Sub - Raw GitHub Push",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Context for Sanitise": {
+            "main": [
+                [
+                    {
+                        "node": "Run 03 Sub - Sanitise Profile",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 01 Sub - Account Ledger": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Context for POS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validate And Preview Period": {
+            "main": [
+                [
+                    {
+                        "node": "Build Snapshot Context",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 06 Sub - Raw GitHub Push": {
+            "main": [
+                [
+                    {
+                        "node": "Return Core Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Merge Context for Master Data": {
+            "main": [
+                [
+                    {
+                        "node": "Run 05 Sub - Master Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run 03 Sub - Sanitise Profile": {
+            "main": [
+                [
+                    {
+                        "node": "Merge Context for Master Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

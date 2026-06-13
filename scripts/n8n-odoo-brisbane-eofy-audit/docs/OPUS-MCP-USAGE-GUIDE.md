@@ -22,8 +22,8 @@ https://github.com/jethro-hall/ghoststack-rag
 | Stage 01 account ledger exporter | `lib/01_account_ledger_exporter.js` _(embedded in n8n workflow)_ |
 | Stage 02 POS retail exporter | `lib/02_pos_retail_exporter.js` |
 | Stage 03 sanitise + profile | `lib/03_sanitise_profile.js`, `lib/sanitise-core.js`, `lib/profile-core.js` |
-| Stage 04 audit payload prepare | `lib/04_claude_prepare.js` |
 | Stage 04 GitHub audit package push | `lib/04_github_push.js` |
+| Stage 06 raw JSONL → GitHub | `lib/06_raw_github_push.js` |
 | MCP server (live Code node in n8n) | `lib/mcp_server.js` — **authoritative source; changes must be applied to both repo file AND the n8n DB Code node via the workflow history chain** |
 | Stage 05 master data exporter | `lib/05_master_data_exporter.js` |
 | MCP server (tool definitions) | `lib/mcp_server.js` |
@@ -41,18 +41,20 @@ https://github.com/jethro-hall/ghoststack-rag
 - The full `audit-tests.json` test battery (use this to frame your audit analysis)
 - The `join-keys.json` cross-reference map for building queries
 - The `claude-audit-system-prompt.txt` system prompt (describes the expected output structure)
-- The audit package committed by Stage 04 at `audit-exports/{snapshot_id}/` — **this is your primary starting point for each audit session**
+- The audit package committed by Stage 04 at `snapshots/{snapshot_id}/` — **orientation and metrics; start here**
+- Raw row-level JSONL at `raw_data/{snapshot_id}/` in `jethro-hall/Claudeopus_Odoo_Audit` — **use for independent trial balance, AP aging, bank rec recomputation**
 
 **How to use repo access during an audit session:**
 
-1. **Start here first:** read `audit-exports/{snapshot_id}/audit_package_manifest.json` — it lists every file pushed to the repo and gives the direct URL to `audit_payload.json` (the prepared sample data + readiness summary assembled for this snapshot).
-2. Read `audit-exports/{snapshot_id}/audit_payload.json` to see the stratified sample records, readiness summary, extraction gaps, and audit test battery in one place — before touching any MCP tool.
-3. Read stage packs (`01_account_ledger/stage_pack.json`, `02_pos_retail/stage_pack.json`, etc.) to understand row counts, field coverage, and any API errors per stage.
-4. Before calling `odoo_audit_init`, read `mcp_server.js` → `toolAuditInit` to understand exactly what the init response contains.
-5. Before calling `odoo_query` on a model, read the relevant exporter to confirm which fields are present and what sanitisation was applied.
-6. If a query returns unexpected results, read `sanitise-core.js` to understand how values were transformed.
-7. Use `audit-tests.json` to align your analysis with the pre-defined test battery rather than inventing ad-hoc tests.
-8. Use `join-keys.json` to confirm cross-model join paths before writing aggregation queries.
+1. **Start here first:** read `snapshots/{snapshot_id}/audit_package_manifest.json` — lists every metrics file pushed and links to `audit_payload.json`.
+2. Read `snapshots/{snapshot_id}/audit_payload.json` for readiness summary, dynamic `extraction_gaps`, `raw_data.status`, and the audit test battery — before touching any MCP tool.
+3. For row-level recomputation, download `raw_data/{snapshot_id}/*.jsonl.gz` from `https://github.com/jethro-hall/Claudeopus_Odoo_Audit` (decompress with `gunzip -k`). MCP serves **sanitised** rows only; raw GitHub rows are **not sanitised**.
+4. Read stage packs (`01_account_ledger/stage_pack.json`, `02_pos_retail/stage_pack.json`, etc.) to understand row counts, field coverage, and any API errors per stage.
+5. Before calling `odoo_audit_init`, read `mcp_server.js` → `toolAuditInit` to understand exactly what the init response contains.
+6. Before calling `odoo_query` on a model, read the relevant exporter to confirm which fields are present and what sanitisation was applied.
+7. If a query returns unexpected results, read `sanitise-core.js` to understand how values were transformed.
+8. Use `audit-tests.json` to align your analysis with the pre-defined test battery rather than inventing ad-hoc tests.
+9. Use `join-keys.json` to confirm cross-model join paths before writing aggregation queries.
 
 > **Note:** The repo reflects the current deployed state. If you observe behaviour that contradicts the repo code, raise it as an anomaly — it may indicate a deployment drift or an undocumented override in the running container.
 

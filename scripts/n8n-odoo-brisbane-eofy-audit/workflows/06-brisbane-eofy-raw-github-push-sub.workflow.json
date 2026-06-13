@@ -1,0 +1,96 @@
+{
+  "name": "06_SUB_RAW_GITHUB_PUSH",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a06trigger-raw-push",
+      "name": "When Executed by Core",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst input = { ...$input.first().json };\n\nconst inputPath = '/tmp/odoo_06_raw_push_input.json';\nfs.writeFileSync(inputPath, JSON.stringify(input), 'utf8');\n\nreturn [{\n  json: {\n    ok: true,\n    input_path: inputPath,\n    snapshot_id: input.snapshot_id,\n    message: 'Input JSON written for Stage 06 raw GitHub push',\n  },\n}];\n"
+      },
+      "id": "a06write-input-json",
+      "name": "Write raw push input JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "command": "node /home/node/.n8n/scripts/06_raw_github_push.js"
+      },
+      "id": "a06run-raw-push",
+      "name": "Run Raw GitHub Push",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        208,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nif (item.exitCode !== undefined && Number(item.exitCode) !== 0) {\n  throw new Error(\n    `Stage 06 raw GitHub push failed (exit ${item.exitCode}). stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst stdout = String(item.stdout || '').trim();\nif (!stdout) {\n  throw new Error(\n    `Stage 06 raw GitHub push returned empty stdout. stderr: ${item.stderr || ''}`,\n  );\n}\n\nconst lastLine = stdout.split(/\\r?\\n/).filter(Boolean).pop();\n\ntry {\n  return [{ json: JSON.parse(lastLine) }];\n} catch (e) {\n  throw new Error(\n    `Could not parse Stage 06 stdout as JSON: ${e.message}. stdout starts: ${stdout.slice(0, 500)}`,\n  );\n}\n"
+      },
+      "id": "a06parse-result",
+      "name": "Parse Raw Push Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "When Executed by Core": {
+      "main": [
+        [
+          {
+            "node": "Write raw push input JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write raw push input JSON": {
+      "main": [
+        [
+          {
+            "node": "Run Raw GitHub Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Raw GitHub Push": {
+      "main": [
+        [
+          {
+            "node": "Parse Raw Push Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 3600
+  }
+}

@@ -25,9 +25,16 @@ Importable n8n workflow JSON and config for **workflow.rideai.com.au**.
 | 01 Account ledger | `01_SUB_ACCOUNT_LEDGER` | `1HXbApqBqDVNVbCa` |
 | 02 POS retail | `02_SUB_POS_RETAIL` | `ZPOS02Brisbane01` |
 | 03 Sanitise + profile | `03_SUB_SANITISE_PROFILE` | `ZSAN03Brisbane01` |
-| 04 Claude audit | `04_SUB_CLAUDE_AUDIT` | `ZCLA04Brisbane01` |
+| 05 Master data | `05_SUB_MASTER_DATA` | `EFsI0LxP80vcl0jk` |
+| 04 GitHub audit package | `04_SUB_CLAUDE_AUDIT` | `ZCLA04Brisbane01` |
+| 06 Raw JSONL → GitHub | `06_SUB_RAW_GITHUB_PUSH` | `ZRAW06Brisbane01` |
 
-Parent chain: **01 Account Ledger** → **02 POS Retail** → **03 Sanitise Profile** → **04 Claude Audit** → **Return Core Result**.
+Parent chain: **01** → **02** → **03** → **05** → **04** → **06** → **Return Core Result**.
+
+GitHub targets in `jethro-hall/Claudeopus_Odoo_Audit`:
+
+- `snapshots/{snapshot_id}/` — metrics + `audit_payload.json` (Stage 04)
+- `raw_data/{snapshot_id}/` — raw `.jsonl.gz` rows for forensic recomputation (Stage 06)
 
 Output paths per snapshot:
 

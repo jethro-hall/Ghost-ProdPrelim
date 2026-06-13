@@ -1,0 +1,40 @@
+{
+  "odoo_base_url": "https://rid002-17-dev.black.wedoo.co.nz",
+  "odoo_username": "research@rideelectric.com.au",
+  "odoo_api_key_or_password": "Sky33line!!",
+  "databases": [
+    {
+      "label": "RE-dev-2026-06-11 (current dev)",
+      "odoo_db": "RE-dev-2026-06-11"
+    },
+    {
+      "label": "RE-Staging-2026-01-08 (legacy staging)",
+      "odoo_db": "RE-Staging-2026-01-08"
+    }
+  ],
+  "companies": [
+    { "label": "EBD",                      "id": 1, "timezone": "Australia/Brisbane" },
+    { "label": "Ride Electric Wholesale",  "id": 2, "timezone": "Australia/Brisbane" },
+    { "label": "Ride Electric Retail",     "id": 3, "timezone": "Australia/Brisbane" },
+    { "label": "Ride Electric Brisbane",   "id": 4, "timezone": "Australia/Brisbane" },
+    { "label": "Ride Electric Burleigh",   "id": 5, "timezone": "Australia/Brisbane" }
+  ],
+  "fy_presets": [
+    { "label": "FY 2024-25 (1 Jul 2024 – 30 Jun 2025)", "start": "2024-07-01", "end": "2025-06-30" },
+    { "label": "FY 2023-24 (1 Jul 2023 – 30 Jun 2024)", "start": "2023-07-01", "end": "2024-06-30" },
+    { "label": "FY 2022-23 (1 Jul 2022 – 30 Jun 2023)", "start": "2022-07-01", "end": "2023-06-30" },
+    { "label": "Custom — use Date From / Date To below",  "start": "", "end": "" }
+  ],
+  "pipeline_defaults": {
+    "output_root": "/home/node/.n8n/odoo_forensic_exports",
+    "page_limit": 3000,
+    "subworkflow_01_account_ledger_id": "1HXbApqBqDVNVbCa",
+    "max_anomaly_evidence_rows": 1000,
+    "max_claude_evidence_rows": 80,
+    "subworkflow_02_pos_retail_id": "ZPOS02Brisbane01",
+    "subworkflow_03_sanitise_profile_id": "ZSAN03Brisbane01",
+    "subworkflow_04_claude_audit_id": "ZCLA04Brisbane01",
+    "subworkflow_06_raw_github_push_id": "ZRAW06Brisbane01",
+    "claude_model": "claude-sonnet-4-20250514"
+  }
+}

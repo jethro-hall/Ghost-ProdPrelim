@@ -4,9 +4,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
-function profileJsonlFile(filePath, modelKey) {
-  const summary = {
+function initProfileSummary(modelKey) {
+  return {
     model: modelKey,
     files: 1,
     rows: 0,
@@ -24,48 +25,78 @@ function profileJsonlFile(filePath, modelKey) {
     bank_fields_redacted: 0,
     compacted_text_fields: 0,
   };
+}
 
-  const ids = new Set();
-  const fields = new Set();
+function accumulateProfileRow(summary, row) {
+  summary.rows += 1;
+  if (row.id) summary._ids.add(row.id);
+  Object.keys(row).forEach((k) => summary._fields.add(k));
+  if (row.debit) summary.debit_total += Number(row.debit) || 0;
+  if (row.credit) summary.credit_total += Number(row.credit) || 0;
+  if (row.balance) summary.balance_total += Number(row.balance) || 0;
+  if (row.amount_total) summary.amount_total += Number(row.amount_total) || 0;
+  if (row._sanitisation) {
+    summary.personal_fields_redacted += row._sanitisation.personal_fields_redacted || 0;
+    summary.bank_fields_redacted += row._sanitisation.bank_fields_redacted || 0;
+    summary.compacted_text_fields += row._sanitisation.compacted_text_fields || 0;
+  }
+
   const dateCandidates = ['date', 'date_order', 'invoice_date', 'payment_date', 'create_date', 'start_at'];
-
-  if (!fs.existsSync(filePath)) return summary;
-
-  const content = fs.readFileSync(filePath, 'utf8');
-  const lines = content.split('\n').filter((l) => l.trim());
-  for (const line of lines) {
-    try {
-      const row = JSON.parse(line);
-      summary.rows += 1;
-      if (row.id) ids.add(row.id);
-      Object.keys(row).forEach((k) => fields.add(k));
-      if (row.debit) summary.debit_total += Number(row.debit) || 0;
-      if (row.credit) summary.credit_total += Number(row.credit) || 0;
-      if (row.balance) summary.balance_total += Number(row.balance) || 0;
-      if (row.amount_total) summary.amount_total += Number(row.amount_total) || 0;
-      if (row._sanitisation) {
-        summary.personal_fields_redacted += row._sanitisation.personal_fields_redacted || 0;
-        summary.bank_fields_redacted += row._sanitisation.bank_fields_redacted || 0;
-        summary.compacted_text_fields += row._sanitisation.compacted_text_fields || 0;
-      }
-      for (const d of dateCandidates) {
-        const v = row[d];
-        if (v && v !== false && typeof v === 'string') {
-          if (!summary.min_date || v < summary.min_date) summary.min_date = v;
-          if (!summary.max_date || v > summary.max_date) summary.max_date = v;
-        }
-      }
-      const piiScan = JSON.stringify(row);
-      if (/@/.test(piiScan) || /\b04\d{8}\b/.test(piiScan)) summary.pii_hits_after += 1;
-    } catch {
-      // skip bad lines
+  for (const d of dateCandidates) {
+    const v = row[d];
+    if (v && v !== false && typeof v === 'string') {
+      if (!summary.min_date || v < summary.min_date) summary.min_date = v;
+      if (!summary.max_date || v > summary.max_date) summary.max_date = v;
     }
   }
 
-  summary.distinct_ids = ids.size;
-  summary.fields = [...fields].sort();
+  const piiScan = JSON.stringify(row);
+  if (/@/.test(piiScan) || /\b04\d{8}\b/.test(piiScan)) summary.pii_hits_after += 1;
+}
+
+function finalizeProfileSummary(summary) {
+  summary.distinct_ids = summary._ids.size;
+  summary.fields = [...summary._fields].sort();
   summary.field_count = summary.fields.length;
+  delete summary._ids;
+  delete summary._fields;
   return summary;
+}
+
+/**
+ * Stream-profile a sanitised JSONL file without loading it all into memory.
+ */
+async function profileJsonlFile(filePath, modelKey) {
+  const summary = initProfileSummary(modelKey);
+  summary._ids = new Set();
+  summary._fields = new Set();
+
+  if (!fs.existsSync(filePath)) {
+    delete summary._ids;
+    delete summary._fields;
+    return summary;
+  }
+
+  const rl = readline.createInterface({
+    input: fs.createReadStream(filePath, { encoding: 'utf8' }),
+    crlfDelay: Infinity,
+  });
+
+  try {
+    for await (const line of rl) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        accumulateProfileRow(summary, JSON.parse(trimmed));
+      } catch {
+        // skip bad lines
+      }
+    }
+  } finally {
+    rl.close();
+  }
+
+  return finalizeProfileSummary(summary);
 }
 
 function buildReadinessSummary(snapshotId, paths, modelSummaries, manifests) {

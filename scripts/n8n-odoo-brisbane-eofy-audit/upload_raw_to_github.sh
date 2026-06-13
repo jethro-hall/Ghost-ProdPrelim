@@ -18,7 +18,15 @@
 set -euo pipefail
 
 # ── Config ───────────────────────────────────────────────────────────────────
-EXPORT_ROOT="/var/lib/docker/volumes/ghoststack-rag_n8n_data/_data/odoo_forensic_exports"
+if [[ -n "${EXPORT_ROOT:-}" && -d "${EXPORT_ROOT}" ]]; then
+  :
+elif [[ -d "/var/lib/docker/volumes/ghoststack-rag_n8n_data/_data/odoo_forensic_exports" ]]; then
+  EXPORT_ROOT="/var/lib/docker/volumes/ghoststack-rag_n8n_data/_data/odoo_forensic_exports"
+elif [[ -d "/home/node/.n8n/odoo_forensic_exports" ]]; then
+  EXPORT_ROOT="/home/node/.n8n/odoo_forensic_exports"
+else
+  EXPORT_ROOT="/var/lib/docker/volumes/ghoststack-rag_n8n_data/_data/odoo_forensic_exports"
+fi
 REPO_URL="https://github.com/jethro-hall/Claudeopus_Odoo_Audit"
 REPO_CLONE_DIR="/tmp/ClaudeOpus_Odoo_Audit_push"
 COMPRESS="${COMPRESS:-1}"          # 1 = gzip files before push
@@ -47,6 +55,24 @@ if [[ ! -d "$SNAP_DIR" ]]; then
 fi
 info "Snapshot: $SNAP_ID"
 info "Source:   $SNAP_DIR"
+
+# ── Load provenance from snapshot_run_context.json ─────────────────────────────
+FY_START="2024-07-01"
+FY_END="2025-06-30"
+PERIOD_LABEL=""
+COMPANY_NAME="Ride Electric Brisbane"
+COMPANY_ID="4"
+CONTEXT_FILE="$SNAP_DIR/snapshot_run_context.json"
+if [[ -f "$CONTEXT_FILE" ]]; then
+  FY_START=$(python3 -c "import json; print(json.load(open('$CONTEXT_FILE')).get('date_start',''))" 2>/dev/null || echo "$FY_START")
+  FY_END=$(python3 -c "import json; print(json.load(open('$CONTEXT_FILE')).get('date_end',''))" 2>/dev/null || echo "$FY_END")
+  PERIOD_LABEL=$(python3 -c "import json; print(json.load(open('$CONTEXT_FILE')).get('period_label','') or '')" 2>/dev/null || echo "")
+  COMPANY_NAME=$(python3 -c "import json; print(json.load(open('$CONTEXT_FILE')).get('company_name','Ride Electric Brisbane'))" 2>/dev/null || echo "$COMPANY_NAME")
+  COMPANY_ID=$(python3 -c "import json; print(json.load(open('$CONTEXT_FILE')).get('company_id',4))" 2>/dev/null || echo "$COMPANY_ID")
+  [[ -n "$FY_START" && -n "$FY_END" ]] || { FY_START="2024-07-01"; FY_END="2025-06-30"; }
+fi
+PERIOD_DISPLAY="$FY_START → $FY_END"
+[[ -n "$PERIOD_LABEL" ]] && PERIOD_DISPLAY="$PERIOD_LABEL ($FY_START → $FY_END)"
 
 # ── Verify gh auth ───────────────────────────────────────────────────────────
 if ! gh auth status &>/dev/null; then
@@ -114,8 +140,8 @@ cat > "$RAW_DEST/README.md" <<SNAPREADME
 
 ## Source
 - **Odoo instance**: RE-Staging-2026-01-08 (https://rid002-17-dev.black.wedoo.co.nz)
-- **Company**: Ride Electric Brisbane (company_id=4)
-- **FY period**: 2024-07-01 → 2025-06-30
+- **Company**: $COMPANY_NAME (company_id=$COMPANY_ID)
+- **FY period**: $PERIOD_DISPLAY
 - **Extracted**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 - **Snapshot ID**: $SNAP_ID
 
@@ -242,8 +268,8 @@ git commit -m "$(cat <<EOF
 feat: upload raw Odoo EOFY export — $SNAP_ID
 
 Source: RE-Staging-2026-01-08 (rid002-17-dev.black.wedoo.co.nz)
-Company: Ride Electric Brisbane (company_id=4)
-FY: 2024-07-01 → 2025-06-30
+Company: $COMPANY_NAME (company_id=$COMPANY_ID)
+FY: $PERIOD_DISPLAY
 Extracted: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Files: ${#SOURCE_FILES[@]} models, raw JSONL (gzip-compressed)
 

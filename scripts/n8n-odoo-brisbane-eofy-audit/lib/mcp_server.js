@@ -20,6 +20,7 @@ const ACCESS_TOKEN = '675620e616cb74f0fb5d2946261de78dffb714c7145aec3d71af3eed9e
 
 const EXPORT_ROOT = '/home/node/.n8n/odoo_forensic_exports';
 
+// Fallback scope when snapshot_run_context.json / stage packs are missing (legacy snapshots).
 const SCOPE = {
   company_id: 4,
   company_name: 'Ride Electric Brisbane',
@@ -28,9 +29,6 @@ const SCOPE = {
   timezone: 'Australia/Brisbane',
   note: 'Brisbane only. Do not generalise to other Ride Electric entities without explicit evidence.',
 };
-
-const FY_END = '2025-06-30';
-const LATE_WRITE_THRESHOLD = '2025-07-01';
 
 const MAX_PAGE = 2000;
 const DEFAULT_PAGE = 500;
@@ -77,6 +75,45 @@ function stageManifestDir(snapshotId, stage) {
 
 function sanitiseManifestDir(snapshotId) {
   return path.join(snapshotBase(snapshotId), '03_sanitise_profile', 'manifests');
+}
+
+function addDaysIso(dateStr, days) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function loadSnapshotScope(snapshotId) {
+  if (!snapshotId) return { ...SCOPE };
+  const candidates = [
+    path.join(snapshotBase(snapshotId), 'snapshot_run_context.json'),
+    path.join(stageManifestDir(snapshotId, '02_pos_retail'), 'pos_retail_stage_pack.json'),
+    path.join(stageManifestDir(snapshotId, '01_account_ledger'), 'account_ledger_stage_pack.json'),
+  ];
+  for (const p of candidates) {
+    try {
+      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+      const period = j.period || j;
+      const start = period.start || period.date_start || j.date_start || j.fy_start;
+      const end = period.end || period.date_end || j.date_end || j.fy_end;
+      if (start && end) {
+        return {
+          company_id: j.company?.id || j.company_id || SCOPE.company_id,
+          company_name: j.company?.name || j.company_name || SCOPE.company_name,
+          fy_start: start,
+          fy_end: end,
+          timezone: period.timezone || j.timezone || SCOPE.timezone,
+          period_label: j.period_label || null,
+          note: SCOPE.note,
+        };
+      }
+    } catch { /* try next candidate */ }
+  }
+  return { ...SCOPE };
+}
+
+function lateWriteThresholdForSnapshot(snapshotId) {
+  return addDaysIso(loadSnapshotScope(snapshotId).fy_end, 1);
 }
 
 // Return all JSONL files for a snapshot, preferring sanitised over raw
@@ -248,7 +285,7 @@ function unbalancedMoves(rows) {
 }
 
 // Lines modified after FY end
-function lateWrites(rows, threshold = LATE_WRITE_THRESHOLD) {
+function lateWrites(rows, threshold) {
   return rows
     .filter(r => r.write_date && String(r.write_date) >= threshold)
     .map(r => ({
@@ -442,7 +479,7 @@ function toolCatalogue(args) {
   return {
     ok: true,
     snapshot_id: snapshotId,
-    scope: SCOPE,
+    scope: loadSnapshotScope(snapshotId),
     catalogue: cat,
     readiness_summary: readiness?.summary || null,
     extraction_gaps: cat.extraction_gaps,
@@ -461,7 +498,7 @@ function toolCatalogue(args) {
 function toolPrecomputedMetrics(args) {
   const snapshotId = args.snapshot_id || latestSnapshot();
   const stage = args.stage || 'all';
-  const out = { ok: true, snapshot_id: snapshotId, scope: SCOPE };
+  const out = { ok: true, snapshot_id: snapshotId, scope: loadSnapshotScope(snapshotId) };
 
   if (stage === 'all' || stage === '01_account_ledger') {
     out.ledger = loadMetricPack(snapshotId, '01_account_ledger');
@@ -551,8 +588,9 @@ function toolModelRows(args) {
 
 function toolLateWrites(args) {
   const snapshotId = args.snapshot_id || latestSnapshot();
+  const scope = loadSnapshotScope(snapshotId);
   const model = args.model || 'account.move.line';
-  const threshold = args.threshold || LATE_WRITE_THRESHOLD;
+  const threshold = args.threshold || lateWriteThresholdForSnapshot(snapshotId);
   const limit = Math.min(Number(args.limit || 500), 2000);
 
   const entry = findModelFile(snapshotId, model);
@@ -570,7 +608,7 @@ function toolLateWrites(args) {
     threshold,
     returned: res.rows.length,
     late_write_rows: lateWrites(res.rows, threshold),
-    note: `Rows where write_date >= ${threshold} (after FY end ${FY_END})`,
+    note: `Rows where write_date >= ${threshold} (after FY end ${scope.fy_end})`,
   };
 }
 
@@ -679,7 +717,7 @@ function toolAggregateMonthly(args) {
   return {
     ok: true,
     snapshot_id: snapshotId,
-    scope: SCOPE,
+    scope: loadSnapshotScope(snapshotId),
     ledger_by_month: metrics?.ledger?.by_month || null,
     pos_by_month: posMetrics?.pos?.by_month || null,
     note: 'Pre-computed monthly aggregates. Use odoo_ledger_integrity or odoo_model_rows for detail.',
@@ -1310,6 +1348,7 @@ function toolSchema(args) {
 
 function toolAuditInit(args) {
   const snapshotId = args.snapshot_id || latestSnapshot();
+  const scope = loadSnapshotScope(snapshotId);
 
   // Available models
   const modelFiles = snapshotJsonlFiles(snapshotId);
@@ -1384,7 +1423,7 @@ function toolAuditInit(args) {
     ok: true,
     audit_session_init: true,
     snapshot_id: snapshotId,
-    scope: SCOPE,
+    scope,
 
     available_data: modelList,
 
@@ -1625,7 +1664,7 @@ function toolHelp() {
   return {
     ok: true,
     server: 'Odoo EOFY Forensic MCP v3 — Ride Electric Brisbane',
-    scope: SCOPE,
+    scope: loadSnapshotScope(latestSnapshot()),
     export_root: EXPORT_ROOT,
     audit_methodology: [
       'This server provides DATA. Anomaly detection is YOUR job as auditor.',

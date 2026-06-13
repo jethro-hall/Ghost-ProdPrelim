@@ -1,0 +1,43 @@
+---
+description: Future Bedrock, GhostDASH, Protean, and server implementation backlog boundaries.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Bedrock Implementation Backlog Boundaries
+
+The Bedrock Provider Integration and Server Audit is future implementation context only.
+
+Do not implement these items unless the user explicitly approves the relevant step:
+- Add boto3 or any other dependency.
+- Add or modify database migrations.
+- Add aws_region columns or schema fields.
+- Modify runtime provider dispatch.
+- Modify Bedrock Converse or streaming runtime code.
+- Modify GhostDASH UI provider selectors.
+- Modify model ID presets.
+- Modify docker-compose.yml.
+- Modify .env files or runtime environment variables.
+- Wire Protean copilot to agent-ingress.
+- Stop, delete, archive, or clean up server directories.
+- Change production services, containers, networks, ports, or volumes.
+
+Future implementation sequence must be explicit and staged:
+1. Repository inspection only.
+2. Backend dependency and settings proposal.
+3. Database migration proposal.
+4. Runtime Bedrock dispatch proposal.
+5. UI Bedrock provider proposal.
+6. Docker/env wiring proposal.
+7. Protean integration proposal.
+8. Server cleanup proposal.
+
+Each future step requires:
+- explicit user approval
+- changed-file list
+- commands to run
+- rollback notes
+- blast-radius assessment
+- cost and latency impact
+- secret-handling confirmation

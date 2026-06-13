@@ -53,6 +53,163 @@ const anthropicBodyPath = input.anthropic_body_path || '/tmp/odoo_04_anthropic_b
 // Destination prefix in the audit repo — files land at root/snapshots/{id}/
 const repoPrefix = `snapshots/${snapshotId}`;
 
+function safeJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
+}
+
+function loadSnapshotScope(root) {
+  const fallback = {
+    company: 'Ride Electric Brisbane',
+    company_id: 4,
+    fy_start: '2024-07-01',
+    fy_end: '2025-06-30',
+    timezone: 'Australia/Brisbane',
+    currency: 'AUD',
+    note: 'Brisbane entity only. Do not extrapolate to other Ride Electric entities.',
+  };
+  const candidates = [
+    path.join(root, 'snapshot_run_context.json'),
+    path.join(root, '02_pos_retail/manifests/pos_retail_stage_pack.json'),
+    path.join(root, '01_account_ledger/manifests/account_ledger_stage_pack.json'),
+  ];
+  for (const p of candidates) {
+    const j = safeJson(p);
+    if (!j) continue;
+    const period = j.period || j;
+    const start = period.start || period.date_start || j.date_start || j.fy_start;
+    const end = period.end || period.date_end || j.date_end || j.fy_end;
+    if (start && end) {
+      return {
+        company: j.company?.name || j.company_name || fallback.company,
+        company_id: j.company?.id || j.company_id || fallback.company_id,
+        fy_start: start,
+        fy_end: end,
+        timezone: period.timezone || j.timezone || fallback.timezone,
+        currency: 'AUD',
+        period_label: j.period_label || null,
+        note: fallback.note,
+      };
+    }
+  }
+  return fallback;
+}
+
+function addDaysIso(dateStr, days) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function countRawJsonlFiles(root) {
+  let count = 0;
+  if (!fs.existsSync(root)) return 0;
+  for (const stageDir of fs.readdirSync(root)) {
+    const rawDir = path.join(root, stageDir, 'raw');
+    if (!fs.existsSync(rawDir) || !fs.statSync(rawDir).isDirectory()) continue;
+    for (const f of fs.readdirSync(rawDir)) {
+      if (f.endsWith('.jsonl')) count += 1;
+    }
+  }
+  return count;
+}
+
+function collectExtractedModels(root) {
+  const models = new Set();
+  if (!fs.existsSync(root)) return models;
+  for (const stageDir of fs.readdirSync(root)) {
+    const rawDir = path.join(root, stageDir, 'raw');
+    if (!fs.existsSync(rawDir) || !fs.statSync(rawDir).isDirectory()) continue;
+    for (const f of fs.readdirSync(rawDir)) {
+      if (f.endsWith('.jsonl')) models.add(f.replace(/\.jsonl$/, ''));
+    }
+  }
+  return models;
+}
+
+function loadApiErrors(root) {
+  const errors = [];
+  for (const stage of ['01_account_ledger', '02_pos_retail', '05_master_data']) {
+    const p = path.join(root, stage, 'manifests/api_errors.json');
+    const j = safeJson(p);
+    if (!j) continue;
+    const list = Array.isArray(j) ? j : (j.errors || []);
+    for (const e of list) errors.push({ stage, ...e });
+  }
+  return errors;
+}
+
+function buildExtractionGaps(snapshotRoot, m05) {
+  const gaps = [];
+  const counts05 = safeJson(path.join(snapshotRoot, '05_master_data/manifests/model_counts.json')) || m05?.model_counts || {};
+  const extracted = collectExtractedModels(snapshotRoot);
+  const apiErrors = loadApiErrors(snapshotRoot);
+
+  const mailCount = counts05['mail.message'] || 0;
+  const trackingCount = counts05['mail.tracking.value'] || 0;
+  if (mailCount > 0) {
+    gaps.push(`mail.message: extracted (${mailCount} rows) — audit trail available via raw_data and MCP after Stage 03 re-run on 05_master_data`);
+  } else {
+    gaps.push('mail.message: not extracted — audit trail unavailable');
+  }
+  if (trackingCount > 0) {
+    gaps.push(`mail.tracking.value: extracted (${trackingCount} rows)`);
+  } else {
+    const trackingDenied = apiErrors.some((e) => String(e.model || '').includes('mail.tracking.value'));
+    gaps.push(trackingDenied
+      ? 'mail.tracking.value: access denied — requires Administration/Settings group in Odoo'
+      : 'mail.tracking.value: not extracted');
+  }
+
+  const valuationTotal = m05?.stock?.valuation_total;
+  const svlCount = counts05['stock.valuation.layer'] || 0;
+  if (svlCount > 0 && valuationTotal != null && Math.abs(Number(valuationTotal)) > 0.01) {
+    gaps.push(`stock.valuation.layer: extracted (${svlCount} rows, valuation_total=${valuationTotal})`);
+  } else if (svlCount > 0) {
+    gaps.push(`stock.valuation.layer: extracted (${svlCount} rows) but valuation_total=${valuationTotal ?? 0} — check product costing method`);
+  } else {
+    gaps.push('stock.valuation.layer: not extracted');
+  }
+
+  if (extracted.has('account.full.reconcile')) {
+    gaps.push('account.full.reconcile: exported all-time reconciliation history — not FY-scoped; do not read counts as FY figures');
+  }
+
+  const neverExtracted = ['account.analytic.line', 'hr.payslip'];
+  for (const model of neverExtracted) {
+    if (!extracted.has(model)) {
+      const note = model === 'hr.payslip'
+        ? 'payroll source documents unavailable (journal entries present in ledger)'
+        : 'cost allocation details unavailable';
+      gaps.push(`${model}: not extracted — ${note}`);
+    }
+  }
+
+  for (const err of apiErrors) {
+    if (err.status === 'access_denied' || err.error_type === 'access_denied') {
+      gaps.push(`${err.model || 'unknown'}: access denied during extraction (${err.stage})`);
+    }
+  }
+
+  return [...new Set(gaps)];
+}
+
+function buildRawDataPointer(snapshotRoot, statusOverride) {
+  const modelCount = countRawJsonlFiles(snapshotRoot);
+  const rawPushPack = safeJson(path.join(snapshotRoot, '06_raw_github_push/manifests/raw_push_stage_pack.json'));
+  let status = statusOverride || 'pending';
+  if (rawPushPack?.status === 'success') status = 'complete';
+  if (rawPushPack?.status === 'error') status = 'failed';
+
+  return {
+    status,
+    repo_path: `raw_data/${snapshotId}/`,
+    repo_url: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/tree/${GITHUB_BRANCH}/raw_data/${snapshotId}/`,
+    model_count: rawPushPack?.files_pushed ?? (status === 'complete' ? modelCount : null),
+    total_rows: rawPushPack?.total_rows ?? null,
+    note: 'Byte-for-byte Odoo API output. Private repo. Not sanitised. Use for row-level forensic recomputation.',
+  };
+}
+
 // ── Collect files to push ──────────────────────────────────────────────────────
 function collectFile(localPath, repoRelPath) {
   if (!fs.existsSync(localPath)) return null;
@@ -61,8 +218,11 @@ function collectFile(localPath, repoRelPath) {
 
 // ── Build structured audit_payload.json ───────────────────────────────────────
 function buildAuditPayload() {
-  function safe(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
+  function safe(p) { return safeJson(p); }
   function r2(v) { return Math.round((Number(v)||0)*100)/100; }
+
+  const scope = loadSnapshotScope(snapshotRoot);
+  const lateWriteCutoff = addDaysIso(scope.fy_end, 62); // ~2 months after FY end
 
   const m01 = safe(path.join(snapshotRoot, '01_account_ledger/metrics/account_ledger_metric_pack.json'));
   const a01 = safe(path.join(snapshotRoot, '01_account_ledger/anomalies/account_ledger_anomaly_pack.json'));
@@ -76,12 +236,7 @@ function buildAuditPayload() {
     _schema: 'ghoststack-audit-orientation/v2',
     snapshot_id: snapshotId,
     generated_at: new Date().toISOString(),
-    scope: {
-      company: 'Ride Electric Brisbane', company_id: 4,
-      fy_start: '2024-07-01', fy_end: '2025-06-30',
-      timezone: 'Australia/Brisbane', currency: 'AUD',
-      note: 'Brisbane entity only. Do not extrapolate to other Ride Electric entities.',
-    },
+    scope,
     mcp_server: {
       endpoint: 'https://workflow.rideai.com.au/webhook/odoo-eofy-forensic-mcp-v3',
       auth: 'Bearer token — provided separately',
@@ -151,22 +306,19 @@ function buildAuditPayload() {
       { id: 'T07', area: 'POS vs ledger',        test: 'Sum POS payments by journal and compare to journal entries.', tool: 'odoo_pos_integrity + odoo_query' },
       { id: 'T08', area: 'Unbilled revenue',     test: 'Find sale.order with invoice_status=to invoice at FY end.', tool: 'odoo_query on sale.order' },
       { id: 'T09', area: 'Accrued payables',     test: 'Find purchase.order with billing_status=to bill at FY end.', tool: 'odoo_query on purchase.order' },
-      { id: 'T10', area: 'Late journal entries', test: 'Identify account.move with date <= 2025-06-30 but write_date > 2025-08-31.', tool: 'odoo_late_writes' },
+      { id: 'T10', area: 'Late journal entries', test: `Identify account.move with date <= ${scope.fy_end} but write_date > ${lateWriteCutoff}.`, tool: 'odoo_late_writes' },
       { id: 'T11', area: 'Negative stock',       test: 'Find product.product with qty_available < 0.', tool: 'odoo_query on product.product' },
       { id: 'T12', area: 'Top customer balances', test: 'Top 20 customer outstanding balances from AR account group.', tool: 'odoo_query on account.move.line' },
     ],
-    extraction_gaps: [
-      'mail.message / mail.tracking.value: not extracted — audit trail unavailable via MCP',
-      'stock.valuation.layer: extracted but valuation_total=0 — check product costing method',
-      'account.analytic.line: not extracted — cost allocation details unavailable',
-      'hr.payslip: not extracted — payroll source documents unavailable (journal entries present in ledger)',
-    ],
+    extraction_gaps: buildExtractionGaps(snapshotRoot, m05),
+    raw_data: buildRawDataPointer(snapshotRoot),
     how_to_use: {
       step1: 'Call odoo_audit_init via MCP for live snapshot context, field index, and anomaly leads',
       step2: 'Run audit_test_battery tests T01-T12 using odoo_query, odoo_aggregate, odoo_precomputed_* tools',
       step3: 'Use odoo_schema to check field availability before querying any model',
       step4: 'Cross-reference stock.move ↔ account.move.line for COGS validation',
       step5: 'Flag discrepancies with specific record IDs and amounts — do not generalise from sample',
+      step6: `Download raw JSONL from raw_data/${snapshotId}/ on GitHub for independent row-level recomputation (trial balance, AP aging, bank rec)`,
     },
   };
 }
