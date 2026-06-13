@@ -272,13 +272,35 @@ def _runtime_capabilities() -> RuntimeCapabilities:
                 message="Chat completions-compatible generation is supported.",
             ),
         },
+        llm_providers={
+            "openai": CapabilityStatus(
+                available=True,
+                configured=True,
+                message="Native OpenAI (Responses + Chat Completions) including GPT-4.1/o-series.",
+            ),
+            "openai_compatible": CapabilityStatus(
+                available=True,
+                configured=True,
+                message="Self-hosted and RideAI gateways via OpenAI-compatible /v1/chat/completions.",
+            ),
+            "google_gemini": CapabilityStatus(
+                available=True,
+                configured=True,
+                message="Native Gemini generateContent and OpenAI-compat endpoints.",
+            ),
+            "anthropic": CapabilityStatus(
+                available=True,
+                configured=True,
+                message="Native Anthropic Messages API for Claude Sonnet/Opus/Haiku.",
+            ),
+        },
         streaming=CapabilityStatus(
             available=True,
             configured=True,
             message="SSE agent streaming is available through the `/agent/*` boundary.",
         ),
         vector_store="qdrant",
-        model_runtime="llamaindex workflows + provider APIs",
+        model_runtime="provider APIs + workflow runtime",
     )
 
 ORDERED_SYNC_STEPS = ("queued", "parse_structure", "index_retrieval", "finalize")
@@ -1333,6 +1355,20 @@ def _chat_upload_to_view(upload: ChatUploadRecord, session: Session) -> ChatUplo
 def _safe_upload_name(filename: str | None) -> str:
     candidate = filename or "upload"
     return re.sub(r"[^a-zA-Z0-9._() -]+", "_", Path(candidate).name).strip()[:200] or "upload"
+
+
+def _safe_relative_upload_path(filename: str | None) -> Path:
+    candidate = (filename or "upload").replace("\\", "/").strip()
+    parts: list[str] = []
+    for part in Path(candidate).parts:
+        if part in {"", ".", ".."}:
+            continue
+        safe_part = re.sub(r"[^a-zA-Z0-9._() -]+", "_", part).strip()[:200]
+        if safe_part:
+            parts.append(safe_part)
+    if not parts:
+        return Path("upload")
+    return Path(*parts)
 
 
 def _resolve_chat_upload_path(*, conversation_id: str, upload_id: str, safe_name: str) -> Path:
@@ -2543,10 +2579,11 @@ def create_app() -> FastAPI:
             raise HTTPException(400, "policy_lane must be default, local, or cloud")
 
         filename = file.filename or "upload"
-        safe_name = re.sub(r"[^a-zA-Z0-9._() -]+", "_", Path(filename).name).strip()[:200] or "upload"
+        relative_path = _safe_relative_upload_path(filename)
+        safe_name = relative_path.name
         dest_dir = settings.upload_dir / target_corpus
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / safe_name
+        dest = dest_dir / relative_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
         size_bytes, sha256 = await _write_upload_to_disk(file, dest)
 
         source_path = str(dest.resolve())
@@ -2556,7 +2593,7 @@ def create_app() -> FastAPI:
         if doc is None:
             doc = DocumentRecord(
                 corpus=target_corpus,
-                filename=safe_name,
+                filename=str(relative_path),
                 source_path=source_path,
                 mime_type=file.content_type or mimetypes.guess_type(safe_name)[0],
                 requested_lane=lane,
@@ -2569,7 +2606,7 @@ def create_app() -> FastAPI:
             session.add(doc)
         else:
             doc.corpus = target_corpus
-            doc.filename = safe_name
+            doc.filename = str(relative_path)
             doc.mime_type = file.content_type or mimetypes.guess_type(safe_name)[0]
             doc.requested_lane = lane
             doc.parse_status = "pending"
@@ -2589,7 +2626,7 @@ def create_app() -> FastAPI:
             details={
                 "document_id": doc.id,
                 "corpus": target_corpus,
-                "filename": safe_name,
+                "filename": str(relative_path),
                 "policy_lane": lane,
                 "source_kind": source_kind,
                 "size_bytes": size_bytes,
@@ -2756,6 +2793,7 @@ def create_app() -> FastAPI:
                         "conversation_mode": body.conversation_mode,
                         "workflow_mode": body.workflow_mode,
                         "use_approved_web": body.use_approved_web,
+                        "tool_overrides": dict(body.tool_overrides or {}),
                     }
                 },
             )
@@ -2783,6 +2821,7 @@ def create_app() -> FastAPI:
                         "conversation_mode": body.conversation_mode,
                         "workflow_mode": body.workflow_mode,
                         "use_approved_web": body.use_approved_web,
+                        "tool_overrides": dict(body.tool_overrides or {}),
                     }
                 },
             )

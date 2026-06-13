@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     # When True, /v1/responses may fall back to chat.completions on 504/upstream timeout (common on long
     # Business Strategist + sub-agent + Odoo runs under gateway limits).
     app_llm_responses_fallback_to_chat: bool = True
+    # When True, casual greetings and similar paths bypass the LLM with canned text.
+    app_disable_direct_answer_bypass: bool = True
     # Sub-agent Worker LLM calls omit max_tokens in the UI; cap generation to keep latency bounded.
     app_sub_agent_max_output_tokens_default: int = 4096
     app_odoo_agentic_enabled: bool = True

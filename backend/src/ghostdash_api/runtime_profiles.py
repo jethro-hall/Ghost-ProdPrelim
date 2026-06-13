@@ -893,7 +893,12 @@ def clone_runtime_profile(
 
 
 def seed_default_runtime_profile(session: Session) -> RuntimeProfileRecord:
-    existing = session.scalar(select(RuntimeProfileRecord).where(RuntimeProfileRecord.is_default.is_(True)))
+    existing = session.scalar(
+        select(RuntimeProfileRecord).where(
+            (RuntimeProfileRecord.is_default.is_(True))
+            | (RuntimeProfileRecord.name == DEFAULT_RUNTIME_PROFILE_NAME)
+        )
+    )
     if existing is not None:
         profile_changed = _normalize_default_profile_embedding_model(existing)
         profile_changed = _normalize_runtime_profile_tool_policy(existing) or profile_changed

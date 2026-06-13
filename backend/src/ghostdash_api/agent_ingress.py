@@ -16,6 +16,12 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .backend_trace import (
+    append_backend_trace,
+    format_backend_exception,
+    mark_generation_path,
+    should_expose_raw_backend_errors,
+)
 from .approved_web import (
     fetch_approved_web_context,
     get_tool_config,
@@ -166,6 +172,35 @@ def _call_init_greeting(local_time: str | None = None, timezone_name: str | None
     if now.hour < 17:
         return "Afternoon, you’re speaking with Mike at Ride Electric. What can I help you with?"
     return "Evening, you’re speaking with Mike at Ride Electric. What can I help you with?"
+
+
+def _casual_direct_chat_greeting(agent: AgentProfileRecord) -> str:
+    agent_name = str(agent.name or "your assistant").strip() or "your assistant"
+    return f"Hey! I'm {agent_name}. What would you like to work on?"
+
+
+def _should_use_casual_direct_reply(
+    *,
+    message: str,
+    workflow_mode: str,
+    kb_enabled: bool,
+    tool_overrides: dict[str, bool] | None,
+    use_approved_web: bool,
+    docx_enabled: bool,
+) -> bool:
+    if str(workflow_mode or "").strip().casefold() != "standard":
+        return False
+    if not _is_casual_greeting(message):
+        return False
+    if kb_enabled:
+        return False
+    if _tool_override_enabled(tool_overrides, "odoo_primary", default=False):
+        return False
+    if use_approved_web:
+        return False
+    if docx_enabled:
+        return False
+    return True
 
 
 def _production_contract_requested(body: ChatRequest) -> bool:
@@ -504,6 +539,102 @@ def _should_force_finance_message_to_odoo_mas(*, agent_name: str | None, message
         "profit and loss",
     )
     return any(term in text for term in finance_terms)
+
+
+def _tool_override_enabled(tool_overrides: dict[str, bool] | None, tool_id: str, *, default: bool = False) -> bool:
+    if not tool_overrides:
+        return default
+    if tool_id in tool_overrides:
+        return bool(tool_overrides[tool_id])
+    return default
+
+
+def _is_casual_greeting(message: str) -> bool:
+    cleaned = re.sub(r"[^\w\s']", " ", str(message or "").strip().casefold())
+    tokens = [token for token in cleaned.split() if token]
+    if not tokens or len(tokens) > 5:
+        return False
+    allowed = {
+        "hi",
+        "hello",
+        "hey",
+        "hiya",
+        "yo",
+        "thanks",
+        "thank",
+        "you",
+        "good",
+        "morning",
+        "afternoon",
+        "evening",
+        "there",
+        "howdy",
+        "gday",
+        "sup",
+    }
+    return all(token in allowed for token in tokens)
+
+
+def _resolve_kb_session_enabled(
+    *,
+    kb_tool: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+) -> bool:
+    if not bool(kb_tool.get("enabled", True)):
+        return False
+    return _tool_override_enabled(tool_overrides, "kb", default=False)
+
+
+def resolve_chat_corpora(
+    profile: Any,
+    requested_corpora: list[str],
+    tool_overrides: dict[str, bool] | None,
+) -> list[str]:
+    if not _tool_override_enabled(tool_overrides, "kb", default=False):
+        return []
+    normalized = [str(corpus).strip() for corpus in (requested_corpora or []) if str(corpus).strip()]
+    if normalized:
+        return normalized
+    if tool_overrides and "kb" in tool_overrides:
+        return []
+    return resolve_corpora(profile, [])
+
+
+def _resolve_kb_enabled(
+    *,
+    kb_tool: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+    conversation_mode: str,
+    message: str,
+    corpora: list[str],
+) -> bool:
+    if not _resolve_kb_session_enabled(kb_tool=kb_tool, tool_overrides=tool_overrides):
+        return False
+    if str(conversation_mode or "").strip().casefold() == "quick" and _is_casual_greeting(message):
+        return False
+    from .workflows import should_run_knowledge_retrieval
+
+    return should_run_knowledge_retrieval(
+        message=message,
+        kb_session_enabled=True,
+        corpora=corpora,
+    )
+
+
+def _apply_tool_session_overrides_to_plan(
+    plan: dict[str, Any],
+    *,
+    tool_overrides: dict[str, bool] | None,
+) -> dict[str, Any]:
+    if _tool_override_enabled(tool_overrides, "odoo_primary", default=False):
+        return plan
+    next_plan = dict(plan)
+    next_plan["tool_plan"] = {
+        "tool_id": None,
+        "mode": "none",
+        "reason": "tools_disabled_for_session",
+    }
+    return next_plan
 
 
 def _tool_citation_from_event(event: ChatToolEvent) -> dict[str, Any]:
@@ -1904,7 +2035,9 @@ def _sanitize_owner_operator_template(raw: str) -> str:
     return text[:420].strip()
 
 
-def build_owner_operator_questionnaire_directives(*, guardrails_config: dict[str, Any]) -> str:
+def build_owner_operator_questionnaire_directives(*, guardrails_config: dict[str, Any], message: str = "") -> str:
+    if message and not _is_business_finance_closeout_request(message) and not _requires_business_structure_for_message(message):
+        return ""
     questionnaire = str(guardrails_config.get("owner_operator_questionnaire") or "").strip()
     compact = str(guardrails_config.get("owner_operator_questionnaire_compact") or "").strip()
     if not questionnaire and not compact:
@@ -2269,10 +2402,26 @@ def build_effective_system_prompt(
         ).strip()
     else:
         prompt = base_system_prompt.strip()
+    grounding_mode = str((guardrails_config or {}).get("grounding_mode") or "retrieved_only").strip().lower()
+    general_grounding = grounding_mode == "general"
+    if general_grounding:
+        prompt = (
+            f"{prompt}\n\n"
+            "Grounding mode: general.\n"
+            "- You may answer conversational and factual questions from general knowledge.\n"
+            "- When retrieved documents or tool evidence are provided, prefer them and cite them.\n"
+            "- Do not refuse a normal question only because retrieval context is empty.\n"
+            "- Do not use Facts/Inferences/Assumptions sections unless the user explicitly asks for that format."
+        ).strip()
     if workflow_directives:
         prompt = f"{prompt}\n\n{workflow_directives}".strip()
-    owner_operator_directives = build_owner_operator_questionnaire_directives(
-        guardrails_config=dict(guardrails_config or {})
+    owner_operator_directives = (
+        ""
+        if general_grounding
+        else build_owner_operator_questionnaire_directives(
+            guardrails_config=dict(guardrails_config or {}),
+            message=message,
+        )
     )
     if owner_operator_directives:
         prompt = f"{prompt}\n\n{owner_operator_directives}".strip()
@@ -3617,79 +3766,102 @@ def dedupe_answer_text(answer: str) -> str:
 
 def build_blank_answer_fallback(*, citations: list[dict]) -> str:
     """Replace empty model output after generate + stream retry; error not length/context/timeout."""
-    n = len(citations)
-    citation_line = (
-        f"- {n} citation(s) were prepared from retrieved context before generation."
-        if n
-        else "- No citations were attached before generation (retrieval may have returned nothing usable)."
-    )
-    fallback = [
-        "The language model returned no usable text for this turn, so this message replaces the assistant reply.",
-        "",
-        "What we know:",
-        citation_line,
-        "- Retrieval can succeed even when generation fails; the Citations list may still show sources.",
-        "- Typical causes: transient provider errors, empty completions, policy blocks with no body, or response shapes the client could not parse into text.",
-        "",
-        "What to try:",
-        "1. Retry the same question once.",
-        "2. Ask for a shorter answer or one subsection at a time (one metric, one period, or one table).",
-        "3. In Agent Config, confirm model id, API mode, and optional max output tokens.",
-        "4. If this repeats, check agent-ingress logs for the request trace id.",
-    ]
-    return "\n".join(fallback).strip()
+    if citations:
+        return "I couldn't complete that answer. Try again with a shorter question."
+    return "I couldn't generate a reply. Please try again."
 
 
 def build_timeout_fallback(*, citations: list[dict]) -> str:
     """Model or network stopped before finishing; classified timeout."""
-    fallback = [
-        "Generation timed out before the model could finish this answer.",
-        "",
-        "What we know:",
-        "- The request reached the provider and grounded context was used",
-        f"- {len(citations)} citation(s) were available when the timeout occurred",
-        "- This is a latency or execution-window limit, not missing retrieval data",
-        "",
-        "What to try:",
-        "1. Ask for a shorter answer or split the work into smaller steps.",
-        "2. Retry; streaming often delivers partial text before the window elapses.",
-        "3. Narrow scope (one entity, one period, or one document) per message.",
-    ]
-    return "\n".join(fallback).strip()
+    if citations:
+        return "That answer timed out before it finished. Try a shorter question or retry once."
+    return "The request timed out before a reply was ready. Please try again."
 
 
 def build_length_guardrail_fallback(*, citations: list[dict]) -> str:
     """Upstream rejected prompt size (provider length guardrail)."""
-    fallback = [
-        "The upstream model rejected the prompt length because the combined request was too long after retrieval.",
-        "",
-        "What we know:",
-        "- Your question was kept for a shorter retry variant when possible",
-        f"- {len(citations)} citation(s) were in play when the guardrail fired",
-        "- This is a prompt-size limit at the provider, not a failure to retrieve",
-        "",
-        "What to try:",
-        "1. Retry with a narrower question or less chat history in the thread.",
-        "2. Ask for a brief summary first, then follow up for detail.",
-        "3. Repeat the same intent with fewer uploaded files in one turn if applicable.",
-    ]
-    return "\n".join(fallback).strip()
+    _ = citations
+    return "That question was too large for the model. Try a shorter question or start a new thread."
 
 
 def build_context_length_fallback(*, citations: list[dict]) -> str:
     """Context window exceeded (tokens: prompt + requested completion)."""
-    fallback = [
-        "Context window exceeded: the model rejected the total size of prompt plus requested completion.",
-        "",
-        "What we know:",
-        "- Grounded or tool context was assembled",
-        f"- {len(citations)} citation(s) were included before the limit was hit",
-        "",
-        "What to try:",
-        "1. Lower max output tokens in the agent runtime profile and retry, or ask for a shorter answer first.",
-        "2. Narrow the question (one month, one product line, one location) to shrink the prompt.",
-    ]
-    return "\n".join(fallback).strip()
+    _ = citations
+    return "That question exceeded the model context limit. Ask a narrower question or reduce history in the thread."
+
+
+def _resolve_failed_llm_answer(
+    *,
+    last_error: Exception | None,
+    citations: list[dict],
+    surface: str | None,
+    route_decision: dict[str, Any],
+    trace_id: str | None,
+    retry_route: str,
+) -> str:
+    raw = format_backend_exception(last_error)
+    append_backend_trace(
+        route_decision,
+        kind="llm_error",
+        level="error",
+        message=raw or "LLM returned no text",
+        detail={"citation_count": len(citations)},
+    )
+    if should_expose_raw_backend_errors(surface):
+        return raw or "LLM returned no text"
+    if last_error is not None and is_length_guardrail_error(last_error):
+        answer = build_length_guardrail_fallback(citations=citations)
+        append_backend_trace(route_decision, kind="fallback", level="warn", message=answer, detail={"reason": "length_guardrail"})
+        if trace_id:
+            log_instant_event(
+                trace_id=trace_id,
+                service="agent-ingress",
+                route=retry_route,
+                status="ok",
+                error=repr(last_error),
+                details={"citation_count": len(citations), "fallback": "length_guardrail"},
+            )
+        return answer
+    if last_error is not None and is_context_length_error(last_error):
+        answer = build_context_length_fallback(citations=citations)
+        append_backend_trace(route_decision, kind="fallback", level="warn", message=answer, detail={"reason": "context_length"})
+        if trace_id:
+            log_instant_event(
+                trace_id=trace_id,
+                service="agent-ingress",
+                route=retry_route,
+                status="ok",
+                error=repr(last_error),
+                details={"citation_count": len(citations), "fallback": "context_length"},
+            )
+        return answer
+    if last_error is not None and is_timeout_error(last_error):
+        answer = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
+        append_backend_trace(route_decision, kind="fallback", level="warn", message=answer, detail={"reason": "timeout"})
+        return answer
+    answer = build_blank_answer_fallback(citations=citations)
+    append_backend_trace(route_decision, kind="fallback", level="warn", message=answer, detail={"reason": "blank"})
+    return answer
+
+
+def _annotate_route_decision_for_plan(
+    route_decision: dict[str, Any],
+    *,
+    plan: dict[str, Any],
+    combined_upload_context: str,
+) -> None:
+    if plan.get("direct_answer") and not combined_upload_context:
+        reason = str((plan.get("tool_plan") or {}).get("reason") or "direct_answer")
+        mark_generation_path(route_decision, "direct_bypass")
+        append_backend_trace(
+            route_decision,
+            kind="bypass",
+            level="info",
+            message=reason,
+            detail={"direct_answer_preview": str(plan.get("direct_answer") or "")[:240]},
+        )
+    else:
+        mark_generation_path(route_decision, "llm")
 
 
 def run_answer_with_prompt_variants(
@@ -3784,12 +3956,75 @@ def _resolve_fallback_model_id(orchestration: dict[str, Any], *, primary_model_i
     return primary_model_id
 
 
+def _resolve_execution_path(
+    *,
+    is_multi_agent_workflow_run: bool,
+    use_odoo_agentic: bool,
+    inline_workers_enabled: bool,
+    route_type: str,
+) -> str:
+    if is_multi_agent_workflow_run:
+        return "mas_workflow_run"
+    if use_odoo_agentic:
+        return "odoo_agentic_loop"
+    if inline_workers_enabled and route_type == "workers":
+        return "inline_worker_delegation"
+    if route_type == "workers":
+        return "tool_backed_single_agent"
+    if route_type == "suggest_specialist":
+        return "specialist_suggestion"
+    return "direct_llm"
+
+
+def _log_chat_route_decision(
+    *,
+    trace_id: str,
+    execution_path: str,
+    route_decision: dict[str, Any],
+    tool_overrides: dict[str, bool] | None,
+    conversation_mode: str,
+    workflow_mode: str,
+    agent_id: str,
+    agent_name: str,
+    message: str,
+    kb_enabled: bool,
+    surface: str,
+    corpora: list[str],
+    kb_session_enabled: bool,
+) -> None:
+    log_instant_event(
+        trace_id=trace_id,
+        service="agent-ingress",
+        route="chat.route_decision",
+        status="ok",
+        details={
+            "execution_path": execution_path,
+            "route_type": route_decision.get("route_type"),
+            "rationale_summary": route_decision.get("rationale_summary"),
+            "tool_expectations": route_decision.get("tool_expectations"),
+            "tool_overrides": dict(tool_overrides or {}),
+            "conversation_mode": conversation_mode,
+            "workflow_mode": workflow_mode,
+            "agent_id": agent_id,
+            "agent_name": agent_name,
+            "surface": surface,
+            "kb_enabled": kb_enabled,
+            "kb_session_enabled": kb_session_enabled,
+            "corpora": list(corpora),
+            "message_excerpt": _normalize_prompt_excerpt(message, max_chars=120, mode="head"),
+        },
+    )
+
+
 def _should_emit_multi_agent_handoff_trace(
     *,
     workflow_mode: str,
     route_decision: dict[str, Any] | None,
     tool_plan: dict[str, Any] | None,
+    tool_overrides: dict[str, bool] | None,
 ) -> bool:
+    if not _tool_override_enabled(tool_overrides, "inline_workers", default=False):
+        return False
     route_type = str((route_decision or {}).get("route_type") or "").strip().lower()
     if route_type != "workers":
         return False
@@ -4196,7 +4431,7 @@ def create_app() -> FastAPI:
             raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
-        corpora = resolve_corpora(runtime_profile, body.corpora)
+        corpora = resolve_chat_corpora(runtime_profile, body.corpora, body.tool_overrides)
         guardrails_config = _sanitize_production_guardrails(agent, dict(runtime_profile.guardrails_config_json or {}))
         if is_production_chat_surface(body.surface) and not _is_valid_magic_mike_consumer_runtime(agent, guardrails_config):
             raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
@@ -4315,9 +4550,24 @@ def create_app() -> FastAPI:
         )
         tool_summary = [item.model_dump() for item in tool_summary_models]
         kb_tool = get_tool_config(tool_policy_config, "kb") or {}
-        kb_enabled = bool(kb_tool.get("enabled", True))
+        kb_session_enabled = _resolve_kb_session_enabled(
+            kb_tool=kb_tool,
+            tool_overrides=body.tool_overrides,
+        )
+        kb_enabled = _resolve_kb_enabled(
+            kb_tool=kb_tool,
+            tool_overrides=body.tool_overrides,
+            conversation_mode=conversation_mode,
+            message=body.message,
+            corpora=corpora,
+        )
         odoo_ready = any(item.id == "odoo_primary" and item.status == "ready" for item in tool_summary_models)
         web_enabled = bool(web_tool.get("enabled", False))
+        general_grounding = str(guardrails_config.get("grounding_mode") or "").strip().lower() == "general"
+        include_owner_operator_context = (
+            not general_grounding
+            and (kb_session_enabled or _is_business_finance_closeout_request(body.message))
+        )
         effective_snapshot_id = build_effective_snapshot_id(
             agent_id=agent.id,
             runtime_profile_id=runtime_profile.id,
@@ -4326,8 +4576,10 @@ def create_app() -> FastAPI:
             workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
-            owner_operator_template_compact=str(
-                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            owner_operator_template_compact=(
+                str(guardrails_config.get("owner_operator_questionnaire_compact") or "")
+                if include_owner_operator_context
+                else ""
             ),
             business_structure_context_compact=str(
                 guardrails_config.get("business_structure_context_compact") or ""
@@ -4344,8 +4596,10 @@ def create_app() -> FastAPI:
             used_approved_web=use_approved_web,
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
-            owner_operator_template_compact=str(
-                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            owner_operator_template_compact=(
+                str(guardrails_config.get("owner_operator_questionnaire_compact") or "")
+                if include_owner_operator_context
+                else ""
             ),
             business_structure_context_compact=str(
                 guardrails_config.get("business_structure_context_compact") or ""
@@ -4368,6 +4622,28 @@ def create_app() -> FastAPI:
                     "tool_id": None,
                     "mode": "none",
                     "reason": "call_init_greeting_bypass" if call_init_turn else "production_greeting_bypass",
+                },
+            }
+        elif (
+            not settings.app_disable_direct_answer_bypass
+            and _should_use_casual_direct_reply(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            kb_enabled=kb_enabled,
+            tool_overrides=body.tool_overrides,
+            use_approved_web=use_approved_web,
+            docx_enabled=body.docx_mode.enabled,
+        )
+        ):
+            plan = {
+                "query_mode": "direct",
+                "direct_answer": _casual_direct_chat_greeting(agent),
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": None,
+                    "mode": "none",
+                    "reason": "casual_greeting_direct_reply",
                 },
             }
         elif missing_business_structure_answer:
@@ -4471,6 +4747,7 @@ def create_app() -> FastAPI:
                     if existing_prompt
                     else evidence_retrieval_prompt(body.message)
                 )
+        plan = _apply_tool_session_overrides_to_plan(plan, tool_overrides=body.tool_overrides)
         if is_production_chat_surface(body.surface) and _is_magic_mike_agent(agent):
             plan["tool_plan"] = {"tool_id": None, "mode": "none", "reason": "production_consumer_tool_policy"}
         effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
@@ -4481,6 +4758,8 @@ def create_app() -> FastAPI:
             connection=connection,
             use_openai_responses_chain=use_openai_responses_chain,
         )
+        if not _tool_override_enabled(body.tool_overrides, "odoo_primary", default=False):
+            use_odoo_agentic = False
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
@@ -4533,6 +4812,32 @@ def create_app() -> FastAPI:
             odoo_ready=odoo_ready,
         )
         route_decision["llm_execution"] = []
+        _annotate_route_decision_for_plan(
+            route_decision,
+            plan=plan,
+            combined_upload_context=combined_upload_context,
+        )
+        inline_workers_enabled = _tool_override_enabled(body.tool_overrides, "inline_workers", default=False)
+        _log_chat_route_decision(
+            trace_id=request.state.trace_id,
+            execution_path=_resolve_execution_path(
+                is_multi_agent_workflow_run=False,
+                use_odoo_agentic=use_odoo_agentic,
+                inline_workers_enabled=inline_workers_enabled,
+                route_type=str(route_decision.get("route_type") or "direct"),
+            ),
+            route_decision=route_decision,
+            tool_overrides=body.tool_overrides,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
+            agent_id=agent.id,
+            agent_name=agent.name,
+            message=body.message,
+            kb_enabled=kb_enabled,
+            surface=body.surface,
+            corpora=corpora,
+            kb_session_enabled=kb_session_enabled,
+        )
         plan_query_prompt = str(plan.get("prompt") or "")
         if tool_evidence.prompt_prefix:
             plan_query_prompt = (
@@ -4952,30 +5257,14 @@ def create_app() -> FastAPI:
             if not answer.strip():
                 can_cache_response = False
                 last_error = stream_error or generate_error
-                if last_error is not None and is_length_guardrail_error(last_error):
-                    answer = build_length_guardrail_fallback(citations=citations)
-                    log_instant_event(
-                        trace_id=request.state.trace_id,
-                        service="agent-ingress",
-                        route="chat_answer.length_fallback",
-                        status="ok",
-                        error=repr(last_error),
-                        details={"citation_count": len(citations)},
-                    )
-                elif last_error is not None and is_context_length_error(last_error):
-                    answer = build_context_length_fallback(citations=citations)
-                    log_instant_event(
-                        trace_id=request.state.trace_id,
-                        service="agent-ingress",
-                        route="chat_answer.context_length_fallback",
-                        status="ok",
-                        error=repr(last_error),
-                        details={"citation_count": len(citations)},
-                    )
-                elif last_error is not None and is_timeout_error(last_error):
-                    answer = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
-                else:
-                    answer = build_blank_answer_fallback(citations=citations)
+                answer = _resolve_failed_llm_answer(
+                    last_error=last_error,
+                    citations=citations,
+                    surface=body.surface,
+                    route_decision=route_decision,
+                    trace_id=request.state.trace_id,
+                    retry_route="chat_answer.length_fallback",
+                )
         answer = normalize_finance_closeout_answer(
             answer_text=answer,
             request_message=body.message,
@@ -5142,7 +5431,7 @@ def create_app() -> FastAPI:
             raise HTTPException(400, "docx_mode.template_id is required when operation is finalize")
         docx_artifacts: list[dict[str, Any]] = []
         docx_diagnostics: list[dict[str, Any]] = []
-        corpora = resolve_corpora(runtime_profile, body.corpora)
+        corpora = resolve_chat_corpora(runtime_profile, body.corpora, body.tool_overrides)
         guardrails_config = _sanitize_production_guardrails(agent, dict(runtime_profile.guardrails_config_json or {}))
         if is_production_chat_surface(body.surface) and not _is_valid_magic_mike_consumer_runtime(agent, guardrails_config):
             raise HTTPException(400, PRODUCTION_CONTRACT_ERROR)
@@ -5260,9 +5549,24 @@ def create_app() -> FastAPI:
         )
         tool_summary = [item.model_dump() for item in tool_summary_models]
         kb_tool = get_tool_config(tool_policy_config, "kb") or {}
-        kb_enabled = bool(kb_tool.get("enabled", True))
+        kb_session_enabled = _resolve_kb_session_enabled(
+            kb_tool=kb_tool,
+            tool_overrides=body.tool_overrides,
+        )
+        kb_enabled = _resolve_kb_enabled(
+            kb_tool=kb_tool,
+            tool_overrides=body.tool_overrides,
+            conversation_mode=conversation_mode,
+            message=body.message,
+            corpora=corpora,
+        )
         odoo_ready = any(item.id == "odoo_primary" and item.status == "ready" for item in tool_summary_models)
         web_enabled = bool(web_tool.get("enabled", False))
+        general_grounding = str(guardrails_config.get("grounding_mode") or "").strip().lower() == "general"
+        include_owner_operator_context = (
+            not general_grounding
+            and (kb_session_enabled or _is_business_finance_closeout_request(body.message))
+        )
         effective_snapshot_id = build_effective_snapshot_id(
             agent_id=agent.id,
             runtime_profile_id=runtime_profile.id,
@@ -5271,8 +5575,10 @@ def create_app() -> FastAPI:
             workflow_mode=workflow_mode,
             tool_summary=tool_summary,
             use_approved_web=use_approved_web,
-            owner_operator_template_compact=str(
-                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            owner_operator_template_compact=(
+                str(guardrails_config.get("owner_operator_questionnaire_compact") or "")
+                if include_owner_operator_context
+                else ""
             ),
             business_structure_context_compact=str(
                 guardrails_config.get("business_structure_context_compact") or ""
@@ -5289,8 +5595,10 @@ def create_app() -> FastAPI:
             used_approved_web=use_approved_web,
             tool_summary=tool_summary,
             openai_responses_chain=use_openai_responses_chain,
-            owner_operator_template_compact=str(
-                guardrails_config.get("owner_operator_questionnaire_compact") or ""
+            owner_operator_template_compact=(
+                str(guardrails_config.get("owner_operator_questionnaire_compact") or "")
+                if include_owner_operator_context
+                else ""
             ),
             business_structure_context_compact=str(
                 guardrails_config.get("business_structure_context_compact") or ""
@@ -5313,6 +5621,28 @@ def create_app() -> FastAPI:
                     "tool_id": None,
                     "mode": "none",
                     "reason": "call_init_greeting_bypass" if call_init_turn else "production_greeting_bypass",
+                },
+            }
+        elif (
+            not settings.app_disable_direct_answer_bypass
+            and _should_use_casual_direct_reply(
+            message=body.message,
+            workflow_mode=workflow_mode,
+            kb_enabled=kb_enabled,
+            tool_overrides=body.tool_overrides,
+            use_approved_web=use_approved_web,
+            docx_enabled=body.docx_mode.enabled,
+        )
+        ):
+            plan = {
+                "query_mode": "direct",
+                "direct_answer": _casual_direct_chat_greeting(agent),
+                "prompt": None,
+                "citations": [],
+                "tool_plan": {
+                    "tool_id": None,
+                    "mode": "none",
+                    "reason": "casual_greeting_direct_reply",
                 },
             }
         elif missing_business_structure_answer:
@@ -5354,6 +5684,7 @@ def create_app() -> FastAPI:
                 "Auditor quality gate contract:\n" + bp_mode_auditor_prompt(body.message),
             ]
             plan["prompt"] = "\n\n".join(part for part in bp_prompt_parts if part).strip()
+        plan = _apply_tool_session_overrides_to_plan(plan, tool_overrides=body.tool_overrides)
         if is_production_chat_surface(body.surface) and _is_magic_mike_agent(agent):
             plan["tool_plan"] = {"tool_id": None, "mode": "none", "reason": "production_consumer_tool_policy"}
         effective_system_prompt = append_tool_plan_system_hint(effective_system_prompt, plan.get("tool_plan"))
@@ -5364,6 +5695,8 @@ def create_app() -> FastAPI:
             connection=connection,
             use_openai_responses_chain=use_openai_responses_chain,
         )
+        if not _tool_override_enabled(body.tool_overrides, "odoo_primary", default=False):
+            use_odoo_agentic = False
         tool_evidence = prepare_tool_evidence(
             session,
             agent_id=agent.id,
@@ -5492,6 +5825,32 @@ def create_app() -> FastAPI:
             odoo_ready=odoo_ready,
         )
         route_decision["llm_execution"] = []
+        _annotate_route_decision_for_plan(
+            route_decision,
+            plan=plan,
+            combined_upload_context=combined_upload_context,
+        )
+        inline_workers_enabled = _tool_override_enabled(body.tool_overrides, "inline_workers", default=False)
+        _log_chat_route_decision(
+            trace_id=request.state.trace_id,
+            execution_path=_resolve_execution_path(
+                is_multi_agent_workflow_run=False,
+                use_odoo_agentic=use_odoo_agentic,
+                inline_workers_enabled=inline_workers_enabled,
+                route_type=str(route_decision.get("route_type") or "direct"),
+            ),
+            route_decision=route_decision,
+            tool_overrides=body.tool_overrides,
+            conversation_mode=conversation_mode,
+            workflow_mode=workflow_mode,
+            agent_id=agent.id,
+            agent_name=agent.name,
+            message=body.message,
+            kb_enabled=kb_enabled,
+            surface=body.surface,
+            corpora=corpora,
+            kb_session_enabled=kb_session_enabled,
+        )
         prev_openai_rid = (conversation.openai_last_response_id or "").strip() or None
         openai_rid_out: list[str | None] = [None]
         raw_max_tokens = llm_config.get("max_tokens")
@@ -5669,6 +6028,7 @@ def create_app() -> FastAPI:
                     workflow_mode=workflow_mode,
                     route_decision=route_decision,
                     tool_plan=plan.get("tool_plan"),
+                    tool_overrides=body.tool_overrides,
                 ):
                     if str(agent.agent_role or "lead").strip().lower() != "lead":
                         invalid_orchestrator_event = ChatToolEvent(
@@ -5901,30 +6261,14 @@ def create_app() -> FastAPI:
                 if stream_error is not None:
                     cache_response = False
                 if stream_error is not None and not answer_parts:
-                    if is_length_guardrail_error(stream_error):
-                        fallback = build_length_guardrail_fallback(citations=citations)
-                        log_instant_event(
-                            trace_id=request.state.trace_id,
-                            service="agent-ingress",
-                            route="chat_stream.length_fallback",
-                            status="ok",
-                            error=repr(stream_error),
-                            details={"citation_count": len(citations)},
-                        )
-                    elif is_context_length_error(stream_error):
-                        fallback = build_context_length_fallback(citations=citations)
-                        log_instant_event(
-                            trace_id=request.state.trace_id,
-                            service="agent-ingress",
-                            route="chat_stream.context_length_fallback",
-                            status="ok",
-                            error=repr(stream_error),
-                            details={"citation_count": len(citations)},
-                        )
-                    elif is_timeout_error(stream_error):
-                        fallback = build_timeout_fallback(citations=citations) if citations else build_blank_answer_fallback(citations=citations)
-                    else:
-                        fallback = build_blank_answer_fallback(citations=citations)
+                    fallback = _resolve_failed_llm_answer(
+                        last_error=stream_error,
+                        citations=citations,
+                        surface=body.surface,
+                        route_decision=route_decision,
+                        trace_id=request.state.trace_id,
+                        retry_route="chat_stream.length_fallback",
+                    )
                     answer_parts.append(fallback)
                     yield _encode({"type": "delta", "delta": fallback})
             answer_text = normalize_finance_closeout_answer(

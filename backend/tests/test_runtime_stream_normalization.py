@@ -19,6 +19,19 @@ def make_gateway_connection() -> ConnectionRecord:
     )
 
 
+def make_responses_gateway_connection() -> ConnectionRecord:
+    return ConnectionRecord(
+        provider="openai",
+        label="RE-JH-LLM05",
+        provider_kind="openai_compatible",
+        auth_strategy="bearer",
+        auth_header_name=None,
+        api_key="test-key",
+        base_url="https://one.rideai.com.au/v1/responses",
+        enabled=True,
+    )
+
+
 def test_stream_answer_normalizes_structured_gateway_deltas(monkeypatch) -> None:
     chunks = [
         SimpleNamespace(
@@ -58,3 +71,39 @@ def test_stream_answer_normalizes_structured_gateway_deltas(monkeypatch) -> None
     )
 
     assert deltas == ['odoo.rpc.search_read\n{"model":"res.company","fields":["id","name"]}']
+
+
+def test_stream_answer_uses_responses_sdk_for_openai_compatible_gateway(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeResponses:
+        @staticmethod
+        def create(**kwargs):
+            captured.update(kwargs)
+            return iter(
+                [
+                    SimpleNamespace(type="response.output_text.delta", delta="Hello "),
+                    SimpleNamespace(type="response.output_text.delta", delta="world"),
+                    SimpleNamespace(type="response.completed", response=SimpleNamespace(id="resp_123")),
+                ]
+            )
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    monkeypatch.setattr(runtime, "_build_openai_compatible_client", lambda _connection: FakeClient())
+
+    deltas = list(
+        runtime.stream_answer(
+            "Say hello",
+            make_responses_gateway_connection(),
+            api_mode="responses",
+            trace_id="trace-test",
+            service="agent-ingress",
+            model_id="RE-JH-LLM05",
+        )
+    )
+
+    assert deltas == ["Hello ", "world"]
+    assert captured["model"] == "re-jh-llm05"
+    assert captured["input"] == "Say hello"

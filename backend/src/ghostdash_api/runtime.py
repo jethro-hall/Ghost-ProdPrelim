@@ -10,9 +10,6 @@ from urllib.parse import urlsplit
 
 import httpx
 from openai import OpenAI as OpenAIClient
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.embeddings.openai.base import OpenAIEmbeddingModelType
-from llama_index.llms.openai import OpenAI as LlamaIndexOpenAI
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -25,8 +22,6 @@ from .token_usage import normalize_provider_usage_dict
 
 settings = get_settings()
 SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT
-OPENAI_EMBEDDING_MODEL_VALUES = frozenset(model.value for model in OpenAIEmbeddingModelType)
-OPENAI_EMBEDDING_VALIDATION_MODEL = OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002.value
 
 
 @dataclass(slots=True)
@@ -69,10 +64,14 @@ def _normalize_provider_model_id(
         if lowered.startswith("model/"):
             model = model.split("/", 1)[1]
         model = model.lstrip("/")
-        # OpenAI-compatible gateways are effectively case-insensitive for model IDs; normalizing
-        # prevents outages from persisted values like `LLAMA31-8B`.
-        if model and model.upper() == model:
+        # Native OpenAI catalogs are lowercase; self-hosted gateways often expose case-sensitive
+        # custom ids (for example `RE-JH-LLM05`) so only normalize native OpenAI providers.
+        if kind == "openai" and model and model.upper() == model:
             model = model.lower()
+    if kind == "anthropic":
+        lowered = model.lower()
+        if lowered.startswith("anthropic/"):
+            model = model.split("/", 1)[1]
     return model
 
 
@@ -111,8 +110,20 @@ def _normalize_openai_compatible_base_url(base_url: str) -> str:
     return normalized
 
 
+def _normalize_rideai_gateway_base_url(base_url: str) -> str:
+    normalized = _normalize_openai_compatible_base_url(base_url)
+    parsed = urlsplit(normalized.rstrip("/"))
+    if (parsed.hostname or "").lower() != "one.rideai.com.au":
+        return normalized
+    path = (parsed.path or "").rstrip("/")
+    if not path:
+        return f"{parsed.scheme}://{parsed.netloc}/v1"
+    return normalized
+
+
 def _provider_base_url(connection: ProviderConnectionConfig) -> str:
-    return _normalize_openai_compatible_base_url(connection.base_url or settings.openai_base_url)
+    raw = connection.base_url or settings.openai_base_url
+    return _normalize_rideai_gateway_base_url(raw)
 
 
 def _provider_default_headers(connection: ProviderConnectionConfig) -> dict[str, str] | None:
@@ -128,7 +139,7 @@ def _provider_default_headers(connection: ProviderConnectionConfig) -> dict[str,
     parsed = urlsplit(base_url)
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/")
-    if hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1"):
+    if hostname == "one.rideai.com.au" and (path.endswith("/api/llamaindex/v1") or path.endswith("/v1")):
         return {"X-Internal-Key": _provider_api_key(connection)}
     return None
 
@@ -257,6 +268,97 @@ def _gemini_generate_content_result(
     return LlmCompletionResult(text=text, openai_response_id=None, usage=usage)
 
 
+ANTHROPIC_API_VERSION = "2023-06-01"
+
+
+def _anthropic_base_url(connection: ProviderConnectionConfig) -> str:
+    raw = connection.base_url or "https://api.anthropic.com/v1"
+    normalized = raw.rstrip("/")
+    if normalized.endswith("/messages"):
+        return normalized[: -len("/messages")]
+    return normalized
+
+
+def _anthropic_auth_headers(connection: ProviderConnectionConfig) -> dict[str, str]:
+    strategy = (connection.auth_strategy or "bearer").strip().lower()
+    api_key = _provider_api_key(connection)
+    if strategy == "custom_header":
+        header_name = (connection.auth_header_name or "").strip() or "x-api-key"
+        return {
+            header_name: api_key,
+            "anthropic-version": ANTHROPIC_API_VERSION,
+            "Content-Type": "application/json",
+        }
+    return {
+        "x-api-key": api_key,
+        "anthropic-version": ANTHROPIC_API_VERSION,
+        "Content-Type": "application/json",
+    }
+
+
+def _extract_anthropic_text(payload: dict[str, Any]) -> str:
+    content = payload.get("content")
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for block in content:
+        if isinstance(block, dict) and block.get("type") == "text":
+            text = block.get("text")
+            if isinstance(text, str) and text.strip():
+                parts.append(text)
+    return "".join(parts).strip()
+
+
+def _extract_anthropic_usage(payload: dict[str, Any]) -> dict[str, int | bool] | None:
+    usage = payload.get("usage")
+    if not isinstance(usage, dict):
+        return None
+    input_tokens = usage.get("input_tokens")
+    output_tokens = usage.get("output_tokens")
+    total_tokens = None
+    if isinstance(input_tokens, int) and isinstance(output_tokens, int):
+        total_tokens = input_tokens + output_tokens
+    return normalize_provider_usage_dict(
+        prompt_tokens=input_tokens,
+        completion_tokens=output_tokens,
+        total_tokens=total_tokens,
+    )
+
+
+def _anthropic_messages_result(
+    connection: ProviderConnectionConfig,
+    *,
+    prompt: str,
+    model_id: str,
+    system_prompt: str = SYSTEM_PROMPT,
+    temperature: float = 0,
+    max_tokens: int | None = None,
+) -> LlmCompletionResult:
+    url = f"{_anthropic_base_url(connection)}/messages"
+    headers = _anthropic_auth_headers(connection)
+    body: dict[str, Any] = {
+        "model": model_id,
+        "max_tokens": max_tokens if max_tokens is not None else 4096,
+        "temperature": temperature,
+        "system": (system_prompt or "").strip() or "You are a helpful assistant.",
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    timeout = float(getattr(settings, "app_llm_request_timeout_seconds", 120.0))
+    with httpx.Client(timeout=timeout) as client:
+        response = client.post(url, headers=headers, json=body)
+        if response.status_code >= 400:
+            raise ValueError(f"Anthropic messages failed ({response.status_code}): {response.text[:4000]}")
+        payload = response.json()
+    text = _extract_anthropic_text(payload)
+    if not text:
+        raise ValueError(f"Anthropic messages returned no text: {payload!r}")
+    return LlmCompletionResult(
+        text=text,
+        openai_response_id=None,
+        usage=_extract_anthropic_usage(payload),
+    )
+
+
 def _extract_openai_chat_usage(response: Any) -> dict[str, int | bool] | None:
     usage = getattr(response, "usage", None)
     if usage is None and isinstance(response, dict):
@@ -291,14 +393,50 @@ def _extract_openai_responses_usage(response: Any) -> dict[str, int | bool] | No
 
 def _uses_rideai_chat_gateway(connection: ProviderConnectionConfig) -> bool:
     base_url = _provider_base_url(connection)
-    return _uses_rideai_llamaindex_base_url(base_url)
+    return _uses_rideai_internal_gateway_base_url(base_url)
+
+
+def _is_openai_native_host(connection: ProviderConnectionConfig) -> bool:
+    host = (urlsplit(_provider_base_url(connection)).hostname or "").lower()
+    return host == "api.openai.com"
+
+
+def _requires_openai_sdk_client(connection: ProviderConnectionConfig) -> bool:
+    """Use the OpenAI SDK directly for gateways with custom model ids."""
+    if _uses_rideai_chat_gateway(connection):
+        return True
+    kind = (connection.provider_kind or "openai").strip().lower()
+    if kind == "openai_compatible":
+        return True
+    return not _is_openai_native_host(connection)
+
+
+def _use_openai_responses_sdk(
+    connection: ProviderConnectionConfig,
+    *,
+    api_mode: str,
+    use_openai_responses_http: bool,
+) -> bool:
+    if use_openai_responses_http:
+        return True
+    if api_mode != "responses":
+        return False
+    if _uses_rideai_chat_gateway(connection):
+        return False
+    kind = (connection.provider_kind or "openai").strip().lower()
+    if kind == "openai_compatible":
+        return False
+    return _is_openai_native_host(connection)
+
+
+def _uses_rideai_internal_gateway_base_url(base_url: str) -> bool:
+    parsed = urlsplit(base_url.rstrip("/"))
+    return (parsed.hostname or "").lower() == "one.rideai.com.au"
 
 
 def _uses_rideai_llamaindex_base_url(base_url: str) -> bool:
-    parsed = urlsplit(base_url.rstrip("/"))
-    hostname = (parsed.hostname or "").lower()
-    path = parsed.path.rstrip("/")
-    return hostname == "one.rideai.com.au" and path.endswith("/api/llamaindex/v1")
+    """Backward-compatible alias for the RideAI internal OpenAI-compatible gateway."""
+    return _uses_rideai_internal_gateway_base_url(base_url)
 
 
 def should_use_openai_responses_chain(connection: ConnectionRecord, api_mode: str) -> bool:
@@ -344,50 +482,16 @@ def _embedding_provider_api_key(connection: ProviderConnectionConfig) -> str:
     return _provider_api_key(connection)
 
 
-def _embedding_base_uses_custom_endpoint(base_url: str) -> bool:
-    return (urlsplit(base_url).hostname or "").lower() != "api.openai.com"
-
-
-def _should_use_custom_embedding_model_name(connection: ProviderConnectionConfig, model: str) -> bool:
-    return (
-        model not in OPENAI_EMBEDDING_MODEL_VALUES
-        and _embedding_base_uses_custom_endpoint(_embedding_provider_base_url(connection))
-    )
-
-
-def _get_llm(connection: ProviderConnectionConfig, *, model_id: str | None = None) -> LlamaIndexOpenAI:
-    return _build_llm(
-        connection,
-        model_id=model_id,
-        temperature=0,
-        max_tokens=None,
-        system_prompt=SYSTEM_PROMPT,
-    )
-
-
-def _build_llm(
-    connection: ProviderConnectionConfig,
-    *,
-    model_id: str | None,
-    temperature: float,
-    max_tokens: int | None,
-    system_prompt: str,
-) -> LlamaIndexOpenAI:
-    model = _normalize_provider_model_id(
-        connection.provider,
-        model_id,
-        settings.app_default_chat_model,
-        provider_kind=connection.provider_kind,
-    )
-    return LlamaIndexOpenAI(
-        model=model,
-        api_key=_provider_api_key(connection),
-        api_base=_provider_base_url(connection),
-        default_headers=_provider_default_headers(connection),
-        temperature=temperature,
-        max_tokens=max_tokens,
-        system_prompt=system_prompt,
-        timeout=float(getattr(settings, "app_llm_request_timeout_seconds", 300.0) or 300.0),
+def _build_embedding_client(connection: ProviderConnectionConfig) -> OpenAIClient:
+    emb_base = _embedding_provider_base_url(connection)
+    default_headers = None
+    if _uses_rideai_internal_gateway_base_url(emb_base):
+        default_headers = _provider_default_headers(connection)
+    return OpenAIClient(
+        api_key=_embedding_provider_api_key(connection),
+        base_url=emb_base,
+        default_headers=default_headers,
+        timeout=settings.app_llm_request_timeout_seconds,
     )
 
 
@@ -444,6 +548,38 @@ def _openai_stream_chat_completions_deltas(
             yield delta
 
 
+def _openai_chat_completions_result(
+    client: OpenAIClient,
+    *,
+    resolved_model: str,
+    system_prompt: str,
+    prompt: str,
+    temperature: float,
+    max_tokens: int | None,
+) -> LlmCompletionResult:
+    kwargs: dict[str, Any] = {
+        "model": resolved_model,
+        "messages": [
+            {"role": "system", "content": system_prompt or "You are a helpful assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": temperature,
+        "stream": False,
+    }
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    response = client.chat.completions.create(**kwargs)
+    if isinstance(response, str):
+        content = response
+    else:
+        content = response.choices[0].message.content if response.choices else ""
+    return LlmCompletionResult(
+        text=_coerce_content_fragment_to_text(content).strip(),
+        openai_response_id=None,
+        usage=_extract_openai_chat_usage(response),
+    )
+
+
 def _coerce_content_fragment_to_text(fragment: Any) -> str:
     if fragment is None:
         return ""
@@ -464,33 +600,6 @@ def _coerce_content_fragment_to_text(fragment: Any) -> str:
     return ""
 
 
-def _get_embed_model(connection: ProviderConnectionConfig, *, embedding_model: str | None = None) -> OpenAIEmbedding:
-    model = _normalize_provider_model_id(
-        connection.provider,
-        embedding_model,
-        settings.app_default_embedding_model,
-        provider_kind=connection.provider_kind,
-    )
-    embed_kwargs = {
-        "api_key": _embedding_provider_api_key(connection),
-        "api_base": _embedding_provider_base_url(connection),
-        "embed_batch_size": max(1, settings.app_embedding_batch_size),
-    }
-    if _should_use_custom_embedding_model_name(connection, model):
-        # LlamaIndex validates `model` against OpenAI enums before making the request,
-        # so custom TEI-served models need to be passed via `model_name` instead.
-        embed_kwargs["model"] = OPENAI_EMBEDDING_VALIDATION_MODEL
-        embed_kwargs["model_name"] = model
-    else:
-        embed_kwargs["model"] = model
-    emb_base = _embedding_provider_base_url(connection)
-    if _uses_rideai_llamaindex_base_url(emb_base):
-        headers = _provider_default_headers(connection)
-        if headers:
-            embed_kwargs["default_headers"] = headers
-    return OpenAIEmbedding(**embed_kwargs)
-
-
 def _iter_embedding_text_batches(texts: list[str]) -> Iterator[list[str]]:
     batch_size = max(1, settings.app_embedding_batch_size)
     for start in range(0, len(texts), batch_size):
@@ -498,16 +607,26 @@ def _iter_embedding_text_batches(texts: list[str]) -> Iterator[list[str]]:
 
 
 def _request_embeddings_in_batches(
-    embed_model: OpenAIEmbedding,
+    connection: ProviderConnectionConfig,
     texts: list[str],
     *,
+    embedding_model: str | None = None,
     trace_id: str | None = None,
     service: str = "workflow-runtime",
 ) -> list[list[float]]:
+    client = _build_embedding_client(connection)
+    model = _normalize_provider_model_id(
+        connection.provider,
+        embedding_model,
+        settings.app_default_embedding_model,
+        provider_kind=connection.provider_kind,
+    )
     vectors: list[list[float]] = []
     for batch in _iter_embedding_text_batches(texts):
         def _run(current_batch: list[str] = batch) -> list[list[float]]:
-            return embed_model.get_text_embedding_batch(current_batch)
+            response = client.embeddings.create(model=model, input=current_batch)
+            by_index = {item.index: item.embedding for item in response.data}
+            return [by_index[index] for index in range(len(current_batch))]
 
         batch_vectors = (
             wrap_outbound_call(trace_id=trace_id, service=service, route="openai.embeddings", fn=_run)
@@ -748,8 +867,13 @@ def embed_texts(
         return []
     provider_connection = _merge_provider_connection(connection)
     if not settings.app_embedding_cache_enabled:
-        embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
-        return _request_embeddings_in_batches(embed_model, text_batch, trace_id=trace_id, service=service)
+        return _request_embeddings_in_batches(
+            provider_connection,
+            text_batch,
+            embedding_model=embedding_model,
+            trace_id=trace_id,
+            service=service,
+        )
 
     cached_vectors, namespace, stale_count = _load_cached_embeddings(
         provider_connection,
@@ -784,10 +908,10 @@ def embed_texts(
 
     missing_vectors_by_hash: dict[str, list[float]] = {}
     if unique_missing_texts:
-        embed_model = _get_embed_model(provider_connection, embedding_model=embedding_model)
         new_vectors = _request_embeddings_in_batches(
-            embed_model,
+            provider_connection,
             unique_missing_texts,
+            embedding_model=embedding_model,
             trace_id=trace_id,
             service=service,
         )
@@ -838,7 +962,23 @@ def generate_answer(
     )
 
     base_url = _provider_base_url(provider_connection)
-    if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
+    provider_kind = (provider_connection.provider_kind or "").strip().lower()
+    if provider_kind == "anthropic":
+
+        def _run_anthropic() -> LlmCompletionResult:
+            return _anthropic_messages_result(
+                provider_connection,
+                prompt=prompt,
+                model_id=resolved_model,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+        if trace_id:
+            return wrap_outbound_call(trace_id=trace_id, service=service, route="anthropic.messages", fn=_run_anthropic)
+        return _run_anthropic()
+    if provider_kind == "google_gemini" and _is_gemini_native_base_url(base_url):
 
         def _run() -> LlmCompletionResult:
             return _gemini_generate_content_result(provider_connection, prompt=prompt, model_id=resolved_model)
@@ -847,30 +987,11 @@ def generate_answer(
             return wrap_outbound_call(trace_id=trace_id, service=service, route="gemini.generateContent", fn=_run)
         return _run()
 
-    if _uses_rideai_chat_gateway(provider_connection):
-        client = _build_openai_compatible_client(provider_connection)
-
-        def _run() -> LlmCompletionResult:
-            kwargs: dict[str, Any] = {
-                "model": resolved_model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": temperature,
-                "stream": False,
-            }
-            if max_tokens is not None:
-                kwargs["max_tokens"] = max_tokens
-            response = client.chat.completions.create(**kwargs)
-            content = response.choices[0].message.content if response.choices else ""
-            return LlmCompletionResult(
-                text=_coerce_content_fragment_to_text(content).strip(),
-                openai_response_id=None,
-                usage=_extract_openai_chat_usage(response),
-            )
-
-    elif use_openai_responses_http:
+    if _use_openai_responses_sdk(
+        provider_connection,
+        api_mode=api_mode,
+        use_openai_responses_http=use_openai_responses_http,
+    ):
         client = _build_openai_compatible_client(provider_connection)
 
         def _run() -> LlmCompletionResult:
@@ -921,19 +1042,17 @@ def generate_answer(
                 return _non_stream_chat_fallback()
 
     else:
-        llm = _build_llm(
-            provider_connection,
-            model_id=model_id,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_prompt=system_prompt,
-        )
+        client = _build_openai_compatible_client(provider_connection)
 
         def _run() -> LlmCompletionResult:
-            response = llm.complete(prompt)
-            out = getattr(response, "text", str(response)).strip()
-            usage = _extract_openai_chat_usage(response)
-            return LlmCompletionResult(text=out, openai_response_id=None, usage=usage)
+            return _openai_chat_completions_result(
+                client,
+                resolved_model=resolved_model,
+                system_prompt=system_prompt,
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
 
     route = f"openai.{api_mode}"
     if trace_id:
@@ -970,7 +1089,25 @@ def stream_answer(
     status: str = "ok"
     try:
         base_url = _provider_base_url(provider_connection)
-        if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base_url):
+        provider_kind = (provider_connection.provider_kind or "").strip().lower()
+        if provider_kind == "anthropic":
+            result = _anthropic_messages_result(
+                provider_connection,
+                prompt=prompt,
+                model_id=resolved_model,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            if usage_out is not None and len(usage_out) > 0:
+                usage_out[0] = result.usage
+            text = result.text.strip()
+            if text:
+                chunk_size = 240
+                for i in range(0, len(text), chunk_size):
+                    yield text[i : i + chunk_size]
+            return
+        if provider_kind == "google_gemini" and _is_gemini_native_base_url(base_url):
             # Native Gemini does not currently support token-delta streaming through this path.
             # We still stream by yielding the completed answer once (or in a few chunks).
             result = _gemini_generate_content_result(provider_connection, prompt=prompt, model_id=resolved_model)
@@ -983,19 +1120,11 @@ def stream_answer(
                     yield text[i : i + chunk_size]
             return
 
-        if _uses_rideai_chat_gateway(provider_connection):
-            client = _build_openai_compatible_client(provider_connection)
-            s = (system_prompt or "").strip() or "You are a helpful assistant."
-            yield from _openai_stream_chat_completions_deltas(
-                client,
-                resolved_model=resolved_model,
-                system_prompt=s,
-                prompt=prompt,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                usage_out=usage_out,
-            )
-        elif use_openai_responses_http:
+        if _use_openai_responses_sdk(
+            provider_connection,
+            api_mode=api_mode,
+            use_openai_responses_http=use_openai_responses_http,
+        ):
             client = _build_openai_compatible_client(provider_connection)
             instr = (system_prompt or "").strip() or "You are a helpful assistant."
             try:
@@ -1039,19 +1168,17 @@ def stream_answer(
                     usage_out=usage_out,
                 )
         else:
-            llm = _build_llm(
-                provider_connection,
-                model_id=model_id,
+            client = _build_openai_compatible_client(provider_connection)
+            s = (system_prompt or "").strip() or "You are a helpful assistant."
+            yield from _openai_stream_chat_completions_deltas(
+                client,
+                resolved_model=resolved_model,
+                system_prompt=s,
+                prompt=prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                system_prompt=system_prompt,
+                usage_out=usage_out,
             )
-            for chunk in llm.stream_complete(prompt):
-                delta = _coerce_content_fragment_to_text(
-                    getattr(chunk, "delta", None) or getattr(chunk, "text", None) or chunk
-                )
-                if delta:
-                    yield delta
     except Exception as exc:
         error = repr(exc)
         status = "error"
@@ -1134,7 +1261,23 @@ def test_provider_connection(
 
     def _run() -> dict[str, str]:
         base = _provider_base_url(provider_connection)
-        if (provider_connection.provider_kind or "").strip().lower() == "google_gemini" and _is_gemini_native_base_url(base):
+        provider_kind = (provider_connection.provider_kind or "").strip().lower()
+        if provider_kind == "anthropic":
+            output = _anthropic_messages_result(
+                provider_connection,
+                prompt=prompt,
+                model_id=resolved_model,
+                system_prompt="You are a helpful assistant.",
+                temperature=0,
+                max_tokens=256,
+            ).text
+            return {
+                "api_mode": api_mode,
+                "model": resolved_model,
+                "base_url": _anthropic_base_url(provider_connection),
+                "output": output.strip(),
+            }
+        if provider_kind == "google_gemini" and _is_gemini_native_base_url(base):
             output = _gemini_generate_content(provider_connection, prompt=prompt, model_id=resolved_model)
             return {
                 "api_mode": api_mode,
@@ -1142,7 +1285,21 @@ def test_provider_connection(
                 "base_url": base,
                 "output": output.strip(),
             }
-        if _uses_rideai_chat_gateway(provider_connection):
+        if _use_openai_responses_sdk(
+            provider_connection,
+            api_mode=api_mode,
+            use_openai_responses_http=False,
+        ):
+            client = _build_openai_compatible_client(provider_connection)
+            response = client.responses.create(
+                model=resolved_model,
+                instructions="You are a helpful assistant.",
+                input=prompt,
+                temperature=0,
+                stream=False,
+            )
+            output = (getattr(response, "output_text", None) or "").strip()
+        else:
             client = _build_openai_compatible_client(provider_connection)
             response = client.chat.completions.create(
                 model=resolved_model,
@@ -1150,11 +1307,10 @@ def test_provider_connection(
                 temperature=0,
                 stream=False,
             )
-            output = (response.choices[0].message.content if response.choices else "") or ""
-        else:
-            llm = _get_llm(provider_connection, model_id=model_id)
-            response = llm.complete(prompt)
-            output = getattr(response, "text", str(response)).strip()
+            if isinstance(response, str):
+                output = response.strip()
+            else:
+                output = (response.choices[0].message.content if response.choices else "") or ""
         return {
             "api_mode": api_mode,
             "model": resolved_model,

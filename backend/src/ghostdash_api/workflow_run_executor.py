@@ -38,6 +38,7 @@ async def default_consult_runner(
     conversation_mode: str,
     workflow_mode: str,
     use_approved_web: bool,
+    tool_overrides: dict[str, bool] | None = None,
 ) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(
@@ -50,6 +51,7 @@ async def default_consult_runner(
                 "conversation_mode": conversation_mode,
                 "workflow_mode": workflow_mode,
                 "use_approved_web": use_approved_web,
+                "tool_overrides": dict(tool_overrides or {}),
             },
         )
         response.raise_for_status()
@@ -160,6 +162,7 @@ async def execute_workflow_run(
             conversation_mode = str(request_config.get("conversation_mode") or "quick")
             workflow_mode = str(request_config.get("workflow_mode") or "standard")
             use_approved_web = bool(request_config.get("use_approved_web"))
+            tool_overrides = dict(request_config.get("tool_overrides") or {})
             workflow_name = str(workflow_config.get("name") or run.workflow_id)
 
         for step in steps:
@@ -220,6 +223,7 @@ async def execute_workflow_run(
                     conversation_mode=conversation_mode,
                     workflow_mode=workflow_mode,
                     use_approved_web=use_approved_web,
+                    tool_overrides=tool_overrides,
                 )
                 with session_factory() as session:
                     update_workflow_step_run(

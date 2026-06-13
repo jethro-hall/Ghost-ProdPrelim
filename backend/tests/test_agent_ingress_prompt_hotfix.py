@@ -1570,3 +1570,90 @@ def test_agent_chat_working_session_avoids_continue_directive(monkeypatch) -> No
     assert captured_prompts
     assert "working session mode" in captured_prompts[0]
     assert "Say CONTINUE" not in captured_prompts[0]
+
+
+def test_resolve_kb_enabled_respects_tool_override_and_casual_greeting() -> None:
+    kb_tool = {"enabled": True}
+
+    assert agent_ingress._resolve_kb_enabled(
+        kb_tool=kb_tool,
+        tool_overrides={"kb": False},
+        conversation_mode="quick",
+        message="hello",
+        corpora=["default"],
+    ) is False
+
+    assert agent_ingress._resolve_kb_enabled(
+        kb_tool=kb_tool,
+        tool_overrides={"kb": True},
+        conversation_mode="quick",
+        message="hello",
+        corpora=["default"],
+    ) is False
+
+    assert agent_ingress._resolve_kb_enabled(
+        kb_tool=kb_tool,
+        tool_overrides={"kb": True},
+        conversation_mode="quick",
+        message="What does jobs booked in detail.xlsx show for March?",
+        corpora=["default"],
+    ) is True
+
+    assert agent_ingress._resolve_kb_enabled(
+        kb_tool=kb_tool,
+        tool_overrides={"kb": True},
+        conversation_mode="quick",
+        message="What were total sales last month?",
+        corpora=[],
+    ) is False
+
+
+def test_casual_direct_reply_bypasses_llm_for_hey() -> None:
+    assert agent_ingress._should_use_casual_direct_reply(
+        message="Hey",
+        workflow_mode="standard",
+        kb_enabled=False,
+        tool_overrides={"kb": False, "odoo_primary": False},
+        use_approved_web=False,
+        docx_enabled=False,
+    )
+
+
+def test_build_blank_answer_fallback_is_user_facing() -> None:
+    assert agent_ingress.build_blank_answer_fallback(citations=[]) == "I couldn't generate a reply. Please try again."
+    assert "What we know" not in agent_ingress.build_blank_answer_fallback(citations=[{"filename": "a.xlsx"}])
+
+
+def test_should_emit_multi_agent_handoff_trace_requires_inline_workers_opt_in() -> None:
+    route_decision = {"route_type": "workers"}
+    tool_plan = {"mode": "required", "operation": "odoo.finance.summary"}
+
+    assert agent_ingress._should_emit_multi_agent_handoff_trace(
+        workflow_mode="standard",
+        route_decision=route_decision,
+        tool_plan=tool_plan,
+        tool_overrides=None,
+    ) is False
+
+    assert agent_ingress._should_emit_multi_agent_handoff_trace(
+        workflow_mode="standard",
+        route_decision=route_decision,
+        tool_plan=tool_plan,
+        tool_overrides={"inline_workers": True},
+    ) is True
+
+
+def test_apply_tool_session_overrides_to_plan_clears_odoo_tool_plan() -> None:
+    plan = {
+        "tool_plan": {"tool_id": "odoo_primary", "mode": "primary", "reason": "finance_query"},
+        "citations": [{"source": "jobs booked in detail.xlsx"}],
+    }
+
+    updated = agent_ingress._apply_tool_session_overrides_to_plan(
+        plan,
+        tool_overrides={"odoo_primary": False},
+    )
+
+    assert updated["tool_plan"]["mode"] == "none"
+    assert updated["tool_plan"]["reason"] == "tools_disabled_for_session"
+    assert updated["citations"] == plan["citations"]

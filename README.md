@@ -86,7 +86,7 @@ Files can be routed to either:
 
 ## EOFY Forensic Audit — Ride Electric Brisbane
 
-All audit tooling lives under `scripts/n8n-odoo-brisbane-eofy-audit/`. This system extracts Odoo financial data for FY 2024-07-01 to 2025-06-30 (company_id = 4, Brisbane only), sanitises it for AI use, and exposes it through an MCP server so Opus can run an independent forensic audit without raw PII access.
+All audit tooling lives under `scripts/n8n-odoo-brisbane-eofy-audit/`. This system extracts Odoo financial data for a **human-selected FY period** (default FY24/25: `2024-07-01` → `2025-06-30`; FY23/24: `2023-07-01` → `2024-06-30`) for company_id = 4 (Brisbane only), sanitises it for AI use, and exposes it through an MCP server so Opus can run an independent forensic audit without raw PII access.
 
 The complete operating guide for Opus is at:
 `scripts/n8n-odoo-brisbane-eofy-audit/docs/OPUS-MCP-USAGE-GUIDE.md`
@@ -107,19 +107,25 @@ scripts/n8n-odoo-brisbane-eofy-audit/
   lib/
     02_pos_retail_exporter.js     ← Stage 02 POS extractor script
     03_sanitise_profile.js        ← Stage 03 PII sanitisation + profiling script
-    04_claude_prepare.js          ← Stage 04 audit payload builder
-    04_claude_call_api.js         ← Stage 04 Anthropic API caller
-    04_claude_save_report.js      ← Stage 04 report writer
+    04_claude_prepare.js          ← Stage 04 audit payload builder (legacy Anthropic path)
+    04_github_push.js             ← Stage 04 GitHub push + audit_payload.json builder
+    04_claude_call_api.js         ← Stage 04 Anthropic API caller (legacy)
+    04_claude_save_report.js      ← Stage 04 report writer (legacy)
     05_master_data_exporter.js    ← Stage 05 master data + stock + audit trail extractor
+    n8n_validate_period_gate.code.js   ← Orchestrator period validation + preview
+    n8n_build_snapshot_context.code.js ← Orchestrator snapshot_id + snapshot_run_context.json
     mcp_server.js                 ← EOFY MCP Forensic Audit v3 server (n8n Code node body)
     odoo-rpc.js                   ← Odoo JSON-RPC utility
     sanitise-core.js              ← PII sanitisation logic
     profile-core.js               ← JSONL profiling and readiness summary
   workflows/
+    00-brisbane-eofy-orchestrator.workflow.json       ← Main orchestrator (period gate + stages 01→05→04)
     02-brisbane-eofy-pos-retail.workflow.json         ← Stage 02 POS subworkflow
     03-brisbane-eofy-sanitise-profile-sub.workflow.json ← Stage 03 sanitise subworkflow
-    04-brisbane-eofy-claude-audit-sub.workflow.json   ← Stage 04 Claude audit subworkflow
+    04-brisbane-eofy-claude-audit-sub.workflow.json   ← Stage 04 GitHub push subworkflow
     05-brisbane-eofy-master-data-sub.workflow.json    ← Stage 05 master data subworkflow
+  deploy_orchestrator_period_gate.py  ← Deploy period gate + snapshot context to n8n DB
+  deploy_mcp_workflow.py              ← Deploy MCP server to n8n DB + webhook
   docs/
     OPUS-MCP-USAGE-GUIDE.md       ← Complete Opus operating guide (read before any audit session)
     fix-execute-command-expression.md
@@ -137,7 +143,72 @@ scripts/n8n-odoo-brisbane-eofy-audit/
 | 04 | Claude Audit | Prepares audit payload, calls Anthropic API, saves anomaly report | `{snapshot}/04_claude_audit/manifests/` |
 | 05 | Master Data + Context | res.partner/users/company/currency, product.*, uom.uom, stock.*, sale/purchase orders, account.tax.repartition.line, fiscal.position, payment.term, mail.message, mail.tracking.value, ir.attachment metadata, IR tables (guarded) | `{snapshot}/05_master_data/raw/` |
 
-Run stages in order: 01 → 02 → 03 → 04. Stage 05 can run in parallel with 04. Re-run Stage 03 with `export_stages: ["05_master_data"]` after Stage 05 completes.
+Run stages in order via the orchestrator: **01 → 02 → 03 → 05 → 04** (Stage 05 before GitHub push so master data is included). Re-run Stage 03 with `export_stages: ["05_master_data"]` after Stage 05 completes if you ran stages manually.
+
+Each snapshot writes **`snapshot_run_context.json`** at `{snapshot_id}/snapshot_run_context.json` — the single source of truth for `date_start`, `date_end`, and `period_label`. MCP and GitHub push read this file first, then fall back to stage pack `period` metadata, then legacy FY24/25 defaults.
+
+---
+
+### Running the orchestrator (period gate)
+
+Workflow: **`00_START_HERE_SINGLE_LEDGER_CLEAN`** in n8n (`https://workflow.rideai.com.au`).
+
+Flow:
+
+```
+Manual Trigger → Core Run Config → Select Audit Period → Validate And Preview Period
+  → Confirm Period — Wait → Build Snapshot Context → 01 → 02 → 03 → 05 → 04 → 06 → Return
+```
+
+**GitHub publication split:**
+
+| Repo path | Contents | Stage |
+|-----------|----------|-------|
+| `snapshots/{snapshot_id}/` | Metrics, manifests, `audit_payload.json` (orientation only — no raw rows) | 04 |
+| `raw_data/{snapshot_id}/` | Byte-for-byte Odoo JSONL (`.jsonl.gz`), README, metadata | 06 |
+
+**Deploy from repo (after editing lib or workflow JSON):**
+
+```bash
+python3 scripts/n8n-odoo-brisbane-eofy-audit/deploy_orchestrator_period_gate.py
+python3 scripts/n8n-odoo-brisbane-eofy-audit/deploy_stage_06_raw_push.py
+python3 scripts/n8n-odoo-brisbane-eofy-audit/deploy_mcp_workflow.py
+docker cp scripts/n8n-odoo-brisbane-eofy-audit/lib/04_github_push.js \
+  ghoststack-rag-n8n-1:/home/node/.n8n/scripts/04_github_push.js
+docker cp scripts/n8n-odoo-brisbane-eofy-audit/lib/06_raw_github_push.js \
+  ghoststack-rag-n8n-1:/home/node/.n8n/scripts/06_raw_github_push.js
+```
+
+**Manual raw backfill (if Stage 06 was skipped):**
+
+```bash
+# From host (requires gh auth + sudo for docker volume access)
+sudo /var/llamaindex/ghoststack-rag/scripts/n8n-odoo-brisbane-eofy-audit/upload_raw_to_github.sh <snapshot_id>
+
+# Or from n8n container (uses GITHUB_PAT)
+docker exec ghoststack-rag-n8n-1 sh -c \
+  'echo "{\"snapshot_id\":\"<snapshot_id>\",\"output_root\":\"/home/node/.n8n/odoo_forensic_exports\"}" > /tmp/odoo_06_raw_push_input.json && node /home/node/.n8n/scripts/06_raw_github_push.js'
+```
+
+**Operator steps (FY24/25 — defaults):**
+
+1. Open `00_START_HERE_SINGLE_LEDGER_CLEAN`.
+2. Leave **`Select Audit Period`** at defaults: `date_start=2024-07-01`, `date_end=2025-06-30`.
+3. Click **Execute workflow**.
+4. Review **`Validate And Preview Period`** output (`period_preview.planned_snapshot_id` → `eofy_2025_brisbane_*`).
+5. Click **Resume** on **`Confirm Period — Wait`** (no Odoo extraction until Resume).
+6. Pass the resulting **`snapshot_id`** explicitly to all MCP calls.
+
+**Operator steps (FY23/24):**
+
+1. Edit **`Select Audit Period`**:
+   - `date_start`: `2023-07-01`
+   - `date_end`: `2024-06-30`
+   - `period_label`: `FY23/24` (optional)
+2. Execute → review preview (`eofy_2024_brisbane_*`) → **Resume**.
+3. Use that **`snapshot_id`** in MCP and GitHub — do **not** rely on `latestSnapshot()` when both FY snapshots exist.
+
+**Invalid dates fail closed** at **`Validate And Preview Period`** (before the Wait gate): both dates required, ISO `YYYY-MM-DD`, `date_start < date_end`.
 
 ---
 
@@ -146,12 +217,12 @@ Run stages in order: 01 → 02 → 03 → 04. Stage 05 can run in parallel with 
 The current audit-ready snapshot is:
 
 ```
-eofy_2025_brisbane_2026-06-09T23-11-45-949Z
+eofy_2025_brisbane_2026-06-10T03-15-11-977Z
 ```
 
 Located inside the n8n container at:
 ```
-/home/node/.n8n/odoo_forensic_exports/eofy_2025_brisbane_2026-06-09T23-11-45-949Z/
+/home/node/.n8n/odoo_forensic_exports/eofy_2025_brisbane_2026-06-10T03-15-11-977Z/
 ```
 
 Always pass `snapshot_id` explicitly to all MCP tool calls. Do not rely on auto-detection — 11 older partial snapshots exist in the same root.

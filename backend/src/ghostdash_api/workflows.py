@@ -1326,6 +1326,66 @@ def needs_document_inventory_context(message: str) -> bool:
     return "do you have any" in lowered and "document" in lowered
 
 
+def message_explicitly_requests_knowledge(message: str) -> bool:
+    lowered = str(message or "").strip().casefold()
+    if not lowered:
+        return False
+    explicit_phrases = (
+        "search the knowledge",
+        "search knowledge",
+        "search the documents",
+        "search documents",
+        "look in the document",
+        "look in the file",
+        "look in the knowledge",
+        "from the document",
+        "from the file",
+        "in the knowledge base",
+        "knowledge base",
+        "indexed document",
+        "retrieved document",
+        "what does the file",
+        "what do the files",
+        "according to the document",
+        "according to the file",
+        "cite the document",
+        "use the document",
+        "use the knowledge",
+        "check the spreadsheet",
+        "check the workbook",
+        "in jobs booked",
+    )
+    if any(phrase in lowered for phrase in explicit_phrases):
+        return True
+    return bool(re.search(r"\b[\w\- ]+\.(xlsx|xls|csv|pdf|docx?|pptx?|txt)\b", lowered))
+
+
+def message_has_structured_retrieval_signals(message: str) -> bool:
+    mode = classify_query_mode(message)
+    if mode not in {"structured", "blended"}:
+        return False
+    lowered = message.lower()
+    structured_tokens = ["sku", "price", "amount", "total", "status", "customer", "invoice", "row", "sheet"]
+    return any(re.search(rf"\b{re.escape(token)}\b", lowered) for token in structured_tokens)
+
+
+def should_run_knowledge_retrieval(
+    *,
+    message: str,
+    kb_session_enabled: bool,
+    corpora: list[str],
+) -> bool:
+    if not kb_session_enabled or not corpora:
+        return False
+    if needs_document_inventory_context(message):
+        return True
+    if message_explicitly_requests_knowledge(message):
+        return True
+    if message_has_structured_retrieval_signals(message):
+        return True
+    return False
+
+
 def is_document_inventory_listing_question(message: str) -> bool:
     lowered = message.lower()
     listing_phrases = (
@@ -3507,7 +3567,7 @@ def build_query_plan(
                 + "\n".join(document_scoped_context)
             )
         if not all_context:
-            if suppress_retrieval and str(tool_plan.get("mode") or "") == "required":
+            if suppress_retrieval or not kb_enabled:
                 prompt = f"User question: {user_message}"
             else:
                 prompt = (

@@ -18,7 +18,7 @@ WorkflowMode = Literal[
     "odoo_operations",
     "bp_mode",
 ]
-QueryMode = Literal["semantic", "structured", "blended"]
+QueryMode = Literal["semantic", "structured", "blended", "direct"]
 RouteType = Literal["direct", "workers", "suggest_specialist"]
 RequestedParseLane = Literal["default", "local", "cloud"]
 ParseLanePolicy = Literal["local_default", "cloud_default", "auto"]
@@ -153,6 +153,7 @@ class CapabilityStatus(BaseModel):
 class RuntimeCapabilities(BaseModel):
     parser_lanes: dict[str, CapabilityStatus]
     chat_api_modes: dict[str, CapabilityStatus]
+    llm_providers: dict[str, CapabilityStatus] = Field(default_factory=dict)
     streaming: CapabilityStatus
     vector_store: str
     model_runtime: str
@@ -596,7 +597,7 @@ class RuntimeProfileLlmConfig(BaseModel):
 
 class RuntimeProfileGuardrailsConfig(BaseModel):
     system_prompt: str = Field(min_length=1)
-    grounding_mode: Literal["retrieved_only"] = "retrieved_only"
+    grounding_mode: Literal["retrieved_only", "general"] = "retrieved_only"
     insufficient_context_behavior: str = Field(min_length=1)
     conversation_mode: ConversationMode = "quick"
     policy_mode: Literal["locked", "admin_approval_required", "open"] = "admin_approval_required"
@@ -1083,6 +1084,7 @@ class WorkflowRunCreatePayload(BaseModel):
     workflow_mode: WorkflowMode = "standard"
     use_approved_web: bool = False
     head_agent_id: str | None = None
+    tool_overrides: dict[str, bool] = Field(default_factory=dict)
 
 
 class WorkflowHeadAgentPayload(BaseModel):
@@ -1358,6 +1360,8 @@ class RouteDecision(BaseModel):
     recommended_workers: list[dict] = Field(default_factory=list)
     suggested_specialist_template: dict | None = None
     llm_execution: list[LlmExecutionStep] = Field(default_factory=list)
+    generation_path: str | None = None
+    backend_trace: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
