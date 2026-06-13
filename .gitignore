@@ -13,3 +13,6 @@ dist/
 data/
 *.pem
 .DS_Store
+
+# Runtime symlink directory created by n8n audit pipeline
+odoo_forensic_exports/
