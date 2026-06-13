@@ -114,6 +114,13 @@ class Settings(BaseSettings):
     hubtiger_elevenlabs_tool_dir: str | None = None
     app_operator_admin_key: str | None = None
 
+    # Amazon Bedrock credentials — used when provider_kind = "amazon_bedrock".
+    # Set via env vars AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_DEFAULT_REGION.
+    # If a connection record has its own credentials they take precedence over these globals.
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+    aws_default_region: str = "us-east-1"
+
     @property
     def db_path(self) -> Path:
         prefix = 'sqlite:///'

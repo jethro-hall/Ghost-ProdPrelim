@@ -36,6 +36,7 @@ const KIND_DEFAULTS: Record<ProviderKind, string> = {
   anthropic: "anthropic/claude-3-5-sonnet-20241022",
   google_gemini: "google/gemini-2.0-flash",
   openai_compatible: "openai/llama31-8b",
+  amazon_bedrock: "us.anthropic.claude-sonnet-4-5-20251101-v1:0",
 };
 
 export function defaultModelIdForProviderKind(kind: ProviderKind, runtimeDefault?: string | null): string {
@@ -107,6 +108,14 @@ export const PRESET_MODEL_IDS_BY_KIND: Record<ProviderKind, readonly string[]> =
     "openai/llama31-8b",
     "gpt-4o-mini",
     "gpt-4o",
+  ],
+  amazon_bedrock: [
+    "us.anthropic.claude-sonnet-4-5-20251101-v1:0",
+    "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+    "us.anthropic.claude-3-opus-20240229-v1:0",
+    "us.amazon.nova-pro-v1:0",
+    "us.amazon.nova-lite-v1:0",
+    "us.meta.llama3-3-70b-instruct-v1:0",
   ],
 };
 

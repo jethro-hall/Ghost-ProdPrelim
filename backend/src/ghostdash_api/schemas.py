@@ -23,7 +23,7 @@ RouteType = Literal["direct", "workers", "suggest_specialist"]
 RequestedParseLane = Literal["default", "local", "cloud"]
 ParseLanePolicy = Literal["local_default", "cloud_default", "auto"]
 ChatUploadPersistenceMode = Literal["conversation_only", "save_to_knowledge"]
-ProviderKind = Literal["openai", "anthropic", "google_gemini", "openai_compatible"]
+ProviderKind = Literal["openai", "anthropic", "google_gemini", "openai_compatible", "amazon_bedrock"]
 ConnectionAuthStrategy = Literal["bearer", "x_api_key", "x_goog_api_key", "custom_header"]
 WorkflowExecutionMode = Literal["sequential"]
 WorkflowRunStatus = Literal["queued", "running", "completed", "completed_with_errors", "failed", "aborted"]
@@ -76,6 +76,7 @@ class ConnectionPayload(BaseModel):
     base_url: str | None = None
     enabled: bool = True
     default_model_id: str | None = None
+    aws_region: str | None = None
 
 
 class ConnectionTestPayload(BaseModel):
@@ -89,6 +90,7 @@ class ConnectionTestPayload(BaseModel):
     api_mode: ChatApiMode = "responses"
     model_id: str | None = None
     prompt: str = "Reply with a short OK message that names the API mode used."
+    aws_region: str | None = None
 
 
 class ConnectionView(BaseModel):
@@ -103,6 +105,7 @@ class ConnectionView(BaseModel):
     default_model_id: str | None
     api_key_hint: str | None
     has_api_key: bool
+    aws_region: str | None = None
 
 
 class ConnectionDeletionPreviewImpactView(BaseModel):

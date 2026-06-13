@@ -261,6 +261,9 @@ services:
       APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/llama31-8b}
       APP_DEFAULT_EMBEDDING_MODEL: ${APP_DEFAULT_EMBEDDING_MODEL:-openai/intfloat/multilingual-e5-large-instruct}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     volumes:
       - app_data:/data
     expose:
@@ -303,6 +306,9 @@ services:
       APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/llama31-8b}
       APP_DEFAULT_EMBEDDING_MODEL: ${APP_DEFAULT_EMBEDDING_MODEL:-openai/intfloat/multilingual-e5-large-instruct}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
       SHOPIFY_MCP_URL: http://shopify-mcp:8097
       HUBTIGER_ELEVENLABS_TOOL_DIR: /app/hubtiger-tools
     volumes:
@@ -354,6 +360,9 @@ services:
       APP_DEFAULT_CHAT_MODEL: ${OPENAI_MODEL:-openai/llama31-8b}
       APP_DEFAULT_EMBEDDING_MODEL: ${APP_DEFAULT_EMBEDDING_MODEL:-openai/intfloat/multilingual-e5-large-instruct}
       APP_LLAMAPARSE_TIER: ${LLAMAPARSE_TIER:-agentic}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
       SHOPIFY_MCP_URL: http://shopify-mcp:8097
     volumes:
       - app_data:/data

@@ -1734,6 +1734,7 @@ def create_app() -> FastAPI:
                 default_model_id=row.default_model_id,
                 api_key_hint=row.masked_api_key,
                 has_api_key=bool(row.api_key),
+                aws_region=getattr(row, "aws_region", None),
             )
             for row in rows
         ]
@@ -1754,6 +1755,7 @@ def create_app() -> FastAPI:
             base_url=body.base_url,
             enabled=body.enabled,
             default_model_id=body.default_model_id,
+            aws_region=body.aws_region,
         )
         return ConnectionView(
             id=record.id,
@@ -1767,6 +1769,7 @@ def create_app() -> FastAPI:
             default_model_id=record.default_model_id,
             api_key_hint=record.masked_api_key,
             has_api_key=bool(record.api_key),
+            aws_region=getattr(record, "aws_region", None),
         )
 
     @app.post("/api/connections/{connection_id}/deletion-preview", response_model=ConnectionDeletionPreviewView)
@@ -1820,6 +1823,7 @@ def create_app() -> FastAPI:
                 api_key=body.api_key,
                 base_url=body.base_url,
                 enabled=True,
+                aws_region=body.aws_region,
             )
         try:
             result = test_provider_connection(

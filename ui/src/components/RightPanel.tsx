@@ -31,6 +31,7 @@ type Props = {
     base_url?: string;
     enabled?: boolean;
     default_model_id?: string | null;
+    aws_region?: string | null;
   }) => Promise<void>;
   onDelete: (connectionId: string, confirmationToken: string) => Promise<void>;
 };
@@ -53,6 +54,7 @@ export default function RightPanel({
   const [authHeaderName, setAuthHeaderName] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("https://api.openai.com/v1");
+  const [awsRegion, setAwsRegion] = useState("us-east-1");
   const [enabled, setEnabled] = useState(true);
   const [testModelId, setTestModelId] = useState("");
   const [isNewConnection, setIsNewConnection] = useState(false);
@@ -186,6 +188,7 @@ export default function RightPanel({
     setAuthHeaderName(connection?.auth_header_name ?? "");
     setApiKey("");
     setBaseUrl(connection?.base_url ?? "https://api.openai.com/v1");
+    setAwsRegion(connection?.aws_region ?? "us-east-1");
     setEnabled(connection?.enabled ?? true);
     setTestModelId(fallbackModel);
     setTestResult(null);
@@ -262,6 +265,7 @@ export default function RightPanel({
         auth_header_name: authStrategy === "custom_header" ? authHeaderName || undefined : undefined,
         api_key: apiKey || undefined,
         base_url: baseUrl || undefined,
+        aws_region: nextProviderKind === "amazon_bedrock" ? awsRegion || undefined : undefined,
         model_id: normalizedModel || undefined,
         api_mode: testApiMode,
       });
@@ -294,6 +298,7 @@ export default function RightPanel({
         base_url: baseUrl || undefined,
         enabled,
         default_model_id: testModelId.trim() || null,
+        aws_region: nextProviderKind === "amazon_bedrock" ? awsRegion || "us-east-1" : undefined,
       });
       setSelectedProvider(normalizedProvider);
       setIsNewConnection(false);
@@ -482,6 +487,19 @@ export default function RightPanel({
                     return;
                   }
 
+                  if (next === "amazon_bedrock") {
+                    if (isNewConnection) {
+                      if (!provider.trim() || provider === "openai") setProvider("amazon-bedrock");
+                      if (!label.trim() || label === "OpenAI") setLabel("Amazon Bedrock");
+                    }
+                    setAuthStrategy("custom_header");
+                    setBaseUrl("");
+                    if (!testModelId.trim()) {
+                      setTestModelId(runtimeDefaultModelForKind("amazon_bedrock"));
+                    }
+                    return;
+                  }
+
                   if (!testModelId.trim()) {
                     setTestModelId(runtimeDefaultModelForKind(next));
                   }
@@ -491,6 +509,7 @@ export default function RightPanel({
                 <option value="anthropic">Claude / Anthropic</option>
                 <option value="google_gemini">Google Gemini</option>
                 <option value="openai_compatible">OpenAI-compatible / self-hosted</option>
+                <option value="amazon_bedrock">Amazon Bedrock</option>
               </select>
 
               <label className="font-medium text-slate-600">Label</label>
@@ -561,6 +580,22 @@ export default function RightPanel({
                 <div className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[0.66rem] text-emerald-800">
                   Gemini provider selected. Use a Gemini model id such as <code>gemini-2.0-flash</code> or <code>google/gemini-2.0-flash</code>.
                 </div>
+              )}
+              {activeProviderKind === "amazon_bedrock" && (
+                <>
+                  <label className="font-medium text-slate-600">
+                    AWS Region
+                  </label>
+                  <input
+                    className="ghost-input"
+                    value={awsRegion}
+                    onChange={(event) => setAwsRegion(event.target.value)}
+                    placeholder="us-east-1"
+                  />
+                  <div className="rounded border border-sky-200 bg-sky-50 px-2 py-1 text-[0.66rem] text-sky-800">
+                    Amazon Bedrock — no Base URL needed. Set <strong>Auth header name</strong> to your AWS Access Key ID and <strong>API key</strong> to your AWS Secret Access Key. Model id must be a Bedrock inference profile ID such as <code>us.anthropic.claude-sonnet-4-5-20251101-v1:0</code>.
+                  </div>
+                </>
               )}
               {isLikelyOllamaBaseUrl(baseUrl) && (
                 <div className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[0.66rem] text-amber-800">

@@ -71,7 +71,7 @@ export type ChatToolEvent = {
 };
 export type RequestedLane = "default" | "local" | "cloud";
 export type ChatUploadPersistenceMode = "conversation_only" | "save_to_knowledge";
-export type ProviderKind = "openai" | "anthropic" | "google_gemini" | "openai_compatible";
+export type ProviderKind = "openai" | "anthropic" | "google_gemini" | "openai_compatible" | "amazon_bedrock";
 export type ConnectionAuthStrategy = "bearer" | "x_api_key" | "x_goog_api_key" | "custom_header";
 export type ToolHealth = "healthy" | "unhealthy" | "unknown";
 
@@ -117,6 +117,7 @@ export type Connection = {
   default_model_id?: string | null;
   api_key_hint: string | null;
   has_api_key: boolean;
+  aws_region?: string | null;
 };
 
 export type ConnectionDeletionPreviewImpact = {
@@ -1275,6 +1276,7 @@ export async function testConnection(body: {
   auth_header_name?: string | null;
   api_key?: string;
   base_url?: string;
+  aws_region?: string | null;
   model_id?: string;
   api_mode: ChatApiMode;
   prompt?: string;

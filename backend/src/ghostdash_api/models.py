@@ -76,6 +76,7 @@ class ConnectionRecord(TimestampMixin, Base):
     base_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     default_model_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    aws_region: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     @property
     def masked_api_key(self) -> str | None:

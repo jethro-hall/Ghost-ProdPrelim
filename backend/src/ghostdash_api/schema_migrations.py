@@ -228,6 +228,27 @@ def _ensure_connection_default_model_id_column(engine: Engine) -> None:
                 raise
 
 
+def _ensure_connection_aws_region_column(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "connections" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("connections")}
+    if "aws_region" in columns:
+        return
+    with engine.begin() as connection:
+        statement = (
+            "ALTER TABLE connections ADD COLUMN IF NOT EXISTS aws_region VARCHAR(64)"
+            if engine.dialect.name == "postgresql"
+            else "ALTER TABLE connections ADD COLUMN aws_region VARCHAR(64)"
+        )
+        try:
+            connection.execute(text(statement))
+        except (OperationalError, ProgrammingError) as exc:
+            message = str(exc).lower()
+            if "already exists" not in message and "duplicate column" not in message:
+                raise
+
+
 def _ensure_connection_metadata_columns(engine: Engine) -> None:
     inspector = inspect(engine)
     if "connections" not in inspector.get_table_names():
@@ -840,6 +861,7 @@ def run_startup_migrations(engine: Engine) -> None:
     _ensure_voice_turns_table(engine)
     _ensure_connection_metadata_columns(engine)
     _ensure_connection_default_model_id_column(engine)
+    _ensure_connection_aws_region_column(engine)
     _ensure_workflow_tasks_table(engine)
     _ensure_workflow_run_events_table(engine)
     _ensure_docx_sessions_table(engine)

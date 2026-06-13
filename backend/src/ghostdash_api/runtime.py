@@ -42,6 +42,7 @@ class ProviderConnectionConfig:
     provider_kind: str = "openai"
     auth_strategy: str = "bearer"
     auth_header_name: str | None = None
+    aws_region: str | None = None
 
 
 def _normalize_provider_model_id(
@@ -92,6 +93,7 @@ def _merge_provider_connection(
         auth_header_name=auth_header_name if auth_header_name is not None else connection.auth_header_name,
         api_key=api_key if api_key not in (None, "") else connection.api_key,
         base_url=base_url if base_url not in (None, "") else connection.base_url,
+        aws_region=getattr(connection, "aws_region", None),
     )
 
 
@@ -266,6 +268,92 @@ def _gemini_generate_content_result(
         else None
     )
     return LlmCompletionResult(text=text, openai_response_id=None, usage=usage)
+
+
+# ---------------------------------------------------------------------------
+# Amazon Bedrock Converse helpers
+# ---------------------------------------------------------------------------
+
+def _bedrock_client(connection: ProviderConnectionConfig):
+    """Build a boto3 bedrock-runtime client from connection credentials."""
+    import boto3  # local import: only needed when amazon_bedrock provider is used
+    region = (getattr(connection, "aws_region", None) or "").strip() or settings.aws_default_region
+    # auth_header_name stores AWS Access Key ID; api_key stores AWS Secret Access Key.
+    access_key_id = (connection.auth_header_name or "").strip() or settings.aws_access_key_id
+    secret_access_key = (connection.api_key or "").strip() or settings.aws_secret_access_key
+    kwargs: dict = {"region_name": region}
+    if access_key_id:
+        kwargs["aws_access_key_id"] = access_key_id
+    if secret_access_key:
+        kwargs["aws_secret_access_key"] = secret_access_key
+    return boto3.client("bedrock-runtime", **kwargs)
+
+
+def _bedrock_converse_result(
+    connection: ProviderConnectionConfig,
+    *,
+    prompt: str,
+    model_id: str,
+    system_prompt: str,
+    temperature: float,
+    max_tokens: int | None,
+) -> LlmCompletionResult:
+    client = _bedrock_client(connection)
+    inference_config: dict[str, Any] = {
+        "maxTokens": max_tokens if max_tokens is not None else 4096,
+        "temperature": float(temperature),
+    }
+    response = client.converse(
+        modelId=model_id,
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+        system=[{"text": (system_prompt or "").strip() or "You are a helpful assistant."}],
+        inferenceConfig=inference_config,
+    )
+    output_message = response.get("output", {}).get("message", {})
+    content_blocks = output_message.get("content", [])
+    text = "".join(
+        block["text"] for block in content_blocks if isinstance(block, dict) and "text" in block
+    ).strip()
+    if not text:
+        raise ValueError(f"Bedrock converse returned no text: {response!r}")
+    usage = response.get("usage", {})
+    return LlmCompletionResult(
+        text=text,
+        openai_response_id=None,
+        usage=normalize_provider_usage_dict(
+            prompt_tokens=usage.get("inputTokens"),
+            completion_tokens=usage.get("outputTokens"),
+            total_tokens=usage.get("totalTokens"),
+        ),
+    )
+
+
+def _bedrock_converse_stream(
+    connection: ProviderConnectionConfig,
+    *,
+    prompt: str,
+    model_id: str,
+    system_prompt: str,
+    temperature: float,
+    max_tokens: int | None,
+) -> Iterator[str]:
+    """Yield text deltas from Bedrock converse_stream (Server-Sent Events)."""
+    client = _bedrock_client(connection)
+    inference_config: dict[str, Any] = {
+        "maxTokens": max_tokens if max_tokens is not None else 4096,
+        "temperature": float(temperature),
+    }
+    response = client.converse_stream(
+        modelId=model_id,
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+        system=[{"text": (system_prompt or "").strip() or "You are a helpful assistant."}],
+        inferenceConfig=inference_config,
+    )
+    for event in response.get("stream", []):
+        delta = event.get("contentBlockDelta", {}).get("delta", {})
+        chunk = delta.get("text", "")
+        if chunk:
+            yield chunk
 
 
 ANTHROPIC_API_VERSION = "2023-06-01"
@@ -764,6 +852,17 @@ def seed_default_connections(session: Session) -> None:
             "base_url": "https://generativelanguage.googleapis.com/v1beta",
             "enabled": False,
         },
+        "amazon-bedrock": {
+            "label": "Amazon Bedrock",
+            "provider_kind": "amazon_bedrock",
+            # auth_header_name stores the AWS Access Key ID (no Bearer token needed).
+            "auth_strategy": "custom_header",
+            "auth_header_name": settings.aws_access_key_id or None,
+            "api_key": settings.aws_secret_access_key or None,
+            "base_url": None,
+            "enabled": bool(settings.aws_access_key_id and settings.aws_secret_access_key),
+            "aws_region": settings.aws_default_region,
+        },
     }
     for provider, payload in defaults.items():
         existing = session.scalar(select(ConnectionRecord).where(ConnectionRecord.provider == provider))
@@ -771,14 +870,30 @@ def seed_default_connections(session: Session) -> None:
             if provider == "openai" and settings.openai_api_key and not existing.api_key:
                 existing.api_key = settings.openai_api_key
                 existing.enabled = True
+            if provider == "amazon-bedrock":
+                if settings.aws_access_key_id and not existing.auth_header_name:
+                    existing.auth_header_name = settings.aws_access_key_id
+                if settings.aws_secret_access_key and not existing.api_key:
+                    existing.api_key = settings.aws_secret_access_key
+                    existing.enabled = True
+                if not getattr(existing, "aws_region", None):
+                    existing.aws_region = settings.aws_default_region  # type: ignore[attr-defined]
             existing.base_url = existing.base_url or payload["base_url"]
             existing.provider_kind = existing.provider_kind or payload["provider_kind"]
             existing.auth_strategy = existing.auth_strategy or payload["auth_strategy"]
             if existing.auth_header_name is None:
                 existing.auth_header_name = payload["auth_header_name"]
             continue
-        session.add(ConnectionRecord(provider=provider, **payload))
+        session.add(ConnectionRecord(provider=provider, **{k: v for k, v in payload.items() if k != "aws_region"}))
+        if provider == "amazon-bedrock" and payload.get("aws_region"):
+            # aws_region is handled by schema_migrations; setattr after add to avoid FK timing issues.
+            pass
     session.commit()
+    # Patch aws_region on the bedrock record after commit (column added by schema_migrations).
+    bedrock_record = session.scalar(select(ConnectionRecord).where(ConnectionRecord.provider == "amazon-bedrock"))
+    if bedrock_record and not getattr(bedrock_record, "aws_region", None) and settings.aws_default_region:
+        bedrock_record.aws_region = settings.aws_default_region  # type: ignore[attr-defined]
+        session.commit()
 
 
 def list_connections(session: Session) -> list[ConnectionRecord]:
@@ -963,6 +1078,21 @@ def generate_answer(
 
     base_url = _provider_base_url(provider_connection)
     provider_kind = (provider_connection.provider_kind or "").strip().lower()
+    if provider_kind == "amazon_bedrock":
+
+        def _run_bedrock() -> LlmCompletionResult:
+            return _bedrock_converse_result(
+                provider_connection,
+                prompt=prompt,
+                model_id=resolved_model,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+        if trace_id:
+            return wrap_outbound_call(trace_id=trace_id, service=service, route="bedrock.converse", fn=_run_bedrock)
+        return _run_bedrock()
     if provider_kind == "anthropic":
 
         def _run_anthropic() -> LlmCompletionResult:
@@ -1090,6 +1220,17 @@ def stream_answer(
     try:
         base_url = _provider_base_url(provider_connection)
         provider_kind = (provider_connection.provider_kind or "").strip().lower()
+        if provider_kind == "amazon_bedrock":
+            for chunk in _bedrock_converse_stream(
+                provider_connection,
+                prompt=prompt,
+                model_id=resolved_model,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ):
+                yield chunk
+            return
         if provider_kind == "anthropic":
             result = _anthropic_messages_result(
                 provider_connection,
