@@ -34,7 +34,7 @@ const pendingTask: Task = {
 };
 
 export type AppOutletContext = {
-  uploadFile: (f: File, corpus?: string, lane?: RequestedLane) => Promise<{ id: string }>;
+  uploadFile: (f: File, corpus?: string, lane?: RequestedLane, relativePath?: string) => Promise<{ id: string }>;
   startSync: (corpus?: string) => Promise<void>;
   refreshConnections: () => Promise<void>;
   runtimeDefaults: RuntimeDefaults | null;

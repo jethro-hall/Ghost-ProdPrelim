@@ -1296,9 +1296,10 @@ export async function deleteConnection(connectionId: string, confirmationToken: 
   return data;
 }
 
-export async function uploadFile(file: File, corpus?: string, policyLane?: RequestedLane) {
+export async function uploadFile(file: File, corpus?: string, policyLane?: RequestedLane, relativePath?: string) {
   const form = new FormData();
-  form.append("file", file);
+  const uploadName = relativePath || file.webkitRelativePath || file.name;
+  form.append("file", file, uploadName);
   if (corpus) form.append("corpus", corpus);
   if (policyLane) form.append("policy_lane", policyLane);
   const { data } = await api.post("/upload", form);

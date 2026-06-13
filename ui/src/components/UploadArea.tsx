@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useRef, type InputHTMLAttributes } from "react";
+import { collectFilesFromDataTransfer } from "../lib/collectDroppedFiles";
 import { TrashIcon, UploadIcon } from "./ReferenceIcons";
 import { formatRequestedLane, type RequestedLane } from "../api";
 
@@ -20,7 +21,7 @@ type Props = {
   uploading: boolean;
   statusText: string;
   onLaneChange: (lane: RequestedLane) => void;
-  onAddFiles: (files: FileList | null) => void;
+  onAddFiles: (files: FileList | File[] | null) => void;
   onRemove: (id: string) => void;
   onUploadAll: () => void;
   onClearCompleted: () => void;
@@ -56,13 +57,6 @@ export default function UploadArea({
   const filesInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!folderInputRef.current) return;
-    folderInputRef.current.setAttribute("webkitdirectory", "");
-    folderInputRef.current.setAttribute("directory", "");
-    folderInputRef.current.setAttribute("multiple", "");
-  }, []);
-
   return (
     <div className="mb-6 w-full">
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -90,14 +84,13 @@ export default function UploadArea({
       </div>
 
       <div
-        className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-white/60 p-8 text-center transition-all duration-200 hover:border-ghost-orange hover:bg-orange-50/40"
-        onClick={() => filesInputRef.current?.click()}
+        className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-white/60 p-8 text-center transition-all duration-200 hover:border-ghost-orange hover:bg-orange-50/40"
         onDragOver={(event) => {
           event.preventDefault();
         }}
         onDrop={(event) => {
           event.preventDefault();
-          onAddFiles(event.dataTransfer.files);
+          void collectFilesFromDataTransfer(event.dataTransfer).then((files) => onAddFiles(files));
         }}
       >
         <UploadIcon size={32} strokeWidth={1.5} className="text-slate-400" />
@@ -139,7 +132,10 @@ export default function UploadArea({
         <input
           ref={folderInputRef}
           type="file"
+          multiple
           className="hidden"
+          // Non-standard attributes required for recursive folder selection in Chromium/WebKit.
+          {...({ webkitdirectory: "", directory: "" } as InputHTMLAttributes<HTMLInputElement>)}
           onChange={(event) => {
             onAddFiles(event.target.files);
             event.target.value = "";

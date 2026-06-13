@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import type {
   ChatApiMode,
   Connection,
@@ -63,7 +62,9 @@ export default function RightPanel({
   const [testError, setTestError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [testApiMode, setTestApiMode] = useState<ChatApiMode>(apiMode);
   const [chatApiModeBusy, setChatApiModeBusy] = useState(false);
+  const [chatApiModeError, setChatApiModeError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deletePreview, setDeletePreview] = useState<ConnectionDeletionPreview | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -116,6 +117,22 @@ export default function RightPanel({
       trimmed.startsWith("o3") ||
       trimmed.startsWith("llama")
     );
+  }
+
+  function isRideAiGatewayBaseUrl(value: string) {
+    try {
+      const url = new URL(value.trim() || "https://example.com");
+      return url.hostname.toLowerCase() === "one.rideai.com.au";
+    } catch {
+      return false;
+    }
+  }
+
+  function recommendedConnectionTestApiMode(kind: ProviderKind, url: string, fallback: ChatApiMode): ChatApiMode {
+    if (kind === "openai_compatible" || isRideAiGatewayBaseUrl(url) || isLikelyOllamaBaseUrl(url)) {
+      return "chat_completions";
+    }
+    return fallback;
   }
 
   function extractApiErrorMessage(error: unknown) {
@@ -199,6 +216,13 @@ export default function RightPanel({
   }, [open, isNewConnection, selectedConnection, runtimeDefaults?.llm_model_id]);
 
   const activeProviderKind = effectiveProviderKind(providerKind, baseUrl);
+
+  useEffect(() => {
+    if (!open) return;
+    setTestApiMode(recommendedConnectionTestApiMode(activeProviderKind, baseUrl, runtimeDefaults?.chat_api_mode ?? apiMode));
+    setChatApiModeError(null);
+  }, [open, activeProviderKind, baseUrl, selectedProvider, runtimeDefaults?.chat_api_mode, apiMode]);
+
   const modelQuickPickOptions = useMemo(() => {
     const merged = new Set<string>([
       ...(PRESET_MODEL_IDS_BY_KIND[activeProviderKind] ?? []),
@@ -239,7 +263,7 @@ export default function RightPanel({
         api_key: apiKey || undefined,
         base_url: baseUrl || undefined,
         model_id: normalizedModel || undefined,
-        api_mode: apiMode,
+        api_mode: testApiMode,
       });
       setTestResult(result);
       if (nextProviderKind !== providerKind) {
@@ -550,37 +574,51 @@ export default function RightPanel({
               </label>
 
               <div className="rounded-lg border border-slate-200 bg-white/80 p-2 text-[0.72rem] leading-5 text-slate-600">
-                <div className="font-semibold text-slate-900">OpenAI API path</div>
-                <label className="mt-2 block text-[0.72rem] font-medium text-slate-700">Default chat API mode</label>
+                <div className="font-semibold text-slate-900">Connection test API mode</div>
+                <label className="mt-2 block text-[0.72rem] font-medium text-slate-700">Use for Test connection</label>
                 <select
                   className="ghost-input mt-1"
-                  disabled={!runtimeDefaults || chatApiModeBusy}
-                  value={runtimeDefaults?.chat_api_mode ?? apiMode}
+                  disabled={testing}
+                  value={testApiMode}
                   onChange={(event) => {
-                    const next = event.target.value as ChatApiMode;
-                    setChatApiModeBusy(true);
-                    void onSaveChatApiMode(next)
-                      .catch(() => null)
-                      .finally(() => setChatApiModeBusy(false));
+                    setTestApiMode(event.target.value as ChatApiMode);
+                    setTestError(null);
                   }}
                 >
                   <option value="responses">Responses API</option>
                   <option value="chat_completions">Chat Completions API</option>
                 </select>
                 <p className="mt-2 text-[0.66rem] text-slate-500">
-                  This updates the <strong>default</strong> runtime profile (same as{" "}
-                  <Link className="font-medium text-slate-700 underline" to="/pipelines">
-                    Parsing Pipelines
-                  </Link>
-                  ). Each agent can override this under{" "}
-                  <Link className="font-medium text-slate-700 underline" to="/agent">
-                    Agent config
-                  </Link>
-                  .
+                  Self-hosted and RideAI gateways should use <strong>Chat Completions</strong>. Responses is for native{" "}
+                  <code className="rounded bg-slate-100 px-1">api.openai.com</code> models only.
                 </p>
-                <p className="mt-2 text-[0.66rem] text-slate-500">
-                  Connections only store base URL and credentials; choose <strong>Responses</strong> for current OpenAI ChatGPT-class models on <code className="rounded bg-slate-100 px-1">api.openai.com</code>.
-                </p>
+                {isRideAiGatewayBaseUrl(baseUrl) && (
+                  <p className="mt-2 text-[0.66rem] text-amber-800">
+                    RideAI gateway detected. Base URL should be <code className="rounded bg-amber-100 px-1">https://one.rideai.com.au/v1</code>{" "}
+                    and model ids are case-sensitive (for example <code className="rounded bg-amber-100 px-1">RE-JH-LLM05</code>).
+                  </p>
+                )}
+                <div className="mt-3 border-t border-slate-200 pt-2">
+                  <div className="text-[0.66rem] font-medium text-slate-700">
+                    Workspace default: {runtimeDefaults?.chat_api_mode ?? apiMode}
+                  </div>
+                  <button
+                    type="button"
+                    className="ghost-btn mt-2"
+                    disabled={!runtimeDefaults || chatApiModeBusy || testApiMode === runtimeDefaults?.chat_api_mode}
+                    onClick={() => {
+                      if (!runtimeDefaults) return;
+                      setChatApiModeBusy(true);
+                      setChatApiModeError(null);
+                      void onSaveChatApiMode(testApiMode)
+                        .catch((error) => setChatApiModeError(extractApiErrorMessage(error)))
+                        .finally(() => setChatApiModeBusy(false));
+                    }}
+                  >
+                    {chatApiModeBusy ? "Saving..." : "Use test mode as workspace default"}
+                  </button>
+                  {chatApiModeError && <p className="mt-2 text-[0.66rem] text-rose-600">{chatApiModeError}</p>}
+                </div>
               </div>
 
               <div className="mt-1 flex items-center gap-2">

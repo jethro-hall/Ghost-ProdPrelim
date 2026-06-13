@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import IngestionHistory from "../components/IngestionHistory";
 import UploadArea, { type StagedUpload } from "../components/UploadArea";
+import { relativePathForFile } from "../lib/collectDroppedFiles";
 import { createCollection, deleteCollection, fetchCapabilities, fetchCollections, fetchDocuments } from "../api";
 import type { AppOutletContext } from "../components/AppLayout";
 import type { Collection, DocumentIngestion, RequestedLane, RuntimeCapabilities } from "../api";
@@ -83,18 +84,23 @@ export default function DataSourcesPage() {
     });
   }
 
-  function addFiles(fileList: FileList | null) {
+  function addFiles(fileList: FileList | File[] | null) {
     if (!fileList || fileList.length === 0) return;
     const next = Array.from(fileList).map<StagedUpload>((file) => ({
       id: crypto.randomUUID(),
       file,
-      name: file.webkitRelativePath || file.name,
+      name: relativePathForFile(file),
       sizeLabel: formatBytes(file.size),
       lane,
       status: "staged",
     }));
+    const folderCount = new Set(next.map((item) => item.name.split("/")[0]).filter(Boolean)).size;
     setStagedFiles((items) => [...items, ...next]);
-    setStatus(`${next.length} file(s) staged for upload.`);
+    setStatus(
+      next.length === 1
+        ? `1 file staged for upload.`
+        : `${next.length} file(s) staged${folderCount > 1 ? ` from ${folderCount} top-level folder(s)` : ""}.`,
+    );
   }
 
   async function refreshDocuments() {
@@ -123,7 +129,7 @@ export default function DataSourcesPage() {
           ),
         );
         try {
-          await uploadFile(item.file, selectedCollection.slug, item.lane);
+          await uploadFile(item.file, selectedCollection.slug, item.lane, item.name);
           setStagedFiles((items) =>
             items.map((entry) =>
               entry.id === item.id
