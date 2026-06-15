@@ -99,14 +99,12 @@ ghoststack.rideai.com.au {
 		}
 	}
 	handle_path /agent-runtime/* {
+		@sse path /api/agent-runs/*/events/stream
+		header @sse Cache-Control no-cache
+		header @sse X-Accel-Buffering no
+		header @sse Content-Type "text/event-stream"
 		reverse_proxy agent-runtime:8200 {
-			flush_interval -1
-			fail_duration 0
-			lb_try_duration 15s
-			lb_try_interval 500ms
-			health_uri /health
-			health_interval 5s
-			health_timeout 3s
+			flush_interval 0
 			transport http {
 				dial_timeout 5s
 				response_header_timeout 0
