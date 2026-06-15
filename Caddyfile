@@ -98,7 +98,7 @@ ghoststack.rideai.com.au {
 			}
 		}
 	}
-	handle /agent-runtime/* {
+	handle_path /agent-runtime/* {
 		reverse_proxy agent-runtime:8200 {
 			flush_interval -1
 			fail_duration 0
