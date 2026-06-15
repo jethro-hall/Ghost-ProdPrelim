@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Agent Runtime — Live Trace</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f172a; color: #e2e8f0; font-family: 'Courier New', monospace; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  #header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  #header h1 { font-size: 15px; color: #7c3aed; }
+  #status { padding: 3px 10px; border-radius: 12px; font-size: 11px; background: #1e293b; border: 1px solid #334155; }
+  #status.running { background: #052e16; border-color: #22c55e; color: #86efac; }
+  #status.completed { background: #052e16; border-color: #22c55e; color: #86efac; }
+  #status.failed { background: #3a1e1e; border-color: #ef4444; color: #fca5a5; }
+  #layout { display: flex; flex: 1; min-height: 0; }
+  #plan { width: 32%; min-width: 280px; overflow-y: auto; padding: 12px 14px; border-right: 1px solid #1e293b; background: #0d1424; }
+  #plan h2 { font-size: 11px; color: #7c3aed; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  #plan-empty { color: #475569; font-size: 12px; }
+  .plan-thought { background: #1e1a3a; border-left: 3px solid #7c3aed; padding: 8px 10px; margin: 6px 0; border-radius: 4px; color: #c4b5fd; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+  .plan-thought .plan-step { display: block; font-size: 10px; color: #6d28d9; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .plan-tool { font-size: 11px; color: #0ea5e9; padding: 3px 0 3px 12px; border-left: 2px solid #0ea5e9; margin: 4px 0; }
+  .plan-tool.done { color: #22c55e; border-left-color: #22c55e; }
+  .plan-tool.fail { color: #ef4444; border-left-color: #ef4444; }
+  #timeline { flex: 1; overflow-y: auto; padding: 8px 0; border-right: 1px solid #1e293b; }
+  #detail { width: 32%; min-width: 280px; overflow-y: auto; padding: 16px; background: #0a1628; }
+  #step-pill { background: #1e1a3a; color: #c4b5fd; border: 1px solid #6d28d9; border-radius: 12px; padding: 3px 10px; font-size: 11px; }
+  #conn-pill { font-size: 10px; color: #475569; }
+  #conn-pill.connecting { color: #f59e0b; }
+  #conn-pill.live { color: #22c55e; }
+  #conn-pill.dead { color: #ef4444; }
+  .event-row { display: flex; flex-direction: column; padding: 5px 16px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.1s; }
+  .event-row:hover, .event-row.selected { background: #1e293b; }
+  .event-row.selected { border-left-color: var(--color); }
+  .event-top { display: flex; align-items: center; gap: 8px; }
+  .event-icon { width: 14px; text-align: center; flex-shrink: 0; }
+  .event-type { min-width: 100px; flex-shrink: 0; }
+  .event-title { flex: 1; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .event-ts { color: #475569; font-size: 10px; flex-shrink: 0; }
+  .event-body { margin: 4px 0 0 22px; background: #1e293b; border-radius: 4px; padding: 6px 10px; font-size: 11px; color: #64748b; max-height: 120px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+  .final-body { background: #1e3a2f; color: #86efac; max-height: 300px; }
+  .plan-body { background: #1e1a3a; color: #c4b5fd; }
+  .error-body { background: #3a1e1e; color: #fca5a5; }
+  .partial-body { background: #2d2000; color: #fbbf24; max-height: 200px; }
+  #form { padding: 10px 16px; border-top: 1px solid #334155; background: #1e293b; display: flex; gap: 10px; flex-shrink: 0; }
+  #form input { flex: 1; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-family: inherit; }
+  #form button { background: #7c3aed; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  #form button:hover { background: #6d28d9; }
+  #approval-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 999; }
+  #approval-modal.show { display: flex; }
+  .modal-box { background: #1e293b; border-radius: 12px; padding: 28px; max-width: 480px; width: 90%; border: 1px solid #ef4444; }
+  .pulse { display: inline-block; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  pre { white-space: pre-wrap; word-break: break-all; }
+  #query-list { padding: 6px 16px; border-bottom: 1px solid #1e293b; flex-shrink: 0; max-height: 64px; overflow-y: auto; }
+  .query-chip { display: inline-block; background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2px 10px; margin: 2px 3px; font-size: 11px; cursor: pointer; color: #94a3b8; }
+  .query-chip:hover { border-color: #7c3aed; color: #c4b5fd; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Agent Runtime — Live Trace <span style="color:#475569;font-size:11px;font-weight:normal;margin-left:6px">v1.1</span></h1>
+  <span id="status" class="queued">idle</span>
+  <span id="step-pill">step 0 / 40</span>
+  <span id="conn-pill">disconnected</span>
+  <span id="model-label" style="color:#475569;font-size:11px">Claude Opus 4.6 · AP Bedrock</span>
+  <span id="live-indicator"></span>
+</div>
+
+<div id="query-list">
+  <span class="query-chip" onclick="quickQuery(this)">FY2025 P&amp;L across all companies — top/bottom by net position</span>
+  <span class="query-chip" onclick="quickQuery(this)">c3 FY2026: which account_move_line entries have the largest individual debit amounts? Show top 20 with account name.</span>
+  <span class="query-chip" onclick="quickQuery(this)">Across all companies FY2024 and FY2025, what is the trend in total posted debit values? Which company grew most?</span>
+  <span class="query-chip" onclick="quickQuery(this)">For company c4 FY2025, compute the trial balance: sum of debits and credits per account. Are they balanced?</span>
+  <span class="query-chip" onclick="quickQuery(this)">How many distinct product templates exist and what are the 10 most common product categories in the data?</span>
+</div>
+
+<div id="layout">
+  <div id="plan">
+    <h2>Plan / Thinking</h2>
+    <div id="plan-empty">The agent's reasoning, plan steps, and tool decisions will appear here as it works.</div>
+    <div id="plan-feed"></div>
+  </div>
+  <div id="timeline"></div>
+  <div id="detail">
+    <div style="color:#475569;font-size:12px;padding:8px 0">Click any event row to inspect it.</div>
+  </div>
+</div>
+
+<div id="form">
+  <input id="question" type="text" placeholder="Ask anything about the financial data…" value="" />
+  <button onclick="submitRun()">&#9654; Run</button>
+</div>
+
+<div id="approval-modal">
+  <div class="modal-box">
+    <div style="color:#f97316;font-weight:bold;margin-bottom:12px">Approval Required</div>
+    <div id="approval-tool" style="color:#67e8f9;margin-bottom:8px;font-size:14px"></div>
+    <div id="approval-args" style="background:#0f172a;padding:10px;border-radius:6px;font-size:11px;color:#94a3b8;max-height:200px;overflow:auto;margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="decideApproval('reject')" style="background:#450a0a;color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:8px 16px;cursor:pointer">Reject</button>
+      <button onclick="decideApproval('allow_once')" style="background:#052e16;color:#86efac;border:1px solid #22c55e;border-radius:6px;padding:8px 16px;cursor:pointer">Allow</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = '/agent-runtime';
+let currentRunId = null;
+let currentApprovalId = null;
+let es = null;
+let events = [];
+let selectedId = null;
+let defaultMaxSteps = 40; // updated from /api/runtime-config at load
+let lastSeq = 0;
+let stepCount = 0;
+let reconnectAttempt = 0;
+let reconnectTimer = null;
+let lastEventAt = 0;
+let staleWatchdog = null;
+
+const EVENT_META = {
+  'run.started':            {icon:'●', color:'#6366f1'},
+  'run.failed':             {icon:'⊘', color:'#f97316'},
+  'agent.analyzing':        {icon:'~', color:'#8b5cf6'},
+  'agent.message.delta':    {icon:'▸', color:'#a78bfa'},
+  'agent.plan.public':      {icon:'≡', color:'#7c3aed'},
+  'agent.replanning':       {icon:'⟳', color:'#f59e0b'},
+  'tool.call.started':      {icon:'→', color:'#0ea5e9'},
+  'tool.call.completed':    {icon:'✓', color:'#22c55e'},
+  'tool.call.failed':       {icon:'✗', color:'#ef4444'},
+  'artifact.created':       {icon:'⊕', color:'#10b981'},
+  'approval.requested':     {icon:'!', color:'#f97316'},
+  'verification.started':   {icon:'◈', color:'#6366f1'},
+  'verification.failed':    {icon:'✗', color:'#ef4444'},
+  'verification.passed':    {icon:'◈', color:'#22c55e'},
+  'agent.remediation.started':{icon:'⟳',color:'#f59e0b'},
+  'agent.final':            {icon:'★', color:'#f59e0b'},
+  'run.completed':          {icon:'●', color:'#22c55e'},
+};
+
+function meta(type) {
+  return EVENT_META[type] || {icon:'·', color:'#64748b'};
+}
+
+function ts(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleTimeString();
+}
+
+function quickQuery(el) {
+  document.getElementById('question').value = el.textContent.trim().replace(/&amp;/g,'&');
+}
+
+async function submitRun() {
+  const q = document.getElementById('question').value.trim();
+  if (!q) return;
+
+  events = [];
+  selectedId = null;
+  lastSeq = 0;
+  stepCount = 0;
+  reconnectAttempt = 0;
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  document.getElementById('timeline').innerHTML = '';
+  document.getElementById('plan-feed').innerHTML = '';
+  document.getElementById('plan-empty').style.display = 'none';
+  updateStepPill();
+  document.getElementById('detail').innerHTML = '<div style="color:#475569;font-size:12px;padding:8px 0">Starting run…</div>';
+
+  const resp = await fetch(`${BASE}/api/agent-runs`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    // Do NOT send max_steps — let the backend default (AGENT_RUNTIME_MAX_STEPS) apply.
+    body: JSON.stringify({question: q})
+  });
+  const data = await resp.json();
+  currentRunId = data.run_id;
+  setStatus('running');
+
+  document.getElementById('live-indicator').innerHTML = '<span class="pulse"></span>';
+  subscribeEvents(currentRunId);
+}
+
+function setConn(state) {
+  const el = document.getElementById('conn-pill');
+  el.className = state;
+  el.textContent = state === 'live' ? '● live' : state === 'connecting' ? '○ connecting' : state === 'dead' ? '✗ stream lost' : 'disconnected';
+}
+
+function updateStepPill() {
+  document.getElementById('step-pill').textContent = `step ${stepCount} / ${defaultMaxSteps}`;
+}
+
+function startStaleWatchdog() {
+  if (staleWatchdog) clearInterval(staleWatchdog);
+  staleWatchdog = setInterval(() => {
+    if (!es || !currentRunId) return;
+    if (setStatus.last === 'completed' || setStatus.last === 'failed') return;
+    const idle = Date.now() - lastEventAt;
+    if (idle > 45000) {
+      // No events or heartbeats for 45s — force reconnect.
+      console.warn('[sse] stale stream detected, reconnecting');
+      try { es.close(); } catch (_) {}
+      scheduleReconnect();
+    }
+  }, 5000);
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  if (!currentRunId) return;
+  reconnectAttempt += 1;
+  const delay = Math.min(1000 * Math.pow(2, reconnectAttempt - 1), 8000);
+  setConn('connecting');
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    subscribeEvents(currentRunId);
+  }, delay);
+}
+
+function subscribeEvents(runId) {
+  if (es) { try { es.close(); } catch (_) {} }
+  setConn('connecting');
+  es = new EventSource(`${BASE}/api/agent-runs/${runId}/events/stream?after=${lastSeq}`);
+  lastEventAt = Date.now();
+  startStaleWatchdog();
+
+  es.onopen = () => {
+    reconnectAttempt = 0;
+    setConn('live');
+  };
+  es.onmessage = (e) => {
+    lastEventAt = Date.now();
+    if (!e.data) return;
+    let evt;
+    try { evt = JSON.parse(e.data); } catch (_) { return; }
+    if (evt.type === 'stream.end') {
+      document.getElementById('live-indicator').innerHTML = '';
+      setConn('disconnected');
+      try { es.close(); } catch (_) {}
+      if (staleWatchdog) { clearInterval(staleWatchdog); staleWatchdog = null; }
+      return;
+    }
+    if (typeof evt.seq === 'number' && evt.seq > lastSeq) lastSeq = evt.seq;
+    if (!evt.visible && evt.type !== 'tool.stdout.delta') return;
+    if (evt.type === 'tool.stdout.delta') return;
+    handleEvent(evt);
+  };
+  es.onerror = () => {
+    setConn('dead');
+    try { es.close(); } catch (_) {}
+    if (setStatus.last === 'completed' || setStatus.last === 'failed') return;
+    scheduleReconnect();
+  };
+}
+
+function handleEvent(evt) {
+  // Idempotent on reconnect — skip already-rendered events.
+  if (evt.id && document.getElementById(`ev-${evt.id}`)) return;
+
+  events.push(evt);
+  renderRow(evt);
+  renderPlan(evt);
+
+  if (evt.type === 'tool.call.started') {
+    stepCount += 1;
+    updateStepPill();
+  }
+
+  if (evt.type === 'approval.requested') {
+    currentApprovalId = evt.payload?.approval_id;
+    document.getElementById('approval-tool').textContent = evt.payload?.tool_name || '';
+    document.getElementById('approval-args').textContent = JSON.stringify(evt.payload?.args || {}, null, 2);
+    document.getElementById('approval-modal').classList.add('show');
+  }
+
+  if (evt.type === 'run.completed') setStatus('completed');
+  if (evt.type === 'run.failed') setStatus('failed');
+  if (evt.type === 'tool.call.failed' && evt.title?.startsWith('Runtime')) setStatus('failed');
+}
+
+function renderPlan(evt) {
+  const feed = document.getElementById('plan-feed');
+  if (!feed) return;
+  const payload = evt.payload || {};
+
+  if (evt.type === 'agent.message.delta') {
+    const text = String(payload.text||'').trim();
+    if (text.length < 8) return; // ignore single-token deltas
+    const node = document.createElement('div');
+    node.className = 'plan-thought';
+    node.innerHTML = `<span class="plan-step">step ${stepCount + 1} · thinking</span>${escHtml(text)}`;
+    feed.appendChild(node);
+    feed.scrollTop = feed.scrollHeight;
+    return;
+  }
+  if (evt.type === 'agent.plan.public') {
+    const plan = String(payload.plan||'').trim();
+    if (!plan) return;
+    const node = document.createElement('div');
+    node.className = 'plan-thought';
+    node.innerHTML = `<span class="plan-step">plan</span>${escHtml(plan)}`;
+    feed.appendChild(node);
+    feed.scrollTop = feed.scrollHeight;
+    return;
+  }
+  if (evt.type === 'tool.call.started') {
+    const node = document.createElement('div');
+    node.className = 'plan-tool';
+    node.id = `plan-tool-${payload.call_id || evt.id}`;
+    node.textContent = `→ ${payload.tool_name || evt.title || 'tool'}`;
+    feed.appendChild(node);
+    feed.scrollTop = feed.scrollHeight;
+    return;
+  }
+  if (evt.type === 'tool.call.completed' || evt.type === 'tool.call.failed') {
+    const callId = payload.call_id;
+    const existing = callId ? document.getElementById(`plan-tool-${callId}`) : null;
+    const failed = evt.type === 'tool.call.failed';
+    if (existing) {
+      existing.classList.add(failed ? 'fail' : 'done');
+      existing.textContent = `${failed ? '✗' : '✓'} ${payload.tool_name || evt.title || 'tool'}`;
+    }
+    return;
+  }
+  if (evt.type === 'agent.final') {
+    const node = document.createElement('div');
+    node.className = 'plan-thought';
+    node.style.borderLeftColor = '#22c55e';
+    node.style.background = '#1e3a2f';
+    node.style.color = '#86efac';
+    node.innerHTML = `<span class="plan-step" style="color:#22c55e">final answer</span>${escHtml(String(payload.content||'').slice(0,400))}`;
+    feed.appendChild(node);
+    feed.scrollTop = feed.scrollHeight;
+  }
+}
+
+async function decideApproval(decision) {
+  if (!currentRunId || !currentApprovalId) return;
+  await fetch(`${BASE}/api/agent-runs/${currentRunId}/approvals/${currentApprovalId}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({decision})
+  });
+  document.getElementById('approval-modal').classList.remove('show');
+  currentApprovalId = null;
+}
+
+function renderRow(evt) {
+  const m = meta(evt.type);
+  const tl = document.getElementById('timeline');
+  const row = document.createElement('div');
+  row.className = 'event-row';
+  row.id = `ev-${evt.id}`;
+  row.style.setProperty('--color', m.color);
+  row.onclick = () => selectEvent(evt);
+
+  const title = evt.title || evt.type;
+  const payload = evt.payload || {};
+
+  let bodyHTML = '';
+  if (evt.type === 'agent.final') {
+    bodyHTML = `<div class="event-body final-body">${escHtml(String(payload.content||''))}</div>`;
+  } else if (evt.type === 'run.failed') {
+    const findings = payload.partial_findings;
+    if (findings) {
+      bodyHTML = `<div class="event-body partial-body">Partial findings:\n${escHtml(findings.slice(0,400))}${findings.length>400?'…':''}</div>`;
+    } else {
+      bodyHTML = `<div class="event-body error-body">${escHtml(String(payload.error||''))}</div>`;
+    }
+  } else if (evt.type === 'agent.plan.public') {
+    bodyHTML = `<div class="event-body plan-body">${escHtml(String(payload.plan||''))}</div>`;
+  } else if (evt.type === 'agent.message.delta') {
+    const text = String(payload.text||'');
+    if (text.length > 20) {
+      bodyHTML = `<div class="event-body">${escHtml(text.slice(0,300))}${text.length>300?'…':''}</div>`;
+    }
+  } else if (evt.type === 'tool.call.failed') {
+    bodyHTML = `<div class="event-body error-body">${escHtml(String(payload.error||payload.reason||''))}</div>`;
+  } else if (evt.type === 'verification.failed') {
+    const defects = (payload.defects||[]).map(d=>`• ${d}`).join('\n');
+    if (defects) bodyHTML = `<div class="event-body error-body">${escHtml(defects)}</div>`;
+  }
+
+  row.innerHTML = `
+    <div class="event-top">
+      <span class="event-icon" style="color:${m.color}">${m.icon}</span>
+      <span class="event-type" style="color:${m.color}">${evt.type.replace(/\./g,' ')}</span>
+      <span class="event-title">${escHtml(title)}</span>
+      <span class="event-ts">${ts(evt.created_at)}</span>
+    </div>
+    ${bodyHTML}
+  `;
+
+  tl.appendChild(row);
+  tl.scrollTop = tl.scrollHeight;
+}
+
+function selectEvent(evt) {
+  if (selectedId) {
+    const prev = document.getElementById(`ev-${selectedId}`);
+    if (prev) prev.classList.remove('selected');
+  }
+  selectedId = evt.id;
+  const el = document.getElementById(`ev-${evt.id}`);
+  if (el) el.classList.add('selected');
+
+  const detail = document.getElementById('detail');
+  const payload = evt.payload || {};
+  const m = meta(evt.type);
+
+  let html = `
+    <div style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #1e293b">
+      <div style="color:#475569;font-size:11px">seq ${evt.seq} · ${evt.type} · ${ts(evt.created_at)}</div>
+      <div style="font-weight:bold;margin-top:4px;color:${m.color}">${escHtml(evt.title||evt.type)}</div>
+    </div>
+  `;
+
+  if (evt.type === 'agent.final') {
+    html += `<div style="label">Final Answer</div><pre style="color:#86efac;background:#1e3a2f;padding:12px;border-radius:6px;white-space:pre-wrap">${escHtml(String(payload.content||''))}</pre>`;
+  } else if (evt.type === 'run.failed' && payload.partial_findings) {
+    html += `<div style="color:#fbbf24;font-size:11px;margin-bottom:4px">PARTIAL FINDINGS (run did not converge)</div><pre style="color:#fbbf24;background:#2d2000;padding:12px;border-radius:6px;white-space:pre-wrap">${escHtml(String(payload.partial_findings||''))}</pre>`;
+  } else if (evt.type === 'agent.plan.public') {
+    html += `<pre style="color:#c4b5fd;background:#1e1a3a;padding:12px;border-radius:6px;white-space:pre-wrap">${escHtml(String(payload.plan||''))}</pre>`;
+  } else if (payload.args) {
+    html += `<div style="color:#475569;font-size:10px;margin-bottom:4px">ARGUMENTS</div><pre style="background:#1e293b;padding:10px;border-radius:6px;font-size:11px;color:#94a3b8;overflow:auto;max-height:300px">${escHtml(JSON.stringify(payload.args,null,2))}</pre>`;
+  } else if (Object.keys(payload).length > 0) {
+    html += `<div style="color:#475569;font-size:10px;margin-bottom:4px">PAYLOAD</div><pre style="background:#1e293b;padding:10px;border-radius:6px;font-size:11px;color:#94a3b8">${escHtml(JSON.stringify(payload,null,2))}</pre>`;
+  }
+
+  detail.innerHTML = html;
+}
+
+function setStatus(s) {
+  setStatus.last = s;
+  const el = document.getElementById('status');
+  el.className = s;
+  el.textContent = s;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Load runtime config then optionally auto-load a run from URL
+window.addEventListener('load', async () => {
+  try {
+    const cfg = await fetch(`${BASE}/api/runtime-config`).then(r => r.json());
+    defaultMaxSteps = cfg.default_max_steps || defaultMaxSteps;
+    updateStepPill();
+    const label = document.getElementById('model-label');
+    if (cfg.default_model && label) {
+      const short = cfg.default_model.includes('opus') ? 'Claude Opus 4.6 · AP Bedrock' : cfg.default_model;
+      label.textContent = short;
+    }
+  } catch (_) { /* non-critical */ }
+
+  const runId = new URLSearchParams(location.search).get('run_id');
+  if (runId) {
+    currentRunId = runId;
+    fetch(`${BASE}/api/agent-runs/${runId}`)
+      .then(r => r.json())
+      .then(data => {
+        setStatus(data.status);
+        (data.events||[]).filter(e=>e.visible).forEach(renderRow);
+        if (data.status === 'running') subscribeEvents(runId);
+      });
+  }
+});
+</script>
+</body>
+</html>

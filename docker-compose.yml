@@ -1,4 +1,21 @@
 services:
+  rapids-analytics:
+    build:
+      context: ./rapids-analytics
+      dockerfile: Dockerfile
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - MIRROR_ROOT=/data/odoo-mirror
+    volumes:
+      - app_data:/data
+    expose:
+      - "8010"
+    restart: unless-stopped
+    networks:
+      - default
+
   caddy:
     image: caddy:2-alpine
     ports:
@@ -25,6 +42,8 @@ services:
       ghost-chatui:
         condition: service_started
       n8n:
+        condition: service_started
+      agent-runtime:
         condition: service_started
     restart: unless-stopped
 
@@ -428,6 +447,42 @@ services:
       dockerfile: Dockerfile
     expose:
       - "3500"
+    restart: unless-stopped
+
+  agent-runtime:
+    build:
+      context: ./services/agent-runtime
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DB_URL: postgresql+psycopg://ghostdash:ghostdash@postgres:5432/ghostdash
+      RAPIDS_URL: http://rapids-analytics:8010
+      HOST: 0.0.0.0
+      PORT: "8200"
+      LOG_LEVEL: info
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-2}
+      ODOO_URL: ${ODOO_URL:-}
+      ODOO_DB: ${ODOO_DB:-}
+      ODOO_USER: ${ODOO_USER:-}
+      ODOO_PASSWORD: ${ODOO_PASSWORD:-}
+      AGENT_RUNTIME_DEFAULT_MODEL: ${AGENT_RUNTIME_DEFAULT_MODEL:-au.anthropic.claude-opus-4-6-v1}
+      AGENT_RUNTIME_VERIFIER_MODEL: ${AGENT_RUNTIME_VERIFIER_MODEL:-au.anthropic.claude-sonnet-4-6}
+    expose:
+      - "8200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rapids-analytics:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8200/health').read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
     restart: unless-stopped
 
 volumes:
