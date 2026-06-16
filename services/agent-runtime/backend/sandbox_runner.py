@@ -121,7 +121,7 @@ def execute_python(
 ) -> ToolResult:
     code = str(args.get("code", "")).strip()
     reason = str(args.get("reason", ""))
-    timeout = int(args.get("timeout_seconds") or 30)
+    timeout = int(args.get("timeout_seconds") or 60)
     timeout = min(timeout, _settings.agent_runtime_python_timeout_seconds)
 
     if not code:

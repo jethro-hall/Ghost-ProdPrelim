@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     agent_runtime_default_model: str = "us.anthropic.claude-opus-4-5"
     agent_runtime_verifier_model: str = "us.anthropic.claude-sonnet-4-5-20251101-v1:0"
     agent_runtime_max_output_bytes_for_model: int = 8192  # 8KB summary cap
-    agent_runtime_python_timeout_seconds: int = 30
-    agent_runtime_bash_timeout_seconds: int = 30
+    agent_runtime_python_timeout_seconds: int = 60
+    agent_runtime_bash_timeout_seconds: int = 60
 
     # Service
     host: str = "0.0.0.0"
