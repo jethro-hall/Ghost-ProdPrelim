@@ -141,7 +141,7 @@ class ConnectionDeleteResponse(BaseModel):
 
 class ConnectionTestResponse(BaseModel):
     ok: bool
-    api_mode: ChatApiMode
+    api_mode: str  # e.g. "responses", "chat_completions", "bedrock_converse"
     model: str
     base_url: str
     output: str
@@ -597,7 +597,7 @@ class RuntimeProfileLlmConfig(BaseModel):
     connection_id: str | None = None
     provider: str = Field(default="openai", min_length=1, max_length=32)
     model_id: str = Field(min_length=1)
-    temperature: float = Field(default=0.2, ge=0, le=2)
+    temperature: float | None = Field(default=None, ge=0, le=2)
     # Optional: when omitted/null, provider defaults apply and we do not force a cap.
     max_tokens: int | None = Field(default=None)
     api_mode: ChatApiMode = "responses"
@@ -617,8 +617,9 @@ class RuntimeProfileLlmConfig(BaseModel):
 
 class RuntimeProfileGuardrailsConfig(BaseModel):
     system_prompt: str = Field(min_length=1)
-    grounding_mode: Literal["retrieved_only", "general"] = "retrieved_only"
-    insufficient_context_behavior: str = Field(min_length=1)
+    grounding_mode: Literal["retrieved_only", "general", "tool_grounded", "script_audit"] = "retrieved_only"
+    # Relaxed 2026-06-16: legacy field, no longer injected into prompts. Allow empty so new agents can be created without it.
+    insufficient_context_behavior: str = ""
     conversation_mode: ConversationMode = "quick"
     policy_mode: Literal["locked", "admin_approval_required", "open"] = "admin_approval_required"
     business_structure_required: bool = True
@@ -637,6 +638,14 @@ class RuntimeProfileGuardrailsConfig(BaseModel):
     docx_finalize_required_sections: list[str] = Field(
         default_factory=lambda: ["facts", "inferences", "assumptions", "risks", "actions"]
     )
+    # Audit / script execution fields
+    thinking_mode: Literal["disabled", "adaptive", "manual"] = "disabled"
+    thinking_effort: Literal["low", "medium", "high", "max"] = "high"
+    thinking_budget_tokens: int | None = Field(default=None, ge=1024, le=32000)
+    preserve_thinking_blocks: bool = True
+    audit_memory_enabled: bool = False
+    allow_mirror_script_execution: bool = False
+    audit_max_iterations: int | None = Field(default=None, ge=1, le=20)
 
 
 class RuntimeProfileKnowledgeBaseConfig(BaseModel):
