@@ -321,11 +321,11 @@ def _register_all(
             "Has access to: pandas, numpy, duckdb, httpx, json, pathlib, decimal, datetime, "
             "collections, statistics, re, hashlib, csv, math. "
             "Write results to stdout as JSON. Use result = <value> to return data. "
-            "Max 30s timeout. ALWAYS use short timeouts in httpx calls: timeout=20. "
+            "Max 60s timeout. ALWAYS use short timeouts in httpx calls: timeout=55. "
             "GPU service url: os.environ.get('RAPIDS_URL', 'http://rapids-analytics:8010'). "
             "Example GPU query: "
             "import httpx,os; r=httpx.post(os.environ.get('RAPIDS_URL','http://rapids-analytics:8010')+'/execute',"
-            "json={'script':'df=gf(\"FRAME\")\\nresult=float(df[\"debit\"].sum())'},timeout=20); print(r.json()['result'])"
+            "json={'script':'df=gf(\"FRAME\")\\nresult=float(df[\"debit\"].sum())'},timeout=55); print(r.json()['result'])"
         ),
         json_schema={
             "type": "object",

@@ -121,7 +121,7 @@ def execute_python(
 ) -> ToolResult:
     code = str(args.get("code", "")).strip()
     reason = str(args.get("reason", ""))
-    timeout = int(args.get("timeout_seconds") or 60)
+    timeout = int(args.get("timeout_seconds") or 90)
     timeout = min(timeout, _settings.agent_runtime_python_timeout_seconds)
 
     if not code:
@@ -204,7 +204,7 @@ def execute_bash(
 ) -> ToolResult:
     cmd = str(args.get("cmd", "")).strip()
     cwd_rel = str(args.get("cwd", "workspace")).strip()
-    timeout = int(args.get("timeout_seconds") or 60)
+    timeout = int(args.get("timeout_seconds") or 90)
     timeout = min(timeout, _settings.agent_runtime_bash_timeout_seconds)
 
     if not cmd:

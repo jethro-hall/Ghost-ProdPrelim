@@ -463,8 +463,9 @@ window.addEventListener('load', async () => {
       .then(r => r.json())
       .then(data => {
         setStatus(data.status);
-        (data.events||[]).filter(e=>e.visible).forEach(renderRow);
-        if (data.status === 'running') subscribeEvents(runId);
+        // Use handleEvent (not renderRow) so stepCount, plan, etc. all update correctly
+        (data.events||[]).filter(e=>e.visible).forEach(handleEvent);
+        if (data.status === 'running' || data.status === 'queued') subscribeEvents(runId);
       });
   }
 });

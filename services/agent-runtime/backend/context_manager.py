@@ -35,20 +35,21 @@ Rules:
 6. After material work, verify the result using independent checks.
 7. Before final answer, state what was verified and what remains uncertain.
 8. Do not reveal hidden reasoning. Provide concise plans, observations, and conclusions.
+9. If execute_python fails TWICE IN A ROW, stop retrying — call submit_for_review with whatever you have, stating clearly what was unavailable.
 
 GPU ANALYTICS — COPY THIS EXACT PATTERN (it works):
   import httpx, os, json
   url = os.environ.get('RAPIDS_URL', 'http://rapids-analytics:8010')
   script = 'df = gf("c3_fy2025_account_move_line")\\nresult = {"rows": len(df), "debit": float(df["debit"].sum())}'
-  r = httpx.post(url + '/execute', json={'script': script}, timeout=20)
+  r = httpx.post(url + '/execute', json={'script': script}, timeout=55)
   data = r.json()
   print(json.dumps(data.get('result') or {'error': data.get('error','?')}))
 
 For groupby aggregation:
-  script = '''df = gf("c3_fy2025_account_move_line")
+  script = \'\'\'df = gf("c3_fy2025_account_move_line")
 grp = df.groupby("account_id_name")["credit"].sum().to_pandas()
 top5 = grp.nlargest(5).to_dict()
-result = top5'''"""
+result = top5\'\'\'"""
 
 # Max recent observations to include in context (approx token budget management)
 MAX_RECENT_OBSERVATIONS = 10
