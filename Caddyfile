@@ -22,21 +22,33 @@
 	handle /api/voice/elevenlabs/* {
 		reverse_proxy agent-ingress:8001 {
 			flush_interval -1
+			lb_policy first
+			fail_duration 5s
+			unhealthy_request_count 2
 		}
 	}
 	handle /api/* {
 		reverse_proxy control-api:8000 {
 			flush_interval -1
+			lb_policy first
+			fail_duration 5s
+			unhealthy_request_count 2
 		}
 	}
 	handle /agent/* {
 		reverse_proxy agent-ingress:8001 {
 			flush_interval -1
+			lb_policy first
+			fail_duration 5s
+			unhealthy_request_count 2
 		}
 	}
 	handle /health {
 		reverse_proxy control-api:8000 {
 			flush_interval -1
+			lb_policy first
+			fail_duration 5s
+			unhealthy_request_count 2
 		}
 	}
 	handle {
@@ -70,21 +82,75 @@ ghoststack.rideai.com.au {
 	handle /api/voice/elevenlabs/* {
 		reverse_proxy agent-ingress:8001 {
 			flush_interval -1
+			# fail_duration 0: never permanently mark upstream as dead.
+			# Every request always attempts the upstream regardless of prior failures.
+			# lb_try_duration retries the connection for up to 15s before returning 503.
+			fail_duration 0
+			lb_try_duration 15s
+			lb_try_interval 500ms
+			health_uri /health
+			health_interval 5s
+			health_timeout 3s
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 0
+				keepalive off
+			}
+		}
+	}
+	handle_path /agent-runtime/* {
+		@sse path /api/agent-runs/*/events/stream
+		header @sse Cache-Control no-cache
+		header @sse X-Accel-Buffering no
+		header @sse Content-Type "text/event-stream"
+		reverse_proxy agent-runtime:8200 {
+			flush_interval 0
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 0
+				keepalive off
+			}
 		}
 	}
 	handle /api/* {
 		reverse_proxy control-api:8000 {
 			flush_interval -1
+			fail_duration 0
+			lb_try_duration 15s
+			lb_try_interval 500ms
+			health_uri /health
+			health_interval 5s
+			health_timeout 3s
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 0
+				keepalive off
+			}
 		}
 	}
 	handle /agent/* {
 		reverse_proxy agent-ingress:8001 {
 			flush_interval -1
+			fail_duration 0
+			lb_try_duration 15s
+			lb_try_interval 500ms
+			health_uri /health
+			health_interval 5s
+			health_timeout 3s
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 0
+				keepalive off
+			}
 		}
 	}
 	handle /health {
 		reverse_proxy control-api:8000 {
-			flush_interval -1
+			fail_duration 0
+			lb_try_duration 10s
+			health_uri /health
+			health_interval 5s
+			health_timeout 3s
 		}
 	}
 	handle {
