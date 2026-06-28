@@ -8,6 +8,10 @@
   body { background: #0f172a; color: #e2e8f0; font-family: 'Courier New', monospace; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
   #header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
   #header h1 { font-size: 15px; color: #7c3aed; }
+  #header .header-spacer { flex: 1; }
+  #header .header-button { background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: inherit; }
+  #header .header-button:hover { border-color: #7c3aed; color: #c4b5fd; }
+  #header .header-button.active { background: #1e1a3a; border-color: #7c3aed; color: #c4b5fd; }
   #status { padding: 3px 10px; border-radius: 12px; font-size: 11px; background: #1e293b; border: 1px solid #334155; }
   #status.running { background: #052e16; border-color: #22c55e; color: #86efac; }
   #status.completed { background: #052e16; border-color: #22c55e; color: #86efac; }
@@ -54,6 +58,59 @@
   #query-list { padding: 6px 16px; border-bottom: 1px solid #1e293b; flex-shrink: 0; max-height: 64px; overflow-y: auto; }
   .query-chip { display: inline-block; background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2px 10px; margin: 2px 3px; font-size: 11px; cursor: pointer; color: #94a3b8; }
   .query-chip:hover { border-color: #7c3aed; color: #c4b5fd; }
+
+  /* ── Data Sources drawer ───────────────────────────────────────────────── */
+  #data-drawer { position: fixed; top: 0; right: 0; width: 0; height: 100vh; background: #0a1628; border-left: 1px solid #1e293b; box-shadow: -8px 0 24px rgba(0,0,0,0.4); transition: width 0.18s ease-out; overflow: hidden; z-index: 50; display: flex; flex-direction: column; }
+  #data-drawer.open { width: 480px; }
+  #data-drawer header { padding: 12px 14px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  #data-drawer header h2 { font-size: 13px; color: #7c3aed; }
+  #data-drawer header .close { margin-left: auto; background: transparent; color: #94a3b8; border: none; cursor: pointer; font-size: 16px; padding: 0 4px; }
+  #data-drawer header .close:hover { color: #ef4444; }
+  #data-tabs { display: flex; gap: 0; padding: 0 12px; background: #0d1424; border-bottom: 1px solid #1e293b; flex-shrink: 0; }
+  .data-tab { background: transparent; color: #64748b; border: none; padding: 8px 12px; font-size: 11px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; }
+  .data-tab:hover { color: #c4b5fd; }
+  .data-tab.active { color: #c4b5fd; border-bottom-color: #7c3aed; }
+  #data-body { flex: 1; overflow-y: auto; padding: 12px 14px; font-size: 12px; }
+  .data-section { margin-bottom: 14px; }
+  .data-section label { display: block; font-size: 10px; color: #6d28d9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  .data-section select, .data-section input, .data-section textarea { width: 100%; background: #0d1424; color: #e2e8f0; border: 1px solid #334155; border-radius: 5px; padding: 6px 8px; font-size: 12px; font-family: inherit; }
+  .data-section select:focus, .data-section input:focus, .data-section textarea:focus { outline: none; border-color: #7c3aed; }
+  .data-section textarea { min-height: 92px; font-family: 'Courier New', monospace; resize: vertical; }
+  .data-section .data-hint { color: #475569; font-size: 10px; margin-top: 4px; }
+  #data-status { font-size: 10px; color: #64748b; padding: 4px 14px; background: #0d1424; border-top: 1px solid #1e293b; flex-shrink: 0; }
+  #data-status.error { color: #fca5a5; background: #2a0e0e; }
+  #data-status.ok { color: #86efac; }
+  .data-button { background: #7c3aed; color: #fff; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 12px; font-family: inherit; }
+  .data-button:hover { background: #6d28d9; }
+  .data-button:disabled { background: #334155; cursor: not-allowed; }
+  .data-result { background: #0d1424; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; margin-top: 10px; max-height: 360px; overflow: auto; font-size: 11px; }
+  .data-result table { width: 100%; border-collapse: collapse; }
+  .data-result th { text-align: left; font-size: 10px; color: #7c3aed; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid #334155; position: sticky; top: 0; background: #0d1424; }
+  .data-result td { padding: 3px 8px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: top; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .data-result tr:hover td { background: #1e293b; color: #fff; white-space: normal; }
+  .data-result-meta { color: #64748b; font-size: 10px; margin-bottom: 6px; }
+  .data-snapshot-row { padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; }
+  .data-snapshot-row:focus { outline: 2px solid #7c3aed; outline-offset: 2px; }
+  .data-snapshot-row:hover { background: #1e293b; }
+  .data-snapshot-row.active { background: #1e1a3a; border-color: #7c3aed; }
+  .data-snapshot-row .label { color: #c4b5fd; font-size: 11px; }
+  .data-snapshot-row .meta { color: #475569; font-size: 10px; margin-top: 2px; }
+
+  .data-metric-card { background: #0d1424; border: 1px solid #1e293b; border-radius: 4px; margin-bottom: 6px; font-size: 11px; overflow: hidden; }
+  .data-metric-card .data-metric-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; }
+  .data-metric-card .data-metric-head:focus { outline: 2px solid #7c3aed; outline-offset: -2px; }
+  .data-metric-card .data-metric-head:hover { background: #1e293b; }
+  .data-metric-card .data-metric-caret { width: 10px; color: #7c3aed; font-size: 11px; flex-shrink: 0; }
+  .data-metric-card .data-metric-headtext { flex: 1; min-width: 0; }
+  .data-metric-card .name { color: #c4b5fd; font-weight: bold; word-break: break-all; }
+  .data-metric-card .formula { color: #475569; font-size: 10px; margin: 2px 0 0; word-break: break-all; }
+  .data-metric-card .rows { color: #94a3b8; font-size: 10px; flex-shrink: 0; }
+  .data-metric-card .data-metric-body { background: #0a1224; border-top: 1px solid #1e293b; padding: 8px 10px; }
+  .data-metric-card .data-metric-toolbar { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .data-metric-tabbtn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 3px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; }
+  .data-metric-tabbtn.active { background: #1e1a3a; border-color: #7c3aed; color: #c4b5fd; }
+  .data-metric-copy { margin-left: auto; background: transparent; color: #64748b; border: 1px solid #334155; padding: 3px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: inherit; }
+  .data-metric-copy:hover { color: #c4b5fd; border-color: #7c3aed; }
 </style>
 </head>
 <body>
@@ -65,6 +122,8 @@
   <span id="conn-pill">disconnected</span>
   <span id="model-label" style="color:#475569;font-size:11px">Claude Opus 4.6 · AP Bedrock</span>
   <span id="live-indicator"></span>
+  <span class="header-spacer"></span>
+  <button class="header-button" id="data-drawer-toggle" data-testid="data-drawer-toggle" onclick="toggleDataDrawer()">Data Sources</button>
 </div>
 
 <div id="query-list">
@@ -103,6 +162,67 @@
     </div>
   </div>
 </div>
+
+<aside id="data-drawer" aria-hidden="true">
+  <header>
+    <h2>External Data API</h2>
+    <button class="close" onclick="toggleDataDrawer(false)" aria-label="Close">✕</button>
+  </header>
+  <nav id="data-tabs">
+    <button class="data-tab active" data-tab="snapshots" data-testid="tab-snapshots" onclick="setDataTab('snapshots')">Snapshots</button>
+    <button class="data-tab" data-tab="sql" data-testid="tab-sql" onclick="setDataTab('sql')">SQL</button>
+    <button class="data-tab" data-tab="search" data-testid="tab-search" onclick="setDataTab('search')">Search</button>
+    <button class="data-tab" data-tab="metrics" data-testid="tab-metrics" onclick="setDataTab('metrics')">Metrics</button>
+  </nav>
+  <div id="data-body">
+    <div data-pane="snapshots">
+      <div class="data-section">
+        <label>Snapshot</label>
+        <div id="data-snapshots-list">Loading…</div>
+        <div class="data-hint">Click a snapshot to make it the active source for the SQL, Search, and Metrics tabs.</div>
+      </div>
+      <div class="data-section">
+        <label>Active snapshot</label>
+        <div id="data-active-snapshot" style="font-size:11px;color:#cbd5e1">(none)</div>
+      </div>
+    </div>
+    <div data-pane="sql" hidden>
+      <div class="data-section">
+        <label>SQL (read-only)</label>
+        <textarea id="data-sql" placeholder="SELECT * FROM account_move_line LIMIT 50">SELECT line_number, snapshot_id FROM (SELECT 1 AS line_number) t LIMIT 1</textarea>
+        <div class="data-hint">Tables match the underlying model names (e.g. account_move_line, pos_order_line). Only SELECT is allowed; writes are blocked server-side.</div>
+      </div>
+      <div class="data-section" style="display:flex;gap:8px;align-items:center">
+        <button class="data-button" id="data-run-sql" data-testid="run-sql" onclick="runSql()">Run query</button>
+        <span id="data-sql-meta" style="font-size:10px;color:#64748b"></span>
+      </div>
+      <div id="data-sql-result"></div>
+    </div>
+    <div data-pane="search" hidden>
+      <div class="data-section">
+        <label>Search query</label>
+        <input id="data-search-query" placeholder="workshop"/>
+      </div>
+      <div class="data-section">
+        <label>Optional model (table) filter</label>
+        <input id="data-search-model" placeholder="e.g. account_move_line"/>
+      </div>
+      <div class="data-section">
+        <button class="data-button" id="data-run-search" data-testid="run-search" onclick="runSearch()">Search</button>
+        <span id="data-search-meta" style="font-size:10px;color:#64748b;margin-left:8px"></span>
+      </div>
+      <div id="data-search-result"></div>
+    </div>
+    <div data-pane="metrics" hidden>
+      <div class="data-section">
+        <button class="data-button" data-testid="refresh-metrics" onclick="loadMetrics()">Refresh metrics</button>
+        <span id="data-metrics-meta" style="font-size:10px;color:#64748b;margin-left:8px"></span>
+      </div>
+      <div id="data-metrics-result">Click "Refresh metrics" for the active snapshot.</div>
+    </div>
+  </div>
+  <div id="data-status">External Data API: not yet contacted</div>
+</aside>
 
 <script>
 const BASE = '/agent-runtime';
@@ -454,6 +574,17 @@ window.addEventListener('load', async () => {
       const short = cfg.default_model.includes('opus') ? 'Claude Opus 4.6 · AP Bedrock' : cfg.default_model;
       label.textContent = short;
     }
+    const drawerBtn = document.getElementById('data-drawer-toggle');
+    if (drawerBtn) {
+      drawerBtn.disabled = !cfg.external_data_api_configured;
+      drawerBtn.title = cfg.external_data_api_configured
+        ? 'Open External Data API panel'
+        : 'EXTERNAL_DATA_API_KEY not set on the agent-runtime service';
+      if (!cfg.external_data_api_configured) {
+        drawerBtn.style.color = '#475569';
+        drawerBtn.textContent = 'Data Sources (off)';
+      }
+    }
   } catch (_) { /* non-critical */ }
 
   const runId = new URLSearchParams(location.search).get('run_id');
@@ -469,6 +600,303 @@ window.addEventListener('load', async () => {
       });
   }
 });
+
+// ── External Data drawer ─────────────────────────────────────────────────────
+
+const dataState = { snapshots: [], active: null, loaded: false };
+
+function toggleDataDrawer(force) {
+  const drawer = document.getElementById('data-drawer');
+  const btn = document.getElementById('data-drawer-toggle');
+  if (!drawer) return;
+  const open = (typeof force === 'boolean') ? force : !drawer.classList.contains('open');
+  drawer.classList.toggle('open', open);
+  drawer.setAttribute('aria-hidden', String(!open));
+  if (btn) btn.classList.toggle('active', open);
+  if (open && !dataState.loaded) loadSnapshots();
+}
+
+function setDataTab(name) {
+  document.querySelectorAll('.data-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('#data-body [data-pane]').forEach(p => p.hidden = (p.dataset.pane !== name));
+}
+
+function setDataStatus(text, kind) {
+  const el = document.getElementById('data-status');
+  if (!el) return;
+  el.textContent = text;
+  el.className = kind ? kind : '';
+}
+
+async function loadSnapshots() {
+  setDataStatus('Loading snapshots…');
+  try {
+    const resp = await fetch(`${BASE}/api/external-data/snapshots`, { credentials: 'include' });
+    if (!resp.ok) {
+      const detail = await resp.json().catch(() => ({}));
+      setDataStatus(`HTTP ${resp.status}: ${detail.detail?.message || resp.statusText}`, 'error');
+      return;
+    }
+    const data = await resp.json();
+    dataState.snapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
+    dataState.loaded = true;
+    renderSnapshots();
+    setDataStatus(`${dataState.snapshots.length} snapshot(s) loaded`, 'ok');
+  } catch (err) {
+    setDataStatus(String(err.message || err), 'error');
+  }
+}
+
+function renderSnapshots() {
+  const host = document.getElementById('data-snapshots-list');
+  if (!host) return;
+  if (!dataState.snapshots.length) {
+    host.innerHTML = '<div style="color:#64748b">No snapshots returned by the External Data API.</div>';
+    return;
+  }
+  host.innerHTML = '';
+  for (const s of dataState.snapshots) {
+    const id = s.snapshot_id || s.id || '';
+    const row = document.createElement('div');
+    row.className = 'data-snapshot-row';
+    if (dataState.active === id) row.classList.add('active');
+    row.dataset.id = id;
+    row.dataset.testid = 'snapshot-row';
+    row.setAttribute('role', 'button');
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('aria-label', `Select snapshot ${id}`);
+    row.setAttribute('aria-pressed', dataState.active === id ? 'true' : 'false');
+    const status = s.status || 'unknown';
+    const views = Array.isArray(s.available_views) ? s.available_views.length : 0;
+    row.innerHTML = `<div class="label">${escHtml(id)}</div>
+      <div class="meta">${escHtml(status)} · ${views} view${views === 1 ? '' : 's'}${s.profile_id ? ' · ' + escHtml(s.profile_id) : ''}</div>`;
+    row.onclick = () => selectSnapshot(id);
+    row.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectSnapshot(id); } };
+    host.appendChild(row);
+  }
+}
+
+function selectSnapshot(id) {
+  dataState.active = id;
+  document.querySelectorAll('.data-snapshot-row').forEach(r => r.classList.toggle('active', r.dataset.id === id));
+  const lbl = document.getElementById('data-active-snapshot');
+  if (lbl) lbl.textContent = id;
+  setDataStatus('Active snapshot: ' + id, 'ok');
+}
+
+async function runSql() {
+  if (!dataState.active) { setDataStatus('Select a snapshot first.', 'error'); setDataTab('snapshots'); return; }
+  const sql = document.getElementById('data-sql').value.trim();
+  if (!sql) return;
+  const btn = document.getElementById('data-run-sql');
+  btn.disabled = true;
+  setDataStatus('Running SQL…');
+  document.getElementById('data-sql-meta').textContent = '';
+  document.getElementById('data-sql-result').innerHTML = '';
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(`${BASE}/api/external-data/snapshots/${encodeURIComponent(dataState.active)}/query`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ sql })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      const msg = data.detail?.message || data.message || resp.statusText;
+      document.getElementById('data-sql-result').innerHTML = `<div style="color:#fca5a5">${escHtml(msg)}</div>`;
+      setDataStatus('SQL error: ' + msg, 'error');
+      return;
+    }
+    const elapsed = Math.round(performance.now() - t0);
+    document.getElementById('data-sql-meta').textContent = `${data.row_count ?? (data.rows || []).length} rows · ${elapsed}ms${data.truncated ? ' · truncated' : ''}`;
+    renderTable('data-sql-result', data.columns || [], data.rows || []);
+    setDataStatus('SQL completed', 'ok');
+  } catch (err) {
+    setDataStatus(String(err.message || err), 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function runSearch() {
+  if (!dataState.active) { setDataStatus('Select a snapshot first.', 'error'); setDataTab('snapshots'); return; }
+  const query = document.getElementById('data-search-query').value.trim();
+  const model = document.getElementById('data-search-model').value.trim();
+  if (!query) return;
+  const btn = document.getElementById('data-run-search');
+  btn.disabled = true;
+  setDataStatus('Running search…');
+  document.getElementById('data-search-meta').textContent = '';
+  document.getElementById('data-search-result').innerHTML = '';
+  try {
+    const body = { query };
+    if (model) body.model = model;
+    const resp = await fetch(`${BASE}/api/external-data/snapshots/${encodeURIComponent(dataState.active)}/search`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      const msg = data.detail?.message || data.message || resp.statusText;
+      document.getElementById('data-search-result').innerHTML = `<div style="color:#fca5a5">${escHtml(msg)}</div>`;
+      setDataStatus('Search error: ' + msg, 'error');
+      return;
+    }
+    const matches = Array.isArray(data.matches) ? data.matches : [];
+    document.getElementById('data-search-meta').textContent = `${matches.length} match${matches.length === 1 ? '' : 'es'}`;
+    if (!matches.length) {
+      document.getElementById('data-search-result').innerHTML = '<div style="color:#64748b">No matches.</div>';
+    } else {
+      const html = matches.slice(0, 50).map(m => {
+        const fields = Array.isArray(m.matched_fields) && m.matched_fields.length ? m.matched_fields.join(', ') : '(field unknown)';
+        const recordPreview = JSON.stringify(m.record || {}).slice(0, 240);
+        return `<div class="data-metric-card"><div class="name">${escHtml(m.model || '?')} #${escHtml(m.line_number || '?')}</div><div class="formula">matched: ${escHtml(fields)}</div><div class="rows">${escHtml(recordPreview)}${recordPreview.length === 240 ? '…' : ''}</div></div>`;
+      }).join('');
+      document.getElementById('data-search-result').innerHTML = html;
+    }
+    setDataStatus('Search completed', 'ok');
+  } catch (err) {
+    setDataStatus(String(err.message || err), 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadMetrics() {
+  if (!dataState.active) { setDataStatus('Select a snapshot first.', 'error'); setDataTab('snapshots'); return; }
+  setDataStatus('Loading metrics…');
+  document.getElementById('data-metrics-meta').textContent = '';
+  document.getElementById('data-metrics-result').innerHTML = 'Loading…';
+  try {
+    const resp = await fetch(`${BASE}/api/external-data/snapshots/${encodeURIComponent(dataState.active)}/metrics`);
+    const data = await resp.json();
+    if (!resp.ok) {
+      const msg = data.detail?.message || data.message || resp.statusText;
+      document.getElementById('data-metrics-result').innerHTML = `<div style="color:#fca5a5">${escHtml(msg)}</div>`;
+      setDataStatus('Metrics error: ' + msg, 'error');
+      return;
+    }
+    const metrics = Array.isArray(data.metrics) ? data.metrics : [];
+    dataState.lastMetrics = metrics;
+    document.getElementById('data-metrics-meta').textContent = `${metrics.length} metric${metrics.length === 1 ? '' : 's'}`;
+    if (!metrics.length) {
+      document.getElementById('data-metrics-result').innerHTML = '<div style="color:#64748b">No metrics for this snapshot.</div>';
+      return;
+    }
+    document.getElementById('data-metrics-result').innerHTML = metrics.map((m, i) => {
+      const rows = Array.isArray(m.result_rows) ? m.result_rows.length : 0;
+      const params = m.parameters ? JSON.stringify(m.parameters) : '';
+      const id = m.metric_id || m.metric_result_id || `metric_${i}`;
+      return `<div class="data-metric-card" data-metric-index="${i}" data-testid="metric-card">
+        <div class="data-metric-head" role="button" tabindex="0" aria-expanded="false" onclick="toggleMetricCard(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMetricCard(${i});}">
+          <span class="data-metric-caret" aria-hidden="true">▸</span>
+          <div class="data-metric-headtext">
+            <div class="name">${escHtml(id)}</div>
+            <div class="formula">${escHtml(m.formula_version || '')} ${params ? '· ' + escHtml(params) : ''}</div>
+          </div>
+          <div class="rows">${rows} row${rows === 1 ? '' : 's'}</div>
+        </div>
+        <div class="data-metric-body" hidden>
+          <div class="data-metric-toolbar">
+            <button class="data-metric-tabbtn active" data-metric-tab="rows" onclick="setMetricTab(${i},'rows')">Rows</button>
+            <button class="data-metric-tabbtn" data-metric-tab="raw" onclick="setMetricTab(${i},'raw')">Raw JSON</button>
+            <button class="data-metric-copy" onclick="copyMetric(${i})" title="Copy raw JSON">Copy</button>
+          </div>
+          <div class="data-metric-tabbody" data-metric-pane="rows"></div>
+          <div class="data-metric-tabbody" data-metric-pane="raw" hidden></div>
+        </div>
+      </div>`;
+    }).join('');
+    setDataStatus('Metrics loaded', 'ok');
+  } catch (err) {
+    setDataStatus(String(err.message || err), 'error');
+  }
+}
+
+function toggleMetricCard(i) {
+  const list = dataState.lastMetrics || [];
+  const m = list[i];
+  if (!m) return;
+  const card = document.querySelector(`.data-metric-card[data-metric-index="${i}"]`);
+  if (!card) return;
+  const head = card.querySelector('.data-metric-head');
+  const body = card.querySelector('.data-metric-body');
+  const expanded = !body.hidden;
+  if (expanded) {
+    body.hidden = true;
+    head.setAttribute('aria-expanded', 'false');
+    card.querySelector('.data-metric-caret').textContent = '▸';
+    return;
+  }
+  head.setAttribute('aria-expanded', 'true');
+  card.querySelector('.data-metric-caret').textContent = '▾';
+  body.hidden = false;
+  // Lazy-render rows/raw on first expand.
+  const rowsPane = card.querySelector('[data-metric-pane="rows"]');
+  if (!rowsPane.dataset.rendered) {
+    const rows = Array.isArray(m.result_rows) ? m.result_rows : [];
+    if (!rows.length) {
+      rowsPane.innerHTML = '<div style="color:#64748b">No result rows.</div>';
+    } else {
+      const cols = Object.keys(rows[0]);
+      const head2 = `<tr>${cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr>`;
+      const body2 = rows.slice(0, 100).map(r => {
+        return `<tr>${cols.map(c => {
+          const v = r[c];
+          const s = (v === null || v === undefined) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+          return `<td title="${escHtml(s)}">${escHtml(s)}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+      rowsPane.innerHTML = `<div class="data-result"><div class="data-result-meta">${rows.length} row${rows.length === 1 ? '' : 's'}${rows.length > 100 ? ' (showing first 100)' : ''}</div><table><thead>${head2}</thead><tbody>${body2}</tbody></table></div>`;
+    }
+    rowsPane.dataset.rendered = '1';
+  }
+  const rawPane = card.querySelector('[data-metric-pane="raw"]');
+  if (!rawPane.dataset.rendered) {
+    const pretty = JSON.stringify(m, null, 2);
+    rawPane.innerHTML = `<pre class="data-result" style="max-height:360px;font-family:'Courier New',monospace;font-size:11px">${escHtml(pretty)}</pre>`;
+    rawPane.dataset.rendered = '1';
+  }
+}
+
+function setMetricTab(i, tab) {
+  const card = document.querySelector(`.data-metric-card[data-metric-index="${i}"]`);
+  if (!card) return;
+  card.querySelectorAll('.data-metric-tabbtn').forEach(b => b.classList.toggle('active', b.dataset.metricTab === tab));
+  card.querySelectorAll('[data-metric-pane]').forEach(p => p.hidden = (p.dataset.metricPane !== tab));
+}
+
+async function copyMetric(i) {
+  const list = dataState.lastMetrics || [];
+  const m = list[i];
+  if (!m) return;
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(m, null, 2));
+    setDataStatus('Metric JSON copied to clipboard', 'ok');
+  } catch (err) {
+    setDataStatus('Clipboard copy blocked: ' + err, 'error');
+  }
+}
+
+function renderTable(hostId, columns, rows) {
+  const host = document.getElementById(hostId);
+  if (!host) return;
+  if (!rows.length) {
+    host.innerHTML = '<div class="data-result"><div style="color:#64748b">0 rows.</div></div>';
+    return;
+  }
+  const cols = (columns && columns.length) ? columns : Object.keys(rows[0]);
+  const head = `<tr>${cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr>`;
+  const body = rows.slice(0, 200).map(r => {
+    return `<tr>${cols.map(c => {
+      const v = r[c];
+      const s = (v === null || v === undefined) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+      return `<td title="${escHtml(s)}">${escHtml(s)}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+  host.innerHTML = `<div class="data-result"><div class="data-result-meta">${rows.length} row${rows.length === 1 ? '' : 's'}${rows.length > 200 ? ' (showing first 200)' : ''}</div><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+}
 </script>
 </body>
 </html>

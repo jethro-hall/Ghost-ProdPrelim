@@ -42,7 +42,7 @@ from .repositories import (
 )
 from .sandbox_runner import sandbox_root
 from .tool_registry import _register_all
-from . import data_connector, sandbox_runner
+from . import data_connector, external_data_api, sandbox_runner
 
 logger = logging.getLogger(__name__)
 _settings = get_settings()
@@ -99,6 +99,7 @@ async def startup() -> None:
     _register_all(
         sandbox_runner=sandbox_runner,
         data_connector=data_connector,
+        external_data_api=external_data_api,
     )
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=32, thread_name_prefix="agent")
     asyncio.get_event_loop().set_default_executor(executor)
@@ -123,6 +124,20 @@ class ApprovalRequest(BaseModel):
     decision: str   # "allow_once" | "allow_always" | "reject"
 
 
+class ExternalQueryRequest(BaseModel):
+    sql: str
+
+
+class ExternalSearchRequest(BaseModel):
+    query: str
+    model: str | None = None
+
+
+class ExternalCrossQueryRequest(BaseModel):
+    snapshot_ids: list[str]
+    sql: str
+
+
 # ── GET /api/runtime-config ───────────────────────────────────────────────────
 
 @app.get("/api/runtime-config")
@@ -131,7 +146,94 @@ async def runtime_config() -> JSONResponse:
     return JSONResponse({
         "default_max_steps": _settings.agent_runtime_max_steps,
         "default_model": _settings.agent_runtime_default_model,
+        "external_data_api_configured": bool(_settings.external_data_api_key),
     })
+
+
+# ── External Data API proxy routes ────────────────────────────────────────────
+# These forward to the FDL-side analytics gateway (External Data API). The API
+# key lives only in the agent-runtime container env. Browsers and the LLM
+# never see it.
+
+def _trace_id_from(request: Request) -> str:
+    return getattr(request.state, "trace_id", "untraced")
+
+
+def _external_data_error(exc: external_data_api.ExternalDataAPIError) -> HTTPException:
+    status = exc.status_code or 502
+    detail: dict[str, Any] = {"message": str(exc)}
+    if exc.payload is not None:
+        detail["upstream"] = exc.payload
+    return HTTPException(status_code=status, detail=detail)
+
+
+@app.get("/api/external-data/snapshots")
+async def external_data_list_snapshots(request: Request) -> JSONResponse:
+    try:
+        data = external_data_api.list_snapshots(trace_id=_trace_id_from(request))
+    except external_data_api.ExternalDataAPIError as exc:
+        raise _external_data_error(exc)
+    return JSONResponse(data)
+
+
+@app.post("/api/external-data/snapshots/{snapshot_id:path}/query")
+async def external_data_query(
+    snapshot_id: str,
+    body: ExternalQueryRequest,
+    request: Request,
+) -> JSONResponse:
+    try:
+        data = external_data_api.run_query(
+            snapshot_id,
+            body.sql,
+            trace_id=_trace_id_from(request),
+        )
+    except external_data_api.ExternalDataAPIError as exc:
+        raise _external_data_error(exc)
+    return JSONResponse(data)
+
+
+@app.post("/api/external-data/snapshots/{snapshot_id:path}/search")
+async def external_data_search(
+    snapshot_id: str,
+    body: ExternalSearchRequest,
+    request: Request,
+) -> JSONResponse:
+    try:
+        data = external_data_api.search(
+            snapshot_id,
+            body.query,
+            model=body.model,
+            trace_id=_trace_id_from(request),
+        )
+    except external_data_api.ExternalDataAPIError as exc:
+        raise _external_data_error(exc)
+    return JSONResponse(data)
+
+
+@app.get("/api/external-data/snapshots/{snapshot_id:path}/metrics")
+async def external_data_metrics(snapshot_id: str, request: Request) -> JSONResponse:
+    try:
+        data = external_data_api.get_metrics(snapshot_id, trace_id=_trace_id_from(request))
+    except external_data_api.ExternalDataAPIError as exc:
+        raise _external_data_error(exc)
+    return JSONResponse(data)
+
+
+@app.post("/api/external-data/query")
+async def external_data_cross_query(
+    body: ExternalCrossQueryRequest,
+    request: Request,
+) -> JSONResponse:
+    try:
+        data = external_data_api.cross_query(
+            body.snapshot_ids,
+            body.sql,
+            trace_id=_trace_id_from(request),
+        )
+    except external_data_api.ExternalDataAPIError as exc:
+        raise _external_data_error(exc)
+    return JSONResponse(data)
 
 
 # ── POST /api/agent-runs ──────────────────────────────────────────────────────

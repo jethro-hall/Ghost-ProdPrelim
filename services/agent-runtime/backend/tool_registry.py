@@ -205,6 +205,7 @@ def _validate_args(tool: ToolDefinition, args: dict[str, Any]) -> None:
 def _register_all(
     sandbox_runner: Any,
     data_connector: Any,
+    external_data_api: Any | None = None,
 ) -> None:
     """
     Called by api.py at startup after injecting the executor implementations.
@@ -546,6 +547,182 @@ def _register_all(
         requires_approval=False,
         executor=None,  # Handled specially by orchestrator
     ))
+
+    # ── External Data API tools ───────────────────────────────────────────────
+    # Server-side proxy to the FDL analytics gateway. The API key lives in env;
+    # the LLM only sees snapshot ids and rows. SELECT-only is enforced.
+    if external_data_api is not None:
+        def _wrap_external(call_name: str, fn: Callable[..., Any]):
+            def runner(args: dict[str, Any], run_id: str, call_id: str, trace_id: str = "untraced") -> ToolResult:
+                import json
+                try:
+                    payload = fn(args, trace_id=trace_id)
+                except external_data_api.ExternalDataAPIError as exc:
+                    return ToolResult(
+                        call_id=call_id,
+                        tool_name=call_name,
+                        status="failed",
+                        observation_for_model=_wrap_observation(call_name, call_id, str(exc)),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    return ToolResult(
+                        call_id=call_id,
+                        tool_name=call_name,
+                        status="failed",
+                        observation_for_model=_wrap_observation(call_name, call_id, f"{type(exc).__name__}: {exc}"),
+                    )
+                summary = json.dumps(payload, indent=2, default=str)
+                return ToolResult(
+                    call_id=call_id,
+                    tool_name=call_name,
+                    status="completed",
+                    observation_for_model=_wrap_observation(call_name, call_id, summary),
+                    raw_output=payload,
+                )
+            return runner
+
+        register(ToolDefinition(
+            name="external_data_list_snapshots",
+            description=(
+                "List every available snapshot in the External Data API. Returns snapshot ids and "
+                "the gold view names available on each. Call this first to discover what data exists."
+            ),
+            json_schema={"type": "object", "properties": {}, "additionalProperties": False},
+            category="data",
+            risk="read",
+            requires_approval=False,
+            executor=_wrap_external(
+                "external_data_list_snapshots",
+                lambda args, trace_id="untraced": external_data_api.list_snapshots(trace_id=trace_id),
+            ),
+        ))
+
+        register(ToolDefinition(
+            name="external_data_query",
+            description=(
+                "Run a read-only DuckDB SELECT over a single snapshot in the External Data API. "
+                "Tables match the underlying model names (e.g. account_move_line, pos_order_line). "
+                "ALWAYS include a LIMIT — results are capped server-side to protect memory."
+            ),
+            json_schema={
+                "type": "object",
+                "properties": {
+                    "snapshot_id": {
+                        "type": "string",
+                        "description": "Snapshot id from external_data_list_snapshots.",
+                    },
+                    "sql": {
+                        "type": "string",
+                        "description": "A SELECT (or WITH ... SELECT) SQL statement. Writes are rejected.",
+                    },
+                },
+                "required": ["snapshot_id", "sql"],
+                "additionalProperties": False,
+            },
+            category="data",
+            risk="read",
+            requires_approval=False,
+            executor=_wrap_external(
+                "external_data_query",
+                lambda args, trace_id="untraced": external_data_api.run_query(
+                    str(args.get("snapshot_id", "")),
+                    str(args.get("sql", "")),
+                    trace_id=trace_id,
+                ),
+            ),
+        ))
+
+        register(ToolDefinition(
+            name="external_data_search",
+            description=(
+                "Free-text search across a snapshot. Returns matched records along with which "
+                "field matched. Optional model filter scopes to one table (e.g. account.move.line)."
+            ),
+            json_schema={
+                "type": "object",
+                "properties": {
+                    "snapshot_id": {"type": "string"},
+                    "query": {"type": "string"},
+                    "model": {
+                        "type": "string",
+                        "description": "Optional model/table to scope the search.",
+                    },
+                },
+                "required": ["snapshot_id", "query"],
+                "additionalProperties": False,
+            },
+            category="data",
+            risk="read",
+            requires_approval=False,
+            executor=_wrap_external(
+                "external_data_search",
+                lambda args, trace_id="untraced": external_data_api.search(
+                    str(args.get("snapshot_id", "")),
+                    str(args.get("query", "")),
+                    model=args.get("model"),
+                    trace_id=trace_id,
+                ),
+            ),
+        ))
+
+        register(ToolDefinition(
+            name="external_data_metrics",
+            description=(
+                "Return all precomputed metric results attached to a snapshot in the External "
+                "Data API. Useful as a starting point before drilling into raw rows with SQL."
+            ),
+            json_schema={
+                "type": "object",
+                "properties": {
+                    "snapshot_id": {"type": "string"},
+                },
+                "required": ["snapshot_id"],
+                "additionalProperties": False,
+            },
+            category="data",
+            risk="read",
+            requires_approval=False,
+            executor=_wrap_external(
+                "external_data_metrics",
+                lambda args, trace_id="untraced": external_data_api.get_metrics(
+                    str(args.get("snapshot_id", "")),
+                    trace_id=trace_id,
+                ),
+            ),
+        ))
+
+        register(ToolDefinition(
+            name="external_data_cross_query",
+            description=(
+                "Run a DuckDB SELECT joining/unioning across multiple snapshots. Tables are "
+                "prefixed with <snapshot_id>__<model> and a _snapshot_id column is added. "
+                "Use this for FY-over-FY trend or multi-company comparisons."
+            ),
+            json_schema={
+                "type": "object",
+                "properties": {
+                    "snapshot_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                    },
+                    "sql": {"type": "string"},
+                },
+                "required": ["snapshot_ids", "sql"],
+                "additionalProperties": False,
+            },
+            category="data",
+            risk="read",
+            requires_approval=False,
+            executor=_wrap_external(
+                "external_data_cross_query",
+                lambda args, trace_id="untraced": external_data_api.cross_query(
+                    list(args.get("snapshot_ids") or []),
+                    str(args.get("sql", "")),
+                    trace_id=trace_id,
+                ),
+            ),
+        ))
 
 
 def _is_destructive_bash(args: dict[str, Any]) -> bool:

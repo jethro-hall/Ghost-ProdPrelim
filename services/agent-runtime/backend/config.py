@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_default_region: str = "us-east-1"
 
+    # External Data API (FDL-side analytics gateway). Server-side proxy only —
+    # the API key never reaches the browser.
+    external_data_api_url: str = "http://3.105.115.144:4110"
+    external_data_api_key: str = ""
+    external_data_api_timeout_seconds: float = 30.0
+    external_data_api_max_rows: int = 5000
+
     # Runtime
     agent_runtime_sandbox_root: str = "/tmp/agent-runtime"
     agent_runtime_max_steps: int = 40
